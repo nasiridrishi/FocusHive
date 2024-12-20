@@ -5,7 +5,7 @@
  * with backend Spring Boot controller endpoints.
  */
 
-import {API_ENDPOINTS} from './index';
+import {API_ENDPOINTS} from '../../config/apiConfig';
 
 export interface EndpointVerification {
   service: string;

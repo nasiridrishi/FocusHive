@@ -3,15 +3,16 @@ export interface User {
   id: string
   email: string
   username: string
-  firstName: string
-  lastName: string
-  name: string // Derived from firstName + lastName or username
+  firstName?: string
+  lastName?: string
+  name?: string // Derived from firstName + lastName or username
+  displayName?: string // Backend may provide displayName instead
   avatar?: string
   profilePicture?: string // Alias for avatar
-  isEmailVerified: boolean
+  isEmailVerified?: boolean
   isVerified?: boolean // Alias for isEmailVerified
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface AuthState {
@@ -37,7 +38,7 @@ export interface LoginResponse {
 export interface RegisterRequest {
   email: string
   password: string
-  username: string
+  username?: string
   firstName: string
   lastName: string
 }

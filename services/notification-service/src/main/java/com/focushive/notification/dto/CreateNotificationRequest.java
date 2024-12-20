@@ -93,7 +93,14 @@ public class CreateNotificationRequest {
 
     /**
      * Additional metadata for the notification (optional)
+     * Can be either a NotificationMetadata object or a Map<String, Object>
      */
     @Valid
     private NotificationMetadata metadata;
+    
+    /**
+     * Raw metadata as Map (alternative to structured metadata)
+     * Used when metadata comes as a simple Map from other services
+     */
+    private Map<String, Object> metadataMap;
 }

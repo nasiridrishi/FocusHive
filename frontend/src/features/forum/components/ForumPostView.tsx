@@ -67,7 +67,7 @@ const ForumPostView: React.FC = () => {
           const postData = await forumApi.getPostBySlug(postSlug)
           setPost(postData)
 
-          const repliesData = await forumApi.getReplies(postData.id, repliesPage)
+          const repliesData = await forumApi.getReplies(Number(postData.id), repliesPage)
           setReplies(repliesData.replies)
         } catch (err) {
           const error = err as Error & { response?: { data?: { message?: string } } }
@@ -85,11 +85,11 @@ const ForumPostView: React.FC = () => {
 
     try {
       if (userHasLiked) {
-        await forumApi.unlikePost(post.id)
+        await forumApi.unlikePost(Number(post.id))
         setUserHasLiked(false)
         setPost(prev => prev ? {...prev, likeCount: prev.likeCount - 1} : null)
       } else {
-        await forumApi.likePost(post.id)
+        await forumApi.likePost(Number(post.id))
         setUserHasLiked(true)
         if (userHasDisliked) {
           setUserHasDisliked(false)
@@ -392,7 +392,7 @@ const ForumPostView: React.FC = () => {
                   onReplyUpdate={() => {
                     // Reload replies when a new reply is added
                     if (post?.id) {
-                      forumApi.getReplies(post.id, repliesPage).then((data) => setReplies(data.replies)).catch(() => {
+                      forumApi.getReplies(Number(post.id), repliesPage).then((data) => setReplies(data.replies)).catch(() => {
                       })
                     }
                   }}

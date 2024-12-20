@@ -35,10 +35,11 @@ public class InputValidationConfig {
         // Patterns for detecting potential injection attacks
         private static final List<Pattern> SQL_INJECTION_PATTERNS = Arrays.asList(
             Pattern.compile("(\\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE|UNION|FROM|WHERE)\\b)", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("(--|#|/\\*|\\*/|;)", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("('|(\\-\\-)|(;)|(\\|\\|)|(/\\*)|(\\*/))", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("(--|#|;)", Pattern.CASE_INSENSITIVE),  // Removed /* and */ to allow Accept: */*
+            Pattern.compile("('|(\\-\\-)|(;)|(\\|\\|))", Pattern.CASE_INSENSITIVE),  // Removed /* and */ to allow Accept: */*
             Pattern.compile("(\\bOR\\b\\s*\\d+\\s*=\\s*\\d+)", Pattern.CASE_INSENSITIVE),
-            Pattern.compile("(\\bOR\\b\\s*'[^']*'\\s*=\\s*'[^']*')", Pattern.CASE_INSENSITIVE)
+            Pattern.compile("(\\bOR\\b\\s*'[^']*'\\s*=\\s*'[^']*')", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("/\\*.*\\*/", Pattern.CASE_INSENSITIVE | Pattern.DOTALL)  // Only flag actual SQL comments with content
         );
 
         private static final List<Pattern> XSS_PATTERNS = Arrays.asList(
@@ -231,12 +232,13 @@ public class InputValidationConfig {
          * Check if header is a standard HTTP header.
          */
         private boolean isStandardHeader(String headerName) {
-            return headerName.startsWith("Accept") ||
-                   headerName.startsWith("Content-") ||
-                   headerName.equals("Host") ||
-                   headerName.equals("User-Agent") ||
-                   headerName.equals("Referer") ||
-                   headerName.equals("Origin");
+            String lowerHeader = headerName.toLowerCase();
+            return lowerHeader.startsWith("accept") ||
+                   lowerHeader.startsWith("content-") ||
+                   lowerHeader.equals("host") ||
+                   lowerHeader.equals("user-agent") ||
+                   lowerHeader.equals("referer") ||
+                   lowerHeader.equals("origin");
         }
 
         /**

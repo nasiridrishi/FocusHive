@@ -4,7 +4,7 @@ services:
   # PostgreSQL Database
   focushive-notification-service-postgres:
     image: postgres:15-alpine
-    container_name: focushive-notification-service-postgres
+    container_name: focushive-notification-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: notification_service
@@ -40,7 +40,7 @@ services:
   # Redis Cache
   focushive-notification-service-redis:
     image: redis:7-alpine
-    container_name: focushive-notification-service-redis
+    container_name: focushive-notification-redis
     restart: unless-stopped
     command: >
       redis-server
@@ -77,14 +77,15 @@ services:
   # RabbitMQ Message Broker
   focushive-notification-service-rabbitmq:
     image: rabbitmq:3.12-management-alpine
-    container_name: focushive-notification-service-rabbitmq
+    container_name: focushive-notification-rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_DEFAULT_VHOST: /
-    ports:
-      - "15673:15672"   # Management UI
+    # Ports commented out for security - RabbitMQ only accessible internally
+    # ports:
+    #   - "15673:15672"   # Management UI
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
@@ -114,8 +115,12 @@ services:
       dockerfile: Dockerfile
       target: production
     image: focushive/notification-service:latest
-    container_name: focushive-notification-service-app
+    container_name: focushive-notification-app
     restart: unless-stopped
+    networks:
+      focushive-shared-network:
+        aliases:
+          - notification-service
     depends_on:
       focushive-notification-service-postgres:
         condition: service_healthy
@@ -196,21 +201,27 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: false
 
       # Test mode (DISABLE IN PRODUCTION)
-      NOTIFICATION_TEST_ENABLED: "false"
+      NOTIFICATION_TEST_ENABLED: ${NOTIFICATION_TEST_ENABLED}
+
+      # Rate limiting (DISABLED FOR DEVELOPMENT - TODO: Enable for production)
+      RATE_LIMITING_ENABLED: ${RATE_LIMITING_ENABLED}
+
+      # Service API Keys for service-to-service authentication
+      SERVICE_API_KEY_IDENTITY: ${SERVICE_API_KEY_IDENTITY}
+      SERVICE_API_KEY_BACKEND: ${SERVICE_API_KEY_BACKEND}
+      SERVICE_API_KEY_BUDDY: ${SERVICE_API_KEY_BUDDY}
+      SERVICE_API_KEY_ADMIN: ${SERVICE_API_KEY_ADMIN}
 
       # JVM Memory settings
       JAVA_OPTS: "-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
+    # Ports exposed for testing
     ports:
       - "8083:8083"   # Application port
-      - "9091:9090"   # JMX port
+      # - "9091:9090"   # JMX port
     volumes:
       - ./logs:/app/logs
       - ./config:/app/config
-    networks:
-      # Using shared network to enable communication with identity-service, buddy-service, and focushive-backend
-      # This prevents network isolation that causes UnknownHostException between services
-      - focushive-shared-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 30s
@@ -229,11 +240,12 @@ services:
   # MailHog for email testing (development/testing only)
   focushive-notification-service-mailhog:
     image: mailhog/mailhog:latest
-    container_name: focushive-notification-service-mailhog
+    container_name: focushive-notification-mailhog
     restart: unless-stopped
-    ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+    # Ports commented out for security - only accessible internally
+    # ports:
+    #   - "1025:1025"  # SMTP
+    #   - "8025:8025"  # Web UI
     networks:
       # Using shared network to enable communication with other services if needed
       - focushive-shared-network
@@ -241,10 +253,38 @@ services:
       - dev
       - test
 
+  # Cloudflared Tunnel Service
+  focushive-notification-service-cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: focushive-notification-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
+    networks:
+      - focushive-shared-network
+    depends_on:
+      focushive-notification-service-app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "cloudflared", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
   # Prometheus for monitoring (optional)
   focushive-notification-service-prometheus:
     image: prom/prometheus:latest
-    container_name: focushive-notification-service-prometheus
+    container_name: focushive-notification-prometheus
     restart: unless-stopped
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -252,8 +292,9 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
-    ports:
-      - "9092:9090"
+    # Ports commented out for security - only accessible internally
+    # ports:
+    #   - "9092:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus

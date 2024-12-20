@@ -4,7 +4,7 @@
  */
 
 import type {PresenceStatus, UserPresence as BaseUserPresence} from '../../shared/types/presence';
-import type {Hive as BaseHive} from '../../shared/types/hive';
+import type {Hive as BaseHive, UpdateHiveRequest} from '../../shared/types/hive';
 import type {User as BaseUser} from '../../shared/types/auth';
 
 // Extended UserPresence with computed properties
@@ -164,21 +164,7 @@ export type CreateHiveMutation = MutationResult<
 export type UpdateHiveMutation = MutationResult<
   Hive,
   unknown,
-  { hiveId: string; updates: {
-    name?: string;
-    description?: string;
-    isPrivate?: boolean;
-    maxMembers?: number;
-    tags?: string[];
-    settings?: Partial<{
-      allowChat?: boolean;
-      allowVoice?: boolean;
-      requireApproval?: boolean;
-      focusMode?: 'pomodoro' | 'continuous' | 'flexible';
-      defaultSessionLength?: number;
-      maxSessionLength?: number;
-    }>;
-  }}
+  { hiveId: string; updates: UpdateHiveRequest }
 >;
 
 export type DeleteHiveMutation = MutationResult<void, unknown, string>;

@@ -1,12 +1,14 @@
 package com.focushive.identity.security.encryption;
 
-import lombok.RequiredArgsConstructor;
+import com.focushive.identity.entity.EncryptionKeyEntity;
+import com.focushive.identity.repository.EncryptionKeyRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +17,8 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -24,14 +28,22 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Implements secure key storage and rotation for GDPR compliance.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EncryptionKeyService {
+
+    private final EncryptionKeyRepository encryptionKeyRepository;
     
     private final ConcurrentHashMap<String, EncryptionKey> keyCache = new ConcurrentHashMap<>();
     private final ReadWriteLock keyRotationLock = new ReentrantReadWriteLock();
     private final SecureRandom secureRandom = new SecureRandom();
-    
+
+    /**
+     * Constructor with repository injection for persistence.
+     */
+    public EncryptionKeyService(EncryptionKeyRepository encryptionKeyRepository) {
+        this.encryptionKeyRepository = encryptionKeyRepository;
+    }
+
     @Value("${app.encryption.master-key}")
     private String masterKeyBase64;
     
@@ -49,9 +61,10 @@ public class EncryptionKeyService {
     
     /**
      * Initialize the encryption key service.
-     * Creates the initial key if none exists.
+     * Loads existing keys from database or creates the initial key if none exists.
      */
     @EventListener(ApplicationReadyEvent.class)
+    @Transactional
     public void initialize() {
         if (masterKeyBase64 == null || masterKeyBase64.isEmpty()) {
             throw new IllegalStateException("Master key not configured. Set app.encryption.master-key");
@@ -62,12 +75,18 @@ public class EncryptionKeyService {
         try {
             // Validate master key format
             validateMasterKey();
-            
+
+            // Load existing keys from database
+            loadExistingKeys();
+
             // Create initial key if none exists
             if (currentKeyVersion == null) {
+                log.info("No active encryption key found in database, creating new key");
                 createNewKey();
+            } else {
+                log.info("Loaded active encryption key version: {}", currentKeyVersion);
             }
-            
+
             // Clean up expired keys
             cleanupExpiredKeys();
             
@@ -79,7 +98,37 @@ public class EncryptionKeyService {
             throw new IllegalStateException("Encryption key service initialization failed", e);
         }
     }
-    
+
+    /**
+     * Load existing encryption keys from database into cache.
+     * Sets the current key version if an active key exists.
+     */
+    private void loadExistingKeys() {
+        log.debug("Loading existing encryption keys from database");
+
+        // Load all valid keys (active and not expired)
+        List<EncryptionKeyEntity> validKeys = encryptionKeyRepository.findValidKeys(Instant.now());
+
+        if (validKeys.isEmpty()) {
+            log.info("No valid encryption keys found in database");
+            return;
+        }
+
+        // Load keys into cache
+        for (EncryptionKeyEntity entity : validKeys) {
+            EncryptionKey key = entity.toDomainObject();
+            keyCache.put(key.getVersion(), key);
+
+            // Set current version if this is the active key
+            if (entity.isActive()) {
+                currentKeyVersion = key.getVersion();
+                log.info("Set current encryption key version: {}", currentKeyVersion);
+            }
+        }
+
+        log.info("Loaded {} encryption keys from database", validKeys.size());
+    }
+
     /**
      * Gets the current active encryption key.
      * 
@@ -227,19 +276,30 @@ public class EncryptionKeyService {
     }
     
     /**
-     * Creates a new encryption key and adds it to the cache.
-     * 
+     * Creates a new encryption key, persists it to database, and adds it to the cache.
+     *
      * @return new key version
      */
+    @Transactional
     private String createNewKey() {
         try {
             String version = generateKeyVersion();
             EncryptionKey key = deriveKeyFromMaster(version);
-            
+
+            // Persist to database
+            EncryptionKeyEntity entity = EncryptionKeyEntity.fromDomainObject(key);
+
+            // Deactivate any existing active keys
+            encryptionKeyRepository.deactivateAll();
+
+            // Save the new key as active
+            entity = encryptionKeyRepository.save(entity);
+
+            // Add to cache
             keyCache.put(version, key);
             currentKeyVersion = version;
-            
-            log.info("Created new encryption key with version: {}", version);
+
+            log.info("Created and persisted new encryption key with version: {}", version);
             return version;
             
         } catch (Exception e) {

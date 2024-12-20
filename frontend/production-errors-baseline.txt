@@ -1,0 +1,28 @@
+src/features/buddy/components/BuddyMatchingDialog.tsx(489,18): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(95,12): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(113,12): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(131,12): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(149,12): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(179,16): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(182,16): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(188,16): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(212,16): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(215,16): error TS2769: No overload matches this call.
+src/features/dashboard/pages/DashboardPage.tsx(221,16): error TS2769: No overload matches this call.
+src/features/gamification/components/GoalProgress.tsx(768,12): error TS2769: No overload matches this call.
+src/features/hive/components/HiveList.tsx(381,23): error TS2322: Type 'import("/Users/nasir/uol/focushive/workspaces/agent-3-ui/src/shared/types/hive").Hive' is not assignable to type 'import("/Users/nasir/uol/focushive/workspaces/agent-3-ui/src/features/hive/components/HiveCard").Hive'.
+src/features/hive/pages/HiveDetailPage.tsx(140,10): error TS2769: No overload matches this call.
+src/features/hive/pages/HiveDetailPage.tsx(198,10): error TS2769: No overload matches this call.
+src/features/hive/pages/HiveDetailPage.tsx(302,10): error TS2769: No overload matches this call.
+src/features/hive/pages/HiveDetailPage.tsx(331,37): error TS2339: Property 'user' does not exist on type 'UserPresence'.
+src/features/hive/pages/HiveDetailPage.tsx(332,37): error TS2339: Property 'user' does not exist on type 'UserPresence'.
+src/features/hive/pages/HiveDetailPage.tsx(334,34): error TS2339: Property 'user' does not exist on type 'UserPresence'.
+src/features/hive/pages/HiveDetailPage.tsx(334,56): error TS2339: Property 'user' does not exist on type 'UserPresence'.
+src/features/hive/pages/HiveDetailPage.tsx(339,37): error TS2339: Property 'user' does not exist on type 'UserPresence'.
+src/features/timer/components/SessionStats.tsx(308,25): error TS2322: Type 'Element' is not assignable to type 'string | number'.
+src/features/timer/components/SessionStats.tsx(326,25): error TS2322: Type 'Element' is not assignable to type 'string | number'.
+src/features/timer/components/SessionStats.tsx(335,25): error TS2322: Type 'Element' is not assignable to type 'string | number'.
+src/features/timer/components/SessionStats.tsx(432,21): error TS2322: Type 'Element' is not assignable to type 'string | number'.
+src/shared/ui/ConfirmDialog.tsx(47,9): error TS2322: Type '"sm"' is not assignable to type 'false | Breakpoint'.
+src/shared/ui/ConfirmDialog.tsx(49,9): error TS2322: Type '"md"' is not assignable to type 'false | Breakpoint'.
+src/shared/ui/ConfirmDialog.tsx(52,9): error TS2322: Type '"sm"' is not assignable to type 'false | Breakpoint'.

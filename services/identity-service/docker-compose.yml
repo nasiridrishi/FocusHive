@@ -1,4 +1,24 @@
 services:
+  # Cloudflare Tunnel - Provides secure access without exposing ports
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ${IDENTITY_APP_CONTAINER_NAME}-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - identity-network
+    depends_on:
+      focushive-identity-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "cloudflared", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   # PostgreSQL Database - ALL configuration from .env
   postgres:
     image: ${IDENTITY_POSTGRES_IMAGE}
@@ -17,7 +37,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
-      - ${IDENTITY_NETWORK_NAME}
+      - identity-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${IDENTITY_DB_USER} -d ${IDENTITY_DB_NAME}"]
       interval: ${IDENTITY_POSTGRES_HEALTHCHECK_INTERVAL}
@@ -53,7 +73,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - ${IDENTITY_NETWORK_NAME}
+      - identity-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${IDENTITY_REDIS_PASSWORD}", "ping"]
       interval: ${IDENTITY_REDIS_HEALTHCHECK_INTERVAL}
@@ -94,7 +114,9 @@ services:
       DB_PORT: ${IDENTITY_DB_PORT}
       DB_NAME: ${IDENTITY_DB_NAME}
       DB_USER: ${IDENTITY_DB_USER}
+      DB_USERNAME: ${IDENTITY_DB_USER}
       DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      DATABASE_PASSWORD: ${IDENTITY_DB_PASSWORD}
 
       # Redis configuration - ALL from .env
       REDIS_HOST: ${IDENTITY_REDIS_HOST}
@@ -108,6 +130,8 @@ services:
       JWT_ISSUER: ${JWT_ISSUER}
       JWT_ISSUER_URI: ${JWT_ISSUER_URI}
       JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
+      JWT_USE_RSA: ${JWT_USE_RSA}
+      JWT_RSA_KEY_ID: ${JWT_RSA_KEY_ID}
 
       # Security Keys - ALL from .env
       KEY_STORE_PASSWORD: ${KEY_STORE_PASSWORD}
@@ -131,6 +155,8 @@ services:
 
       # External service URLs - from .env
       NOTIFICATION_SERVICE_URL: ${IDENTITY_NOTIFICATION_SERVICE_URL}
+      # Secure API key for notification service authentication
+      NOTIFICATION_SERVICE_API_KEY: ${NOTIFICATION_SERVICE_API_KEY}
 
       # JVM Memory settings - from .env
       JAVA_OPTS: ${IDENTITY_JAVA_OPTS}
@@ -160,14 +186,18 @@ services:
       # CORS configuration - from .env
       CORS_ORIGINS: ${CORS_ORIGINS}
 
+    # Ports exposed for testing
     ports:
       - "${IDENTITY_PORT}:${IDENTITY_PORT}"
-      - "${IDENTITY_APP_JMX_PORT}:${IDENTITY_APP_JMX_PORT}"
+      # - "${IDENTITY_APP_JMX_PORT}:${IDENTITY_APP_JMX_PORT}"
     volumes:
       - ${IDENTITY_APP_LOGS_PATH}:/app/logs
       - ${IDENTITY_APP_CONFIG_PATH}:/app/config
     networks:
-      - ${IDENTITY_NETWORK_NAME}
+      identity-network:
+        aliases:
+          - identity-service
+          - focushive-identity-service
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${IDENTITY_PORT}${IDENTITY_APP_HEALTHCHECK_ENDPOINT}"]
       interval: ${IDENTITY_APP_HEALTHCHECK_INTERVAL}
@@ -184,8 +214,8 @@ services:
           memory: ${IDENTITY_APP_MEMORY_RESERVATION}
 
 networks:
-  focushive-shared-network:
-    external: true
+  identity-network:
+    driver: bridge
     name: ${IDENTITY_NETWORK_NAME}
 
 volumes:

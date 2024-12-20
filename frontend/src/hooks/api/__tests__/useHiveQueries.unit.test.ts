@@ -100,7 +100,7 @@ describe('useHiveDetails Authorization Logic Unit Tests', () => {
       const members = [
         {id: 'user-123', username: 'testuser', email: 'test@example.com'},
         {id: 'user-456', username: 'other', email: 'other@example.com'}
-      ] as Array<{id: string; username: string; email: string}>
+      ].map(member => ({ id: member.id })) as Array<{id: string}>
       const result = calculateAuthorization('user-123', 'user-789', members)
       expect(result.isOwner).toBe(false)
       expect(result.isMember).toBe(true)

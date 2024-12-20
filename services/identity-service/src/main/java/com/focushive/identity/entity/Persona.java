@@ -144,7 +144,7 @@ public class Persona extends BaseEncryptedEntity {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class PrivacySettings {
+    public static class PrivacySettings implements java.io.Serializable {
         
         @Builder.Default
         @Column(name = "show_real_name", nullable = false)

@@ -74,7 +74,7 @@ export const LazyAnalyticsDashboard = createLazyFeature(
 )
 
 export const LazyProductivityChart = createLazyFeature(
-    () => import('@features/analytics/components/ProductivityChart').then(module => ({default: module.ProductivityChart})),
+    () => import('@features/analytics/components/ProductivityChart'),
     'Productivity Chart',
     300
 )

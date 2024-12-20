@@ -169,6 +169,7 @@ const GoalsList: React.FC<{
             <React.Fragment key={goal.id}>
               <ListItem
                   sx={{px: 0}}
+                  data-testid={`goal-${goal.id}`}
                   secondaryAction={
                     <Chip
                         label={goal.priority}
@@ -185,7 +186,7 @@ const GoalsList: React.FC<{
                       size="small"
                   >
                     {goal.isCompleted ? (
-                        <CheckCircle color="success"/>
+                        <CheckCircle data-testid="CheckIcon" color="success"/>
                     ) : (
                         <RadioButtonUnchecked color="action"/>
                     )}
@@ -282,12 +283,12 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
   }
 
   return (
-      <Box>
+      <Box data-testid="session-stats" role="region" aria-label="Session Statistics" className={`session-stats-${showGoals ? 'full' : 'compact'}`}>
         {/* Current Session Stats */}
         {currentSession && (
             <Card sx={{mb: 3}}>
               <CardHeader
-                  title="Current Session"
+                  title="Session Summary"
                   subheader={`Started ${new Date(currentSession.date).toLocaleDateString()}`}
                   avatar={
                     <Avatar sx={{bgcolor: 'primary.main'}}>
@@ -303,9 +304,9 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
                 }}>
                   <Box>
                     <StatCard
-                        title="Current Cycle"
-                        value={`${timerState.currentCycle}/${currentSession.targetCycles}`}
-                        subtitle="Pomodoros"
+                        title="Completed Cycles"
+                        value={timerState.currentCycle}
+                        subtitle={`${timerState.currentCycle}/${currentSession.targetCycles} Pomodoros`}
                         icon={<Timer/>}
                         color="primary"
                     />
@@ -321,7 +322,7 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
                   </Box>
                   <Box>
                     <StatCard
-                        title="Goals Progress"
+                        title="Session Goals"
                         value={`${sessionProgress?.completedGoals || 0}/${sessionProgress?.totalGoals || 0}`}
                         subtitle={`${Math.round(sessionProgress?.goalProgress || 0)}% complete`}
                         icon={<CheckCircle/>}
@@ -349,13 +350,16 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
                       <Stack direction="row" justifyContent="space-between" alignItems="center"
                              mb={1}>
                         <Typography variant="body2">Cycle Progress</Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" data-testid="productivity-score">
                           {Math.round(sessionProgress?.cycleProgress || 0)}%
                         </Typography>
                       </Stack>
                       <LinearProgress
+                          data-testid="productivity-progress"
                           variant="determinate"
                           value={sessionProgress?.cycleProgress || 0}
+                          aria-label={`Productivity: ${Math.round(sessionProgress?.cycleProgress || 0)}%`}
+                          color={sessionProgress?.cycleProgress >= 75 ? 'success' : sessionProgress?.cycleProgress >= 50 ? 'warning' : 'error'}
                           sx={{height: 8, borderRadius: 4}}
                       />
                     </Box>

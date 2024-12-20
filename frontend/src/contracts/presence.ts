@@ -6,7 +6,10 @@
  * across hives and sessions.
  */
 
-import { PresenceStatus } from './websocket';
+import { PresenceStatus, PresenceUpdate } from './websocket';
+
+// Re-export WebSocket types
+export type { PresenceStatus, PresenceUpdate } from './websocket';
 
 /**
  * User activity types
@@ -47,6 +50,8 @@ export type DeviceType =
  */
 export interface UserPresence {
   userId: string;
+  username?: string;  // Add missing property
+  avatar?: string;    // Add missing property
   status: PresenceStatus;
   focusLevel: FocusLevel;
   lastSeen: string;
@@ -61,6 +66,13 @@ export interface UserPresence {
     browser?: string;
     os?: string;
   };
+  deviceInfo?: {  // Add alias for device
+    type?: DeviceType;
+    id?: string;
+    name?: string;
+    browser?: string;
+    os?: string;
+  };
   location?: {
     timezone: string;
     country?: string;
@@ -71,6 +83,7 @@ export interface UserPresence {
     message?: string;
     expiresAt?: string;
   };
+  metadata?: Record<string, any>;  // Add missing property
 }
 
 /**
@@ -281,3 +294,39 @@ export interface PresenceContextMethods {
  * Complete Presence context type
  */
 export interface PresenceContextType extends PresenceContextState, PresenceContextMethods {}
+
+// Aliases and additional types for compatibility with hooks
+export type PresenceSearchParams = {
+  userId?: string;
+  hiveId?: string;
+  status?: PresenceStatus;
+  startDate?: string;
+  endDate?: string;
+};
+export type PresenceHistoryEntry = PresenceEvent;
+export type PresenceStatistics = PresenceAnalytics;
+export type PresenceUpdateRequest = UpdatePresenceRequest; // Renamed to avoid websocket conflict
+export type CollaborationSession = FocusSession;
+export type UserStatusHistory = PresenceHistory;
+export type PresenceConfig = PresenceSettings;
+export type BulkPresenceRequest = {
+  userIds: string[];
+  includeActivity?: boolean;
+};
+export type ActivityType = UserActivityType; // Alias for hooks
+export type UserActivity = UserActivityType; // Another alias
+export type SetPresenceRequest = UpdatePresenceRequest; // Legacy alias
+export type DeviceInfo = UserPresence['device'];
+export type PresenceNotification = {
+  id: string;
+  userId: string;
+  type: 'status_changed' | 'focus_started' | 'focus_ended';
+  message: string;
+  timestamp: string;
+};
+export type PresenceWebSocketEvent = {
+  type: 'presence_update' | 'focus_session' | 'heartbeat';
+  userId: string;
+  data: any;
+  timestamp: string;
+};

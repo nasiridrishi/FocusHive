@@ -145,8 +145,29 @@ public class AuthenticationService {
         String ipAddress = getClientIpAddress();
 
         // Find user first to check lockout status
-        User user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
-                .orElse(null);
+        User user = null;
+        String usernameOrEmail = request.getUsernameOrEmail();
+
+        // Check if the input looks like an email
+        if (isValidEmail(usernameOrEmail)) {
+            // It's an email - need to use hash-based lookup for encrypted emails
+            if (encryptionService != null) {
+                try {
+                    String emailHash = encryptionService.hash(usernameOrEmail.toLowerCase());
+                    user = userRepository.findByEmailHash(emailHash).orElse(null);
+                } catch (Exception e) {
+                    log.debug("Hash-based email lookup failed: {}", e.getMessage());
+                    // Fallback to direct email lookup for test environments
+                    user = userRepository.findByEmail(usernameOrEmail).orElse(null);
+                }
+            } else {
+                // Encryption service not available (test mode), use direct lookup
+                user = userRepository.findByEmail(usernameOrEmail).orElse(null);
+            }
+        } else {
+            // It's a username
+            user = userRepository.findByUsername(usernameOrEmail).orElse(null);
+        }
 
         if (user != null) {
             // Check account lockout status before authentication attempt

@@ -9,7 +9,7 @@
  */
 
 import {useInfiniteQuery, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {hiveApiService} from '@services/api';
+import hiveApiService from '@services/api/hiveApi';
 import {CACHE_TIMES, invalidateQueries, queryKeys, STALE_TIMES} from '@lib/queryClient';
 import {type HiveDTO, transformHiveDTO} from './transformers';
 import {useAuth} from './useAuthQueries';

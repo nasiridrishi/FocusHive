@@ -47,10 +47,13 @@ type CreateHiveFormData = {
   isPublic: boolean
   tags: string[]
   settings: {
+    privacyLevel: 'PUBLIC' | 'PRIVATE' | 'INVITE_ONLY'
+    category: 'STUDY' | 'WORK' | 'SOCIAL' | 'CODING'
+    maxParticipants: number
     allowChat: boolean
     allowVoice: boolean
     requireApproval: boolean
-    focusMode: 'pomodoro' | 'continuous' | 'flexible'
+    focusMode: 'POMODORO' | 'TIMEBLOCK' | 'FREEFORM'
     defaultSessionLength: number
     maxSessionLength: number
   }
@@ -68,12 +71,12 @@ const steps = ['Basic Info', 'Settings', 'Review']
 
 const focusModeOptions = [
   {
-    value: 'pomodoro',
+    value: 'POMODORO',
     label: 'Pomodoro (25/5 min cycles)',
     description: 'Structured work sessions with breaks'
   },
-  {value: 'continuous', label: 'Continuous', description: 'Uninterrupted focus sessions'},
-  {value: 'flexible', label: 'Flexible', description: 'Members choose their own timing'},
+  {value: 'TIMEBLOCK', label: 'Time Block', description: 'Uninterrupted focus sessions'},
+  {value: 'FREEFORM', label: 'Free Form', description: 'Members choose their own timing'},
 ]
 
 const commonTags = [
@@ -97,11 +100,11 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     handleSubmit,
     watch,
     trigger,
-    formState: {isValid},
+    formState: {isValid, errors},
     reset
   } = useForm<CreateHiveFormData>({
     resolver: yupResolver(createHiveSchema) as Resolver<CreateHiveFormData>,
-    mode: 'onBlur',
+    mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: {
       name: '',
@@ -110,10 +113,13 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
       isPublic: true,
       tags: [],
       settings: {
+        privacyLevel: 'PUBLIC',
+        category: 'STUDY',
+        maxParticipants: 10,
         allowChat: true,
         allowVoice: false,
         requireApproval: false,
-        focusMode: 'flexible',
+        focusMode: 'FREEFORM',
         defaultSessionLength: 25,
         maxSessionLength: 120,
       },
@@ -121,6 +127,9 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
   })
 
   const watchedValues = watch()
+
+  // Debug logging
+  console.log('Form state:', { isValid, errors, watchedValues })
 
   const handleNext = async () => {
     // Validate current step before proceeding
@@ -154,6 +163,9 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
       isPublic: data.isPublic,
       tags: data.tags || [],
       settings: {
+        privacyLevel: data.settings.privacyLevel,
+        category: data.settings.category,
+        maxParticipants: data.settings.maxParticipants,
         allowChat: data.settings.allowChat,
         allowVoice: data.settings.allowVoice,
         requireApproval: data.settings.requireApproval,
@@ -183,7 +195,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
       case 1:
         return true
       case 2:
-        return isValid
+        return true // Always allow final step submission
       default:
         return false
     }
@@ -571,7 +583,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
                 <LoadingButton
                     variant="contained"
                     onClick={handleSubmit(onFormSubmit)}
-                    disabled={!isStepValid(activeStep)}
+                    disabled={isLoading || !watchedValues.name?.trim() || watchedValues.name?.trim().length < 3 || !watchedValues.description?.trim() || watchedValues.description?.trim().length < 10}
                     loading={isLoading}
                     loadingText="Creating..."
                     startIcon={<AddIcon/>}

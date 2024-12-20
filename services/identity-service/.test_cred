@@ -1,0 +1,58 @@
+# FocusHive Test Credentials
+# Generated: 2025-09-20
+# Expiration: 30 days from generation
+# Algorithm: RS256 (RSA with SHA-256)
+# Key ID: focushive-2025-01
+# WARNING: Do not commit this file to version control
+
+## JWT TOKENS (30-day expiration, RS256-signed)
+
+### Admin/Service Account Token
+ADMIN_TOKEN=eyJhbGciOiJSUzI1NiIsImtpZCI6ImZvY3VzaGl2ZS0yMDI1LTAxIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzZXJ2aWNlLW5vdGlmaWNhdGlvbiIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MS9pZGVudGl0eSIsImF1ZCI6ImZvY3VzaGl2ZS1hcGkiLCJ0eXBlIjoic2VydmljZS1hY2NvdW50Iiwic2VydmljZSI6Im5vdGlmaWNhdGlvbi1zZXJ2aWNlLXRlc3QiLCJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9NT05JVE9SIiwiUk9MRV9TRVJWSUNFIl0sInBlcm1pc3Npb25zIjpbIm5vdGlmaWNhdGlvbi5zZW5kIiwibm90aWZpY2F0aW9uLm1hbmFnZSIsIm1ldHJpY3MucmVhZCIsImFkbWluLmFsbCJdLCJpYXQiOjE3NTgzOTMwMDIsImV4cCI6MTc2MDk4NTAwMn0.rivjjhkJAVDUmCzS_iqpTAGWuYTkMSU-3e5BLQjkLedhOs8rwayA5LA5c1C5gD2kunGH0S06LkFTQZLii1f6fxJmQOxY4rfETEltktcXCdRP3bAE85sdkaqfFCkSJxUUbQEnX-_qiDijvbdOmk5SZDEqY-RU3GJkysJcW755Qr2U5IDY9vBZ3FBvxBPpYb-ist2lOKEcFz6w93--DHfZvD6_P_aEx7Lw7BjBK3XL4IZTCf2fFY7zOu722vK1XkwinV02PQOCSt9wO0_cs_v60K4-ai_zdydD6X0KIp9cF6HD4oLzKWhAJDoM2mTympWjSJGnEeVp0ix2ZcJLXT18wQ
+
+# Admin Token Claims:
+# - type: service-account
+# - service: notification-service-test
+# - roles: ["ROLE_ADMIN", "ROLE_MONITOR", "ROLE_SERVICE"]
+# - permissions: ["notification.send", "notification.manage", "metrics.read", "admin.all"]
+# - subject: service-notification
+
+### User Token
+USER_TOKEN=eyJhbGciOiJSUzI1NiIsImtpZCI6ImZvY3VzaGl2ZS0yMDI1LTAxIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyLTEyMyIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MS9pZGVudGl0eSIsImF1ZCI6ImZvY3VzaGl2ZS1hcGkiLCJ0eXBlIjoidXNlciIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInBlcm1pc3Npb25zIjpbIm5vdGlmaWNhdGlvbi5yZWNlaXZlIiwicHJvZmlsZS5yZWFkIiwicHJvZmlsZS51cGRhdGUiXSwiaWF0IjoxNzU4MzkzMDAyLCJleHAiOjE3NjA5ODUwMDJ9.sqVciIIc3K7RoCAbA6fc_fAA2Pvt_vXMHiWbz9IC5_l6jAHmprvTTxt5djp-wZ5G9QiB3XOG7kWqo3YLMjDluAhdEzMGbN4W3uu_4zZLgf28Rl7gWd_PVsXXc1HI9TjksyBH_m6w3TTJu97lNLp_XNFFjVEXBbivEDftIKhJAf_2ZnrA4hWjBR_qY1uect-Y4cBfMY03ZalAfD2-Bmghk6yqP4Tfe-jcqtVnAB0fS4o0_raJix9DxYoCBs3iNqqedm9jK2ooERRL2I78lnmRdpX1q058k9k5YfDRJlbGCUJg2zfpSg_JUOQedWlTHhsEuUhXencE2-7yQ8y5SJ6Hng
+
+# User Token Claims:
+# - type: user
+# - username: testuser
+# - email: testuser@example.com
+# - roles: ["ROLE_USER"]
+# - permissions: ["notification.receive", "profile.read", "profile.update"]
+# - subject: user-123
+
+## USAGE WITH CURL
+
+# Admin request example:
+# curl -H "Authorization: Bearer $ADMIN_TOKEN" http://localhost:8083/api/admin/stats
+
+# User request example:
+# curl -H "Authorization: Bearer $USER_TOKEN" http://localhost:8083/api/notifications
+
+## FULL AUTHORIZATION HEADERS
+
+ADMIN_AUTH_HEADER="Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImZvY3VzaGl2ZS0yMDI1LTAxIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzZXJ2aWNlLW5vdGlmaWNhdGlvbiIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MS9pZGVudGl0eSIsImF1ZCI6ImZvY3VzaGl2ZS1hcGkiLCJ0eXBlIjoic2VydmljZS1hY2NvdW50Iiwic2VydmljZSI6Im5vdGlmaWNhdGlvbi1zZXJ2aWNlLXRlc3QiLCJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9NT05JVE9SIiwiUk9MRV9TRVJWSUNFIl0sInBlcm1pc3Npb25zIjpbIm5vdGlmaWNhdGlvbi5zZW5kIiwibm90aWZpY2F0aW9uLm1hbmFnZSIsIm1ldHJpY3MucmVhZCIsImFkbWluLmFsbCJdLCJpYXQiOjE3NTgzOTMwMDIsImV4cCI6MTc2MDk4NTAwMn0.rivjjhkJAVDUmCzS_iqpTAGWuYTkMSU-3e5BLQjkLedhOs8rwayA5LA5c1C5gD2kunGH0S06LkFTQZLii1f6fxJmQOxY4rfETEltktcXCdRP3bAE85sdkaqfFCkSJxUUbQEnX-_qiDijvbdOmk5SZDEqY-RU3GJkysJcW755Qr2U5IDY9vBZ3FBvxBPpYb-ist2lOKEcFz6w93--DHfZvD6_P_aEx7Lw7BjBK3XL4IZTCf2fFY7zOu722vK1XkwinV02PQOCSt9wO0_cs_v60K4-ai_zdydD6X0KIp9cF6HD4oLzKWhAJDoM2mTympWjSJGnEeVp0ix2ZcJLXT18wQ"
+
+USER_AUTH_HEADER="Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6ImZvY3VzaGl2ZS0yMDI1LTAxIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyLTEyMyIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MS9pZGVudGl0eSIsImF1ZCI6ImZvY3VzaGl2ZS1hcGkiLCJ0eXBlIjoidXNlciIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwicm9sZXMiOlsiUk9MRV9VU0VSIl0sInBlcm1pc3Npb25zIjpbIm5vdGlmaWNhdGlvbi5yZWNlaXZlIiwicHJvZmlsZS5yZWFkIiwicHJvZmlsZS51cGRhdGUiXSwiaWF0IjoxNzU4MzkzMDAyLCJleHAiOjE3NjA5ODUwMDJ9.sqVciIIc3K7RoCAbA6fc_fAA2Pvt_vXMHiWbz9IC5_l6jAHmprvTTxt5djp-wZ5G9QiB3XOG7kWqo3YLMjDluAhdEzMGbN4W3uu_4zZLgf28Rl7gWd_PVsXXc1HI9TjksyBH_m6w3TTJu97lNLp_XNFFjVEXBbivEDftIKhJAf_2ZnrA4hWjBR_qY1uect-Y4cBfMY03ZalAfD2-Bmghk6yqP4Tfe-jcqtVnAB0fS4o0_raJix9DxYoCBs3iNqqedm9jK2ooERRL2I78lnmRdpX1q058k9k5YfDRJlbGCUJg2zfpSg_JUOQedWlTHhsEuUhXencE2-7yQ8y5SJ6Hng"
+
+## TESTED ENDPOINTS
+
+# ✅ Public endpoints (no auth required):
+# GET http://localhost:8083/api/metrics
+
+# ✅ Admin endpoints (require ROLE_ADMIN):
+# GET http://localhost:8083/api/admin/stats
+# GET http://localhost:8083/api/metrics/security
+
+# ✅ Monitor endpoints (require ROLE_ADMIN or ROLE_MONITOR):
+# GET http://localhost:8083/api/metrics/summary
+# GET http://localhost:8083/api/metrics/cache
+# GET http://localhost:8083/api/metrics/notifications
+# GET http://localhost:8083/api/metrics/performance

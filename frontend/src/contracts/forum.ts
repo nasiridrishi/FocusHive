@@ -16,10 +16,11 @@ export type ReactionType = 'like' | 'helpful' | 'insightful' | 'celebrate' | 'lo
  * Forum post entity
  */
 export interface ForumPost {
-  id: number;
-  userId: number;
-  hiveId?: number | null;           // Optional association with a hive
+  id: string | number;
+  userId: string | number;
+  hiveId?: string | number | null;   // Optional association with a hive
   title: string;
+  slug: string;                      // URL-friendly identifier
   content: string;
   type: PostType;
   status: PostStatus;
@@ -30,12 +31,13 @@ export interface ForumPost {
   isPinned: boolean;
   isFeatured: boolean;
   isAnswered?: boolean;              // For question type posts
-  acceptedReplyId?: number | null;   // ID of accepted answer
+  acceptedReplyId?: string | number | null;   // ID of accepted answer
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  replies?: ForumReply[];            // Add missing replies property
   author: {
-    id: number;
+    id: string | number;
     username: string;
     avatarUrl?: string;
     reputation?: number;
@@ -52,10 +54,11 @@ export interface ForumPost {
  * Forum reply/comment entity
  */
 export interface ForumReply {
-  id: number;
-  postId: number;
-  userId: number;
-  parentId?: number | null;     // For nested replies
+  id: string | number;
+  postId: string | number;
+  userId: string | number;
+  parentId?: string | number | null; // For nested replies
+  parentReplyId?: string | number | null; // Alias for parentId
   content: string;
   status: ReplyStatus;
   likeCount: number;
@@ -64,7 +67,7 @@ export interface ForumReply {
   editedAt?: string | null;
   createdAt: string;
   author: {
-    id: number;
+    id: string | number;
     username: string;
     avatarUrl?: string;
     reputation?: number;
@@ -84,7 +87,8 @@ export interface CreatePostRequest {
   title: string;
   content: string;
   type: PostType;
-  hiveId?: number | null;
+  hiveId?: string | number | null;
+  categoryId?: string | number; // Add categoryId support
   tags?: string[];
   isDraft?: boolean;
 }
@@ -104,9 +108,10 @@ export interface UpdatePostRequest {
  * Create reply request
  */
 export interface CreateReplyRequest {
-  postId: number;
+  postId: string | number;
   content: string;
-  parentId?: number | null;
+  parentId?: string | number | null;
+  parentReplyId?: string | number | null; // Alias for parentId
 }
 
 /**
@@ -124,7 +129,7 @@ export interface ForumSearchParams {
   type?: PostType;
   tags?: string[];
   author?: string;
-  hiveId?: number;
+  hiveId?: string | number;
   status?: PostStatus;
   sortBy?: 'recent' | 'popular' | 'trending' | 'unanswered';
   page?: number;
@@ -205,7 +210,7 @@ export interface ModerationAction {
  */
 export interface FlagContentRequest {
   targetType: 'post' | 'reply';
-  targetId: number;
+  targetId: string | number;
   reason: 'spam' | 'inappropriate' | 'offensive' | 'misinformation' | 'other';
   description?: string;
 }
@@ -215,7 +220,7 @@ export interface FlagContentRequest {
  */
 export interface ReactionRequest {
   targetType: 'post' | 'reply';
-  targetId: number;
+  targetId: string | number;
   type: ReactionType;
 }
 
@@ -326,4 +331,44 @@ export interface ForumPreferences {
   digestFrequency: 'daily' | 'weekly' | 'never';
   defaultPostType: PostType;
   defaultSortOrder: 'recent' | 'popular' | 'trending';
+}
+
+/**
+ * Additional buddy-compatible types for forum operations
+ */
+export interface ForumCreateReplyRequest {
+  content: string;
+  postId: string | number;
+  parentReplyId?: string | number;
+  attachments?: File[];
+}
+
+/**
+ * Forum user for compatibility with buddy system
+ */
+export interface ForumUser {
+  id: string | number;
+  username: string;
+  avatar?: string;
+  role: 'USER' | 'MODERATOR' | 'ADMIN' | 'member';
+  joinDate?: string;
+  postCount?: number;
+  reputation?: number;
+  badges?: string[];
+}
+
+/**
+ * Extended forum post with replies
+ */
+export interface ExtendedForumPost extends ForumPost {
+  replies: ForumReply[];
+  author: ForumUser;
+}
+
+/**
+ * Extended forum reply with user info
+ */
+export interface ExtendedForumReply extends ForumReply {
+  author: ForumUser;
+  parentReplyId?: string | number | null;
 }

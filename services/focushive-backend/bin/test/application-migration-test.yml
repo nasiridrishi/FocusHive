@@ -1,0 +1,159 @@
+# =======================================================
+# MIGRATION TEST CONFIGURATION
+# =======================================================
+# This configuration is specifically for testing database migrations
+# with TestContainers PostgreSQL and Flyway enabled
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+  # =======================================================
+  # DISABLE MOST FEATURES FOR MIGRATION-FOCUSED TESTING
+  # =======================================================
+  autoconfigure:
+    exclude:
+      # Disable Redis and external services for migration tests
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketMessagingAutoConfiguration
+      - org.springframework.boot.autoconfigure.websocket.reactive.WebSocketReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.cloud.openfeign.FeignAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+
+  # =======================================================
+  # DATABASE CONFIGURATION - WILL BE OVERRIDDEN BY TESTCONTAINERS
+  # =======================================================
+  datasource:
+    # Default configuration - TestContainers will override these
+    url: jdbc:postgresql://localhost:5432/migration_test
+    username: test_user
+    password: test_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 600000
+
+  # =======================================================
+  # JPA CONFIGURATION FOR MIGRATION TESTING
+  # =======================================================
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Validate against migrated schema
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false  # Keep logs clean unless debugging
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        use_sql_comments: false
+        temp.use_jdbc_metadata_defaults: false
+        # Disable caching for tests
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+    defer-datasource-initialization: false  # Let Flyway handle initialization
+
+  # =======================================================
+  # FLYWAY CONFIGURATION FOR MIGRATION TESTING
+  # =======================================================
+  flyway:
+    enabled: true  # ENABLE FLYWAY FOR MIGRATION TESTS
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    mixed: true  # Allow mixed transactional and non-transactional statements
+    clean-disabled: false  # Allow cleaning for tests
+    group: true  # Group migrations for better error reporting
+
+  # Disable cache for migration tests
+  cache:
+    type: none
+
+# =======================================================
+# APPLICATION FEATURES - MINIMAL FOR MIGRATION TESTS
+# =======================================================
+app:
+  version: migration-test-1.0.0
+  features:
+    # Disable all optional features for migration-focused tests
+    forum:
+      enabled: false
+    buddy:
+      enabled: false
+    analytics:
+      enabled: false
+    authentication:
+      enabled: false
+    redis:
+      enabled: false
+    health:
+      enabled: false
+    websocket:
+      enabled: false
+
+# =======================================================
+# SERVER CONFIGURATION
+# =======================================================
+server:
+  port: 0  # Random port for tests
+
+# =======================================================
+# LOGGING CONFIGURATION FOR MIGRATION TESTS
+# =======================================================
+logging:
+  level:
+    root: WARN
+    com.focushive: INFO
+    org.springframework: WARN
+    org.springframework.boot: WARN
+    org.flywaydb: INFO  # Enable Flyway logs for migration tests
+    org.hibernate: WARN
+    org.postgresql: WARN
+    org.testcontainers: INFO  # TestContainers logs
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [MIGRATION-TEST] %logger{36} - %msg%n"
+
+# =======================================================
+# DISABLE EXTERNAL SERVICES AND RESILIENCE FEATURES
+# =======================================================
+management:
+  endpoints:
+    enabled-by-default: false
+  metrics:
+    export:
+      prometheus:
+        enabled: false
+  tracing:
+    enabled: false
+    sampling:
+      probability: 0.0
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      identity-service:
+        enabled: false
+  retry:
+    instances:
+      identity-service:
+        enabled: false
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 1000
+        readTimeout: 2000
+        loggerLevel: none
+  circuitbreaker:
+    enabled: false

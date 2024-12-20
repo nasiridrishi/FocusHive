@@ -382,14 +382,51 @@ public class NotificationServiceImpl implements NotificationService {
             }
         }
         
-        // Convert data map to JSON string
-        String dataJson = "{}";
+        // Combine data and metadata into a single data structure
+        Map<String, Object> combinedData = new HashMap<>();
+        
+        // Add data from request
         if (request.getData() != null && !request.getData().isEmpty()) {
+            combinedData.putAll(request.getData());
+        }
+        
+        // Add metadata from request (if it exists)
+        // ROUTING FIX: Handle metadata field as Map since identity-service sends it as generic metadata
+        if (request.getMetadata() != null) {
             try {
-                dataJson = objectMapper.writeValueAsString(request.getData());
-            } catch (JsonProcessingException e) {
-                log.warn("Failed to serialize notification data: {}", e.getMessage());
+                // Convert NotificationMetadata to Map for processing
+                String metadataJson = objectMapper.writeValueAsString(request.getMetadata());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> metadataMap = objectMapper.readValue(metadataJson, Map.class);
+                log.info("METADATA DEBUG: Processing metadata as Map: {}", metadataMap);
+                combinedData.putAll(metadataMap);
+            } catch (Exception e) {
+                log.error("METADATA DEBUG: Failed to process metadata: {}", e.getMessage(), e);
             }
+        }
+        
+        // Add raw metadata map from request (if it exists)
+        if (request.getMetadataMap() != null && !request.getMetadataMap().isEmpty()) {
+            // Add all raw metadata directly to combined data
+            combinedData.putAll(request.getMetadataMap());
+            log.info("METADATA DEBUG: Added metadataMap with keys: {} and values: {}", 
+                    request.getMetadataMap().keySet(), request.getMetadataMap());
+        } else {
+            log.warn("METADATA DEBUG: MetadataMap is null or empty: {}", request.getMetadataMap());
+        }
+        
+        // Convert combined data to JSON string
+        String dataJson = "{}";
+        log.info("METADATA DEBUG: Final combinedData before serialization: {}", combinedData);
+        if (!combinedData.isEmpty()) {
+            try {
+                dataJson = objectMapper.writeValueAsString(combinedData);
+                log.info("METADATA DEBUG: Successfully serialized to JSON: {}", dataJson);
+            } catch (JsonProcessingException e) {
+                log.error("METADATA DEBUG: Failed to serialize notification data: {}", e.getMessage(), e);
+            }
+        } else {
+            log.warn("METADATA DEBUG: CombinedData is empty, using default '{}'");
         }
         
         Notification notification = Notification.builder()
@@ -414,19 +451,59 @@ public class NotificationServiceImpl implements NotificationService {
 
     private void publishNotificationEvent(Notification notification, NotificationPreference preference) {
         try {
-            Map<String, Object> event = new HashMap<>();
-            event.put("notificationId", notification.getId());
-            event.put("userId", notification.getUserId());
-            event.put("type", notification.getType().name());
-            event.put("inAppEnabled", preference.getInAppEnabled());
-            event.put("emailEnabled", preference.getEmailEnabled());
-            event.put("pushEnabled", preference.getPushEnabled());
+            // Build comprehensive notification message with email fields
+            com.focushive.notification.messaging.dto.NotificationMessage message = com.focushive.notification.messaging.dto.NotificationMessage.builder()
+                .notificationId(notification.getId())
+                .userId(notification.getUserId())
+                .type(notification.getType())
+                .title(notification.getTitle())
+                .message(notification.getContent())
+                .priority(notification.getPriority() != null ? notification.getPriority().ordinal() + 1 : 5)
+                .data(parseDataField(notification.getData()))
+                .actionUrl(notification.getActionUrl())
+                .urgent(notification.getPriority() == Notification.NotificationPriority.URGENT)
+                .timestamp(notification.getCreatedAt())
+                // CRITICAL: Email-specific fields for email delivery
+                .emailTo(extractEmailFromNotification(notification))
+                .emailSubject(notification.getTitle()) // Use title as email subject
+                .emailFrom(getDefaultFromEmail())
+                .templateId(null) // Template ID not available in Notification entity
+                .templateVariables(parseTemplateVariables(notification))
+                .correlationId(generateCorrelationId())
+                .build();
+
+            // ROUTING FIX: Route to appropriate queue based on message content
+            String routingKey;
+            String queueType;
             
-            rabbitTemplate.convertAndSend(notificationExchange, notificationRoutingKey, event);
-            log.debug("Published notification event for notification {}", notification.getId());
+            if (message.getEmailTo() != null && !message.getEmailTo().trim().isEmpty()) {
+                // Route to email queue for AsyncEmailNotificationHandler to process
+                routingKey = "notification.email.send";
+                queueType = "email";
+                log.debug("Routing notification {} to EMAIL queue (recipient: {})", 
+                        notification.getId(), message.getEmailTo());
+            } else if (message.isUrgent() || notification.getPriority() == Notification.NotificationPriority.URGENT) {
+                // Route urgent notifications to priority queue
+                routingKey = "notification.priority.high";
+                queueType = "priority";
+                log.debug("Routing notification {} to PRIORITY queue", notification.getId());
+            } else {
+                // Route to default notification queue
+                routingKey = notificationRoutingKey;
+                queueType = "default";
+                log.debug("Routing notification {} to DEFAULT queue", notification.getId());
+            }
+
+            // Send to RabbitMQ with appropriate routing
+            rabbitTemplate.convertAndSend(notificationExchange, routingKey, message);
+            
+            log.info("Notification message published to {} queue: {} with routing key: {}", 
+                    queueType, notification.getId(), routingKey);
+            
         } catch (Exception e) {
-            log.error("Failed to publish notification event: {}", e.getMessage(), e);
-            // Don't fail the notification creation if queue publishing fails
+            log.error("Failed to publish notification event for {}: {}", 
+                    notification.getId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to publish notification event", e);
         }
     }
 
@@ -494,6 +571,87 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         return successCount;
+    }
+
+    // Helper methods for email field processing
+    
+    private String extractEmailFromNotification(Notification notification) {
+        // Try to get email from notification data (which now includes metadata)
+        if (notification.getData() != null) {
+            try {
+                Map<String, Object> data = objectMapper.readValue(notification.getData(), Map.class);
+                
+                // Check for userEmail in data
+                if (data.containsKey("userEmail")) {
+                    String email = (String) data.get("userEmail");
+                    if (email != null && !email.trim().isEmpty()) {
+                        log.debug("Found userEmail in notification data: {}", email);
+                        return email;
+                    }
+                }
+                
+                // Check for emailOverride (from metadata)
+                if (data.containsKey("emailOverride")) {
+                    String email = (String) data.get("emailOverride");
+                    if (email != null && !email.trim().isEmpty()) {
+                        log.debug("Found emailOverride in notification data: {}", email);
+                        return email;
+                    }
+                }
+                
+            } catch (Exception e) {
+                log.warn("Could not parse notification data for email extraction: {}", e.getMessage());
+            }
+        }
+        
+        // Fallback: We need to get the user's email somehow
+        log.warn("No email found in notification data for user: {}", notification.getUserId());
+        return null; // This will be handled by the email service lookup
+    }
+
+    private String getDefaultFromEmail() {
+        return "no-reply@focushive.app"; // Make this configurable
+    }
+
+    private String generateCorrelationId() {
+        return "notif-" + System.currentTimeMillis() + "-" + 
+               Thread.currentThread().getId();
+    }
+
+    private Map<String, String> parseTemplateVariables(Notification notification) {
+        if (notification.getData() == null) {
+            return new HashMap<>();
+        }
+        
+        try {
+            Map<String, Object> data = objectMapper.readValue(notification.getData(), Map.class);
+            Map<String, String> variables = new HashMap<>();
+            
+            // Convert all data to string variables for template processing
+            data.forEach((key, value) -> {
+                if (value != null) {
+                    variables.put(key, value.toString());
+                }
+            });
+            
+            return variables;
+        } catch (Exception e) {
+            log.debug("Could not parse template variables", e);
+            return new HashMap<>();
+        }
+    }
+
+    private Map<String, Object> parseDataField(String dataJson) {
+        if (dataJson == null) {
+            return new HashMap<>();
+        }
+        
+        try {
+            return objectMapper.readValue(dataJson, Map.class);
+        } catch (Exception e) {
+            log.debug("Could not parse data field", e);
+            return new HashMap<>();
+        }
     }
 
     @Override

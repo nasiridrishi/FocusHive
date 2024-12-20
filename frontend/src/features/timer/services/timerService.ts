@@ -17,7 +17,7 @@ import type {
   TimerHistoryResponse,
   TimerTemplatesResponse,
   TimerWebSocketEvent,
-  TimerCommand,
+  TimerActionRequest,
   TimerSyncData,
   SessionStatus,
   SessionType
@@ -508,7 +508,7 @@ export class TimerService {
   /**
    * Send timer command via WebSocket
    */
-  sendTimerCommand(command: TimerCommand): void {
+  sendTimerCommand(command: TimerActionRequest): void {
     if (!this.webSocketService?.isConnected?.()) {
       throw new Error('WebSocket is not connected');
     }
@@ -684,7 +684,7 @@ export class TimerService {
 
       // Notify via WebSocket (if available)
       if (this.webSocketService) {
-        this.sendTimerCommand({ action: 'start', sessionId: session.id });
+        this.sendTimerCommand({ action: 'start', timerId: session.id });
       }
 
       return session;

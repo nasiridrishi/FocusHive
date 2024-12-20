@@ -1,336 +1,401 @@
 import React from 'react'
 import {
+  Box,
+  Card,
+  CardContent,
+  CardActions,
+  CardMedia,
+  Typography,
+  Chip,
+  Button,
   Avatar,
   AvatarGroup,
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Chip,
-  IconButton,
-  Menu,
-  MenuItem,
-  Tooltip,
-  Typography,
+  Stack,
+  LinearProgress,
+  Skeleton,
   useTheme,
+  IconButton,
+  Tooltip,
 } from '@mui/material'
 import {
-  Circle as CircleIcon,
-  ExitToApp as ExitToAppIcon,
-  Lock as LockIcon,
-  MoreVert as MoreVertIcon,
   People as PeopleIcon,
-  PlayArrow as PlayArrowIcon,
+  Lock as LockIcon,
   Public as PublicIcon,
-  Settings as SettingsIcon,
-  Share as ShareIcon,
+  Mail as MailIcon,
+  School as SchoolIcon,
+  Work as WorkIcon,
+  Group as GroupIcon,
+  Code as CodeIcon,
+  PersonAdd as PersonAddIcon,
+  ExitToApp as ExitToAppIcon,
+  Launch as LaunchIcon,
   Timer as TimerIcon,
 } from '@mui/icons-material'
-import {Hive, HiveMember} from '@shared/types'
-import {JoinHiveButton} from './JoinHiveButton'
+import { Hive as SharedHive, HiveMember } from '@shared/types'
 
-interface HiveCardProps {
+// Extend the shared Hive type with local properties
+interface Hive extends Omit<SharedHive, 'settings'> {
+  settings: {
+    privacyLevel: 'PUBLIC' | 'PRIVATE' | 'INVITE_ONLY'
+    category: 'STUDY' | 'WORK' | 'SOCIAL' | 'CODING'
+    focusMode: 'POMODORO' | 'TIMEBLOCK' | 'FREEFORM'
+    maxParticipants: number
+    [key: string]: any
+  }
+  status?: 'ACTIVE' | 'INACTIVE'
+  members?: Array<{ userId: string; joinedAt: string }>
+  statistics?: {
+    totalSessions: number
+    totalFocusTime: number
+    averageRating: number
+    weeklyActiveUsers: number
+  }
+  nextSession?: any
+  imageUrl?: string
+}
+
+export type { Hive }
+
+export interface HiveCardProps {
   hive: Hive
-  members?: HiveMember[]
-  currentUserId?: string
-  onJoin?: (hiveId: string) => void
+  members?: any[] // Optional members array
+  onJoin?: (hiveId: string, message?: string) => void
   onLeave?: (hiveId: string) => void
+  onView?: (hiveId: string) => void
   onEnter?: (hiveId: string) => void
   onSettings?: (hiveId: string) => void
   onShare?: (hiveId: string) => void
-  variant?: 'default' | 'compact' | 'detailed'
   isLoading?: boolean
+  compact?: boolean
+  variant?: 'default' | 'compact' | string
+  currentUserId?: string
+}
+
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case 'STUDY':
+      return <SchoolIcon />
+    case 'WORK':
+      return <WorkIcon />
+    case 'SOCIAL':
+      return <GroupIcon />
+    case 'CODING':
+      return <CodeIcon />
+    default:
+      return <GroupIcon />
+  }
+}
+
+const getPrivacyIcon = (privacyLevel: string) => {
+  switch (privacyLevel) {
+    case 'PUBLIC':
+      return <PublicIcon />
+    case 'PRIVATE':
+      return <LockIcon />
+    case 'INVITE_ONLY':
+      return <MailIcon />
+    default:
+      return <PublicIcon />
+  }
 }
 
 export const HiveCard: React.FC<HiveCardProps> = ({
-                                                    hive,
-                                                    members = [],
-                                                    currentUserId,
-                                                    onJoin,
-                                                    onLeave,
-                                                    onEnter,
-                                                    onSettings,
-                                                    onShare,
-                                                    variant = 'default',
-                                                    isLoading = false,
-                                                  }) => {
+  hive,
+  onJoin,
+  onLeave,
+  onView,
+  isLoading = false,
+  compact = false,
+  currentUserId,
+}) => {
   const theme = useTheme()
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
+  const memberCount = hive.members?.length || 0
+  const isMember = Boolean(
+    currentUserId && hive.members?.some((m) => m.userId === currentUserId)
+  )
+  const isFull = memberCount >= hive.settings.maxParticipants
+  const progressPercentage = (memberCount / hive.settings.maxParticipants) * 100
 
-  // Check if current user is a member
-  const isMember = currentUserId && members.some(member => member.userId === currentUserId)
-  const isOwner = currentUserId === hive.ownerId
-
-  // Get online members
-  const onlineMembers = members.filter(member => member.isActive)
-  const onlineMembersCount = onlineMembers.length
-
-  // Get current user's role if they're a member
-  const currentUserMember = members.find(member => member.userId === currentUserId)
-  const canManage = currentUserMember?.permissions.canManageSettings || isOwner
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>): void => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuClose = (): void => {
-    setAnchorEl(null)
-  }
-
-  const handleAction = (action: () => void): void => {
-    action()
-    handleMenuClose()
-  }
-
-  const renderMembers = (): React.ReactElement | null => {
-    if (variant === 'compact') return null
-
-    return (
-        <Box sx={{display: 'flex', alignItems: 'center', gap: 1, mt: 1}}>
-          <AvatarGroup
-              max={4}
-              sx={{
-                '& .MuiAvatar-root': {
-                  width: 24,
-                  height: 24,
-                  fontSize: '0.75rem'
-                }
-              }}
-          >
-            {onlineMembers.slice(0, 4).map((member) => (
-                <Tooltip key={member.id}
-                         title={`${member.user.firstName} ${member.user.lastName} - Online`}>
-                  <Avatar
-                      src={member.user.profilePicture}
-                      alt={`${member.user.firstName} ${member.user.lastName}`}
-                      sx={{
-                        border: `2px solid ${theme.palette.success.main}`,
-                      }}
-                  >
-                    {member.user.firstName[0]}{member.user.lastName[0]}
-                  </Avatar>
-                </Tooltip>
-            ))}
-          </AvatarGroup>
-
-          {onlineMembersCount > 0 && (
-              <Chip
-                  size="small"
-                  icon={<CircleIcon sx={{color: 'success.main'}}/>}
-                  label={`${onlineMembersCount} online`}
-                  variant="outlined"
-                  sx={{fontSize: '0.7rem'}}
-              />
-          )}
-        </Box>
-    )
-  }
-
-  const renderStats = (): React.ReactElement | null => {
-    return (
-        <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1}}>
-          <Chip
-              size="small"
-              icon={<PeopleIcon/>}
-              label={`${hive.currentMembers}/${hive.maxMembers}`}
-              variant="outlined"
-          />
-
-          {hive.settings.focusMode && (
-              <Chip
-                  size="small"
-                  icon={<TimerIcon/>}
-                  label={hive.settings.focusMode}
-                  variant="outlined"
-                  color="primary"
-              />
-          )}
-
-          <Chip
-              size="small"
-              icon={hive.isPublic ? <PublicIcon/> : <LockIcon/>}
-              label={hive.isPublic ? 'Public' : 'Private'}
-              variant="outlined"
-              color={hive.isPublic ? 'success' : 'warning'}
-          />
-        </Box>
-    )
-  }
-
-  const renderActions = (): React.ReactElement | null => {
-    if (isMember) {
-      return (
-          <>
-            <Button
-                variant="contained"
-                startIcon={<PlayArrowIcon/>}
-                onClick={() => onEnter?.(hive.id)}
-                disabled={isLoading}
-                sx={{minWidth: 120}}
-            >
-              Enter Hive
-            </Button>
-
-            <IconButton
-                size="small"
-                onClick={handleMenuOpen}
-                disabled={isLoading}
-            >
-              <MoreVertIcon/>
-            </IconButton>
-
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-            >
-              {canManage && (
-                  <MenuItem onClick={() => handleAction(() => onSettings?.(hive.id))}>
-                    <SettingsIcon sx={{mr: 1}}/>
-                    Settings
-                  </MenuItem>
-              )}
-              <MenuItem onClick={() => handleAction(() => onShare?.(hive.id))}>
-                <ShareIcon sx={{mr: 1}}/>
-                Share
-              </MenuItem>
-              {!isOwner && (
-                  <MenuItem
-                      onClick={() => handleAction(() => onLeave?.(hive.id))}
-                      sx={{color: 'error.main'}}
-                  >
-                    <ExitToAppIcon sx={{mr: 1}}/>
-                    Leave Hive
-                  </MenuItem>
-              )}
-            </Menu>
-          </>
-      )
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger onView if clicking on action buttons
+    const target = e.target as HTMLElement
+    if (
+      target.closest('button') ||
+      target.closest('[role="button"]')
+    ) {
+      return
     }
-
-    return (
-        <JoinHiveButton
-            hive={hive}
-            onJoin={onJoin}
-            isLoading={isLoading}
-            variant="contained"
-            size="medium"
-        />
-    )
+    onView?.(hive.id)
   }
 
-  const cardHeight = variant === 'compact' ? 120 : variant === 'detailed' ? 240 : 180
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      onView?.(hive.id)
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card data-testid="hive-card-skeleton">
+        <CardContent>
+          <Skeleton variant="rectangular" height={200} sx={{ mb: 2 }} />
+          <Skeleton variant="text" width="60%" height={32} sx={{ mb: 1 }} />
+          <Skeleton variant="text" width="100%" />
+          <Skeleton variant="text" width="80%" />
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-      <Card
+    <Card
+      data-testid="hive-card"
+      role="article"
+      className={compact ? 'hive-card--compact' : ''}
+      onClick={handleCardClick}
+      onKeyPress={handleKeyPress}
+      tabIndex={0}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: 3,
+          transform: 'translateY(-2px)',
+          '& .view-details-text': {
+            opacity: 1,
+          },
+        },
+      }}
+    >
+      {/* Image or Placeholder */}
+      {hive.imageUrl ? (
+        <CardMedia
+          component="img"
+          height="200"
+          image={hive.imageUrl}
+          alt={hive.name}
+          sx={{ objectFit: 'cover' }}
+          role="img"
+        />
+      ) : (
+        <Box
+          data-testid="default-hive-image"
           sx={{
-            height: cardHeight,
+            height: 200,
             display: 'flex',
-            flexDirection: 'column',
-            transition: 'all 0.2s ease-in-out',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: theme.shadows[4],
-            },
-            border: isMember ? `2px solid ${theme.palette.primary.main}` : undefined,
-            opacity: isLoading ? 0.7 : 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'grey.200',
           }}
-      >
-        <CardContent sx={{flex: 1, pb: 1}}>
-          {/* Header */}
-          <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            mb: 1
-          }}>
-            <Typography
-                variant="h6"
-                component="h3"
-                sx={{
-                  fontWeight: 600,
-                  fontSize: variant === 'compact' ? '1rem' : '1.1rem',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 1,
-                  WebkitBoxOrient: 'vertical',
-                }}
-            >
-              {hive.name}
-            </Typography>
+        >
+          <GroupIcon sx={{ fontSize: 60, color: 'grey.500' }} />
+        </Box>
+      )}
 
-            {isMember && (
-                <Chip
-                    size="small"
-                    label="Member"
-                    color="primary"
-                    variant="filled"
-                    sx={{fontSize: '0.7rem'}}
-                />
-            )}
+      {/* Status Badge */}
+      {hive.status === 'ACTIVE' ? (
+        <Chip
+          label="Active"
+          color="success"
+          size="small"
+          data-testid="active-indicator"
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+          }}
+        />
+      ) : (
+        <Chip
+          label="Inactive"
+          color="default"
+          size="small"
+          data-testid="inactive-indicator"
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+          }}
+        />
+      )}
+
+      <CardContent sx={{ flex: 1 }}>
+        {/* Member Badge */}
+        {isMember && (
+          <Chip
+            label="Member"
+            color="primary"
+            size="small"
+            data-testid="member-badge"
+            sx={{ mb: 1 }}
+          />
+        )}
+
+        {/* Title */}
+        <Typography variant="h6" component="h2" gutterBottom>
+          {hive.name}
+        </Typography>
+
+        {/* Description */}
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            mb: 2,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {hive.description}
+        </Typography>
+
+        {/* Tags */}
+        {!compact && hive.tags && hive.tags.length > 0 && (
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{ flexWrap: 'wrap', gap: 0.5, mb: 2 }}
+            data-testid="hive-tags"
+          >
+            {hive.tags.slice(0, 3).map((tag) => (
+              <Chip
+                key={tag}
+                label={tag}
+                size="small"
+                variant="outlined"
+              />
+            ))}
+          </Stack>
+        )}
+
+        {/* Metadata */}
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+          <Chip
+            icon={getCategoryIcon(hive.settings.category)}
+            label={hive.settings.category}
+            size="small"
+            color="primary"
+            data-testid="category-chip"
+          />
+          <Chip
+            icon={<TimerIcon />}
+            label={hive.settings.focusMode}
+            size="small"
+            color="secondary"
+            data-testid="focus-mode-chip"
+          />
+          <Chip
+            icon={getPrivacyIcon(hive.settings.privacyLevel) as React.ReactElement}
+            label={hive.settings.privacyLevel}
+            size="small"
+            color="warning"
+            variant="outlined"
+            data-testid="privacy-badge"
+          />
+        </Stack>
+
+        {/* Privacy Icon for specific types */}
+        {(hive.settings.privacyLevel === 'PRIVATE' ||
+          hive.settings.privacyLevel === 'INVITE_ONLY') && (
+          <Box sx={{ display: 'none' }}>
+            <span data-testid="privacy-icon" />
           </Box>
+        )}
 
-          {/* Description */}
-          {variant !== 'compact' && (
-              <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    mb: 2,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: variant === 'detailed' ? 3 : 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-              >
-                {hive.description}
-              </Typography>
-          )}
+        {/* Members */}
+        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <AvatarGroup max={4}>
+            {hive.members?.slice(0, 4).map((member) => (
+              <Avatar key={member.userId} sx={{ width: 32, height: 32 }}>
+                {member.userId.charAt(0).toUpperCase()}
+              </Avatar>
+            ))}
+          </AvatarGroup>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            data-testid="member-count"
+            aria-label={`${memberCount} out of ${hive.settings.maxParticipants} members`}
+          >
+            {memberCount}/{hive.settings.maxParticipants}
+          </Typography>
+        </Box>
 
-          {/* Tags */}
-          {variant === 'detailed' && hive.tags.length > 0 && (
-              <Box sx={{display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1}}>
-                {hive.tags.slice(0, 3).map((tag) => (
-                    <Chip
-                        key={tag}
-                        size="small"
-                        label={tag}
-                        variant="outlined"
-                        sx={{fontSize: '0.7rem', height: 20}}
-                    />
-                ))}
-                {hive.tags.length > 3 && (
-                    <Chip
-                        size="small"
-                        label={`+${hive.tags.length - 3} more`}
-                        variant="outlined"
-                        sx={{fontSize: '0.7rem', height: 20}}
-                    />
-                )}
-              </Box>
-          )}
+        {/* Progress Bar */}
+        <LinearProgress
+          variant="determinate"
+          value={progressPercentage}
+          sx={{ mt: 1, height: 6, borderRadius: 1 }}
+          color={isFull ? 'error' : 'primary'}
+          role="progressbar"
+          aria-valuenow={progressPercentage}
+        />
 
-          {/* Stats and Members */}
-          {renderStats()}
-          {renderMembers()}
-        </CardContent>
+        {/* Owner Info */}
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ mt: 1, display: 'block' }}
+          data-testid="owner-info"
+        >
+          Created by {hive.ownerId}
+        </Typography>
 
-        {/* Actions */}
-        <CardActions sx={{pt: 0, px: 2, pb: 2, justifyContent: 'space-between'}}>
-          {renderActions()}
-        </CardActions>
-      </Card>
+        {/* View Details Text (shown on hover) */}
+        <Typography
+          className="view-details-text"
+          variant="caption"
+          color="primary"
+          sx={{
+            mt: 1,
+            display: 'block',
+            opacity: 0,
+            transition: 'opacity 0.3s ease',
+          }}
+        >
+          View Details
+        </Typography>
+      </CardContent>
+
+      <CardActions>
+        {isMember ? (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<ExitToAppIcon />}
+            onClick={(e) => {
+              e.stopPropagation()
+              onLeave?.(hive.id)
+            }}
+            fullWidth
+          >
+            Leave
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PersonAddIcon />}
+            onClick={(e) => {
+              e.stopPropagation()
+              onJoin?.(hive.id)
+            }}
+            disabled={isFull}
+            fullWidth
+          >
+            {isFull ? 'Full' : 'Join'}
+          </Button>
+        )}
+      </CardActions>
+    </Card>
   )
 }
 

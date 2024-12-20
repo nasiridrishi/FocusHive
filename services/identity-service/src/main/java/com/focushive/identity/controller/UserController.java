@@ -22,7 +22,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
 @Tag(name = "User Management", description = "User profile and account management endpoints")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "JWT")

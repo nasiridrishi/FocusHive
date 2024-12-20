@@ -1,7 +1,7 @@
 package com.focushive.api.config;
 
 import com.focushive.api.config.SimpleRateLimitingFilter;
-import com.focushive.backend.security.IdentityServiceAuthenticationFilter;
+import com.focushive.api.security.IdentityServiceAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

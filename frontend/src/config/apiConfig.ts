@@ -9,48 +9,51 @@
  */
 
 // Service base URLs with environment variables and fallbacks
+// NOTE: Chat, Analytics, and Forum are integrated into the Backend Service
 export const SERVICE_URLS = {
   // Core FocusHive Backend Service (Port 8080)
-  BACKEND: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080',
+  // Includes: Core features + Chat + Analytics + Forum modules
+  BACKEND: import.meta.env.VITE_BACKEND_URL || 'https://identity.focushive.app',
 
   // Identity Service - OAuth2 & Persona Management (Port 8081)
   IDENTITY: import.meta.env.VITE_IDENTITY_URL || 'http://localhost:8081',
 
-  // Music Service - Spotify Integration (Port 8082)
+  // Music Service - Spotify Integration (Port 8082) - SHELVED
   MUSIC: import.meta.env.VITE_MUSIC_URL || 'http://localhost:8082',
 
   // Notification Service - Multi-channel Notifications (Port 8083)
   NOTIFICATION: import.meta.env.VITE_NOTIFICATION_URL || 'http://localhost:8083',
 
-  // Chat Service - Real-time Messaging (Port 8084)
-  CHAT: import.meta.env.VITE_CHAT_URL || 'http://localhost:8084',
+  // Chat Service - Merged into Backend Service
+  CHAT: import.meta.env.VITE_BACKEND_URL || 'https://identity.focushive.app',
 
-  // Analytics Service - Productivity Tracking (Port 8085)
-  ANALYTICS: import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:8085',
+  // Analytics Service - Merged into Backend Service
+  ANALYTICS: import.meta.env.VITE_BACKEND_URL || 'https://identity.focushive.app',
 
-  // Forum Service - Community Discussions (Port 8086)
-  FORUM: import.meta.env.VITE_FORUM_URL || 'http://localhost:8086',
+  // Forum Service - Merged into Backend Service
+  FORUM: import.meta.env.VITE_BACKEND_URL || 'https://identity.focushive.app',
 
   // Buddy Service - Accountability Partners (Port 8087)
   BUDDY: import.meta.env.VITE_BUDDY_URL || 'http://localhost:8087'
 } as const;
 
 // WebSocket endpoints configuration
+// NOTE: Chat, Analytics, and Forum WebSockets are integrated into Backend Service
 export const WS_ENDPOINTS = {
-  // Main WebSocket connection for core features
-  MAIN: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
+  // Main WebSocket connection for core features + Chat + Analytics + Forum
+  MAIN: import.meta.env.VITE_WS_URL || 'wss://identity.focushive.app/ws',
 
-  // Chat-specific WebSocket connection
-  CHAT: import.meta.env.VITE_CHAT_WS_URL || 'ws://localhost:8084/ws',
+  // Chat WebSocket - Uses Backend Service
+  CHAT: import.meta.env.VITE_WS_URL || 'wss://identity.focushive.app/ws',
 
-  // Music service WebSocket for collaborative playlists
+  // Music service WebSocket for collaborative playlists - SHELVED
   MUSIC: import.meta.env.VITE_MUSIC_WS_URL || 'ws://localhost:8082/ws',
 
-  // Analytics WebSocket for real-time metrics
-  ANALYTICS: import.meta.env.VITE_ANALYTICS_WS_URL || 'ws://localhost:8085/ws',
+  // Analytics WebSocket - Uses Backend Service
+  ANALYTICS: import.meta.env.VITE_WS_URL || 'wss://identity.focushive.app/ws',
 
-  // Forum WebSocket for real-time updates
-  FORUM: import.meta.env.VITE_FORUM_WS_URL || 'ws://localhost:8086/ws',
+  // Forum WebSocket - Uses Backend Service
+  FORUM: import.meta.env.VITE_WS_URL || 'wss://identity.focushive.app/ws',
 
   // Buddy WebSocket for accountability features
   BUDDY: import.meta.env.VITE_BUDDY_WS_URL || 'ws://localhost:8087/ws'

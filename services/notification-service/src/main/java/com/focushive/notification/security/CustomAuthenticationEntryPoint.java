@@ -39,9 +39,27 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         String path = request.getRequestURI();
         String method = request.getMethod();
-
-        log.debug("Authentication failed for {} {}: {}",
-            method, path, authException != null ? authException.getMessage() : "No auth exception");
+        String userAgent = request.getHeader("User-Agent");
+        String remoteAddr = request.getRemoteAddr();
+        String authHeader = request.getHeader("Authorization");
+        String serviceName = request.getHeader("X-Service-Name");
+        String correlationId = request.getHeader("X-Correlation-ID");
+        
+        // Log comprehensive authentication failure information
+        log.warn("Authentication failed for {} {} from {} | User-Agent: {} | Service: {} | Correlation-ID: {} | Auth-Type: {} | Exception: {}",
+            method, path, remoteAddr, 
+            userAgent != null ? (userAgent.length() > 50 ? userAgent.substring(0, 50) + "..." : userAgent) : "unknown",
+            serviceName != null ? serviceName : "none",
+            correlationId != null ? correlationId : "none",
+            authHeader != null ? (authHeader.startsWith("Bearer ") ? "JWT" : "Other") : "None",
+            authException != null ? authException.getMessage() : "No auth exception");
+            
+        // Log additional debug info if debug level is enabled
+        if (log.isDebugEnabled()) {
+            log.debug("Authentication failure details - Exception type: {}, Path parameters: {}, Query string: {}",
+                authException != null ? authException.getClass().getSimpleName() : "null",
+                path, request.getQueryString());
+        }
 
         // Check if the endpoint exists
         boolean endpointExists = endpointExistenceChecker.doesEndpointExist(request);
@@ -50,14 +68,15 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             // Endpoint doesn't exist - return 404
             sendErrorResponse(response, HttpStatus.NOT_FOUND,
                 "The requested endpoint does not exist",
-                path);
-            log.debug("Returning 404 for non-existent endpoint: {} {}", method, path);
+                path, correlationId);
+            log.info("Returned 404 for non-existent endpoint: {} {} (correlation-id: {})", method, path, correlationId);
         } else {
             // Endpoint exists but authentication failed - return 401
             sendErrorResponse(response, HttpStatus.UNAUTHORIZED,
                 "Authentication required to access this resource",
-                path);
-            log.debug("Returning 401 for protected endpoint: {} {}", method, path);
+                path, correlationId);
+            log.info("Returned 401 for protected endpoint: {} {} from service '{}' (correlation-id: {})", 
+                method, path, serviceName != null ? serviceName : "unknown", correlationId);
         }
     }
 
@@ -68,12 +87,14 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
      * @param status The HTTP status to set
      * @param message The error message
      * @param path The request path
+     * @param correlationId The correlation ID for request tracing
      * @throws IOException If writing to response fails
      */
     private void sendErrorResponse(HttpServletResponse response,
                                     HttpStatus status,
                                     String message,
-                                    String path) throws IOException {
+                                    String path,
+                                    String correlationId) throws IOException {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
@@ -84,6 +105,9 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         errorResponse.put("error", status.getReasonPhrase());
         errorResponse.put("message", message);
         errorResponse.put("path", path);
+        if (correlationId != null) {
+            errorResponse.put("correlationId", correlationId);
+        }
 
         String jsonResponse = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(jsonResponse);

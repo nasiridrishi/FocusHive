@@ -39,12 +39,8 @@ public class SimpleSecurityConfig {
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Actuator health endpoints - critical for monitoring
-                .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/actuator/health/**").permitAll()
-                .requestMatchers("/actuator/info").permitAll()
-                .requestMatchers("/actuator/metrics").permitAll()
-                .requestMatchers("/actuator/prometheus").permitAll()
+                // Actuator redirect endpoints on main port - return informative error
+                .requestMatchers("/actuator/**").permitAll()
                 // Custom health endpoint
                 .requestMatchers("/api/v1/health").permitAll()
                 // Swagger documentation

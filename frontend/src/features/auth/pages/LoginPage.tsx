@@ -10,12 +10,8 @@ export default function LoginPage(): JSX.Element {
   const location = useLocation()
   const {authState, login, clearError} = useAuth()
 
-  // Clear any existing error when component mounts
-  React.useEffect(() => {
-    if (authState.error) {
-      clearError()
-    }
-  }, [authState.error, clearError])
+  // Clear error only when user starts typing again (handled by form)
+  // Don't auto-clear errors on mount to preserve login failure messages
 
   const handleLogin = async (credentials: LoginRequest): Promise<void> => {
     try {

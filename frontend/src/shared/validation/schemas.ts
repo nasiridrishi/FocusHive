@@ -30,7 +30,6 @@ const passwordSchema = yup
 // Username validation schema
 const usernameSchema = yup
 .string()
-.required('Username is required')
 .min(3, 'Username must be at least 3 characters')
 .max(30, 'Username must be less than 30 characters')
 .matches(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens')
@@ -43,30 +42,30 @@ const nameSchema = yup
 .max(50, 'Must be less than 50 characters')
 .matches(/^[a-zA-Z\s'-]+$/, 'Can only contain letters, spaces, apostrophes, and hyphens')
 
-// Login form validation schema
+// Login form validation schema - only include fields used in form
 export const loginSchema = yup.object({
   email: emailSchema,
   password: yup
-  .string()
-  .required('Password is required')
-  .min(6, 'Password must be at least 6 characters')
-})
+    .string()
+    .required('Password is required')
+    .min(6, 'Password must be at least 6 characters')
+}).required()
 
-// Registration form validation schema
+// Registration form validation schema - only core form fields
 export const registerSchema = yup.object({
   firstName: nameSchema.label('First name'),
   lastName: nameSchema.label('Last name'),
-  username: usernameSchema,
+  username: usernameSchema.optional(),
   email: emailSchema,
   password: passwordSchema,
   confirmPassword: yup
-  .string()
-  .required('Please confirm your password')
-  .oneOf([yup.ref('password')], 'Passwords must match'),
+    .string()
+    .required('Please confirm your password')
+    .oneOf([yup.ref('password')], 'Passwords must match'),
   acceptTerms: yup
-  .boolean()
-  .oneOf([true], 'You must accept the terms and conditions')
-})
+    .boolean()
+    .oneOf([true], 'You must accept the terms and conditions')
+}).required()
 
 // Create Hive form validation schema
 export const createHiveSchema = yup.object({
@@ -90,25 +89,39 @@ export const createHiveSchema = yup.object({
   tags: yup
   .array()
   .of(yup.string().max(20, 'Tag must be less than 20 characters'))
-  .max(10, 'Cannot have more than 10 tags'),
+  .max(10, 'Cannot have more than 10 tags')
+  .default([]),
   settings: yup.object({
-    allowChat: yup.boolean().required(),
-    allowVoice: yup.boolean().required(),
-    requireApproval: yup.boolean().required(),
+    privacyLevel: yup
+    .string()
+    .oneOf(['PUBLIC', 'PRIVATE', 'INVITE_ONLY'], 'Invalid privacy level')
+    .default('PUBLIC'),
+    category: yup
+    .string()
+    .oneOf(['STUDY', 'WORK', 'SOCIAL', 'CODING'], 'Invalid category')
+    .default('STUDY'),
+    maxParticipants: yup
+    .number()
+    .min(2, 'Must allow at least 2 participants')
+    .max(100, 'Cannot exceed 100 participants')
+    .default(10),
+    allowChat: yup.boolean().default(true),
+    allowVoice: yup.boolean().default(false),
+    requireApproval: yup.boolean().default(false),
     focusMode: yup
     .string()
-    .required('Focus mode is required')
-    .oneOf(['pomodoro', 'continuous', 'flexible'], 'Invalid focus mode'),
+    .oneOf(['POMODORO', 'TIMEBLOCK', 'FREEFORM'], 'Invalid focus mode')
+    .default('FREEFORM'),
     defaultSessionLength: yup
     .number()
-    .required('Default session length is required')
     .min(5, 'Session must be at least 5 minutes')
-    .max(120, 'Session cannot exceed 120 minutes'),
+    .max(120, 'Session cannot exceed 120 minutes')
+    .default(25),
     maxSessionLength: yup
     .number()
-    .required('Maximum session length is required')
     .min(30, 'Maximum session must be at least 30 minutes')
     .max(480, 'Maximum session cannot exceed 8 hours')
+    .default(120)
     .test(
         'greater-than-default',
         'Maximum session must be greater than default session',
@@ -117,7 +130,7 @@ export const createHiveSchema = yup.object({
           return !value || !defaultSessionLength || value >= defaultSessionLength
         }
     )
-  })
+  }).default({})
 })
 
 // Password strength checker utility

@@ -151,13 +151,6 @@ export interface AnalyticsContextValue {
 }
 
 // Component Props Interfaces
-export interface ProductivityChartProps {
-  data: ChartDataPoint[];
-  config?: Partial<ChartConfig>;
-  timeRange: AnalyticsTimeRange;
-  loading?: boolean;
-  error?: string | null;
-}
 
 export interface TaskCompletionRateProps {
   data: TaskCompletionData;

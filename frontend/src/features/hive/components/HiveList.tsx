@@ -125,9 +125,9 @@ export const HiveList: React.FC<HiveListProps> = ({
         }
       }
 
-      // Tags filter
+      // Tags filter - ALL selected tags must be present in the hive
       if (selectedTags.length > 0) {
-        if (!selectedTags.some(tag => hive.tags.includes(tag))) {
+        if (!selectedTags.every(tag => hive.tags.includes(tag))) {
           return false
         }
       }

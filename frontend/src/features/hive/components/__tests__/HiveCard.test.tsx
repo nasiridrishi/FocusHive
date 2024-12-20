@@ -1,997 +1,359 @@
 import React from 'react'
-import {beforeEach, describe, expect, it, vi} from 'vitest'
-import {screen, waitFor} from '@testing-library/react'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import {renderWithProviders} from '../../../../test-utils/test-utils'
-import {HiveCard} from '../HiveCard'
-import {Hive, HiveMember, User} from '@shared/types'
+import { renderWithProviders } from '../../../../test-utils/test-utils'
+import HiveCard from '../HiveCard'
 
-// Mock JoinHiveButton component
-vi.mock('../JoinHiveButton', () => ({
-  JoinHiveButton: ({
-                     hive,
-                     onJoin,
-                     isLoading,
-                     variant,
-                     size
-                   }: {
-    hive: Hive
-    onJoin?: (hiveId: string) => void
-    isLoading?: boolean
-    variant?: string
-    size?: string
-  }) => (
-      <button
-          onClick={() => onJoin?.(hive.id)}
-          disabled={isLoading || hive.currentMembers >= hive.maxMembers}
-          data-testid="join-hive-button"
-          data-variant={variant}
-          data-size={size}
-      >
-        {hive.currentMembers >= hive.maxMembers ? 'Full' : 'Join Hive'}
-      </button>
-  )
-}))
-
-// Mock data
-const mockUser: User = {
-  id: 'user1',
-  username: 'testuser',
-  email: 'test@example.com',
-  firstName: 'Test',
-  lastName: 'User',
-  name: 'Test User',
-  avatar: null,
-  profilePicture: null,
-  isEmailVerified: true,
-  isVerified: true,
-  createdAt: '2024-01-01T00:00:00Z',
-  updatedAt: '2024-01-01T00:00:00Z'
-}
-
-const mockOwner: User = {
-  id: 'owner1',
-  username: 'owner',
-  email: 'owner@example.com',
-  firstName: 'Hive',
-  lastName: 'Owner',
-  name: 'Hive Owner',
-  avatar: null,
-  profilePicture: null,
-  isEmailVerified: true,
-  isVerified: true,
-  createdAt: '2024-01-01T00:00:00Z',
-  updatedAt: '2024-01-01T00:00:00Z'
-}
-
-const createMockHive = (overrides: Partial<Hive> = {}): Hive => ({
-  id: `hive-${Math.random().toString(36).substr(2, 9)}`,
-  name: 'Test Hive',
-  description: 'A test hive for development and collaboration',
-  ownerId: 'owner1',
-  owner: mockOwner,
+const mockHive = {
+  id: '1',
+  name: 'Study Hive',
+  description: 'A focused study group for CS students preparing for exams',
+  ownerId: 'user123',
+  owner: {
+    id: 'user123',
+    email: 'owner@example.com',
+    username: 'studyowner',
+    firstName: 'John',
+    lastName: 'Doe',
+    name: 'John Doe',
+    isEmailVerified: true,
+    createdAt: '2025-01-01T09:00:00Z',
+    updatedAt: '2025-01-01T09:00:00Z',
+  },
+  tags: ['computer-science', 'study-group', 'exam-prep'],
+  settings: {
+    privacyLevel: 'PUBLIC' as const,
+    category: 'STUDY' as const,
+    focusMode: 'POMODORO' as const,
+    sessionDuration: 25,
+    breakDuration: 5,
+    maxParticipants: 10,
+    autoStartBreaks: true,
+    muteNotifications: false,
+    virtualBackgrounds: true,
+    screenSharing: true,
+    chatEnabled: true,
+    videoEnabled: true,
+    waitingRoom: false,
+    recordSessions: false,
+    language: 'en',
+    timeZone: 'UTC',
+    allowGuestAccess: false,
+    requireApproval: false,
+    customSettings: {},
+    allowChat: true,
+    allowVoice: true,
+    defaultSessionLength: 25,
+    maxSessionLength: 60,
+  },
+  currentMembers: 0,
   maxMembers: 10,
   isPublic: true,
-  tags: ['study', 'programming', 'collaboration'],
-  settings: {
-    allowChat: true,
-    allowVoice: false,
-    requireApproval: false,
-    focusMode: 'continuous',
-    defaultSessionLength: 25,
-    maxSessionLength: 120
-  },
-  currentMembers: 3,
-  memberCount: 3,
   isOwner: false,
   isMember: false,
-  createdAt: '2024-01-01T00:00:00Z',
-  updatedAt: '2024-01-01T00:00:00Z',
-  ...overrides
-})
-
-const createMockMember = (overrides: Partial<HiveMember> = {}): HiveMember => ({
-  id: `member-${Math.random().toString(36).substr(2, 9)}`,
-  userId: 'user1',
-  user: mockUser,
-  hiveId: 'hive1',
-  role: 'member',
-  joinedAt: '2024-01-01T00:00:00Z',
-  isActive: true,
-  permissions: {
-    canInviteMembers: false,
-    canModerateChat: false,
-    canManageSettings: false,
-    canStartTimers: false
+  status: 'ACTIVE' as const,
+  members: [],
+  createdAt: '2025-01-01T10:00:00Z',
+  updatedAt: '2025-01-01T10:00:00Z',
+  statistics: {
+    totalSessions: 0,
+    totalFocusTime: 0,
+    averageRating: 0,
+    weeklyActiveUsers: 0,
   },
-  ...overrides
-})
+  nextSession: null,
+  imageUrl: '/hive-images/study.jpg',
+}
 
 describe('HiveCard', () => {
   const defaultProps = {
-    hive: createMockHive(),
-    members: [] as HiveMember[],
-    currentUserId: undefined as string | undefined,
+    hive: mockHive,
     onJoin: vi.fn(),
     onLeave: vi.fn(),
-    onEnter: vi.fn(),
-    onSettings: vi.fn(),
-    onShare: vi.fn(),
-    variant: 'default' as const,
-    isLoading: false
+    onView: vi.fn(),
   }
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  describe('Basic Rendering', () => {
-    it('should render hive name as heading', () => {
-      const hive = createMockHive({name: 'My Awesome Hive'})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
+  describe('Rendering', () => {
+    it('should render hive card container', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      expect(screen.getByRole('heading', {name: 'My Awesome Hive'})).toBeInTheDocument()
+      expect(screen.getByTestId('hive-card')).toBeInTheDocument()
     })
 
-    it('should render hive description', () => {
-      const hive = createMockHive({description: 'This is a detailed hive description'})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
+    it('should display hive name', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      expect(screen.getByText('This is a detailed hive description')).toBeInTheDocument()
+      expect(screen.getByText('Study Hive')).toBeInTheDocument()
+    })
+
+    it('should display hive description', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
+
+      expect(screen.getByText('A focused study group for CS students preparing for exams')).toBeInTheDocument()
     })
 
     it('should display member count', () => {
-      const hive = createMockHive({currentMembers: 5, maxMembers: 10})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      expect(screen.getByText('5/10')).toBeInTheDocument()
+      expect(screen.getByTestId('member-count')).toHaveTextContent('0/10')
     })
 
-    it('should show public/private status', () => {
-      // Test public hive
-      const publicHive = createMockHive({isPublic: true})
-      const {rerender} = renderWithProviders(<HiveCard {...defaultProps} hive={publicHive}/>)
-      expect(screen.getByText('Public')).toBeInTheDocument()
+    it('should display hive type badge', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      // Test private hive
-      const privateHive = createMockHive({isPublic: false})
-      rerender(<HiveCard {...defaultProps} hive={privateHive}/>)
-      expect(screen.getByText('Private')).toBeInTheDocument()
+      expect(screen.getByTestId('privacy-badge')).toHaveTextContent('PUBLIC')
     })
 
-    it('should display focus mode when available', () => {
-      const hive = createMockHive({
-        settings: {
-          ...createMockHive().settings,
-          focusMode: 'pomodoro'
-        }
-      })
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
+    it('should display hive category', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      expect(screen.getByText('pomodoro')).toBeInTheDocument()
-    })
-  })
-
-  describe('Variant Rendering', () => {
-    it('should render with default height for default variant', () => {
-      const hive = createMockHive()
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive} variant="default"/>)
-
-      const card = screen.getByRole('heading').closest('[class*="MuiCard-root"]')
-      expect(card).toHaveStyle({height: '180px'})
+      expect(screen.getByTestId('category-chip')).toHaveTextContent('STUDY')
     })
 
-    it('should render with compact height for compact variant', () => {
-      const hive = createMockHive()
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive} variant="compact"/>)
+    it('should display tags', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      const card = screen.getByRole('heading').closest('[class*="MuiCard-root"]')
-      expect(card).toHaveStyle({height: '120px'})
+      const tagsContainer = screen.getByTestId('hive-tags')
+      expect(within(tagsContainer).getByText('computer-science')).toBeInTheDocument()
+      expect(within(tagsContainer).getByText('study-group')).toBeInTheDocument()
+      expect(within(tagsContainer).getByText('exam-prep')).toBeInTheDocument()
     })
 
-    it('should render with detailed height for detailed variant', () => {
-      const hive = createMockHive()
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive} variant="detailed"/>)
+    it('should display creator name', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      const card = screen.getByRole('heading').closest('[class*="MuiCard-root"]')
-      expect(card).toHaveStyle({height: '240px'})
+      expect(screen.getByTestId('owner-info')).toBeInTheDocument()
     })
 
-    it('should not show description in compact variant', () => {
-      const hive = createMockHive({description: 'This should not be visible'})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive} variant="compact"/>)
+    it('should display hive image when provided', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      expect(screen.queryByText('This should not be visible')).not.toBeInTheDocument()
+      const image = screen.getByRole('img', { name: /study hive/i })
+      expect(image).toHaveAttribute('src', '/hive-images/study.jpg')
     })
 
-    it('should not show members section in compact variant', () => {
-      const member = createMockMember({isActive: true})
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={createMockHive()} members={[member]} variant="compact"/>
-      )
+    it('should display default image when no image provided', () => {
+      const hiveWithoutImage = { ...mockHive, imageUrl: undefined }
+      renderWithProviders(<HiveCard {...defaultProps} hive={hiveWithoutImage} />)
 
-      expect(screen.queryByText('1 online')).not.toBeInTheDocument()
-    })
-
-    it('should show tags only in detailed variant', () => {
-      const hive = createMockHive({tags: ['test', 'programming', 'study']})
-
-      // Test detailed variant shows tags
-      const {rerender} = renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} variant="detailed"/>
-      )
-      expect(screen.getByText('test')).toBeInTheDocument()
-      expect(screen.getByText('programming')).toBeInTheDocument()
-
-      // Test default variant doesn't show tags
-      rerender(<HiveCard {...defaultProps} hive={hive} variant="default"/>)
-      expect(screen.queryByText('test')).not.toBeInTheDocument()
-    })
-
-    it('should limit tags display to 3 in detailed variant', () => {
-      const hive = createMockHive({tags: ['tag1', 'tag2', 'tag3', 'tag4', 'tag5']})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive} variant="detailed"/>)
-
-      expect(screen.getByText('tag1')).toBeInTheDocument()
-      expect(screen.getByText('tag2')).toBeInTheDocument()
-      expect(screen.getByText('tag3')).toBeInTheDocument()
-      expect(screen.getByText('+2 more')).toBeInTheDocument()
+      expect(screen.getByTestId('default-hive-image')).toBeInTheDocument()
     })
   })
 
-  describe('Member Status Display', () => {
-    it('should show member chip when user is a member', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
+  describe('Member Status', () => {
+    it('should show join button when user is not a member', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} members={[member]} currentUserId="user1"/>
-      )
-
-      expect(screen.getByText('Member')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /join/i })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /leave/i })).not.toBeInTheDocument()
     })
 
-    it('should not show member chip when user is not a member', () => {
-      const hive = createMockHive()
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} currentUserId="user1"/>
-      )
+    it('should show leave button when user is a member', () => {
+      const memberHive = {
+        ...mockHive,
+        isMember: true,
+        members: [{ userId: 'current-user', joinedAt: new Date().toISOString() }]
+      }
+      renderWithProviders(<HiveCard {...defaultProps} hive={memberHive} currentUserId="current-user" />)
 
-      expect(screen.queryByText('Member')).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /leave/i })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /join/i })).not.toBeInTheDocument()
     })
 
-    it('should show highlighted border for member cards', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
+    it('should show member badge when user is a member', () => {
+      const memberHive = {
+        ...mockHive,
+        isMember: true,
+        members: [{ userId: 'current-user', joinedAt: new Date().toISOString() }]
+      }
+      renderWithProviders(<HiveCard {...defaultProps} hive={memberHive} currentUserId="current-user" />)
 
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} members={[member]} currentUserId="user1"/>
-      )
-
-      // Check for primary border color on the card
-      const card = screen.getByRole('heading').closest('[class*="MuiCard-root"]')
-      expect(card).toHaveStyle({'border-width': '2px'})
-    })
-  })
-
-  describe('Online Members Display', () => {
-    it('should show online members count', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const onlineMember = createMockMember({isActive: true})
-      const offlineMember = createMockMember({isActive: false})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[onlineMember, offlineMember]}
-              variant="default"
-          />
-      )
-
-      expect(screen.getByText('1 online')).toBeInTheDocument()
+      expect(screen.getByTestId('member-badge')).toBeInTheDocument()
     })
 
-    it('should show online member avatars', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const onlineMember = createMockMember({
-        isActive: true,
-        user: {...mockUser, firstName: 'John', lastName: 'Doe'}
-      })
+    it('should disable join button when hive is full', () => {
+      const fullHive = {
+        ...mockHive,
+        currentMembers: 10,
+        members: Array(10).fill(null).map((_, i) => ({ userId: `user${i}`, joinedAt: new Date().toISOString() }))
+      }
+      renderWithProviders(<HiveCard {...defaultProps} hive={fullHive} />)
 
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[onlineMember]}
-              variant="default"
-          />
-      )
-
-      const avatar = screen.getByText('JD') // First + Last initials
-      expect(avatar).toBeInTheDocument()
-    })
-
-    it('should limit avatar display to 4 members max', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const members = Array.from({length: 6}, (_, i) =>
-          createMockMember({
-            id: `member-${i}`,
-            isActive: true,
-            user: {
-              ...mockUser,
-              id: `user-${i}`,
-              firstName: `User${i}`,
-              lastName: `Test${i}`
-            }
-          })
-      )
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={members}
-              variant="default"
-          />
-      )
-
-      // Should show "6 online" but only render up to 4 avatars in AvatarGroup
-      expect(screen.getByText('6 online')).toBeInTheDocument()
-      // AvatarGroup with max={4} will show 3 avatars + "+3" for the remaining ones
+      const joinButton = screen.getByRole('button', { name: /full/i })
+      expect(joinButton).toBeDisabled()
     })
   })
 
-  describe('Action Buttons - Non-Member', () => {
-    it('should show JoinHiveButton for non-members', () => {
-      const hive = createMockHive()
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} currentUserId="user1"/>
-      )
+  describe('Hive Types', () => {
+    it('should display private hive indicator', () => {
+      const privateHive = {
+        ...mockHive,
+        isPublic: false,
+        settings: { ...mockHive.settings, privacyLevel: 'PRIVATE' as const }
+      }
+      renderWithProviders(<HiveCard {...defaultProps} hive={privateHive} />)
 
-      expect(screen.getByTestId('join-hive-button')).toBeInTheDocument()
+      expect(screen.getByTestId('privacy-badge')).toHaveTextContent('PRIVATE')
+      expect(screen.getByTestId('privacy-icon')).toBeInTheDocument()
     })
 
+    it('should display invite-only hive indicator', () => {
+      const inviteHive = {
+        ...mockHive,
+        isPublic: false,
+        settings: { ...mockHive.settings, privacyLevel: 'INVITE_ONLY' as const }
+      }
+      renderWithProviders(<HiveCard {...defaultProps} hive={inviteHive} />)
+
+      expect(screen.getByTestId('privacy-badge')).toHaveTextContent('INVITE_ONLY')
+      expect(screen.getByTestId('privacy-icon')).toBeInTheDocument()
+    })
+  })
+
+  describe('User Interactions', () => {
     it('should call onJoin when join button is clicked', async () => {
       const user = userEvent.setup()
       const onJoin = vi.fn()
-      const hive = createMockHive({id: 'test-hive'})
+      renderWithProviders(<HiveCard {...defaultProps} onJoin={onJoin} />)
 
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} onJoin={onJoin} currentUserId="user1"/>
-      )
-
-      const joinButton = screen.getByTestId('join-hive-button')
+      const joinButton = screen.getByRole('button', { name: /join/i })
       await user.click(joinButton)
 
-      expect(onJoin).toHaveBeenCalledWith('test-hive')
+      expect(onJoin).toHaveBeenCalledWith('1')
     })
 
-    it('should pass correct props to JoinHiveButton', () => {
-      const hive = createMockHive()
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} isLoading={true} currentUserId="user1"/>
-      )
-
-      const joinButton = screen.getByTestId('join-hive-button')
-      expect(joinButton).toHaveAttribute('data-variant', 'contained')
-      expect(joinButton).toHaveAttribute('data-size', 'medium')
-      expect(joinButton).toBeDisabled() // Due to isLoading
-    })
-  })
-
-  describe('Action Buttons - Member', () => {
-    it('should show Enter Hive button for members', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      expect(screen.getByRole('button', {name: 'Enter Hive'})).toBeInTheDocument()
-    })
-
-    it('should call onEnter when Enter Hive button is clicked', async () => {
-      const user = userEvent.setup()
-      const onEnter = vi.fn()
-      const hive = createMockHive({id: 'test-hive'})
-      const member = createMockMember({userId: 'user1', hiveId: 'test-hive'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-              onEnter={onEnter}
-          />
-      )
-
-      const enterButton = screen.getByRole('button', {name: 'Enter Hive'})
-      await user.click(enterButton)
-
-      expect(onEnter).toHaveBeenCalledWith('test-hive')
-    })
-
-    it('should show more actions menu button for members', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getByRole('button', {name: ''}) // MoreVertIcon button
-      expect(menuButton).toBeInTheDocument()
-    })
-
-    it('should disable action buttons when loading', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-              isLoading={true}
-          />
-      )
-
-      expect(screen.getByRole('button', {name: 'Enter Hive'})).toBeDisabled()
-    })
-  })
-
-  describe('Menu Actions', () => {
-    it('should open menu when more actions button is clicked', async () => {
-      const user = userEvent.setup()
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-      expect(menuButton).toBeInTheDocument()
-
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      expect(screen.getByRole('menu')).toBeInTheDocument()
-      expect(screen.getByRole('menuitem', {name: 'Share'})).toBeInTheDocument()
-    })
-
-    it('should show Settings menu item for members with management permissions', async () => {
-      const user = userEvent.setup()
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({
-        userId: 'user1',
-        hiveId: 'hive1',
-        permissions: {...createMockMember().permissions, canManageSettings: true}
-      })
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      expect(screen.getByRole('menuitem', {name: 'Settings'})).toBeInTheDocument()
-    })
-
-    it('should show Settings menu item for hive owners', async () => {
-      const user = userEvent.setup()
-      const hive = createMockHive({id: 'hive1', ownerId: 'user1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      expect(screen.getByRole('menuitem', {name: 'Settings'})).toBeInTheDocument()
-    })
-
-    it('should not show Leave Hive option for owners', async () => {
-      const user = userEvent.setup()
-      const hive = createMockHive({id: 'hive1', ownerId: 'user1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      expect(screen.queryByRole('menuitem', {name: 'Leave Hive'})).not.toBeInTheDocument()
-    })
-
-    it('should show Leave Hive option for non-owner members', async () => {
-      const user = userEvent.setup()
-      const hive = createMockHive({id: 'hive1', ownerId: 'owner1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      expect(screen.getByRole('menuitem', {name: 'Leave Hive'})).toBeInTheDocument()
-    })
-
-    it('should call onLeave when Leave Hive is clicked', async () => {
+    it('should call onLeave when leave button is clicked', async () => {
       const user = userEvent.setup()
       const onLeave = vi.fn()
-      const hive = createMockHive({id: 'test-hive', ownerId: 'owner1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'test-hive'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-              onLeave={onLeave}
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        await user.click(menuButton)
+      const memberHive = {
+        ...mockHive,
+        isMember: true,
+        members: [{ userId: 'current-user', joinedAt: new Date().toISOString() }]
       }
+      renderWithProviders(
+        <HiveCard {...defaultProps} hive={memberHive} onLeave={onLeave} currentUserId="current-user" />
+      )
 
-      const leaveItem = screen.getByRole('menuitem', {name: 'Leave Hive'})
-      await user.click(leaveItem)
+      const leaveButton = screen.getByRole('button', { name: /leave/i })
+      await user.click(leaveButton)
 
-      expect(onLeave).toHaveBeenCalledWith('test-hive')
+      expect(onLeave).toHaveBeenCalledWith('1')
     })
 
-    it('should call onShare when Share is clicked', async () => {
+    it('should call onView when card is clicked', async () => {
       const user = userEvent.setup()
-      const onShare = vi.fn()
-      const hive = createMockHive({id: 'test-hive'})
-      const member = createMockMember({userId: 'user1', hiveId: 'test-hive'})
+      const onView = vi.fn()
+      renderWithProviders(<HiveCard {...defaultProps} onView={onView} />)
 
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-              onShare={onShare}
-          />
-      )
+      const card = screen.getByTestId('hive-card')
+      await user.click(card)
 
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      const shareItem = screen.getByRole('menuitem', {name: 'Share'})
-      await user.click(shareItem)
-
-      expect(onShare).toHaveBeenCalledWith('test-hive')
+      expect(onView).toHaveBeenCalledWith('1')
     })
 
-    it('should call onSettings when Settings is clicked', async () => {
+    it('should not call onView when action buttons are clicked', async () => {
       const user = userEvent.setup()
-      const onSettings = vi.fn()
-      const hive = createMockHive({id: 'test-hive', ownerId: 'user1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'test-hive'})
-
+      const onView = vi.fn()
+      const onJoin = vi.fn()
       renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-              onSettings={onSettings}
-          />
+        <HiveCard {...defaultProps} onView={onView} onJoin={onJoin} />
       )
 
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
+      const joinButton = screen.getByRole('button', { name: /join/i })
+      await user.click(joinButton)
 
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      const settingsItem = screen.getByRole('menuitem', {name: 'Settings'})
-      await user.click(settingsItem)
-
-      expect(onSettings).toHaveBeenCalledWith('test-hive')
-    })
-
-    it('should close menu when an action is clicked', async () => {
-      const user = userEvent.setup()
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        await user.click(menuButton)
-      }
-
-      const shareItem = screen.getByRole('menuitem', {name: 'Share'})
-      await user.click(shareItem)
-
-      // Menu should be closed after clicking an item
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+      expect(onJoin).toHaveBeenCalled()
+      expect(onView).not.toHaveBeenCalled()
     })
   })
 
-  describe('Loading States', () => {
-    it('should apply loading opacity to card', () => {
-      const hive = createMockHive()
-      renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} isLoading={true}/>
-      )
+  describe('Status Indicators', () => {
+    it('should show active indicator for active hives', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      const card = screen.getByRole('heading').closest('[class*="MuiCard-root"]')
-      expect(card).toHaveStyle({opacity: '0.7'})
+      expect(screen.getByTestId('active-indicator')).toBeInTheDocument()
     })
 
-    it('should disable all interactive elements when loading', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
+    it('should show inactive indicator for inactive hives', () => {
+      const inactiveHive = { ...mockHive, status: 'INACTIVE' as const }
+      renderWithProviders(<HiveCard {...defaultProps} hive={inactiveHive} />)
 
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-              isLoading={true}
-          />
-      )
-
-      expect(screen.getByRole('button', {name: 'Enter Hive'})).toBeDisabled()
-
-      // Check menu button is also disabled
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-      expect(menuButton).toBeDisabled()
-    })
-  })
-
-  describe('Edge Cases and Error Handling', () => {
-    it('should handle very long hive names gracefully', () => {
-      const hive = createMockHive({
-        name: 'This is a very long hive name that should be truncated properly to prevent layout issues'
-      })
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
-
-      const nameElement = screen.getByRole('heading')
-      expect(nameElement).toHaveStyle({
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      })
+      expect(screen.getByTestId('inactive-indicator')).toBeInTheDocument()
     })
 
-    it('should handle very long descriptions gracefully', () => {
-      const longDescription = 'This is a very long description that should be truncated after a certain number of lines to prevent the card from becoming too tall and breaking the layout of the grid or list view.'
-      const hive = createMockHive({description: longDescription})
+    it('should show member progress bar', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
-
-      const descElement = screen.getByText(longDescription)
-      expect(descElement).toHaveStyle({
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        display: '-webkit-box'
-      })
-    })
-
-    it('should handle empty tags array', () => {
-      const hive = createMockHive({tags: []})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive} variant="detailed"/>)
-
-      // Should not crash and should not show tag section
-      expect(screen.getByRole('heading')).toBeInTheDocument()
-    })
-
-    it('should handle missing member data gracefully', () => {
-      const hive = createMockHive()
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive} members={undefined}/>)
-
-      // Should not crash and should show 0 online
-      expect(screen.queryByText('online')).not.toBeInTheDocument()
-    })
-
-    it('should handle zero max members', () => {
-      const hive = createMockHive({currentMembers: 0, maxMembers: 0})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
-
-      expect(screen.getByText('0/0')).toBeInTheDocument()
-    })
-
-    it('should handle members without profile pictures', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({
-        isActive: true,
-        user: {
-          ...mockUser,
-          firstName: 'John',
-          lastName: 'Doe',
-          profilePicture: null
-        }
-      })
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              variant="default"
-          />
-      )
-
-      // Should show initials when no profile picture
-      expect(screen.getByText('JD')).toBeInTheDocument()
+      const progressBar = screen.getByRole('progressbar', { hidden: true })
+      expect(progressBar).toHaveAttribute('aria-valuenow', '0') // 0/10 = 0%
     })
   })
 
   describe('Hover Effects', () => {
-    it('should have hover transform and shadow styles', () => {
-      const hive = createMockHive()
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
+    it('should show view details on hover', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      const card = screen.getByRole('heading').closest('[class*="MuiCard-root"]')
-      expect(card).toHaveStyle({
-        transition: 'all 0.2s ease-in-out'
-      })
+      const card = screen.getByTestId('hive-card')
+      await user.hover(card)
+
+      expect(screen.getByText(/view details/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('Loading State', () => {
+    it('should show skeleton when loading', () => {
+      renderWithProviders(<HiveCard {...defaultProps} isLoading />)
+
+      expect(screen.getByTestId('hive-card-skeleton')).toBeInTheDocument()
     })
   })
 
   describe('Accessibility', () => {
-    it('should have proper ARIA labels and roles', () => {
-      const hive = createMockHive({name: 'Accessible Hive'})
-      renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
+    it('should have accessible card structure', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      expect(screen.getByRole('heading', {name: 'Accessible Hive'})).toBeInTheDocument()
+      const card = screen.getByTestId('hive-card')
+      expect(card).toHaveAttribute('role', 'article')
     })
 
-    it('should have proper button labels', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
+    it('should have accessible member count', () => {
+      renderWithProviders(<HiveCard {...defaultProps} />)
 
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      expect(screen.getByRole('button', {name: 'Enter Hive'})).toBeInTheDocument()
+      const memberCount = screen.getByTestId('member-count')
+      expect(memberCount).toHaveAttribute('aria-label', '0 out of 10 members')
     })
 
-    it('should have tooltips for member avatars', async () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({
-        isActive: true,
-        user: {
-          ...mockUser,
-          firstName: 'John',
-          lastName: 'Doe'
-        }
-      })
+    it('should have keyboard navigation support', async () => {
+      const user = userEvent.setup()
+      const onView = vi.fn()
+      renderWithProviders(<HiveCard {...defaultProps} onView={onView} />)
 
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              variant="default"
-          />
-      )
+      const card = screen.getByTestId('hive-card')
+      card.focus()
 
-      const avatar = screen.getByText('JD')
-      expect(avatar).toBeInTheDocument()
-
-      // Verify the avatar is wrapped in a Tooltip component
-      // The actual tooltip behavior is handled by Material UI and doesn't need explicit testing
-    })
-
-    it('should support keyboard navigation', () => {
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const enterButton = screen.getByRole('button', {name: 'Enter Hive'})
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      // Test that buttons are focusable
-      enterButton.focus()
-      expect(enterButton).toHaveFocus()
-
-      if (menuButton) {
-        menuButton.focus()
-        expect(menuButton).toHaveFocus()
-      }
+      await user.keyboard('{Enter}')
+      expect(onView).toHaveBeenCalled()
     })
   })
 
   describe('Responsive Design', () => {
-    it('should have responsive font sizes', () => {
-      const hive = createMockHive({name: 'Test Hive'})
+    it('should hide tags on small screens', () => {
+      renderWithProviders(<HiveCard {...defaultProps} compact />)
 
-      // Test compact variant font size
-      const {rerender} = renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} variant="compact"/>
-      )
-      let nameElement = screen.getByRole('heading')
-      expect(nameElement).toHaveStyle({fontSize: '1rem'})
-
-      // Test default variant font size
-      rerender(<HiveCard {...defaultProps} hive={hive} variant="default"/>)
-      nameElement = screen.getByRole('heading')
-      expect(nameElement).toHaveStyle({fontSize: '1.1rem'})
+      expect(screen.queryByTestId('hive-tags')).not.toBeInTheDocument()
     })
 
-    it('should handle different description lengths in different variants', () => {
-      const longDescription = 'This is a long description that should be handled differently in different variants of the card component.'
-      const hive = createMockHive({description: longDescription})
+    it('should show compact layout when specified', () => {
+      renderWithProviders(<HiveCard {...defaultProps} compact />)
 
-      // Test default variant (2 lines)
-      const {rerender} = renderWithProviders(
-          <HiveCard {...defaultProps} hive={hive} variant="default"/>
-      )
-      let descElement = screen.getByText(longDescription)
-      expect(descElement).toHaveStyle({WebkitLineClamp: '2'})
-
-      // Test detailed variant (3 lines)
-      rerender(<HiveCard {...defaultProps} hive={hive} variant="detailed"/>)
-      descElement = screen.getByText(longDescription)
-      expect(descElement).toHaveStyle({WebkitLineClamp: '3'})
-    })
-  })
-
-  describe('Performance', () => {
-    it('should not re-render unnecessarily with same props', () => {
-      const hive = createMockHive()
-      const {rerender} = renderWithProviders(<HiveCard {...defaultProps} hive={hive}/>)
-
-      const initialName = screen.getByRole('heading')
-      expect(initialName).toBeInTheDocument()
-
-      // Rerender with same props
-      rerender(<HiveCard {...defaultProps} hive={hive}/>)
-
-      // Should still show the same content
-      expect(screen.getByRole('heading')).toHaveTextContent(hive.name)
-    })
-
-    it('should handle menu state changes gracefully', async () => {
-      const user = userEvent.setup()
-      const hive = createMockHive({id: 'hive1'})
-      const member = createMockMember({userId: 'user1', hiveId: 'hive1'})
-
-      renderWithProviders(
-          <HiveCard
-              {...defaultProps}
-              hive={hive}
-              members={[member]}
-              currentUserId="user1"
-          />
-      )
-
-      const menuButton = screen.getAllByRole('button').find(btn =>
-          btn.querySelector('[data-testid="MoreVertIcon"]')
-      )
-
-      if (menuButton) {
-        // Test that menu can be opened
-        await user.click(menuButton)
-        expect(screen.getByRole('menu')).toBeInTheDocument()
-
-        // Test that clicking a menu item works and closes the menu
-        const shareItem = screen.getByRole('menuitem', {name: 'Share'})
-        await user.click(shareItem)
-
-        // Menu should close after action
-        await waitFor(() => {
-          expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-        })
-      }
+      const card = screen.getByTestId('hive-card')
+      expect(card).toHaveClass('hive-card--compact')
     })
   })
 })

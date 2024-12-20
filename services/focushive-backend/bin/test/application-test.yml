@@ -1,0 +1,208 @@
+# =======================================================
+# SELF-CONTAINED TEST CONFIGURATION
+# =======================================================
+# All values are provided directly without environment variable dependencies
+# This avoids the enum binding issues caused by undefined environment variables
+
+spring:
+  application:
+    name: focushive-backend-test
+    
+  main:
+    allow-bean-definition-overriding: true
+    lazy-initialization: true
+    web-application-type: none
+    
+  # H2 Database for tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      leak-detection-threshold: 30000
+      connection-test-query: SELECT 1
+      pool-name: TestHikariPool
+      
+  # JPA Configuration for tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+    show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 0
+          batch_versioned_data: false
+          lob:
+            non_contextual_creation: true
+        order_inserts: false
+        order_updates: false
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        generate_statistics: false
+        
+  # Disable Flyway for tests  
+  flyway:
+    enabled: false
+    
+  # Disable Redis for tests
+  redis:
+    host: localhost
+    port: 6379
+    password: ""
+    timeout: 2000
+    
+  # Simple cache for tests
+  cache:
+    type: simple
+    
+  # Security configuration
+  security:
+    jwt:
+      secret: test-jwt-secret-key-that-is-long-enough-for-hs256-algorithm-minimum-256-bits-required
+      expiration: 3600000
+      refresh-expiration: 7200000
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081
+          jwk-set-uri: http://localhost:8081/.well-known/jwks.json
+          
+  # Feign client configuration
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 1000
+            readTimeout: 2000
+            loggerLevel: none
+
+# Exclude problematic auto-configurations            
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketMessagingAutoConfiguration
+      - org.springframework.cloud.openfeign.FeignAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+
+# Server configuration
+server:
+  port: 0  # Random port for tests
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# External services (mocked)
+identity:
+  service:
+    url: http://localhost:8081
+    connect-timeout: 1000
+    read-timeout: 2000
+    api-key: test-api-key
+
+services:
+  notification:
+    url: http://localhost:8082
+  buddy:
+    url: http://localhost:8083
+
+# Application features - all disabled for tests
+app:
+  version: test-1.0.0
+  features:
+    forum:
+      enabled: false
+    buddy:
+      enabled: false
+    notification:
+      enabled: false
+    analytics:
+      enabled: false
+    authentication:
+      enabled: false
+    authController:
+      enabled: false
+    redis:
+      enabled: false
+    health:
+      enabled: false
+
+# Rate limiting - disabled for tests
+focushive:
+  rate-limit:
+    enabled: false
+    use-redis: false
+    public-api-requests-per-hour: 1000
+    authenticated-api-requests-per-hour: 10000
+    admin-api-requests-per-hour: 100000
+    websocket-connections-per-minute: 60
+    burst-capacity: 10
+    burst-refill-duration: 60000
+    bucket-ttl: 3600000
+    metrics-enabled: false
+    whitelisted-ips: ""
+    excluded-endpoints: ""
+
+# Logging configuration
+logging:
+  level:
+    root: WARN
+    com.focushive: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.springframework.data: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    feign: WARN
+  pattern:
+    level: "%5p [TEST]"
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [TEST] %logger{36} - %msg%n"
+
+# Management endpoints - minimal for tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      group:
+        liveness:
+          include: db
+        readiness:
+          include: db
+        startup:
+          include: db
+  metrics:
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": false
+      percentiles:
+        "[http.server.requests]": "0.5,0.95,0.99"
+    web:
+      server:
+        request:
+          autotime:
+            enabled: false
+  tracing:
+    sampling:
+      probability: 0.0

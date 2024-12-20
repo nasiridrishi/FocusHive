@@ -14,8 +14,8 @@ RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
 COPY src ./src
 RUN ./gradlew build -x test --no-daemon
 
-# Extract layers for Spring Boot optimization
-RUN java -Djarmode=tools -jar build/libs/*.jar extract --layers
+# Copy JAR for Spring Boot application (find the non-plain JAR)
+RUN find build/libs -name "*SNAPSHOT.jar" -not -name "*plain.jar" -exec cp {} app.jar \;
 
 # Production runtime stage
 FROM eclipse-temurin:21-jre-alpine AS production
@@ -30,11 +30,8 @@ RUN addgroup -g 1001 -S spring && \
     mkdir -p /app/logs && \
     chown -R spring:spring /app
 
-# Copy Spring Boot layers for optimal caching
-COPY --from=build --chown=spring:spring /app/dependencies/ ./
-COPY --from=build --chown=spring:spring /app/spring-boot-loader/ ./
-COPY --from=build --chown=spring:spring /app/snapshot-dependencies/ ./
-COPY --from=build --chown=spring:spring /app/application/ ./
+# Copy the application JAR
+COPY --from=build --chown=spring:spring /app/app.jar ./
 
 # Switch to non-root user
 USER spring:spring
@@ -54,4 +51,4 @@ ENTRYPOINT ["dumb-init", "--", "java", \
     "-XX:+OptimizeStringConcat", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-Dspring.backgroundpreinitializer.ignore=true", \
-    "org.springframework.boot.loader.launch.JarLauncher"]
+    "-jar", "app.jar"]

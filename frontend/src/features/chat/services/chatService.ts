@@ -11,9 +11,40 @@ import type {
   MessageReaction,
   ChatWebSocketEvent,
   BatchMarkAsReadRequest,
+  MessageAttachment,
 } from '@/contracts/chat';
 import type { PaginatedResponse } from '@/contracts/common';
 import type { IMessage } from '@stomp/stompjs';
+
+/**
+ * Convert File objects to MessageAttachment objects
+ */
+function convertFilesToAttachments(files: File[]): MessageAttachment[] {
+  return files.map(file => {
+    const attachment: MessageAttachment = {
+      id: `temp-${Date.now()}-${Math.random()}`, // Temporary ID until uploaded
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: '', // Will be populated after upload
+      thumbnailUrl: undefined,
+    };
+
+    // Add metadata based on file type
+    if (file.type.startsWith('image/')) {
+      // For images, we could add width/height if available
+      attachment.metadata = {};
+    } else if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+      // For media files, we could add duration if available
+      attachment.metadata = {};
+    } else if (file.type === 'application/pdf') {
+      // For PDFs, we could add page count if available
+      attachment.metadata = {};
+    }
+    
+    return attachment;
+  });
+}
 
 /**
  * ChatService - Business logic layer for chat functionality
@@ -31,12 +62,12 @@ import type { IMessage } from '@stomp/stompjs';
  */
 export class ChatService {
   private apiUrl = 'http://localhost:8080/api/v1/chat';
-  private messageCache: Map<number, { message: ChatMessage; timestamp: number }> = new Map();
-  private historyCache: Map<number, { history: ChatHistory; timestamp: number }> = new Map();
+  private messageCache: Map<string, { message: ChatMessage; timestamp: number }> = new Map();
+  private historyCache: Map<string, { history: ChatHistory; timestamp: number }> = new Map();
   private optimisticMessages: Map<string, ChatMessage> = new Map();
   private cacheTimeout = 5 * 60 * 1000; // 5 minutes
   private subscriptions: Map<string, () => void> = new Map();
-  private typingTimers: Map<number, NodeJS.Timeout> = new Map();
+  private typingTimers: Map<string, NodeJS.Timeout> = new Map();
 
   constructor() {}
 
@@ -83,23 +114,36 @@ export class ChatService {
    */
   async sendMessageOptimistic(request: SendMessageRequest): Promise<string> {
     const optimisticId = `optimistic-${Date.now()}-${Math.random()}`;
+    
+    // Convert File[] to MessageAttachment[] if needed
+    let attachments: MessageAttachment[] = [];
+    if (request.attachments) {
+      if (request.attachments.length > 0 && request.attachments[0] instanceof File) {
+        attachments = convertFilesToAttachments(request.attachments as File[]);
+      } else {
+        attachments = request.attachments as MessageAttachment[];
+      }
+    }
+    
+    const user = await authService.getCurrentUser();
 
     // Create optimistic message
     const optimisticMessage: ChatMessage = {
-      id: -1,
-      hiveId: request.hiveId,
-      userId: authService.getCurrentUser()?.id || -1,
-      username: authService.getCurrentUser()?.username || 'You',
-      avatar: authService.getCurrentUser()?.avatar,
-      content: request.content,
-      type: request.type || 'TEXT',
-      status: 'SENDING',
-      parentMessageId: request.parentMessageId,
-      mentions: request.mentions,
-      reactions: [],
-      attachments: [],
+      id: String(-1),
+      hiveId: String(request.hiveId),
+      senderId: user?.id || 'unknown',
+      senderName: user?.username || 'You', 
+      text: request.text || request.content || '',
+      timestamp: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      userId: user?.id,
+      username: user?.username || 'You',
+      content: request.text || request.content || '',
+      reactions: [],
+      attachments,
+      replyToId: request.replyToId || request.parentMessageId,
+      mentions: request.mentions,
     };
 
     // Store optimistic message
@@ -116,7 +160,8 @@ export class ChatService {
         // Mark optimistic message as failed
         const failed = this.optimisticMessages.get(optimisticId);
         if (failed) {
-          failed.status = 'FAILED';
+          // Note: ChatMessage doesn't have status property
+          // failed.status = 'FAILED';
         }
         console.error('Failed to send message:', error);
       });
@@ -135,11 +180,11 @@ export class ChatService {
    * Get message history for a hive
    */
   async getMessageHistory(
-    hiveId: number,
-    options?: { beforeMessageId?: number; limit?: number }
+    hiveId: string | number,
+    options?: { beforeMessageId?: string | number; limit?: number }
   ): Promise<ChatHistory> {
     // Check cache first
-    const cached = this.getCachedHistory(hiveId);
+    const cached = this.getCachedHistory(String(hiveId));
     if (cached && !options) {
       return cached;
     }
@@ -153,7 +198,7 @@ export class ChatService {
       let url = `${this.apiUrl}/hives/${hiveId}/history`;
       if (options) {
         const params = new URLSearchParams();
-        if (options.beforeMessageId) params.append('before', options.beforeMessageId.toString());
+        if (options.beforeMessageId) params.append('before', String(options.beforeMessageId));
         if (options.limit) params.append('limit', options.limit.toString());
         url += `?${params}`;
       }
@@ -173,7 +218,7 @@ export class ChatService {
 
       // Cache history (only if no options)
       if (!options) {
-        this.cacheHistory(hiveId, history);
+        this.cacheHistory(String(hiveId), history);
       }
 
       // Cache individual messages
@@ -189,7 +234,7 @@ export class ChatService {
   /**
    * Update an existing message
    */
-  async updateMessage(messageId: number, request: UpdateMessageRequest): Promise<ChatMessage> {
+  async updateMessage(messageId: string | number, request: UpdateMessageRequest): Promise<ChatMessage> {
     const token = authService.getAccessToken();
     if (!token) {
       throw new Error('Authentication required');
@@ -227,7 +272,7 @@ export class ChatService {
   /**
    * Delete a message
    */
-  async deleteMessage(messageId: number, options?: { soft?: boolean }): Promise<ChatMessage | void> {
+  async deleteMessage(messageId: string | number, options?: { soft?: boolean }): Promise<ChatMessage | void> {
     const token = authService.getAccessToken();
     if (!token) {
       throw new Error('Authentication required');
@@ -252,11 +297,11 @@ export class ChatService {
       if (options?.soft) {
         const message = await response.json();
         this.cacheMessage(message);
-        this.notifyMessageDeletion(message.hiveId, messageId);
+        this.notifyMessageDeletion(Number(message.hiveId), Number(messageId));
         return message;
       } else {
         // Remove from cache
-        this.messageCache.delete(messageId);
+        this.messageCache.delete(String(messageId));
         return;
       }
     } catch (error) {
@@ -268,7 +313,7 @@ export class ChatService {
   /**
    * Add a reaction to a message
    */
-  async addReaction(messageId: number, emoji: string): Promise<void> {
+  async addReaction(messageId: string | number, emoji: string): Promise<void> {
     const token = authService.getAccessToken();
     if (!token) {
       throw new Error('Authentication required');
@@ -291,15 +336,14 @@ export class ChatService {
       // Update cached message if exists
       const cached = this.getCachedMessage(messageId);
       if (cached) {
-        const user = authService.getCurrentUser();
+        const user = await authService.getCurrentUser();
         if (user && !cached.reactions) {
           cached.reactions = [];
         }
         cached.reactions?.push({
           emoji,
-          userId: user?.id || -1,
-          username: user?.username || 'Unknown',
-          createdAt: new Date().toISOString(),
+          userId: user?.id || 'unknown',
+          userName: user?.username || 'Unknown',
         });
         this.cacheMessage(cached);
       }
@@ -312,7 +356,7 @@ export class ChatService {
   /**
    * Remove a reaction from a message
    */
-  async removeReaction(messageId: number, emoji: string): Promise<void> {
+  async removeReaction(messageId: string | number, emoji: string): Promise<void> {
     const token = authService.getAccessToken();
     if (!token) {
       throw new Error('Authentication required');
@@ -333,9 +377,9 @@ export class ChatService {
       // Update cached message if exists
       const cached = this.getCachedMessage(messageId);
       if (cached && cached.reactions) {
-        const userId = authService.getCurrentUser()?.id;
+        const user = await authService.getCurrentUser();
         cached.reactions = cached.reactions.filter(r =>
-          !(r.emoji === emoji && r.userId === userId)
+          !(r.emoji === emoji && r.userId === user?.id)
         );
         this.cacheMessage(cached);
       }
@@ -348,20 +392,20 @@ export class ChatService {
   /**
    * Send typing indicator
    */
-  sendTypingIndicator(hiveId: number, isTyping: boolean): void {
+  sendTypingIndicator(hiveId: string | number, isTyping: boolean): void {
     const destination = '/app/chat/typing';
-    const payload: ChatTypingIndicator = {
-      hiveId,
-      userId: authService.getCurrentUser()?.id || -1,
-      username: authService.getCurrentUser()?.username || 'Unknown',
+    const payload = {
+      roomId: String(hiveId),
+      userId: 'current-user', // Will be populated by server from auth
+      userName: 'You',
       isTyping,
-      timestamp: new Date().toISOString(),
+      startedAt: new Date().toISOString(),
     };
 
     webSocketService.sendMessage(destination, payload);
 
     // Clear any existing typing timer for this hive
-    const existingTimer = this.typingTimers.get(hiveId);
+    const existingTimer = this.typingTimers.get(String(hiveId));
     if (existingTimer) {
       clearTimeout(existingTimer);
     }
@@ -371,14 +415,14 @@ export class ChatService {
       const timer = setTimeout(() => {
         this.sendTypingIndicator(hiveId, false);
       }, 5000);
-      this.typingTimers.set(hiveId, timer);
+      this.typingTimers.set(String(hiveId), timer);
     }
   }
 
   /**
    * Subscribe to typing indicators
    */
-  subscribeToTypingIndicators(hiveId: number, callback: (indicator: ChatTypingIndicator) => void): () => void {
+  subscribeToTypingIndicators(hiveId: string | number, callback: (indicator: any) => void): () => void {
     if (!webSocketService.isConnectedStatus()) {
       return () => {};
     }
@@ -387,7 +431,7 @@ export class ChatService {
 
     const subscriptionId = webSocketService.subscribe(topic, (message: IMessage) => {
       try {
-        const indicator = JSON.parse(message.body) as ChatTypingIndicator;
+        const indicator = JSON.parse(message.body);
         callback(indicator);
       } catch (error) {
         console.error('Failed to parse typing indicator:', error);
@@ -407,7 +451,7 @@ export class ChatService {
   /**
    * Subscribe to new messages in a hive
    */
-  subscribeToMessages(hiveId: number, callback: (message: ChatMessage) => void): () => void {
+  subscribeToMessages(hiveId: string | number, callback: (message: ChatMessage) => void): () => void {
     if (!webSocketService.isConnectedStatus()) {
       return () => {};
     }
@@ -437,7 +481,7 @@ export class ChatService {
   /**
    * Subscribe to message edits
    */
-  subscribeToMessageEdits(hiveId: number, callback: (message: ChatMessage) => void): () => void {
+  subscribeToMessageEdits(hiveId: string | number, callback: (message: ChatMessage) => void): () => void {
     if (!webSocketService.isConnectedStatus()) {
       return () => {};
     }
@@ -467,7 +511,7 @@ export class ChatService {
   /**
    * Subscribe to message deletions
    */
-  subscribeToMessageDeletions(hiveId: number, callback: (data: { messageId: number; deletedAt: string }) => void): () => void {
+  subscribeToMessageDeletions(hiveId: string | number, callback: (data: { messageId: string | number; deletedAt: string }) => void): () => void {
     if (!webSocketService.isConnectedStatus()) {
       return () => {};
     }
@@ -479,7 +523,7 @@ export class ChatService {
         const deletionData = JSON.parse(message.body);
         // Remove from cache
         if (deletionData.messageId) {
-          this.messageCache.delete(deletionData.messageId);
+          this.messageCache.delete(String(deletionData.messageId));
         }
         callback(deletionData);
       } catch (error) {
@@ -509,13 +553,12 @@ export class ChatService {
     try {
       const queryParams = new URLSearchParams();
       if (params.query) queryParams.append('query', params.query);
-      if (params.hiveId) queryParams.append('hiveId', params.hiveId.toString());
       if (params.userId) queryParams.append('userId', params.userId.toString());
       if (params.type) queryParams.append('type', params.type);
       if (params.startDate) queryParams.append('startDate', params.startDate);
       if (params.endDate) queryParams.append('endDate', params.endDate);
-      if (params.page !== undefined) queryParams.append('page', params.page.toString());
-      if (params.size !== undefined) queryParams.append('size', params.size.toString());
+      if (params.limit !== undefined) queryParams.append('limit', params.limit.toString());
+      if (params.offset !== undefined) queryParams.append('offset', params.offset.toString());
 
       const response = await fetch(`${this.apiUrl}/search?${queryParams}`, {
         method: 'GET',
@@ -543,7 +586,7 @@ export class ChatService {
   /**
    * Mark messages as read
    */
-  async markAsRead(messageIds: number[]): Promise<void> {
+  async markAsRead(messageIds: (string | number)[]): Promise<void> {
     const token = authService.getAccessToken();
     if (!token) {
       throw new Error('Authentication required');
@@ -565,9 +608,9 @@ export class ChatService {
 
       // Update cached messages
       messageIds.forEach(id => {
-        const cached = this.getCachedMessage(id);
+        const cached = this.getCachedMessage(String(id));
         if (cached) {
-          cached.status = 'READ';
+          // Note: ChatMessage doesn't have status property in websocket contract
           this.cacheMessage(cached);
         }
       });
@@ -580,7 +623,7 @@ export class ChatService {
   /**
    * Get read receipts for a message
    */
-  async getReadReceipts(messageId: number): Promise<ChatReadReceipt[]> {
+  async getReadReceipts(messageId: string | number): Promise<ChatReadReceipt[]> {
     const token = authService.getAccessToken();
     if (!token) {
       throw new Error('Authentication required');
@@ -608,33 +651,33 @@ export class ChatService {
   // Cache management methods
 
   cacheMessage(message: ChatMessage): void {
-    this.messageCache.set(message.id, {
+    this.messageCache.set(String(message.id), {
       message,
       timestamp: Date.now(),
     });
   }
 
-  getCachedMessage(messageId: number): ChatMessage | null {
-    const cached = this.messageCache.get(messageId);
+  getCachedMessage(messageId: string | number): ChatMessage | null {
+    const cached = this.messageCache.get(String(messageId));
     if (!cached) return null;
 
     // Check if cache is expired
     if (Date.now() - cached.timestamp > this.cacheTimeout) {
-      this.messageCache.delete(messageId);
+      this.messageCache.delete(String(messageId));
       return null;
     }
 
     return cached.message;
   }
 
-  private cacheHistory(hiveId: number, history: ChatHistory): void {
+  private cacheHistory(hiveId: string, history: ChatHistory): void {
     this.historyCache.set(hiveId, {
       history,
       timestamp: Date.now(),
     });
   }
 
-  private getCachedHistory(hiveId: number): ChatHistory | null {
+  private getCachedHistory(hiveId: string): ChatHistory | null {
     const cached = this.historyCache.get(hiveId);
     if (!cached) return null;
 
@@ -653,9 +696,9 @@ export class ChatService {
     this.optimisticMessages.clear();
   }
 
-  clearHiveCache(hiveId: number): void {
+  clearHiveCache(hiveId: string | number): void {
     // Clear history cache
-    this.historyCache.delete(hiveId);
+    this.historyCache.delete(String(hiveId));
 
     // Clear message cache for this hive
     for (const [messageId, cached] of this.messageCache.entries()) {

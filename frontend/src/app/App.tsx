@@ -1,31 +1,19 @@
 import React, {Suspense, useEffect} from 'react'
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom'
+import {BrowserRouter as Router} from 'react-router-dom'
 import {QueryClientProvider} from '@tanstack/react-query'
 import {ThemeProvider} from '@mui/material/styles'
 import {CssBaseline} from '@mui/material'
-import {ResponsiveLayout} from '@shared/layout'
 import {PWAProvider, PWAUpdateNotification} from '@shared/pwa'
 import {I18nProvider} from '@shared/components/i18n'
-import {createAccessibleLightTheme} from '@shared/accessibility/theme/accessibleTheme'
-import {AppLevelErrorBoundary, RouteLevelErrorBoundary} from '@shared/components/error-boundary'
+import {createNoFocusTheme} from '@shared/theme/noFocusTheme'
+import {AppLevelErrorBoundary} from '@shared/components/error-boundary'
 import EnvironmentProvider from '../providers/EnvironmentProvider'
 import {AuthProvider} from '../features/auth/contexts'
-import {SkipLink} from '@shared/components/SkipLink'
 // Import i18n configuration
 import '../lib/i18n'
-import {
-  LazyDashboardPage,
-  LazyDiscoverPage,
-  LazyErrorBoundaryDemo,
-  LazyHomePage,
-  LazyLoginPage,
-  LazyRegisterPage,
-  LazyPersonaSettingsPage,
-  LazyPersonaManagementPage
-} from './routes/LazyRoutes'
-import {LazyGamificationDemo} from '@shared/components/lazy-features'
 import {featurePreloader, initializeBundleOptimization} from '../utils/bundleOptimization'
 import {queryClient} from '../lib/queryClient'
+import {AuthenticatedApp} from './AuthenticatedApp'
 
 // Lazy load React Query Devtools only in development
 const ReactQueryDevtools = import.meta.env.DEV
@@ -34,8 +22,8 @@ const ReactQueryDevtools = import.meta.env.DEV
     })))
     : null
 
-// Create accessible responsive theme
-const theme = createAccessibleLightTheme()
+// Create theme with no focus highlights
+const theme = createNoFocusTheme()
 
 function App(): React.ReactElement {
   // Initialize bundle optimization on app start
@@ -66,100 +54,13 @@ function App(): React.ReactElement {
                 <CssBaseline/>
                 <PWAProvider serviceWorkerOptions={{immediate: true}}>
                   <AuthProvider>
-                    <Router>
-                      <SkipLink>Skip to main content</SkipLink>
-                      <ResponsiveLayout
-                          currentUser={{
-                            name: 'John Doe',
-                            email: 'john.doe@example.com',
-                            avatar: undefined,
-                          }}
-                          isConnected={true}
-                          notificationCount={3}
-                      >
-                        <Routes>
-                          <Route
-                              path="/"
-                              element={
-                                <RouteLevelErrorBoundary routeName="Home">
-                                  <LazyHomePage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/login"
-                              element={
-                                <RouteLevelErrorBoundary routeName="Login">
-                                  <LazyLoginPage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/register"
-                              element={
-                                <RouteLevelErrorBoundary routeName="Register">
-                                  <LazyRegisterPage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/dashboard"
-                              element={
-                                <RouteLevelErrorBoundary routeName="Dashboard">
-                                  <LazyDashboardPage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/hives"
-                              element={
-                                <RouteLevelErrorBoundary routeName="Hives">
-                                  <LazyDashboardPage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/discover"
-                              element={
-                                <RouteLevelErrorBoundary routeName="Discover">
-                                  <LazyDiscoverPage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/gamification"
-                              element={
-                                <RouteLevelErrorBoundary routeName="Gamification">
-                                  <LazyGamificationDemo/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/settings/personas"
-                              element={
-                                <RouteLevelErrorBoundary routeName="PersonaSettings">
-                                  <LazyPersonaSettingsPage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/settings/personas/manage"
-                              element={
-                                <RouteLevelErrorBoundary routeName="PersonaManagement">
-                                  <LazyPersonaManagementPage/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                          <Route
-                              path="/error-boundary-demo"
-                              element={
-                                <RouteLevelErrorBoundary routeName="ErrorBoundaryDemo">
-                                  <LazyErrorBoundaryDemo/>
-                                </RouteLevelErrorBoundary>
-                              }
-                          />
-                        </Routes>
-                      </ResponsiveLayout>
+                    <Router
+                      future={{
+                        v7_startTransition: true,
+                        v7_relativeSplatPath: true
+                      }}
+                    >
+                      <AuthenticatedApp />
                     </Router>
                   </AuthProvider>
                   {/* PWA Update Notifications */}

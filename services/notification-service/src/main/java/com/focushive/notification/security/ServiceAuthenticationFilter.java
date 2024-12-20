@@ -51,22 +51,41 @@ public class ServiceAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+            log.debug("JWT token found in Authorization header for path: {}", request.getRequestURI());
 
             try {
                 // Decode and validate the JWT token
                 Jwt jwt = jwtDecoder.decode(token);
+                log.debug("JWT token successfully decoded. Issuer: {}, Subject: {}, Expires: {}", 
+                    jwt.getIssuer(), jwt.getSubject(), jwt.getExpiresAt());
+
+                // Log all claims for debugging
+                if (log.isDebugEnabled()) {
+                    log.debug("JWT claims: {}", jwt.getClaims());
+                }
 
                 // Check if this is a service account token
                 String tokenType = jwt.getClaimAsString("type");
+                log.debug("JWT token type: {}", tokenType);
+                
                 if ("service-account".equals(tokenType)) {
                     handleServiceToken(jwt, serviceName, correlationId);
+                } else {
+                    log.debug("Regular user token detected, will be handled by Spring Security OAuth2 filter");
                 }
                 // Regular user tokens are handled by the default Spring Security filter
 
             } catch (JwtException e) {
-                log.debug("JWT validation failed: {}", e.getMessage());
+                log.warn("JWT validation failed for token from {}: {} ({})", 
+                    request.getRemoteAddr(), e.getMessage(), e.getClass().getSimpleName());
+                log.debug("JWT validation error details", e);
                 // Let Spring Security handle invalid tokens
             }
+        } else if (authHeader != null) {
+            log.debug("Authorization header present but not Bearer token: {}", 
+                authHeader.length() > 20 ? authHeader.substring(0, 20) + "..." : authHeader);
+        } else {
+            log.debug("No Authorization header found for path: {}", request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);
@@ -79,9 +98,33 @@ public class ServiceAuthenticationFilter extends OncePerRequestFilter {
         String service = jwt.getClaimAsString("service");
         List<String> roles = jwt.getClaimAsStringList("roles");
         List<String> permissions = jwt.getClaimAsStringList("permissions");
+        
+        // Validate service account token structure
+        if (service == null) {
+            log.warn("Service account token is missing 'service' claim. Token subject: {}", jwt.getSubject());
+            return;
+        }
 
         log.info("Service authentication successful for service: {} (header: {}) with correlation ID: {}",
                 service, serviceName, correlationId);
+        
+        // Validate header vs token consistency
+        if (serviceName != null && !serviceName.equals(service)) {
+            log.warn("Service name mismatch: Header says '{}' but JWT token says '{}'", serviceName, service);
+        }
+        
+        // Log roles and permissions for debugging
+        log.debug("Service '{}' has roles: {} and permissions: {}", service, roles, permissions);
+
+        // Handle null collections safely
+        if (roles == null) {
+            roles = Collections.emptyList();
+            log.debug("No roles found in service token for: {}", service);
+        }
+        if (permissions == null) {
+            permissions = Collections.emptyList();
+            log.debug("No permissions found in service token for: {}", service);
+        }
 
         // Create authorities from roles
         List<SimpleGrantedAuthority> authorities = roles.stream()
@@ -92,6 +135,9 @@ public class ServiceAuthenticationFilter extends OncePerRequestFilter {
         permissions.stream()
                 .map(SimpleGrantedAuthority::new)
                 .forEach(authorities::add);
+        
+        log.debug("Created {} total authorities for service '{}': {}", 
+            authorities.size(), service, authorities);
 
         // Set authentication in security context
         UsernamePasswordAuthenticationToken authentication =
@@ -104,7 +150,7 @@ public class ServiceAuthenticationFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        log.debug("Set service authentication for: {} with {} authorities", service, authorities.size());
+        log.info("Service authentication context set for: {} with {} authorities", service, authorities.size());
     }
 
     @Override

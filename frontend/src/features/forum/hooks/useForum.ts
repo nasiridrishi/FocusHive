@@ -88,7 +88,7 @@ export function useCreatePost() {
       // Invalidate posts list
       queryClient.invalidateQueries({ queryKey: forumKeys.posts() });
       // Add the new post to cache
-      queryClient.setQueryData(forumKeys.post(newPost.id), newPost);
+      queryClient.setQueryData(forumKeys.post(Number(newPost.id)), newPost);
       // Clear drafts if it was from a draft
       queryClient.invalidateQueries({ queryKey: forumKeys.drafts() });
     },
@@ -104,7 +104,7 @@ export function useUpdatePost() {
       forumService.updatePost(id, request),
     onSuccess: (updatedPost) => {
       // Update the specific post in cache
-      queryClient.setQueryData(forumKeys.post(updatedPost.id), updatedPost);
+      queryClient.setQueryData(forumKeys.post(Number(updatedPost.id)), updatedPost);
       // Invalidate posts list
       queryClient.invalidateQueries({ queryKey: forumKeys.posts() });
     },
@@ -145,9 +145,9 @@ export function useCreateReply() {
       forumService.createReply(request),
     onSuccess: (_, variables) => {
       // Invalidate replies for the post
-      queryClient.invalidateQueries({ queryKey: forumKeys.replies(variables.postId) });
+      queryClient.invalidateQueries({ queryKey: forumKeys.replies(Number(variables.postId)) });
       // Update reply count in the post
-      queryClient.setQueryData<ForumPost>(forumKeys.post(variables.postId), (old) => {
+      queryClient.setQueryData<ForumPost>(forumKeys.post(Number(variables.postId)), (old) => {
         if (!old) return old;
         return { ...old, replyCount: old.replyCount + 1 };
       });
@@ -164,7 +164,7 @@ export function useUpdateReply() {
       forumService.updateReply(replyId, request),
     onSuccess: (updatedReply) => {
       // Invalidate replies for the post
-      queryClient.invalidateQueries({ queryKey: forumKeys.replies(updatedReply.postId) });
+      queryClient.invalidateQueries({ queryKey: forumKeys.replies(Number(updatedReply.postId)) });
     },
   });
 }
@@ -197,7 +197,7 @@ export function useAddReaction() {
     onSuccess: (_, variables) => {
       // Update the post with new reaction if it's a post reaction
       if (variables.targetType === 'post') {
-        queryClient.setQueryData<ForumPost>(forumKeys.post(variables.targetId), (old) => {
+        queryClient.setQueryData<ForumPost>(forumKeys.post(Number(variables.targetId)), (old) => {
           if (!old) return old;
           // Increase like count for like reactions
           if (variables.type === 'like') {

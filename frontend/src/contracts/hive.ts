@@ -105,6 +105,9 @@ export interface HiveSettings {
   allowVideo: boolean;
   allowScreenShare: boolean;
   autoMute: boolean;
+  enableTimer?: boolean;   // Add missing property
+  enableMusic?: boolean;   // Add missing property
+  requireApproval?: boolean;  // Add missing property
   sessionDuration: number; // in milliseconds
   breakDuration: number;   // in milliseconds
   maxSessionsPerDay?: number;
@@ -396,6 +399,8 @@ export interface SearchHivesRequest {
   query?: string;
   type?: HiveType;
   tags?: string[];
+  visibility?: string;
+  size?: number;
   isPrivate?: boolean;
   minMembers?: number;
   maxMembers?: number;
@@ -447,6 +452,9 @@ export interface HiveAnalytics {
     completionRate: number;
   };
 }
+
+// Type aliases for commonly used types
+export type HiveSearchParams = SearchHivesRequest;
 
 /**
  * Hive context state

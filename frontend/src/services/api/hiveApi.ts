@@ -1,6 +1,6 @@
 import {AxiosError, AxiosInstance} from 'axios';
 import {apiClient} from './httpInterceptors';
-import {API_ENDPOINTS, buildEndpoint} from './index';
+import {API_ENDPOINTS, buildEndpoint} from '../../config/apiConfig';
 
 /**
  * Hive API Service

@@ -16,28 +16,17 @@ import java.util.UUID;
 @Profile("!test") // Don't load this in test profile
 public class IdentityServiceFallback implements IdentityServiceClient {
     
-    @Override
-    public TokenValidationResponse validateToken(String token) {
-        log.error("Identity Service is unavailable - token validation failed");
-        return TokenValidationResponse.builder()
-                .valid(false)
-                .errorMessage("Identity Service unavailable")
-                .build();
-    }
-    
+    // Token validation is now done locally using JwtValidator
+    // validateToken method removed as endpoint doesn't exist
+
     @Override
     public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
         log.error("Identity Service is unavailable - token refresh failed");
         throw new RuntimeException("Cannot refresh token - Identity Service unavailable");
     }
-    
-    @Override
-    public TokenIntrospectionResponse introspectToken(TokenIntrospectionRequest request) {
-        log.error("Identity Service is unavailable - token introspection failed");
-        return TokenIntrospectionResponse.builder()
-                .active(false)
-                .build();
-    }
+
+    // Token introspection endpoint not implemented in Identity Service
+    // introspectToken method removed
     
     @Override
     public UserDto getUser(UUID id) {
@@ -79,11 +68,11 @@ public class IdentityServiceFallback implements IdentityServiceClient {
     }
     
     @Override
-    public HealthResponse checkHealth() {
+    public ActuatorHealthResponse checkHealth() {
         log.error("Identity Service health check failed");
-        return HealthResponse.builder()
+        return ActuatorHealthResponse.builder()
                 .status("DOWN")
-                .version("unknown")
+                .components(new java.util.HashMap<>())
                 .build();
     }
 }

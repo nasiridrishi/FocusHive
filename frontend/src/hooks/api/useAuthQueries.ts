@@ -9,7 +9,7 @@
  */
 
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {authApiService} from '@services/api';
+import authApiService from '@services/api/authApi';
 import {CACHE_TIMES, queryKeys, STALE_TIMES} from '@lib/queryClient';
 import type {
   ChangePasswordRequest,
