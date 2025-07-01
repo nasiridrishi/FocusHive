@@ -3,18 +3,20 @@ const fs = require('fs');
 const path = require('path');
 
 describe('Monorepo Setup', () => {
+  const rootDir = path.join(__dirname, '..');
+  
   test('nx.json should exist', () => {
-    const nxConfigPath = path.join(__dirname, 'nx.json');
+    const nxConfigPath = path.join(rootDir, 'nx.json');
     expect(fs.existsSync(nxConfigPath)).toBe(true);
   });
 
   test('workspace.json should exist', () => {
-    const workspacePath = path.join(__dirname, 'workspace.json');
+    const workspacePath = path.join(rootDir, 'workspace.json');
     expect(fs.existsSync(workspacePath)).toBe(true);
   });
 
   test('package.json should have Nx workspace configuration', () => {
-    const packageJsonPath = path.join(__dirname, 'package.json');
+    const packageJsonPath = path.join(rootDir, 'package.json');
     expect(fs.existsSync(packageJsonPath)).toBe(true);
     
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -24,7 +26,7 @@ describe('Monorepo Setup', () => {
   });
 
   test('Required packages directories should exist', () => {
-    const packagesDir = path.join(__dirname, 'packages');
+    const packagesDir = path.join(rootDir, 'packages');
     expect(fs.existsSync(packagesDir)).toBe(true);
     
     // Check for expected package directories
@@ -36,15 +38,15 @@ describe('Monorepo Setup', () => {
   });
 
   test('Apps and libs directories should exist', () => {
-    const appsDir = path.join(__dirname, 'apps');
-    const libsDir = path.join(__dirname, 'libs');
+    const appsDir = path.join(rootDir, 'apps');
+    const libsDir = path.join(rootDir, 'libs');
     
     expect(fs.existsSync(appsDir)).toBe(true);
     expect(fs.existsSync(libsDir)).toBe(true);
   });
 
   test('TypeScript configuration should be set up', () => {
-    const tsconfigPath = path.join(__dirname, 'tsconfig.base.json');
+    const tsconfigPath = path.join(rootDir, 'tsconfig.base.json');
     expect(fs.existsSync(tsconfigPath)).toBe(true);
     
     const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
