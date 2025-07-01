@@ -1,6 +1,6 @@
 // Test to verify monorepo structure is set up correctly
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe('Monorepo Setup', () => {
   const rootDir = path.join(__dirname, '..');
