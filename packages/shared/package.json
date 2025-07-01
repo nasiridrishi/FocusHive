@@ -1,0 +1,16 @@
+{
+  "name": "@focushive/shared",
+  "version": "0.0.1",
+  "description": "Shared types and utilities for FocusHive",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src --ext .ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
