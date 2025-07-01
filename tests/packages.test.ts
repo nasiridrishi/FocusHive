@@ -1,6 +1,6 @@
 // Test to verify package structures are set up correctly
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe('Package Structure', () => {
   const rootDir = path.join(__dirname, '..');
