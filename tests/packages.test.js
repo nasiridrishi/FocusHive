@@ -3,8 +3,10 @@ const fs = require('fs');
 const path = require('path');
 
 describe('Package Structure', () => {
+  const rootDir = path.join(__dirname, '..');
+  
   describe('Backend Package', () => {
-    const backendPath = path.join(__dirname, 'packages/backend');
+    const backendPath = path.join(rootDir, 'packages/backend');
     
     test('should have package.json', () => {
       const packageJsonPath = path.join(backendPath, 'package.json');
@@ -27,7 +29,7 @@ describe('Package Structure', () => {
   });
 
   describe('Frontend Package', () => {
-    const frontendPath = path.join(__dirname, 'packages/frontend');
+    const frontendPath = path.join(rootDir, 'packages/frontend');
     
     test('should have package.json', () => {
       const packageJsonPath = path.join(frontendPath, 'package.json');
@@ -50,7 +52,7 @@ describe('Package Structure', () => {
   });
 
   describe('Shared Package', () => {
-    const sharedPath = path.join(__dirname, 'packages/shared');
+    const sharedPath = path.join(rootDir, 'packages/shared');
     
     test('should have package.json', () => {
       const packageJsonPath = path.join(sharedPath, 'package.json');
