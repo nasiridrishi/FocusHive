@@ -1,0 +1,28 @@
+{
+  "name": "@focushive/root",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "test": "jest",
+    "test:all": "npm run test --workspaces --if-present",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "build:shared": "npm run build --workspace=@focushive/shared",
+    "build:backend": "npm run build --workspace=@focushive/backend",
+    "build:frontend": "npm run build --workspace=@focushive/frontend",
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev:backend": "npm run dev --workspace=@focushive/backend",
+    "dev:frontend": "npm run dev --workspace=@focushive/frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "typescript": "^5.4.0"
+  }
+}
