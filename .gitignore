@@ -138,3 +138,6 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Archive directory
+archive/
