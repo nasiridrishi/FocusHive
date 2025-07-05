@@ -24,7 +24,7 @@ export enum PresenceStatus {
   ONLINE = 'online',
   AWAY = 'away',
   BUSY = 'busy',
-  OFFLINE = 'offline'
+  OFFLINE = 'offline',
 }
 
 export interface UserPresence {
