@@ -21,3 +21,15 @@ export const debounce = <T extends (...args: any[]) => any>(
     timeout = setTimeout(() => func(...args), wait);
   };
 };
+
+export const formatDate = (date: Date): string => {
+  if (isNaN(date.getTime())) {
+    return 'Invalid Date';
+  }
+  return date.toISOString().split('T')[0];
+};
+
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
