@@ -8,7 +8,10 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "jest",
-    "lint": "eslint src --ext .ts,.tsx"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "clean": "rm -rf dist coverage"
   },
   "dependencies": {
     "react": "^18.2.0",
