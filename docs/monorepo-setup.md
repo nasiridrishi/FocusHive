@@ -43,11 +43,13 @@ focushive/
 ## Development Commands
 
 ### Installation
+
 ```bash
 npm install
 ```
 
 ### Development
+
 ```bash
 # Run backend and frontend in dev mode
 npm run dev
@@ -58,6 +60,7 @@ npm run dev:frontend
 ```
 
 ### Building
+
 ```bash
 # Build all packages
 npm run build
@@ -69,6 +72,7 @@ npm run build:frontend
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 npm run test:all
@@ -78,6 +82,7 @@ npm test
 ```
 
 ### Linting
+
 ```bash
 npm run lint
 ```

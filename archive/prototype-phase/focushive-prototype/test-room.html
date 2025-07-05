@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Room Participants</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Room Participant Test</h1>
+    <div id="status">Not connected</div>
+    <button onclick="connectAndJoin()">Connect & Join Room</button>
+    <div id="participants"></div>
+    
+    <script>
+        let socket;
+        const token = localStorage.getItem('token'); // Get token from your app
+        
+        function connectAndJoin() {
+            // Connect with auth
+            socket = io('http://localhost:3000', {
+                auth: { token },
+                transports: ['websocket']
+            });
+            
+            socket.on('connect', () => {
+                document.getElementById('status').innerText = 'Connected! Socket ID: ' + socket.id;
+                console.log('Connected');
+            });
+            
+            socket.on('auth:success', (data) => {
+                console.log('Auth success:', data);
+                // Try to join first dummy room
+                joinFirstRoom();
+            });
+            
+            socket.on('room:joined', (data) => {
+                console.log('Joined room:', data);
+                const participantsDiv = document.getElementById('participants');
+                participantsDiv.innerHTML = '<h2>Participants in ' + data.room.name + ':</h2>';
+                
+                if (data.participants && data.participants.length > 0) {
+                    data.participants.forEach(p => {
+                        participantsDiv.innerHTML += `
+                            <div style="margin: 10px; padding: 10px; border: 1px solid #ccc;">
+                                User: ${p.userId}<br>
+                                Status: ${p.status}<br>
+                                Task: ${p.currentTask || 'None'}
+                            </div>
+                        `;
+                    });
+                } else {
+                    participantsDiv.innerHTML += '<p>No participants found!</p>';
+                }
+            });
+            
+            socket.on('room:participants', (data) => {
+                console.log('Participants update:', data);
+            });
+            
+            socket.on('room:error', (error) => {
+                console.error('Room error:', error);
+                alert('Room error: ' + error.message);
+            });
+        }
+        
+        async function joinFirstRoom() {
+            // Get rooms list
+            const response = await fetch('http://localhost:3000/api/rooms');
+            const data = await response.json();
+            
+            if (data.rooms && data.rooms.length > 0) {
+                const room = data.rooms.find(r => r.name.includes('Deep Work')) || data.rooms[0];
+                console.log('Joining room:', room);
+                
+                // First join via API
+                const joinResponse = await fetch(`http://localhost:3000/api/rooms/${room.id}/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (joinResponse.ok) {
+                    // Then join via socket
+                    socket.emit('room:join', { roomId: room.id });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

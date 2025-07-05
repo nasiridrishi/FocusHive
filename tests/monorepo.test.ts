@@ -4,7 +4,7 @@ import * as path from 'path';
 
 describe('Monorepo Setup', () => {
   const rootDir = path.join(__dirname, '..');
-  
+
   test('nx.json should exist', () => {
     const nxConfigPath = path.join(rootDir, 'nx.json');
     expect(fs.existsSync(nxConfigPath)).toBe(true);
@@ -18,7 +18,7 @@ describe('Monorepo Setup', () => {
   test('package.json should have Nx workspace configuration', () => {
     const packageJsonPath = path.join(rootDir, 'package.json');
     expect(fs.existsSync(packageJsonPath)).toBe(true);
-    
+
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
     expect(packageJson.name).toBe('@focushive/root');
     expect(packageJson.private).toBe(true);
@@ -28,10 +28,10 @@ describe('Monorepo Setup', () => {
   test('Required packages directories should exist', () => {
     const packagesDir = path.join(rootDir, 'packages');
     expect(fs.existsSync(packagesDir)).toBe(true);
-    
+
     // Check for expected package directories
     const expectedPackages = ['backend', 'frontend', 'shared'];
-    expectedPackages.forEach(pkg => {
+    expectedPackages.forEach((pkg) => {
       const pkgPath = path.join(packagesDir, pkg);
       expect(fs.existsSync(pkgPath)).toBe(true);
     });
@@ -40,7 +40,7 @@ describe('Monorepo Setup', () => {
   test('Apps and libs directories should exist', () => {
     const appsDir = path.join(rootDir, 'apps');
     const libsDir = path.join(rootDir, 'libs');
-    
+
     expect(fs.existsSync(appsDir)).toBe(true);
     expect(fs.existsSync(libsDir)).toBe(true);
   });
@@ -48,7 +48,7 @@ describe('Monorepo Setup', () => {
   test('TypeScript configuration should be set up', () => {
     const tsconfigPath = path.join(rootDir, 'tsconfig.base.json');
     expect(fs.existsSync(tsconfigPath)).toBe(true);
-    
+
     const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
     expect(tsconfig.compilerOptions).toBeDefined();
     expect(tsconfig.compilerOptions.paths).toBeDefined();
