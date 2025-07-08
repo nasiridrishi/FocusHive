@@ -1,0 +1,101 @@
+services:
+  # PostgreSQL for relational data
+  postgres:
+    image: postgres:15-alpine
+    container_name: focushive-postgres
+    environment:
+      POSTGRES_DB: focushive
+      POSTGRES_USER: focushive_user
+      POSTGRES_PASSWORD: focushive_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U focushive_user -d focushive"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB for user preferences and activity logs
+  mongodb:
+    image: mongo:7.0
+    container_name: focushive-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: focushive_user
+      MONGO_INITDB_ROOT_PASSWORD: focushive_pass
+      MONGO_INITDB_DATABASE: focushive
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and real-time presence
+  redis:
+    image: redis:7-alpine
+    container_name: focushive-redis
+    command: redis-server --requirepass focushive_pass
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    container_name: focushive-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      # PostgreSQL
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: focushive
+      POSTGRES_USER: focushive_user
+      POSTGRES_PASSWORD: focushive_pass
+      # MongoDB
+      MONGODB_URI: mongodb://focushive_user:focushive_pass@mongodb:27017/focushive?authSource=admin
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: focushive_pass
+      # JWT
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend
+    container_name: focushive-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://backend:3000
+    depends_on:
+      - backend
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+
+networks:
+  default:
+    name: focushive-network
