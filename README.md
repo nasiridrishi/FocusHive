@@ -8,70 +8,85 @@ This project is currently in the development phase for the University of London 
 
 - **Project Timeline**: May 22, 2025 - September 15, 2025
 - **Current Phase**: Phase 1 - Foundation Setup
-- **Next Milestone**: Monorepo structure with Nx (UOL-19) ✅
+- **Architecture Update**: Migrated to Java/Spring Boot backend (July 8, 2025)
 
-## Monorepo Structure
+## Project Structure
 
-FocusHive uses an Nx-based monorepo to manage all packages:
+FocusHive follows a modular architecture with separate backend and frontend:
 
 ```
 focushive/
-├── packages/
-│   ├── backend/         # Node.js Express microservices
-│   ├── frontend/        # React TypeScript web application
-│   └── shared/          # Shared types and utilities
-├── apps/                # Additional applications
-├── libs/                # Shared libraries
-├── docs/                # Documentation
-│   └── monorepo-setup.md
-├── nx.json              # Nx workspace configuration
-├── workspace.json       # Workspace projects
-└── tsconfig.base.json   # Base TypeScript configuration
+├── backend/             # Spring Boot 3.x Java backend
+│   ├── src/            # Java source code
+│   ├── build.gradle.kts # Gradle build configuration
+│   └── Dockerfile      # Backend container
+├── frontend/
+│   └── web/            # React TypeScript web application
+│       ├── src/        # React source code
+│       └── Dockerfile  # Frontend container
+├── shared/
+│   └── openapi/        # OpenAPI specifications
+├── docs/               # Documentation
+├── docker-compose.yml  # Docker development environment
+└── .github/            # GitHub Actions CI/CD
 ```
 
 ## Development
 
 ### Prerequisites
 
-- Node.js 18+
-- npm 9+
-- Docker (for databases and services)
+- Java 21
+- Node.js 20+
+- npm 10+
+- Docker & Docker Compose
 - Git
 
 ### Getting Started
 
 ```bash
-# Install dependencies
-npm install
+# Start all services with Docker Compose
+docker-compose up -d
 
-# Run development servers (backend + frontend)
-npm run dev
+# Backend will be available at: http://localhost:8080
+# Frontend will be available at: http://localhost:5173
 
-# Run tests
-npm test
-
-# Build all packages
-npm run build
+# Stop all services
+docker-compose down
 ```
 
-### Available Scripts
+### Development Commands
 
-- `npm run dev` - Start backend and frontend in development mode
-- `npm run dev:backend` - Start backend services only
-- `npm run dev:frontend` - Start frontend application only
-- `npm run build` - Build all packages in correct order
-- `npm run build:shared` - Build shared package
-- `npm run test` - Run monorepo tests
-- `npm run test:all` - Run all package tests
-- `npm run lint` - Run linting across all packages
-- `npm run clean` - Clean all build artifacts and node_modules
+#### Backend (Spring Boot)
+```bash
+cd backend
+./gradlew bootRun     # Run backend
+./gradlew test        # Run tests
+./gradlew build       # Build JAR
+```
+
+#### Frontend (React)
+```bash
+cd frontend/web
+npm install           # Install dependencies
+npm run dev           # Run development server
+npm test              # Run tests
+npm run build         # Build production
+```
 
 ## Architecture
 
-- **Backend**: Microservices architecture with Express.js
-- **Frontend**: React with TypeScript
-- **Real-time**: WebSockets via Socket.io
-- **Shared**: Common types and utilities
+- **Backend**: Spring Boot 3.x with Java 21
+  - RESTful APIs with Spring MVC
+  - WebSocket support with STOMP
+  - PostgreSQL with Spring Data JPA
+  - Redis for caching and pub/sub
+  - JWT authentication with Spring Security
+- **Frontend**: React with TypeScript and Vite
+  - Tailwind CSS v4 for styling
+  - Real-time updates via WebSockets
+- **Infrastructure**: Docker containerization
+  - PostgreSQL 16 for relational data
+  - Redis 7 for caching and real-time features
 
 ## Documentation
 

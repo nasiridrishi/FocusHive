@@ -12,13 +12,12 @@ This document provides instructions for running FocusHive using Docker.
 
 The FocusHive Docker setup includes the following services:
 
-- **Frontend**: React application served by Vite (port 5173)
-- **Backend**: Node.js Express API server (internal only)
-- **PostgreSQL**: Relational database for users, hives, and memberships (internal only)
-- **MongoDB**: Document database for user preferences and activity logs (internal only)
-- **Redis**: In-memory cache for real-time presence data (internal only)
+- **Frontend**: React application served by Vite in development (port 5173)
+- **Backend**: Spring Boot API server (port 8080)
+- **PostgreSQL**: Relational database for all application data (port 5432)
+- **Redis**: In-memory cache for real-time presence data (port 6379)
 
-All database services use internal Docker networking for security. Only the frontend is exposed externally.
+Note: MongoDB was removed in favor of using PostgreSQL for all data storage needs.
 
 ## Quick Start
 
@@ -35,108 +34,42 @@ All database services use internal Docker networking for security. Only the fron
 
 3. Start all services:
    ```bash
-   ./docker-utils.sh up
+   docker-compose up -d
    ```
 
-4. Access the application at http://localhost:5173
+4. Access the application:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8080
+   - Swagger UI: http://localhost:8080/swagger-ui.html
 
-## Docker Utilities Script
+## Docker Commands
 
-The project includes a `docker-utils.sh` script for common Docker operations:
+### Basic Operations
 
 ```bash
 # Start all services
-./docker-utils.sh up
+docker-compose up -d
 
 # Stop all services
-./docker-utils.sh down
-
-# Restart all services
-./docker-utils.sh restart
+docker-compose down
 
 # View logs (all services)
-./docker-utils.sh logs
+docker-compose logs -f
 
 # View logs (specific service)
-./docker-utils.sh logs backend
+docker-compose logs -f backend
 
-# Open shell in a service
-./docker-utils.sh shell backend
-
-# Open database shell
-./docker-utils.sh db-shell postgres
-./docker-utils.sh db-shell mongodb
-./docker-utils.sh db-shell redis
+# Restart a service
+docker-compose restart backend
 
 # Clean up (stop services and remove volumes)
-./docker-utils.sh clean
+docker-compose down -v
 ```
 
-## Service Details
-
-### Frontend
-- **Port**: 5173
-- **Access**: http://localhost:5173
-- **Hot Reload**: Enabled
-- **API URL**: Configured to connect to backend via Docker network
-
-### Backend
-- **Port**: 3000 (internal only)
-- **Health Check**: http://backend:3000/health
-- **API Base**: http://backend:3000/api/v1
-
-### PostgreSQL
-- **Port**: 5432 (internal only)
-- **Database**: focushive
-- **User**: focushive_user
-- **Password**: focushive_pass
-
-### MongoDB
-- **Port**: 27017 (internal only)
-- **Database**: focushive
-- **User**: focushive_user
-- **Password**: focushive_pass
-
-### Redis
-- **Port**: 6379 (internal only)
-- **Password**: focushive_pass
-
-## Environment Variables
-
-Key environment variables (configured in `.env`):
+### Development Commands
 
 ```bash
-# Database Configuration
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_DB=focushive
-POSTGRES_USER=focushive_user
-POSTGRES_PASSWORD=focushive_pass
-
-# MongoDB Configuration
-MONGODB_URI=mongodb://focushive_user:focushive_pass@mongodb:27017/focushive?authSource=admin
-
-# Redis Configuration
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_PASSWORD=focushive_pass
-
-# Application Configuration
-NODE_ENV=development
-PORT=3000
-FRONTEND_URL=http://localhost:5173
-
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRES_IN=7d
-```
-
-## Building Images
-
-To rebuild Docker images after code changes:
-
-```bash
-# Rebuild all services
+# Rebuild services after code changes
 docker-compose build
 
 # Rebuild specific service
@@ -144,6 +77,80 @@ docker-compose build backend
 
 # Rebuild without cache
 docker-compose build --no-cache
+
+# Access container shell
+docker exec -it focushive-backend sh
+docker exec -it focushive-web sh
+```
+
+### Database Access
+
+```bash
+# PostgreSQL shell
+docker exec -it focushive-db psql -U focushive_user -d focushive
+
+# Redis CLI
+docker exec -it focushive-redis redis-cli -a focushive_pass
+```
+
+## Service Details
+
+### Frontend (React + Vite)
+- **Port**: 5173
+- **Access**: http://localhost:5173
+- **Hot Reload**: Enabled
+- **Source**: `./frontend/web`
+- **Build**: Multi-stage Dockerfile with nginx for production
+
+### Backend (Spring Boot)
+- **Port**: 8080
+- **Access**: http://localhost:8080
+- **Health Check**: http://localhost:8080/actuator/health
+- **API Base**: http://localhost:8080/api
+- **WebSocket**: http://localhost:8080/ws
+- **Source**: `./backend`
+- **Build**: Multi-stage Dockerfile with JDK 21
+
+### PostgreSQL
+- **Port**: 5432
+- **Database**: focushive
+- **User**: focushive_user
+- **Password**: focushive_pass
+- **Version**: 16-alpine
+
+### Redis
+- **Port**: 6379
+- **Password**: focushive_pass
+- **Version**: 7-alpine
+
+## Environment Variables
+
+Key environment variables (configured in `.env`):
+
+```bash
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=focushive
+DB_USER=focushive_user
+DB_PASSWORD=focushive_pass
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=focushive_pass
+
+# Application Configuration
+SERVER_PORT=8080
+LOG_LEVEL=INFO
+SHOW_SQL=false
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRATION=86400000
+
+# Frontend Configuration
+VITE_API_URL=http://localhost:8080
 ```
 
 ## Troubleshooting
@@ -152,18 +159,23 @@ docker-compose build --no-cache
 
 1. Check logs:
    ```bash
-   docker logs focushive-backend
+   docker-compose logs backend
+   docker-compose logs web
    ```
 
 2. Ensure ports are not in use:
    ```bash
    lsof -i :5173  # Frontend port
+   lsof -i :8080  # Backend port
+   lsof -i :5432  # PostgreSQL port
+   lsof -i :6379  # Redis port
    ```
 
 3. Clean rebuild:
    ```bash
-   ./docker-utils.sh clean
-   ./docker-utils.sh up
+   docker-compose down -v
+   docker-compose build --no-cache
+   docker-compose up -d
    ```
 
 ### Database connection issues
@@ -171,49 +183,60 @@ docker-compose build --no-cache
 1. Ensure containers are healthy:
    ```bash
    docker ps
+   docker-compose ps
    ```
 
-2. Test database connections:
+2. Test database connection:
    ```bash
-   ./docker-utils.sh db-shell postgres
-   ./docker-utils.sh db-shell mongodb
-   ./docker-utils.sh db-shell redis
+   docker exec focushive-db pg_isready -U focushive_user
+   ```
+
+3. Check Redis connection:
+   ```bash
+   docker exec focushive-redis redis-cli -a focushive_pass ping
    ```
 
 ### Frontend can't connect to backend
 
 1. Check backend is running:
    ```bash
-   docker exec focushive-backend wget -qO- http://localhost:3000/health
+   curl http://localhost:8080/actuator/health
    ```
 
 2. Verify environment variables:
    ```bash
-   docker exec focushive-frontend env | grep VITE_API_URL
+   docker exec focushive-web env | grep VITE_API_URL
    ```
+
+3. Check nginx proxy configuration in production mode
 
 ## Development Workflow
 
-1. Make code changes in your local editor
-2. For backend changes, rebuild and restart:
-   ```bash
-   docker-compose build backend
-   docker restart focushive-backend
-   ```
-3. For frontend changes, the dev server will hot-reload automatically
-4. View logs to debug issues:
-   ```bash
-   ./docker-utils.sh logs backend
-   ```
+1. **Backend Changes (Spring Boot)**:
+   - Code changes require container rebuild
+   - Use `docker-compose build backend && docker-compose up -d backend`
+   - Or run locally with `cd backend && ./gradlew bootRun`
+
+2. **Frontend Changes (React)**:
+   - Hot reload is enabled in development mode
+   - Changes are reflected immediately
+   - For production build: `docker-compose build web`
+
+3. **Database Changes**:
+   - Use Flyway migrations in `backend/src/main/resources/db/migration`
+   - Migrations run automatically on startup
 
 ## Production Considerations
 
 The current Docker setup is optimized for development. For production:
 
-1. Use production builds (already configured)
+1. Use production builds (already configured in multi-stage Dockerfiles)
 2. Update passwords and secrets in environment variables
 3. Use Docker Swarm or Kubernetes for orchestration
 4. Configure proper health checks and monitoring
 5. Set up volume backups for databases
-6. Use a reverse proxy (nginx) for the frontend
-7. Enable HTTPS with proper certificates
+6. Enable HTTPS with proper certificates
+7. Use external Redis cluster for scalability
+8. Configure Spring Boot profiles for production settings
+9. Set up proper logging aggregation (ELK stack)
+10. Implement security headers and CORS policies
