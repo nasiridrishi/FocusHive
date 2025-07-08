@@ -1,12 +1,16 @@
+version: '3.9'
+
 services:
-  # PostgreSQL for relational data
-  postgres:
-    image: postgres:15-alpine
-    container_name: focushive-postgres
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: focushive-db
     environment:
       POSTGRES_DB: focushive
       POSTGRES_USER: focushive_user
       POSTGRES_PASSWORD: focushive_pass
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -15,27 +19,13 @@ services:
       timeout: 5s
       retries: 5
 
-  # MongoDB for user preferences and activity logs
-  mongodb:
-    image: mongo:7.0
-    container_name: focushive-mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: focushive_user
-      MONGO_INITDB_ROOT_PASSWORD: focushive_pass
-      MONGO_INITDB_DATABASE: focushive
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Redis for caching and real-time presence
+  # Redis for presence pub/sub
   redis:
     image: redis:7-alpine
     container_name: focushive-redis
     command: redis-server --requirepass focushive_pass
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -44,56 +34,58 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend service
+  # Spring Boot Backend
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
-      target: backend
     container_name: focushive-backend
+    ports:
+      - "8080:8080"
     environment:
-      NODE_ENV: development
-      PORT: 3000
-      # PostgreSQL
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: focushive
-      POSTGRES_USER: focushive_user
-      POSTGRES_PASSWORD: focushive_pass
-      # MongoDB
-      MONGODB_URI: mongodb://focushive_user:focushive_pass@mongodb:27017/focushive?authSource=admin
+      # Database
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: focushive
+      DB_USER: focushive_user
+      DB_PASSWORD: focushive_pass
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: focushive_pass
-      # JWT
+      # Application
+      SERVER_PORT: 8080
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRATION: 86400000
+      LOG_LEVEL: INFO
+      SHOW_SQL: "false"
     depends_on:
-      postgres:
-        condition: service_healthy
-      mongodb:
+      db:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
 
-  # Frontend service
-  frontend:
+  # React Frontend (Vite dev server)
+  web:
     build:
-      context: .
+      context: ./frontend/web
       dockerfile: Dockerfile
-      target: frontend
-    container_name: focushive-frontend
+      target: development
+    container_name: focushive-web
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://backend:3000
+      VITE_API_URL: http://localhost:8080
+    volumes:
+      - ./frontend/web:/app
+      - /app/node_modules
     depends_on:
       - backend
     command: npm run dev
 
 volumes:
   postgres_data:
-  mongodb_data:
   redis_data:
 
 networks:

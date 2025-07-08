@@ -111,6 +111,16 @@ build/
 dist/
 out/
 
+# Java/Gradle
+backend/.gradle/
+backend/build/
+backend/out/
+backend/bin/
+*.class
+*.jar
+*.war
+*.ear
+
 # Logs
 logs
 *.log
