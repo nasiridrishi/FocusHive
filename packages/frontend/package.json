@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "FocusHive React web application",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -14,10 +15,12 @@
     "clean": "rm -rf dist coverage"
   },
   "dependencies": {
+    "@focushive/shared": "^0.0.1",
+    "@tailwindcss/vite": "^4.1.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "socket.io-client": "^4.7.0",
-    "@focushive/shared": "^0.0.1"
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
