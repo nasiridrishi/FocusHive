@@ -1,0 +1,23 @@
+# <type>: <subject> [LINEAR-ID]
+# Example: feat: Add user authentication [UOL-26]
+# 
+# <body>
+# Explain what and why (not how)
+# 
+# Resolves: LINEAR-ID
+
+
+# Type can be:
+#   feat: A new feature
+#   fix: A bug fix
+#   docs: Documentation changes
+#   style: Formatting, missing semicolons, etc (no code change)
+#   refactor: Code restructuring without changing behavior
+#   test: Adding or modifying tests
+#   chore: Maintenance tasks, dependency updates
+
+# Remember to:
+# - Use present tense ("Add feature" not "Added feature")
+# - Keep subject line under 50 characters
+# - Include Linear issue ID in square brackets
+# - Reference the issue again in body with "Resolves: LINEAR-ID"
