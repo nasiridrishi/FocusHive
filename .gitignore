@@ -120,6 +120,8 @@ backend/bin/
 *.jar
 *.war
 *.ear
+# Exception for gradle wrapper
+!backend/gradle/wrapper/gradle-wrapper.jar
 
 # Logs
 logs
