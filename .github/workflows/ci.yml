@@ -58,13 +58,12 @@ jobs:
     - name: Run tests
       working-directory: ./backend
       env:
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_NAME: test_db
-        DB_USER: test_user
-        DB_PASSWORD: test_pass
-        REDIS_HOST: localhost
-        REDIS_PORT: 6379
+        SPRING_PROFILES_ACTIVE: test
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/test_db
+        SPRING_DATASOURCE_USERNAME: test_user
+        SPRING_DATASOURCE_PASSWORD: test_pass
+        SPRING_REDIS_HOST: localhost
+        SPRING_REDIS_PORT: 6379
       run: |
         chmod +x gradlew
         ./gradlew test
