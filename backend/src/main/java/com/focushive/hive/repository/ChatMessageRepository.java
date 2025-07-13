@@ -3,6 +3,7 @@ package com.focushive.hive.repository;
 import com.focushive.hive.entity.ChatMessage;
 import com.focushive.hive.entity.ChatMessage.MessageType;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -122,7 +123,12 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, String
     // Get last message
     @Query("SELECT cm FROM ChatMessage cm WHERE cm.hive.id = :hiveId " +
            "AND cm.deletedAt IS NULL ORDER BY cm.createdAt DESC")
-    Optional<ChatMessage> findLastMessage(@Param("hiveId") String hiveId, Pageable pageable);
+    Page<ChatMessage> findLastMessagePage(@Param("hiveId") String hiveId, Pageable pageable);
+    
+    default Optional<ChatMessage> findLastMessage(String hiveId) {
+        Page<ChatMessage> page = findLastMessagePage(hiveId, PageRequest.of(0, 1));
+        return page.hasContent() ? Optional.of(page.getContent().get(0)) : Optional.empty();
+    }
     
     // Cleanup old deleted messages
     @Modifying

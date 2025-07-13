@@ -26,6 +26,9 @@ public abstract class BaseEntity {
     @Version
     private Long version;
     
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+    
     // Getters and setters
     public String getId() {
         return id;
@@ -57,5 +60,13 @@ public abstract class BaseEntity {
     
     public void setVersion(Long version) {
         this.version = version;
+    }
+    
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+    
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }
