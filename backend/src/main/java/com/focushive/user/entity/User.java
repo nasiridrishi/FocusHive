@@ -72,9 +72,6 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
     
-    @Version
-    private Long version = 0L;
-    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role = UserRole.USER;
@@ -208,14 +205,6 @@ public class User extends BaseEntity implements UserDetails {
     
     public void setLastLoginAt(LocalDateTime lastLoginAt) {
         this.lastLoginAt = lastLoginAt;
-    }
-    
-    public Long getVersion() {
-        return version;
-    }
-    
-    public void setVersion(Long version) {
-        this.version = version;
     }
     
     public enum UserRole {

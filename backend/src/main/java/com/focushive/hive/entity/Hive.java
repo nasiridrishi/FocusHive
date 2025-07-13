@@ -67,9 +67,6 @@ public class Hive extends BaseEntity {
     @Column(name = "total_focus_minutes")
     private Long totalFocusMinutes = 0L;
     
-    @Version
-    private Long version = 0L;
-    
     @OneToMany(mappedBy = "hive", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<HiveMember> members = new HashSet<>();
     
@@ -204,14 +201,6 @@ public class Hive extends BaseEntity {
     
     public void setTotalFocusMinutes(Long totalFocusMinutes) {
         this.totalFocusMinutes = totalFocusMinutes;
-    }
-    
-    public Long getVersion() {
-        return version;
-    }
-    
-    public void setVersion(Long version) {
-        this.version = version;
     }
     
     public enum HiveType {
