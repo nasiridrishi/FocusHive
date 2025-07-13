@@ -55,9 +55,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     
-    - name: Grant execute permission for gradlew
-      run: chmod +x backend/gradlew
-      
     - name: Run tests
       working-directory: ./backend
       env:
@@ -68,7 +65,13 @@ jobs:
         DB_PASSWORD: test_pass
         REDIS_HOST: localhost
         REDIS_PORT: 6379
-      run: ./gradlew test
+      run: |
+        chmod +x gradlew
+        ./gradlew test
+    
+    - name: Build backend
+      working-directory: ./backend
+      run: ./gradlew build
 
   frontend-test:
     name: Frontend Tests
@@ -139,7 +142,6 @@ jobs:
       with:
         context: ./frontend/web
         push: true
-        target: production
         tags: |
           ghcr.io/${{ github.repository }}/frontend:latest
           ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
