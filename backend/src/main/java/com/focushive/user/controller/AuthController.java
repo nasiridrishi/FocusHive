@@ -1,6 +1,7 @@
 package com.focushive.user.controller;
 
 import com.focushive.user.dto.RegisterRequest;
+import com.focushive.user.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,43 +18,46 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "User authentication and registration endpoints")
+@RequiredArgsConstructor
 public class AuthController {
+    
+    private final AuthService authService;
     
     @Operation(summary = "Register a new user", description = "Creates a new user account with email and password")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "User successfully registered",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+            content = @Content(schema = @Schema(implementation = AuthService.AuthenticationResponse.class))),
         @ApiResponse(responseCode = "400", description = "Invalid input data"),
         @ApiResponse(responseCode = "409", description = "User already exists")
     })
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        // TODO: Implement registration logic
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse("token", "user-id"));
+    public ResponseEntity<AuthService.AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthService.AuthenticationResponse response = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
     @Operation(summary = "Login user", description = "Authenticates user and returns JWT token")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Successfully authenticated",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+            content = @Content(schema = @Schema(implementation = AuthService.AuthenticationResponse.class))),
         @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        // TODO: Implement login logic
-        return ResponseEntity.ok(new AuthResponse("token", "user-id"));
+    public ResponseEntity<AuthService.AuthenticationResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthService.AuthenticationResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
     
     @Operation(summary = "Refresh token", description = "Refreshes JWT token using refresh token")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Token successfully refreshed",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+            content = @Content(schema = @Schema(implementation = AuthService.AuthenticationResponse.class))),
         @ApiResponse(responseCode = "401", description = "Invalid refresh token")
     })
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshRequest request) {
-        // TODO: Implement refresh logic
-        return ResponseEntity.ok(new AuthResponse("new-token", "user-id"));
+    public ResponseEntity<AuthService.AuthenticationResponse> refresh(@RequestBody RefreshRequest request) {
+        AuthService.AuthenticationResponse response = authService.refreshToken(request);
+        return ResponseEntity.ok(response);
     }
     
     // Inner classes for DTOs
@@ -78,5 +83,4 @@ public class AuthController {
         public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
     }
     
-    public record AuthResponse(String accessToken, String userId) {}
 }
