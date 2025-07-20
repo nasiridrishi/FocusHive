@@ -34,6 +34,75 @@ services:
       timeout: 5s
       retries: 5
 
+  # Identity Service Database
+  identity-db:
+    image: postgres:16-alpine
+    container_name: identity-db
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: identity_user
+      POSTGRES_PASSWORD: identity_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - identity_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_user -d identity_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Identity Service Redis
+  identity-redis:
+    image: redis:7-alpine
+    container_name: identity-redis
+    command: redis-server --requirepass identity_redis_pass
+    ports:
+      - "6380:6379"
+    volumes:
+      - identity_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Identity Service (Spring Boot)
+  identity-service:
+    build:
+      context: ./identity-service
+      dockerfile: Dockerfile
+    container_name: identity-service
+    ports:
+      - "8081:8081"
+    environment:
+      # Database
+      DB_HOST: identity-db
+      DB_PORT: 5432
+      DB_NAME: identity_db
+      DB_USER: identity_user
+      DB_PASSWORD: identity_pass
+      # Redis
+      REDIS_HOST: identity-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: identity_redis_pass
+      # Security
+      KEY_STORE_PASSWORD: changeme
+      PRIVATE_KEY_PASSWORD: changeme
+      FOCUSHIVE_CLIENT_SECRET: secret
+      # CORS
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:8080
+      # Application
+      SERVER_PORT: 8081
+      LOG_LEVEL: INFO
+      SHOW_SQL: "false"
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      identity-redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   # Spring Boot Backend
   backend:
     build:
@@ -53,6 +122,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: focushive_pass
+      # Identity Service
+      IDENTITY_SERVICE_URL: http://identity-service:8081
       # Application
       SERVER_PORT: 8080
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
@@ -64,6 +135,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      identity-service:
+        condition: service_started
     restart: unless-stopped
 
   # React Frontend (Vite dev server)
@@ -87,6 +160,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  identity_db_data:
+  identity_redis_data:
 
 networks:
   default:

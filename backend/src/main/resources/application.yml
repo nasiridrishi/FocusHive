@@ -27,10 +27,34 @@ spring:
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:focushive_pass}
   
-  security:
-    jwt:
-      secret: ${JWT_SECRET:your-super-secret-jwt-key-change-in-production}
-      expiration: ${JWT_EXPIRATION:86400000} # 24 hours
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 5000
+            readTimeout: 5000
+            loggerLevel: basic
+  
+  # Circuit breaker configuration
+  circuitbreaker:
+    instances:
+      identity-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+# Identity Service configuration
+identity:
+  service:
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+    connect-timeout: ${IDENTITY_SERVICE_CONNECT_TIMEOUT:5000}
+    read-timeout: ${IDENTITY_SERVICE_READ_TIMEOUT:5000}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -49,3 +73,15 @@ logging:
     com.focushive: ${LOG_LEVEL:INFO}
     org.springframework.web: ${LOG_LEVEL:INFO}
     org.springframework.security: ${LOG_LEVEL:INFO}
+    feign: ${FEIGN_LOG_LEVEL:DEBUG}
+
+# Feign configuration
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      identity-service:
+        connectTimeout: ${IDENTITY_SERVICE_CONNECT_TIMEOUT:5000}
+        readTimeout: ${IDENTITY_SERVICE_READ_TIMEOUT:5000}
+        loggerLevel: full

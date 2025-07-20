@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+    show-sql: false
+  
+  flyway:
+    enabled: false
+  
+  cache:
+    type: simple
+  
+  redis:
+    enabled: false
+
+server:
+  port: 0
+
+security:
+  jwt:
+    key-store: classpath:test-keystore.p12
+    key-store-password: testpass
+    key-alias: test
+    private-key-passphrase: testpass
+  cors:
+    allowed-origins: http://localhost:3000
+    
+oauth2:
+  authorization:
+    access-token-time-to-live: PT5M
+    refresh-token-time-to-live: PT30M
+
+logging:
+  level:
+    com.focushive.identity: INFO
+    org.springframework.security: INFO
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
