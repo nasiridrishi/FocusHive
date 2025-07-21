@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
@@ -30,6 +31,7 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication", description = "User authentication proxy endpoints")
 @RequiredArgsConstructor
+@Profile("!test") // Don't load this controller in test profile
 public class AuthProxyController {
     
     private final RestTemplate restTemplate;
