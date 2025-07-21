@@ -1,0 +1,47 @@
+services:
+  github-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: focushive-github-runner
+    volumes:
+      # Mount the entire project
+      - ../../:/workspace
+      # Mount Docker socket for Docker-in-Docker capability
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Cache directories
+      - gradle-cache:/home/runner/.gradle
+      - npm-cache:/home/runner/.npm
+      - act-cache:/home/runner/.cache/act
+    environment:
+      # Default to CI workflow
+      WORKFLOW: ${WORKFLOW:-ci.yml}
+      # Act options
+      ACT_OPTIONS: ${ACT_OPTIONS:--P ubuntu-latest=catthehacker/ubuntu:act-latest}
+      # Disable TTY for CI environments
+      TERM: xterm-256color
+    networks:
+      - github-actions
+    stdin_open: true
+    tty: true
+
+  # Local registry for testing Docker builds
+  registry:
+    image: registry:2
+    container_name: focushive-local-registry
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    networks:
+      - github-actions
+
+volumes:
+  gradle-cache:
+  npm-cache:
+  act-cache:
+  registry-data:
+
+networks:
+  github-actions:
+    name: github-actions-network
