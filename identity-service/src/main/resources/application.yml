@@ -64,6 +64,14 @@ server:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain
 
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:thisisaverylongsecretkeythatshouldbeatleast256bitslongforsecurity}
+  access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000} # 1 hour
+  refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:2592000000} # 30 days
+  remember-me-expiration-ms: ${JWT_REMEMBER_ME_EXPIRATION:7776000000} # 90 days
+  issuer: identity-service
+
 # Security Configuration
 security:
   jwt:
@@ -101,6 +109,12 @@ oauth2:
         - identity.read
         - identity.write
 
+# Application Configuration
+app:
+  base-url: ${APP_BASE_URL:http://localhost:3000}
+  email:
+    from: ${EMAIL_FROM:noreply@focushive.com}
+    
 # Actuator Configuration
 management:
   endpoints:
