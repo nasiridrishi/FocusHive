@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusHive WebSocket Presence Tester</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .log {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .presence-item {
+            background-color: #e8f4f8;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .session-item {
+            background-color: #fff3cd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #ffc107;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 FocusHive WebSocket Presence Tester</h1>
+    
+    <div class="container">
+        <!-- Connection Panel -->
+        <div class="panel full-width">
+            <h2>Connection Settings</h2>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                <input type="text" id="token" placeholder="Paste your JWT token here">
+                <button id="connectBtn" onclick="connect()">Connect</button>
+            </div>
+            <div id="status" class="status disconnected">Disconnected</div>
+        </div>
+
+        <!-- Presence Controls -->
+        <div class="panel">
+            <h2>Presence Controls</h2>
+            <input type="text" id="hiveId" placeholder="Hive ID">
+            
+            <h3>Update Status</h3>
+            <select id="presenceStatus">
+                <option value="ONLINE">Online</option>
+                <option value="AWAY">Away</option>
+                <option value="BUSY">Busy</option>
+                <option value="OFFLINE">Offline</option>
+            </select>
+            <input type="text" id="activity" placeholder="Activity (e.g., Studying)">
+            <button onclick="updatePresence()" id="updatePresenceBtn" disabled>Update Presence</button>
+            
+            <h3>Hive Actions</h3>
+            <div class="button-group">
+                <button onclick="joinHive()" id="joinHiveBtn" disabled>Join Hive</button>
+                <button onclick="leaveHive()" id="leaveHiveBtn" disabled>Leave Hive</button>
+            </div>
+            
+            <h3>Focus Session</h3>
+            <input type="number" id="duration" placeholder="Duration (minutes)" value="25">
+            <div class="button-group">
+                <button onclick="startSession()" id="startSessionBtn" disabled>Start Session</button>
+                <button onclick="endSession()" id="endSessionBtn" disabled>End Session</button>
+            </div>
+            
+            <h3>Other Actions</h3>
+            <button onclick="sendHeartbeat()" id="heartbeatBtn" disabled>Send Heartbeat</button>
+        </div>
+
+        <!-- Live Data Panel -->
+        <div class="panel">
+            <h2>Live Presence Data</h2>
+            <h3>Active Users in Hive</h3>
+            <div id="activeUsers"></div>
+            
+            <h3>Active Sessions</h3>
+            <div id="activeSessions"></div>
+            
+            <h3>My Current Session</h3>
+            <div id="currentSession">No active session</div>
+        </div>
+
+        <!-- Logs Panel -->
+        <div class="panel full-width">
+            <h2>WebSocket Logs</h2>
+            <button onclick="clearLogs()">Clear Logs</button>
+            <div id="logs" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        let currentSessionId = null;
+        let subscriptions = [];
+
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            logs.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('status');
+            const buttons = document.querySelectorAll('button:not(#connectBtn)');
+            
+            if (connected) {
+                status.className = 'status connected';
+                status.textContent = 'Connected';
+                document.getElementById('connectBtn').textContent = 'Disconnect';
+                buttons.forEach(btn => btn.disabled = false);
+            } else {
+                status.className = 'status disconnected';
+                status.textContent = 'Disconnected';
+                document.getElementById('connectBtn').textContent = 'Connect';
+                buttons.forEach(btn => btn.disabled = true);
+            }
+        }
+
+        function connect() {
+            if (stompClient && stompClient.connected) {
+                disconnect();
+                return;
+            }
+
+            const token = document.getElementById('token').value;
+            if (!token) {
+                alert('Please enter your JWT token');
+                return;
+            }
+
+            const socket = new SockJS('http://localhost:8080/ws');
+            stompClient = Stomp.over(socket);
+            
+            // Reduce logging
+            stompClient.debug = (msg) => {
+                if (msg.includes('PING') || msg.includes('PONG')) return;
+                log('STOMP: ' + msg);
+            };
+
+            const headers = {
+                'Authorization': 'Bearer ' + token
+            };
+
+            stompClient.connect(headers, function(frame) {
+                log('Connected to WebSocket', 'success');
+                updateConnectionStatus(true);
+                
+                // Subscribe to user's personal queue
+                const sub1 = stompClient.subscribe('/user/queue/presence', function(message) {
+                    log('Personal presence update: ' + message.body);
+                });
+                subscriptions.push(sub1);
+                
+                const sub2 = stompClient.subscribe('/user/queue/session/confirm', function(message) {
+                    const session = JSON.parse(message.body);
+                    log('Session update: ' + message.body, 'success');
+                    if (session.status === 'ACTIVE') {
+                        currentSessionId = session.sessionId;
+                        updateCurrentSession(session);
+                    }
+                });
+                subscriptions.push(sub2);
+                
+                // Start heartbeat
+                setInterval(() => {
+                    if (stompClient && stompClient.connected) {
+                        sendHeartbeat();
+                    }
+                }, 20000);
+                
+            }, function(error) {
+                log('Connection error: ' + error, 'error');
+                updateConnectionStatus(false);
+            });
+        }
+
+        function disconnect() {
+            if (stompClient) {
+                subscriptions.forEach(sub => sub.unsubscribe());
+                subscriptions = [];
+                stompClient.disconnect();
+                log('Disconnected', 'success');
+            }
+            updateConnectionStatus(false);
+        }
+
+        function updatePresence() {
+            const hiveId = document.getElementById('hiveId').value;
+            const status = document.getElementById('presenceStatus').value;
+            const activity = document.getElementById('activity').value;
+
+            const data = {
+                status: status,
+                hiveId: hiveId || null,
+                activity: activity || null
+            };
+
+            stompClient.send('/app/presence/update', {}, JSON.stringify(data));
+            log('Sent presence update: ' + JSON.stringify(data));
+        }
+
+        function joinHive() {
+            const hiveId = document.getElementById('hiveId').value;
+            if (!hiveId) {
+                alert('Please enter a Hive ID');
+                return;
+            }
+
+            // Subscribe to hive presence updates
+            const sub = stompClient.subscribe(`/topic/hive/${hiveId}/presence`, function(message) {
+                const data = JSON.parse(message.body);
+                log('Hive presence update: ' + message.body);
+                updateActiveUsers(data);
+            });
+            subscriptions.push(sub);
+
+            // Subscribe to hive sessions
+            const sub2 = stompClient.subscribe(`/topic/hive/${hiveId}/sessions`, function(message) {
+                const data = JSON.parse(message.body);
+                log('Hive session update: ' + message.body);
+                updateActiveSessions(data);
+            });
+            subscriptions.push(sub2);
+
+            stompClient.send(`/app/hive/${hiveId}/join`, {}, '{}');
+            log('Joined hive: ' + hiveId);
+        }
+
+        function leaveHive() {
+            const hiveId = document.getElementById('hiveId').value;
+            if (!hiveId) {
+                alert('Please enter a Hive ID');
+                return;
+            }
+
+            stompClient.send(`/app/hive/${hiveId}/leave`, {}, '{}');
+            log('Left hive: ' + hiveId);
+        }
+
+        function startSession() {
+            const hiveId = document.getElementById('hiveId').value;
+            const duration = document.getElementById('duration').value || 25;
+
+            const data = {
+                hiveId: hiveId || null,
+                durationMinutes: parseInt(duration)
+            };
+
+            stompClient.send('/app/session/start', {}, JSON.stringify(data));
+            log('Started focus session: ' + JSON.stringify(data));
+        }
+
+        function endSession() {
+            if (!currentSessionId) {
+                alert('No active session');
+                return;
+            }
+
+            const data = {
+                sessionId: currentSessionId
+            };
+
+            stompClient.send('/app/session/end', {}, JSON.stringify(data));
+            log('Ended session: ' + currentSessionId);
+            currentSessionId = null;
+            document.getElementById('currentSession').innerHTML = 'No active session';
+        }
+
+        function sendHeartbeat() {
+            stompClient.send('/app/presence/heartbeat', {}, '{}');
+            log('Sent heartbeat');
+        }
+
+        function updateActiveUsers(data) {
+            const container = document.getElementById('activeUsers');
+            container.innerHTML = '';
+            
+            if (data.onlineMembers && data.onlineMembers.length > 0) {
+                data.onlineMembers.forEach(user => {
+                    container.innerHTML += `
+                        <div class="presence-item">
+                            <strong>${user.userId}</strong><br>
+                            Status: ${user.status}<br>
+                            Activity: ${user.activity || 'None'}<br>
+                            Last seen: ${new Date(user.lastSeen).toLocaleTimeString()}
+                        </div>
+                    `;
+                });
+            } else {
+                container.innerHTML = '<p>No active users</p>';
+            }
+        }
+
+        function updateActiveSessions(data) {
+            const container = document.getElementById('activeSessions');
+            if (data.session) {
+                container.innerHTML = `
+                    <div class="session-item">
+                        <strong>User: ${data.userId}</strong><br>
+                        Type: ${data.type}<br>
+                        Session: ${data.session.status}<br>
+                        Duration: ${data.session.plannedDurationMinutes} min
+                    </div>
+                `;
+            }
+        }
+
+        function updateCurrentSession(session) {
+            const container = document.getElementById('currentSession');
+            container.innerHTML = `
+                <div class="session-item">
+                    <strong>Session ID:</strong> ${session.sessionId}<br>
+                    <strong>Status:</strong> ${session.status}<br>
+                    <strong>Started:</strong> ${new Date(session.startTime).toLocaleTimeString()}<br>
+                    <strong>Duration:</strong> ${session.plannedDurationMinutes} minutes<br>
+                    <strong>Type:</strong> ${session.type || 'FOCUS'}
+                </div>
+            `;
+        }
+
+        // Auto-connect if token is in URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenParam = urlParams.get('token');
+        if (tokenParam) {
+            document.getElementById('token').value = tokenParam;
+        }
+    </script>
+</body>
+</html>
