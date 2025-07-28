@@ -156,3 +156,5 @@ archive/
 
 BOLO.md
 !identity-service/gradle/wrapper/gradle-wrapper.jar
+/.sync/
+Icon
