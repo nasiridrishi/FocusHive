@@ -108,7 +108,6 @@ dist-ssr
 
 # Build outputs
 build/
-dist/
 out/
 
 # Java/Gradle
@@ -157,4 +156,7 @@ archive/
 BOLO.md
 !identity-service/gradle/wrapper/gradle-wrapper.jar
 /.sync/
-Icon
+Icon
+
+# Documentation directory
+/docs/
