@@ -69,4 +69,10 @@ public interface HiveMemberRepository extends JpaRepository<HiveMember, String> 
     // Statistics
     @Query("SELECT SUM(hm.totalMinutes) FROM HiveMember hm WHERE hm.hive.id = :hiveId")
     Long getTotalMinutesByHiveId(@Param("hiveId") String hiveId);
+    
+    // Check if user is moderator or owner
+    @Query("SELECT CASE WHEN COUNT(hm) > 0 THEN true ELSE false END FROM HiveMember hm " +
+           "WHERE hm.hive.id = :hiveId AND hm.user.id = :userId " +
+           "AND hm.role IN ('OWNER', 'MODERATOR')")
+    boolean isUserModeratorOrOwner(@Param("hiveId") String hiveId, @Param("userId") String userId);
 }
