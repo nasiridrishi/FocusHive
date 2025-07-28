@@ -91,7 +91,7 @@ services:
       PRIVATE_KEY_PASSWORD: changeme
       FOCUSHIVE_CLIENT_SECRET: secret
       # CORS
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:8080
+      CORS_ORIGINS: http://192.168.2.3:3000,http://192.168.2.3:5173,http://192.168.2.3:8080,http://localhost:3000,http://localhost:5173,http://localhost:8080
       # Application
       SERVER_PORT: 8081
       LOG_LEVEL: INFO
@@ -149,7 +149,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:8080
+      VITE_API_URL: http://192.168.2.3:8080
     volumes:
       - ./frontend/web:/app
       - /app/node_modules
