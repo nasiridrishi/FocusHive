@@ -1,6 +1,6 @@
 package com.focushive.analytics.dto;
 
-import com.focushive.analytics.entity.FocusSession;
+import com.focushive.timer.entity.FocusSession;
 
 import java.time.LocalDateTime;
 
@@ -24,16 +24,16 @@ public class SessionResponse {
     // Constructor from entity
     public SessionResponse(FocusSession session) {
         this.id = session.getId();
-        this.userId = session.getUser().getId();
-        this.hiveId = session.getHive() != null ? session.getHive().getId() : null;
+        this.userId = session.getUserId();
+        this.hiveId = session.getHiveId();
         this.startTime = session.getStartTime();
         this.endTime = session.getEndTime();
-        this.targetDurationMinutes = session.getTargetDurationMinutes();
+        this.targetDurationMinutes = session.getDurationMinutes(); // Using durationMinutes as target
         this.actualDurationMinutes = session.getActualDurationMinutes();
-        this.type = session.getType();
+        this.type = session.getSessionType();
         this.completed = session.getCompleted();
-        this.breaksTaken = session.getBreaksTaken();
-        this.distractionsLogged = session.getDistractionsLogged();
+        this.breaksTaken = 0; // Timer entity doesn't have breaksTaken
+        this.distractionsLogged = session.getInterruptions(); // Using interruptions as distractionsLogged
         this.notes = session.getNotes();
     }
     

@@ -25,7 +25,7 @@ spring:
     console:
       enabled: false
   
-  # Disable Redis for tests
+  # Disable Redis and Feign for tests
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration

@@ -1,7 +1,7 @@
 package com.focushive.api.config;
 
 import com.focushive.test.TestApplication;
-import com.focushive.test.config.TestSecurityConfig;
+import com.focushive.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

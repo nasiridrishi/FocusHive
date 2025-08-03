@@ -119,6 +119,15 @@ if [ -d "frontend/web" ] && git diff --cached --name-only | grep -E '^frontend/.
         npm ci
     fi
     
+    # Check if package-lock.json is in sync
+    if ! npm ci --dry-run 2>/dev/null; then
+        print_warning "package-lock.json is out of sync with package.json"
+        print_info "Running npm install to update lock file..."
+        npm install
+        print_warning "package-lock.json has been updated - please stage it"
+        git add package-lock.json
+    fi
+    
     # Run linting
     print_info "Running ESLint..."
     if ! npm run lint; then

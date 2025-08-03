@@ -1,6 +1,6 @@
 package com.focushive.analytics.dto;
 
-import com.focushive.analytics.entity.FocusSession;
+import com.focushive.timer.entity.FocusSession;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
