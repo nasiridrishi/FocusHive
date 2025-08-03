@@ -28,8 +28,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         @ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,
             classes = {
-                com.focushive.api.controller.AuthProxyController.class,
-                com.focushive.api.client.IdentityServiceFallback.class
+                com.focushive.api.controller.AuthProxyController.class
             }
         ),
         @ComponentScan.Filter(

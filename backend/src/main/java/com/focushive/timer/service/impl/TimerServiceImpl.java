@@ -350,10 +350,18 @@ public class TimerServiceImpl implements TimerService {
     
     @Override
     @Transactional
-    @Scheduled(fixedRate = 1000) // Every second
     public void updateHiveTimer(String hiveId) {
         // This would be called by a scheduled task to update all active timers
         // For now, simplified implementation
+    }
+    
+    @Scheduled(fixedRate = 5000) // Every 5 seconds - update all active timers
+    public void updateAllHiveTimers() {
+        // Find all active timers and update them
+        List<HiveTimer> activeTimers = hiveTimerRepository.findByIsRunningTrue();
+        for (HiveTimer timer : activeTimers) {
+            updateHiveTimer(timer.getHiveId());
+        }
     }
     
     // Helper methods

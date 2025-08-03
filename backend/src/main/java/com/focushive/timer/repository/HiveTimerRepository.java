@@ -15,6 +15,9 @@ public interface HiveTimerRepository extends JpaRepository<HiveTimer, String> {
     // Find active timer for a hive
     Optional<HiveTimer> findByHiveIdAndIsRunningTrue(String hiveId);
     
+    // Find all active timers across all hives
+    List<HiveTimer> findByIsRunningTrue();
+    
     // Find all timers for a hive
     List<HiveTimer> findByHiveIdOrderByCreatedAtDesc(String hiveId);
     

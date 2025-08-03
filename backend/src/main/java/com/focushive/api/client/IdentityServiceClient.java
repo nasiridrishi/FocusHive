@@ -2,6 +2,7 @@ package com.focushive.api.client;
 
 import com.focushive.api.dto.identity.*;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -16,6 +17,7 @@ import java.util.UUID;
     fallback = IdentityServiceFallback.class,
     configuration = FeignConfiguration.class
 )
+@Profile("!test") // Don't create this bean in test profile
 public interface IdentityServiceClient {
     
     // Authentication endpoints
