@@ -125,6 +125,7 @@ class PresenceControllerTest {
         );
         
         when(presenceService.getHiveActiveUsers(hiveId)).thenReturn(activeUsers);
+        when(presenceService.getHiveFocusSessions(hiveId)).thenReturn(Arrays.asList());
         
         // When
         HivePresenceInfo result = presenceController.subscribeToHivePresence(hiveId);
@@ -134,6 +135,8 @@ class PresenceControllerTest {
         assertThat(result.getHiveId()).isEqualTo(hiveId);
         assertThat(result.getActiveUsers()).isEqualTo(2);
         assertThat(result.getOnlineMembers()).isEqualTo(activeUsers);
+        verify(presenceService).getHiveActiveUsers(hiveId);
+        verify(presenceService).getHiveFocusSessions(hiveId);
     }
     
     @Test
@@ -152,6 +155,7 @@ class PresenceControllerTest {
         
         // Then
         assertThat(result).isEqualTo(expectedUsers);
+        verify(presenceService).getHiveActiveUsers(hiveId);
     }
     
     @Test
@@ -224,6 +228,7 @@ class PresenceControllerTest {
         
         // Then
         assertThat(result).isEqualTo(expectedSession);
+        verify(presenceService).getActiveFocusSession(USER_ID);
     }
     
     @Test
@@ -251,5 +256,6 @@ class PresenceControllerTest {
         
         // Then
         assertThat(result).isEqualTo(expectedSessions);
+        verify(presenceService).getHiveFocusSessions(hiveId);
     }
 }

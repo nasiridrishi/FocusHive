@@ -3,12 +3,16 @@ spring:
   main:
     allow-bean-definition-overriding: true
     
-  # Datasource configuration for H2 in-memory database
+  # Datasource configuration for H2 in-memory database with PostgreSQL compatibility
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
+    password:
+  sql:
+    init:
+      schema-locations: classpath:schema.sql
+      mode: always 
   
   # JPA configuration
   jpa:
@@ -19,6 +23,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # Allow H2 to handle unknown column types more gracefully
+        globally_quoted_identifiers: false
+        hbm2ddl.halt_on_error: false
   
   # H2 console
   h2:

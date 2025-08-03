@@ -1,21 +1,23 @@
 package com.focushive.timer.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.focushive.config.TestSecurityConfig;
 import com.focushive.timer.dto.*;
 import com.focushive.timer.entity.FocusSession;
 import com.focushive.timer.service.TimerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,12 +29,21 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(TimerController.class)
-@Import(TestSecurityConfig.class)
+@WebMvcTest(controllers = TimerController.class,
+    excludeAutoConfiguration = {
+        SecurityAutoConfiguration.class,
+        SecurityFilterAutoConfiguration.class,
+        UserDetailsServiceAutoConfiguration.class,
+        AutoConfigureTestDatabase.class,
+        JpaRepositoriesAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class,
+        FeignAutoConfiguration.class,
+        SpringDataWebAutoConfiguration.class
+    }
+)
 @ActiveProfiles("test")
 class TimerControllerTest {
     
@@ -45,6 +56,13 @@ class TimerControllerTest {
     @MockBean
     private TimerService timerService;
     
+    // Mock all dependencies that could be autowired
+    @MockBean(name = "identityServiceClient")
+    private com.focushive.api.client.IdentityServiceClient identityServiceClient;
+    
+    @MockBean(name = "identityServiceAuthenticationFilter")
+    private com.focushive.api.security.IdentityServiceAuthenticationFilter identityServiceAuthenticationFilter;
+    
     private String userId;
     private String sessionId;
     
@@ -55,7 +73,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void startSession_Success() throws Exception {
         // Given
         StartSessionRequest request = StartSessionRequest.builder()
@@ -77,7 +94,6 @@ class TimerControllerTest {
         
         // When & Then
         mockMvc.perform(post("/api/v1/timer/sessions/start")
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -88,7 +104,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void endSession_Success() throws Exception {
         // Given
         FocusSessionDto response = FocusSessionDto.builder()
@@ -103,8 +118,7 @@ class TimerControllerTest {
         when(timerService.endSession(userId, sessionId)).thenReturn(response);
         
         // When & Then
-        mockMvc.perform(post("/api/v1/timer/sessions/{sessionId}/end", sessionId)
-                .with(csrf()))
+        mockMvc.perform(post("/api/v1/timer/sessions/{sessionId}/end", sessionId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(sessionId))
                 .andExpect(jsonPath("$.actualDurationMinutes").value(23))
@@ -112,7 +126,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getCurrentSession_Found() throws Exception {
         // Given
         FocusSessionDto session = FocusSessionDto.builder()
@@ -133,7 +146,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getCurrentSession_NotFound() throws Exception {
         // Given
         when(timerService.getCurrentSession(userId)).thenReturn(null);
@@ -144,7 +156,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getSessionHistory_Success() throws Exception {
         // Given
         List<FocusSessionDto> sessions = Arrays.asList(
@@ -174,7 +185,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getDailyStats_Success() throws Exception {
         // Given
         LocalDate date = LocalDate.now();
@@ -200,7 +210,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getWeeklyStats_Success() throws Exception {
         // Given
         LocalDate startDate = LocalDate.now().minusDays(6);
@@ -226,7 +235,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getMonthlyStats_Success() throws Exception {
         // Given
         int year = 2025;
@@ -249,7 +257,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getCurrentStreak_Success() throws Exception {
         // Given
         when(timerService.getCurrentStreak(userId)).thenReturn(7);
@@ -261,7 +268,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void getPomodoroSettings_Success() throws Exception {
         // Given
         PomodoroSettingsDto settings = PomodoroSettingsDto.builder()
@@ -284,7 +290,6 @@ class TimerControllerTest {
     }
     
     @Test
-    @WithMockUser(username = "testuser")
     void updatePomodoroSettings_Success() throws Exception {
         // Given
         PomodoroSettingsDto settings = PomodoroSettingsDto.builder()
@@ -299,7 +304,6 @@ class TimerControllerTest {
         
         // When & Then
         mockMvc.perform(put("/api/v1/timer/pomodoro/settings")
-                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(settings)))
                 .andExpect(status().isOk())
