@@ -3,6 +3,7 @@ package com.focushive.config;
 import com.focushive.api.client.IdentityServiceClient;
 import com.focushive.api.security.IdentityServiceAuthenticationFilter;
 import com.focushive.api.security.JwtTokenProvider;
+import com.focushive.api.service.CustomUserDetailsService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -25,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +43,11 @@ import static org.mockito.Mockito.mock;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class TestSecurityConfig {
+    
+    // Disable Feign client bean creation for tests
+    static {
+        System.setProperty("spring.cloud.openfeign.client.enabled", "false");
+    }
 
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/v1/auth/**",
@@ -52,7 +59,7 @@ public class TestSecurityConfig {
             "/error"
     };
 
-    @Bean("identityServiceClient")
+    @Bean
     @Primary
     public IdentityServiceClient mockIdentityServiceClient() {
         // Return a mock that does nothing - we don't need it for unit tests
@@ -139,5 +146,20 @@ public class TestSecurityConfig {
     @Primary
     public RestTemplate restTemplate() {
         return new RestTemplate();
+    }
+    
+    @Bean
+    @Primary
+    public CustomUserDetailsService customUserDetailsService() {
+        // Return a mock for tests
+        return mock(CustomUserDetailsService.class);
+    }
+    
+    @Bean
+    @Primary
+    @SuppressWarnings("unchecked")
+    public RedisTemplate<String, Object> redisTemplate() {
+        // Return a mock Redis template for tests
+        return mock(RedisTemplate.class);
     }
 }

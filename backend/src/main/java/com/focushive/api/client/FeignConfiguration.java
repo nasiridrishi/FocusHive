@@ -4,11 +4,13 @@ import feign.RequestInterceptor;
 import feign.codec.ErrorDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Feign client configuration for Identity Service communication.
  */
 @Configuration
+@Profile("!test") // Don't load this in test profile
 public class FeignConfiguration {
     
     @Bean

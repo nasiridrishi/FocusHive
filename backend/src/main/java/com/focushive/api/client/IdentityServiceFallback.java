@@ -2,6 +2,7 @@ package com.focushive.api.client;
 
 import com.focushive.api.dto.identity.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -12,6 +13,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
+@Profile("!test") // Don't load this in test profile
 public class IdentityServiceFallback implements IdentityServiceClient {
     
     @Override
