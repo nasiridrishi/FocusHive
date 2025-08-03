@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# FocusHive Pre-push Hook
+# This hook runs before pushing to remote and ensures all tests pass
+
+set -e
+
+echo "🚀 FocusHive Pre-push Hook Running..."
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+# Run all tests
+echo "Running all tests before push..."
+
+FAILED=0
+
+# Frontend tests
+if [ -d "frontend/web" ]; then
+    echo "Running frontend tests..."
+    cd frontend/web
+    if ! npm test -- --watchAll=false --passWithNoTests --coverage; then
+        print_error "Frontend tests failed"
+        FAILED=1
+    else
+        print_success "Frontend tests passed"
+    fi
+    cd ../..
+fi
+
+# Backend tests
+if [ -d "backend" ]; then
+    echo "Running backend tests..."
+    cd backend
+    if ! ./gradlew test; then
+        print_error "Backend tests failed"
+        FAILED=1
+    else
+        print_success "Backend tests passed"
+    fi
+    cd ..
+fi
+
+# Check for uncommitted changes
+if ! git diff-index --quiet HEAD --; then
+    print_error "You have uncommitted changes. Please commit or stash them."
+    FAILED=1
+fi
+
+if [ $FAILED -eq 1 ]; then
+    print_error "Pre-push checks failed! Push aborted."
+    exit 1
+else
+    print_success "All pre-push checks passed!"
+    exit 0
+fi
