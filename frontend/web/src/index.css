@@ -1,3 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Basic reset and Material UI setup */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+/* Additional global styles for the app */
+body {
+  background-color: #fafafa;
+}
