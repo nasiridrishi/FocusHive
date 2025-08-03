@@ -1,20 +1,29 @@
 # FocusHive Git Hooks
 
-These hooks ensure code quality and cannot be bypassed. They run automatically on every commit and push.
+These hooks ensure code quality and mirror all GitHub Actions CI checks locally. They cannot be bypassed and run automatically on every commit and push.
 
 ## Hooks Included
 
 ### pre-commit
-Runs before every commit to check:
+Runs before every commit to execute ALL GitHub Workflow checks locally:
+
+**GitHub Actions CI Pipeline Checks:**
+- ✅ Backend Tests (`./gradlew test` with Spring test profile)
+- ✅ Backend Build (`./gradlew build`)
+- ✅ Identity Service Tests (`./gradlew test` with Spring test profile)
+- ✅ Identity Service Build (`./gradlew build`)
+- ✅ Frontend Linting (`npm run lint`)
+- ✅ Frontend Tests (`npm test -- --run`)
+- ✅ Frontend Build (`npm run build`)
+
+**Additional Code Quality Checks:**
 - ✅ No debugging statements (console.log, System.out.print)
 - ✅ No merge conflict markers
 - ✅ No hardcoded sensitive data
-- ✅ TypeScript compilation (frontend)
-- ✅ ESLint passes (frontend)
-- ✅ All tests pass
-- ✅ Java compilation (backend)
+- ✅ TypeScript compilation (`tsc --noEmit`)
 - ✅ No files larger than 5MB
-- ✅ Commit message format
+- ✅ Commit message format validation
+- ✅ TODO/FIXME comment warnings
 
 ### pre-push
 Runs before pushing to remote:
