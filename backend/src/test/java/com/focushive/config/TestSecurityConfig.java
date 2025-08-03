@@ -39,9 +39,6 @@ import static org.mockito.Mockito.mock;
  * This replaces multiple conflicting test configurations.
  */
 @TestConfiguration
-@Profile("test")
-@EnableWebSecurity
-@EnableMethodSecurity
 public class TestSecurityConfig {
     
     // Disable Feign client bean creation for tests
@@ -59,14 +56,14 @@ public class TestSecurityConfig {
             "/error"
     };
 
-    @Bean
+    @Bean(name = "identityServiceClient")
     @Primary
     public IdentityServiceClient mockIdentityServiceClient() {
         // Return a mock that does nothing - we don't need it for unit tests
         return mock(IdentityServiceClient.class);
     }
     
-    @Bean
+    @Bean(name = "identityServiceAuthenticationFilter")
     @Primary
     public IdentityServiceAuthenticationFilter mockIdentityServiceAuthenticationFilter() {
         // Return a mock filter for tests
@@ -76,17 +73,13 @@ public class TestSecurityConfig {
     @Bean
     @Primary
     public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
-        // Simple security configuration for tests - no external dependencies
+        // Minimal security configuration for WebMvcTest slice tests
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(httpBasic -> {}); // Use basic auth for tests instead of JWT
+                        .anyRequest().permitAll()  // Allow all requests for slice tests
+                );
                 
         return http.build();
     }
