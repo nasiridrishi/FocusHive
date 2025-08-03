@@ -4,7 +4,7 @@ import com.focushive.chat.dto.ChatMessageDto;
 import com.focushive.chat.dto.MessageHistoryResponse;
 import com.focushive.chat.entity.ChatMessage;
 import com.focushive.chat.service.ChatService;
-import com.focushive.test.config.TestSecurityConfig;
+import com.focushive.config.TestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

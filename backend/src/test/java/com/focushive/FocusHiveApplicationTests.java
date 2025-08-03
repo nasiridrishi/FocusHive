@@ -1,7 +1,7 @@
 package com.focushive;
 
+import com.focushive.config.TestSecurityConfig;
 import com.focushive.test.TestApplication;
-import com.focushive.test.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;

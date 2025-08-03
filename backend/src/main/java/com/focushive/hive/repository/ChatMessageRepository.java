@@ -1,7 +1,7 @@
 package com.focushive.hive.repository;
 
-import com.focushive.hive.entity.ChatMessage;
-import com.focushive.hive.entity.ChatMessage.MessageType;
+import com.focushive.chat.entity.ChatMessage;
+import com.focushive.chat.entity.ChatMessage.MessageType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

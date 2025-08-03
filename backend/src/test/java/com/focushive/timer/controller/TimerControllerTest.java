@@ -1,7 +1,7 @@
 package com.focushive.timer.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.focushive.test.config.TestSecurityConfig;
+import com.focushive.config.TestSecurityConfig;
 import com.focushive.timer.dto.*;
 import com.focushive.timer.entity.FocusSession;
 import com.focushive.timer.service.TimerService;
