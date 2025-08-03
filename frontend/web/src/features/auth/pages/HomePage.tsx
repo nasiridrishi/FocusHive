@@ -1,23 +1,81 @@
+import { Container, Typography, Button, Box } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
+
 export default function HomePage() {
+  const navigate = useNavigate()
+
+  const handleGetStarted = () => {
+    navigate('/login')
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Container maxWidth="lg">
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 8,
+          }}
+        >
+          <Typography
+            variant="h2"
+            component="h1"
+            gutterBottom
+            sx={{
+              fontWeight: 'bold',
+              color: 'text.primary',
+              mb: 3,
+            }}
+          >
             Welcome to FocusHive
-          </h1>
-          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+          </Typography>
+          <Typography
+            variant="h5"
+            component="p"
+            color="text.secondary"
+            sx={{
+              maxWidth: 600,
+              mx: 'auto',
+              mb: 4,
+            }}
+          >
             Your digital co-working and co-studying platform
-          </p>
-          <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-            <div className="rounded-md shadow">
-              <button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
-                Get Started
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          </Typography>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{
+              maxWidth: 800,
+              mx: 'auto',
+              mb: 5,
+            }}
+          >
+            Join virtual hives where you can work on individual tasks while being visibly present and accountable to others. 
+            Boost your productivity through passive accountability and collaborative focus sessions.
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={handleGetStarted}
+            sx={{
+              py: 2,
+              px: 4,
+              fontSize: '1.1rem',
+              borderRadius: 2,
+            }}
+          >
+            Get Started
+          </Button>
+        </Box>
+      </Container>
+    </Box>
   )
 }
