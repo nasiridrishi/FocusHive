@@ -6,6 +6,7 @@ import { CssBaseline } from '@mui/material'
 import { HomePage, LoginPage, RegisterPage } from '@features/auth'
 import { DashboardPage, DiscoverPage } from '@features/hive'
 import { AppLayout } from '@shared/layout'
+import { PWAProvider, PWAUpdateNotification } from '@shared/pwa'
 
 // Create Material UI theme
 const theme = createTheme({
@@ -52,19 +53,30 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/hives" element={<DashboardPage />} />
-              <Route path="/discover" element={<DiscoverPage />} />
-            </Routes>
-          </AppLayout>
-        </Router>
-        <ReactQueryDevtools initialIsOpen={false} />
+        <PWAProvider serviceWorkerOptions={{ immediate: true }}>
+          <Router>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/hives" element={<DashboardPage />} />
+                <Route path="/discover" element={<DiscoverPage />} />
+              </Routes>
+            </AppLayout>
+          </Router>
+          {/* PWA Update Notifications */}
+          <PWAUpdateNotification 
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            messages={{
+              updateAvailable: 'A new version of FocusHive is available with improved features!',
+              offlineReady: 'FocusHive is now ready to work offline.',
+              updating: 'Updating FocusHive to the latest version...',
+            }}
+          />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </PWAProvider>
       </ThemeProvider>
     </QueryClientProvider>
   )
