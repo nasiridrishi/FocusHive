@@ -25,29 +25,69 @@ echo "Running all tests before push..."
 
 FAILED=0
 
-# Frontend tests
+# Frontend checks
 if [ -d "frontend/web" ]; then
-    echo "Running frontend tests..."
     cd frontend/web
+    
+    # Run linting
+    echo "Running frontend linting..."
+    if ! npm run lint; then
+        print_error "Frontend linting failed"
+        FAILED=1
+    else
+        print_success "Frontend linting passed"
+    fi
+    
+    # Run build
+    echo "Running frontend build..."
+    if ! npm run build; then
+        print_error "Frontend build failed"
+        FAILED=1
+    else
+        print_success "Frontend build passed"
+    fi
+    
+    # Run tests
+    echo "Running frontend tests..."
     if ! npm test -- --run; then
         print_error "Frontend tests failed"
         FAILED=1
     else
         print_success "Frontend tests passed"
     fi
+    
     cd ../..
 fi
 
-# Backend tests
+# Backend checks
 if [ -d "backend" ]; then
-    echo "Running backend tests..."
     cd backend
-    if ! ./gradlew test; then
-        print_error "Backend tests failed"
+    
+    # Run build (includes compilation and tests)
+    echo "Running backend build..."
+    if ! ./gradlew build; then
+        print_error "Backend build failed"
         FAILED=1
     else
-        print_success "Backend tests passed"
+        print_success "Backend build passed"
     fi
+    
+    cd ..
+fi
+
+# Identity Service checks
+if [ -d "identity-service" ]; then
+    cd identity-service
+    
+    # Run build (includes compilation and tests)
+    echo "Running identity-service build..."
+    if ! ./gradlew build; then
+        print_error "Identity Service build failed"
+        FAILED=1
+    else
+        print_success "Identity Service build passed"
+    fi
+    
     cd ..
 fi
 
