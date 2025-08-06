@@ -249,6 +249,10 @@ export const PageLayout: React.FC<{
     <Box
       sx={{
         width: '100%',
+        ...(maxWidth && {
+          maxWidth: theme => theme.breakpoints.values[maxWidth],
+          mx: 'auto',
+        }),
         py: (theme) => ({
           xs: theme.spacing(spacingMap[spacing].mobile),
           sm: theme.spacing(spacingMap[spacing].tablet),

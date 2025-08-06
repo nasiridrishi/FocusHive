@@ -40,5 +40,3 @@ export {
   ViewportContainer,
 } from './ResponsiveContainer'
 
-// Re-export legacy components for convenience
-export { AppLayout, Header, Sidebar, NavigationDrawer }

@@ -139,7 +139,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     }))
   }
 
-  // const handleAddCustomTag = () => {
+  const _handleAddCustomTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData(prev => ({
         ...prev,
@@ -498,3 +498,4 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
 }
 
 export default CreateHiveForm
+

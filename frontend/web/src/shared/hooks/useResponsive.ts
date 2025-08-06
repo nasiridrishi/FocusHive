@@ -11,7 +11,6 @@ import { breakpointValues, deviceTypes, type BreakpointKey } from '../theme/brea
 
 // Hook for breakpoint-aware responsive behavior
 export const useResponsive = () => {
-  const theme = useTheme()
   
   // Individual breakpoint checks
   const isMobile = useMediaQuery(`(max-width: ${breakpointValues.tablet - 1}px)`)
@@ -164,7 +163,6 @@ export const useResponsiveSpacing = () => {
     
     // Get responsive spacing based on breakpoint
     responsiveSpacing: (mobileScale: number, desktopScale: number) => {
-      const breakpointKeys = Object.keys(breakpointValues) as BreakpointKey[]
       const mobileBreakpoints = ['mobile', 'mobileLg'] as BreakpointKey[]
       const isMobileBreakpoint = mobileBreakpoints.includes(currentBreakpoint)
       return theme.spacing(isMobileBreakpoint ? mobileScale : desktopScale)
@@ -181,7 +179,6 @@ export const useResponsiveSpacing = () => {
 
 // Hook for responsive typography
 export const useResponsiveTypography = () => {
-  const theme = useTheme()
   const { currentBreakpoint } = useResponsive()
   
   return useMemo(() => ({
@@ -269,14 +266,3 @@ export const useReducedMotion = () => {
   return useMediaQuery(deviceTypes.reducedMotion)
 }
 
-// Export all hooks
-export {
-  useBreakpoint,
-  useBreakpointBetween,
-  useDeviceType,
-  useResponsiveSpacing,
-  useResponsiveTypography,
-  useOrientation,
-  useScrollDirection,
-  useReducedMotion,
-}

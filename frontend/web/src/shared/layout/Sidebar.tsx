@@ -8,7 +8,6 @@ import {
   ListItemText,
   Typography,
   Divider,
-  Avatar,
   Badge,
   Button,
   Collapse,
@@ -22,7 +21,6 @@ import {
   Add as AddIcon,
   ExpandLess,
   ExpandMore,
-  Circle as CircleIcon,
   Timer as TimerIcon,
   Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
@@ -71,7 +69,6 @@ const mockRecentActivity = [
 ]
 
 export const Sidebar: React.FC = () => {
-  const theme = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   

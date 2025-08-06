@@ -8,9 +8,7 @@ import {
   Chip,
   Paper,
   Stack,
-  Avatar,
   LinearProgress,
-  useTheme,
 } from '@mui/material'
 import {
   TrendingUp as TrendingUpIcon,
@@ -198,7 +196,6 @@ const mockMembers: Record<string, HiveMember[]> = {
 }
 
 export const DashboardPage: React.FC = () => {
-  const theme = useTheme()
   const [hives, setHives] = useState<Hive[]>([])
   const [members, setMembers] = useState<Record<string, HiveMember[]>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -244,7 +241,7 @@ export const DashboardPage: React.FC = () => {
     // Open share dialog
   }
 
-  const handleCreateHive = (hiveData: any) => {
+  const handleCreateHive = (hiveData: object) => {
     console.log('Creating hive:', hiveData)
     // Simulate API call and update state
   }

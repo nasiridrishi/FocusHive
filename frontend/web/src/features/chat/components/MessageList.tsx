@@ -11,7 +11,7 @@ import { ExpandLess as ExpandLessIcon } from '@mui/icons-material'
 import MessageBubble from './MessageBubble'
 import { ChatMessage } from '../../../shared/types/chat'
 
-const MessageListContainer = styled(Box)(({ theme }) => ({
+const MessageListContainer = styled(Box)(() => ({
   display: 'flex',
   flexDirection: 'column',
   height: '100%',

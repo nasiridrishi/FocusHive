@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import { io, Socket } from 'socket.io-client'
 
+// eslint-disable-next-line react-refresh/only-export-components
 export enum ConnectionState {
   DISCONNECTED = 'disconnected',
   CONNECTING = 'connecting',
@@ -17,9 +18,9 @@ interface WebSocketContextType {
   lastError: string | null
   connect: () => void
   disconnect: () => void
-  emit: (event: string, data?: any) => void
-  on: (event: string, handler: (...args: any[]) => void) => () => void
-  off: (event: string, handler?: (...args: any[]) => void) => void
+  emit: (event: string, data?: unknown) => void
+  on: (event: string, handler: (...args: unknown[]) => void) => () => void
+  off: (event: string, handler?: (...args: unknown[]) => void) => void
 }
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined)
@@ -81,7 +82,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       setReconnectCount(prev => prev + 1)
       connect()
     }, delay)
-  }, [reconnectCount, options.reconnectionDelay, options.reconnectionAttempts])
+  }, [reconnectCount, options.reconnectionDelay, options.reconnectionAttempts, clearReconnectTimeout, connect])
 
   const connect = useCallback(() => {
     if (socketRef.current?.connected) {
@@ -127,7 +128,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
     socketRef.current = socket
     socket.connect()
-  }, [url, options.timeout, scheduleReconnect])
+  }, [url, options.timeout, scheduleReconnect, clearReconnectTimeout])
 
   const disconnect = useCallback(() => {
     isManualDisconnect.current = true
@@ -143,7 +144,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     setLastError(null)
   }, [clearReconnectTimeout])
 
-  const emit = useCallback((event: string, data?: any) => {
+  const emit = useCallback((event: string, data?: unknown) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit(event, data)
     } else {
@@ -151,7 +152,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, [])
 
-  const on = useCallback((event: string, handler: (...args: any[]) => void) => {
+  const on = useCallback((event: string, handler: (...args: unknown[]) => void) => {
     if (socketRef.current) {
       socketRef.current.on(event, handler)
     }
@@ -164,7 +165,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, [])
 
-  const off = useCallback((event: string, handler?: (...args: any[]) => void) => {
+  const off = useCallback((event: string, handler?: (...args: unknown[]) => void) => {
     if (socketRef.current) {
       if (handler) {
         socketRef.current.off(event, handler)
@@ -183,7 +184,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     return () => {
       disconnect()
     }
-  }, []) // Only run on mount/unmount
+  }, [autoConnect, connect, disconnect])
 
   // Handle visibility change for reconnection
   useEffect(() => {
@@ -219,6 +220,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWebSocket = (): WebSocketContextType => {
   const context = useContext(WebSocketContext)
   if (context === undefined) {

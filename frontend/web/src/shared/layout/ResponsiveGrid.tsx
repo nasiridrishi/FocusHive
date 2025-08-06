@@ -9,7 +9,7 @@ import React, { forwardRef } from 'react'
 import { Box, BoxProps } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import { useContainerQuery, useResponsive } from '../hooks'
-import { type BreakpointKey, type ContainerBreakpointKey } from '../theme'
+import { type BreakpointKey } from '../theme'
 
 // Base grid container with CSS Grid support
 const GridContainer = styled(Box, {
@@ -40,6 +40,11 @@ const GridContainer = styled(Box, {
         }
       }
     })
+    
+    // Use defaultValue if no breakpoint values were found
+    if (Object.keys(css).length === 0) {
+      return { '--grid-value': defaultValue }
+    }
     
     return css
   }

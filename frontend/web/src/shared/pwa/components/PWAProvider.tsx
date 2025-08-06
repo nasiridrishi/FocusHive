@@ -81,6 +81,7 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({
  * Hook to access PWA context
  * Must be used within a PWAProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const usePWA = (): PWAContextValue => {
   const context = useContext(PWAContext);
   
@@ -94,6 +95,7 @@ export const usePWA = (): PWAContextValue => {
 /**
  * Higher-order component to wrap components with PWA context
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const withPWA = <P extends object>(
   Component: React.ComponentType<P>
 ): React.FC<P> => {

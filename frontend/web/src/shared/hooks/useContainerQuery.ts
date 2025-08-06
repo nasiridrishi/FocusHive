@@ -91,14 +91,14 @@ export const useContainerQuery = (debounceMs = 100): ContainerQueryResult => {
         resizeObserver.unobserve(container)
         resizeObserver.disconnect()
       }
-    } else {
-      // Fallback to window resize for older browsers
-      window.addEventListener('resize', debouncedUpdate)
-      return () => {
-        window.removeEventListener('resize', debouncedUpdate)
-        if (resizeTimeoutRef.current) {
-          clearTimeout(resizeTimeoutRef.current)
-        }
+    }
+    
+    // Fallback to window resize for older browsers
+    window.addEventListener('resize', debouncedUpdate)
+    return () => {
+      window.removeEventListener('resize', debouncedUpdate)
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current)
       }
     }
   }, [debouncedUpdate, updateDimensions])
@@ -295,10 +295,3 @@ export const useContainerTextScale = (baseSize = 16, scaleFactor = 0.02) => {
   }
 }
 
-// Export all container query hooks
-export {
-  useContainerAspectRatio,
-  useContainerColumns,
-  useContainerGrid,
-  useContainerTextScale,
-}

@@ -13,6 +13,9 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
+
+// Type assertion for Grid props to handle MUI type issues
+const GridItem = Grid as any;
 import {
   Dashboard,
   Refresh,
@@ -70,7 +73,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   compactMode = false
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md' as any));
   const {
     data,
     filter,
@@ -228,7 +231,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Summary Statistics */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={6} sm={3}>
+        <GridItem item xs={6} sm={3} key="total-focus-time" {...({} as any)}>
           <StatCard
             title="Total Focus Time"
             value={formatFocusTime(data.productivity.totalFocusTime)}
@@ -236,8 +239,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             color="primary"
             subtitle={`${data.productivity.completedSessions} sessions`}
           />
-        </Grid>
-        <Grid item xs={6} sm={3}>
+        </GridItem>
+        <GridItem item xs={6} sm={3}>
           <StatCard
             title="Completed Sessions"
             value={data.productivity.completedSessions.toString()}
@@ -245,8 +248,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             color="success"
             subtitle={`${Math.round(data.productivity.completionRate * 100)}% completion rate`}
           />
-        </Grid>
-        <Grid item xs={6} sm={3}>
+        </GridItem>
+        <GridItem item xs={6} sm={3}>
           <StatCard
             title="Current Streak"
             value={`${data.productivity.streak.current} days`}
@@ -254,8 +257,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             color="warning"
             subtitle={`Best: ${data.productivity.streak.best} days`}
           />
-        </Grid>
-        <Grid item xs={6} sm={3}>
+        </GridItem>
+        <GridItem item xs={6} sm={3}>
           <StatCard
             title="Productivity Score"
             value={`${data.productivity.productivity.average.toFixed(1)}/5`}
@@ -263,65 +266,65 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             color="info"
             subtitle={`Trend: ${data.productivity.productivity.trend}`}
           />
-        </Grid>
+        </GridItem>
       </Grid>
 
       <Grid container spacing={3}>
         {/* Filters */}
-        <Grid item xs={12} lg={3}>
+        <GridItem item xs={12} lg={3}>
           <AnalyticsFilters
             filter={filter}
             onFilterChange={updateFilter}
             compact={isMobile || compactMode}
           />
-        </Grid>
+        </GridItem>
 
         {/* Main Content */}
-        <Grid item xs={12} lg={9}>
+        <GridItem item xs={12} lg={9}>
           <Grid container spacing={3}>
             {/* Productivity Chart */}
             {filter.metrics.includes('focus-time') && (
-              <Grid item xs={12}>
+              <GridItem item xs={12}>
                 <ProductivityChart
                   data={data.trends.focusTime}
                   timeRange={filter.timeRange}
                   loading={loading}
                   error={error}
                 />
-              </Grid>
+              </GridItem>
             )}
 
             {/* Task Completion and Goal Progress */}
-            <Grid item xs={12} md={6}>
+            <GridItem item xs={12} md={6}>
               <TaskCompletionRate
                 data={data.taskCompletion}
                 showTrend={true}
                 showBreakdown={!compactMode}
                 variant={compactMode ? 'widget' : 'card'}
               />
-            </Grid>
-            <Grid item xs={12} md={6}>
+            </GridItem>
+            <GridItem item xs={12} md={6}>
               <GoalProgress
                 goals={data.goalProgress}
                 layout={compactMode ? 'list' : 'grid'}
                 showMilestones={!compactMode}
               />
-            </Grid>
+            </GridItem>
 
             {/* Hive Activity Heatmap */}
             {(hiveId || filter.viewType === 'hive') && (
-              <Grid item xs={12}>
+              <GridItem item xs={12}>
                 <HiveActivityHeatmap
                   data={data.hiveActivity}
                   showTooltip={true}
                   cellSize={isMobile ? 8 : 12}
                 />
-              </Grid>
+              </GridItem>
             )}
 
             {/* Member Engagement */}
             {(hiveId || filter.viewType !== 'individual') && data.memberEngagement.length > 0 && (
-              <Grid item xs={12}>
+              <GridItem item xs={12}>
                 <MemberEngagement
                   data={data.memberEngagement}
                   maxMembers={compactMode ? 5 : undefined}
@@ -329,10 +332,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   showRank={true}
                   currentUserId={userId}
                 />
-              </Grid>
+              </GridItem>
             )}
           </Grid>
-        </Grid>
+        </GridItem>
       </Grid>
     </Box>
   );

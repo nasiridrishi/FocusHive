@@ -9,14 +9,12 @@ import {
   Stack,
   Chip,
   IconButton,
-  Tooltip,
   Grid,
   Avatar,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
-  ListItemAvatar,
   Divider,
   Paper,
   ToggleButton,
@@ -169,7 +167,7 @@ const GoalsList: React.FC<{
               <Chip
                 label={goal.priority}
                 size="small"
-                color={getPriorityColor(goal.priority) as any}
+                color={getPriorityColor(goal.priority) as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
                 variant="outlined"
               />
             }
@@ -203,9 +201,7 @@ const GoalsList: React.FC<{
 }
 
 export const SessionStats: React.FC<SessionStatsProps> = ({
-  userId,
   period = 'today',
-  showCharts = true,
   showGoals = true,
 }) => {
   const { currentSession, timerState, timerSettings } = useTimer()

@@ -1,0 +1,926 @@
+src/features/analytics/components/AnalyticsDashboard.test.tsx(156,3): error TS2304: Cannot find name 'beforeEach'.
+src/features/analytics/components/AnalyticsDashboard.tsx(15,18): error TS2307: Cannot find module '@mui/material/Grid2' or its corresponding type declarations.
+src/features/analytics/components/AnalyticsDashboard.tsx(73,57): error TS2345: Argument of type '"md"' is not assignable to parameter of type 'number | Breakpoint'.
+src/features/analytics/components/AnalyticsFilters.test.tsx(39,3): error TS2304: Cannot find name 'beforeEach'.
+src/features/analytics/components/AnalyticsFilters.tsx(274,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/AnalyticsFilters.tsx(288,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/AnalyticsFilters.tsx(303,20): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.test.tsx(24,3): error TS2304: Cannot find name 'beforeEach'.
+src/features/analytics/components/ExportMenu.tsx(256,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.tsx(272,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.tsx(439,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.tsx(444,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.tsx(449,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element[]; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.tsx(516,11): error TS2322: Type '"md"' is not assignable to type 'false | Breakpoint | undefined'.
+src/features/analytics/components/ExportMenu.tsx(544,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element[]; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.tsx(549,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: (Element | null)[]; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: (Element | null)[]; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ExportMenu.tsx(560,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element[]; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/GoalProgress.tsx(367,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/GoalProgress.tsx(377,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/GoalProgress.tsx(387,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/GoalProgress.tsx(397,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/GoalProgress.tsx(416,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; key: string; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; key: string; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/HiveActivityHeatmap.tsx(100,61): error TS2345: Argument of type 'Theme' is not assignable to parameter of type '{ palette: { primary: { main: string; }; grey: { [key: number]: string; }; }; }'.
+  The types of 'palette.grey' are incompatible between these types.
+    Type 'Color' is not assignable to type '{ [key: number]: string; }'.
+      Index signature for type 'number' is missing in type 'Color'.
+src/features/analytics/components/HiveActivityHeatmap.tsx(250,56): error TS2345: Argument of type 'Theme' is not assignable to parameter of type '{ palette: { primary: { main: string; }; grey: { [key: number]: string; }; }; }'.
+  The types of 'palette.grey' are incompatible between these types.
+    Type 'Color' is not assignable to type '{ [key: number]: string; }'.
+      Index signature for type 'number' is missing in type 'Color'.
+src/features/analytics/components/HiveActivityHeatmap.tsx(278,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/HiveActivityHeatmap.tsx(288,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/HiveActivityHeatmap.tsx(298,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/MemberEngagement.test.tsx(8,22): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'User'.
+src/features/analytics/components/MemberEngagement.test.tsx(17,22): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'User'.
+src/features/analytics/components/MemberEngagement.test.tsx(26,22): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'User'.
+src/features/analytics/components/MemberEngagement.test.tsx(35,22): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'User'.
+src/features/analytics/components/MemberEngagement.test.tsx(44,22): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'User'.
+src/features/analytics/components/MemberEngagement.tsx(113,25): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/analytics/components/MemberEngagement.tsx(178,40): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/analytics/components/MemberEngagement.tsx(181,71): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/analytics/components/MemberEngagement.tsx(190,38): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/analytics/components/MemberEngagement.tsx(205,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element[]; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/MemberEngagement.tsx(219,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/MemberEngagement.tsx(228,27): error TS2322: Type '"success" | "error" | "warning" | "default"' is not assignable to type 'OverridableStringUnion<"success" | "error" | "info" | "warning" | "primary" | "secondary" | "inherit", LinearProgressPropsColorOverrides> | undefined'.
+  Type '"default"' is not assignable to type 'OverridableStringUnion<"success" | "error" | "info" | "warning" | "primary" | "secondary" | "inherit", LinearProgressPropsColorOverrides> | undefined'.
+src/features/analytics/components/MemberEngagement.tsx(249,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/MemberEngagement.tsx(259,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/MemberEngagement.tsx(269,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/MemberEngagement.tsx(279,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ProductivityChart.tsx(173,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ProductivityChart.tsx(183,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/ProductivityChart.tsx(193,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/TaskCompletionRate.tsx(184,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/components/TaskCompletionRate.tsx(193,21): error TS2353: Object literal may only specify known properties, and 'colorSuccess' does not exist in type 'Partial<CircularProgressClasses>'.
+src/features/analytics/components/TaskCompletionRate.tsx(221,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/contexts/AnalyticsContext.tsx(162,3): error TS2322: Type '{ user: { id: string; name: string; avatar: undefined; }; focusTime: number; sessions: number; lastActive: Date; rank: number; engagement: "low" | "medium" | "high"; contribution: number; }[]' is not assignable to type 'MemberEngagementData[]'.
+  Type '{ user: { id: string; name: string; avatar: undefined; }; focusTime: number; sessions: number; lastActive: Date; rank: number; engagement: "low" | "medium" | "high"; contribution: number; }' is not assignable to type 'MemberEngagementData'.
+    Types of property 'user' are incompatible.
+      Type '{ id: string; name: string; avatar: undefined; }' is missing the following properties from type 'User': email, username, firstName, lastName, and 3 more.
+src/features/analytics/hooks/useAnalytics.ts(2,10): error TS2459: Module '"../contexts/AnalyticsContext"' declares 'AnalyticsContext' locally, but it is not exported.
+src/features/analytics/hooks/useAnalytics.ts(2,28): error TS2459: Module '"../contexts/AnalyticsContext"' declares 'AnalyticsContextValue' locally, but it is not exported.
+src/features/analytics/pages/AnalyticsDemo.tsx(17,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
+    Type '"xl"' is not assignable to type 'false | Breakpoint | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '"xl"' is not assignable to type 'false | Breakpoint | undefined'.
+src/features/analytics/pages/AnalyticsDemo.tsx(42,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(54,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(66,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(93,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(105,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(117,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(129,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(150,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element[]; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/analytics/pages/AnalyticsDemo.tsx(164,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element[]; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/auth/components/RegisterForm.tsx(178,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/auth/components/RegisterForm.tsx(199,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/auth/pages/HomePage.tsx(21,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
+    Type '"lg"' is not assignable to type 'false | Breakpoint | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '"lg"' is not assignable to type 'false | Breakpoint | undefined'.
+src/features/auth/pages/LoginPage.tsx(49,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
+    Type '"sm"' is not assignable to type 'false | Breakpoint | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '"sm"' is not assignable to type 'false | Breakpoint | undefined'.
+src/features/auth/pages/RegisterPage.tsx(47,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
+    Type '"sm"' is not assignable to type 'false | Breakpoint | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '"sm"' is not assignable to type 'false | Breakpoint | undefined'.
+src/features/chat/components/ChatWindow.tsx(338,15): error TS2322: Type 'TypingIndicator[]' is not assignable to type '{ userId: string; user: { name: string; }; }[]'.
+  Type 'TypingIndicator' is not assignable to type '{ userId: string; user: { name: string; }; }'.
+    Types of property 'user' are incompatible.
+      Property 'name' is missing in type 'User' but required in type '{ name: string; }'.
+src/features/chat/components/MessageBubble.tsx(246,41): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/chat/components/MessageBubble.tsx(262,46): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/chat/components/MessageBubble.tsx(423,32): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/chat/components/MessageBubble.tsx(432,29): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/chat/components/MessageBubble.tsx(454,40): error TS2322: Type '{ children: string; component: string; }' is not assignable to type 'IntrinsicAttributes & TypographyOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref"> & { ...; }, "className" | ... 112 more ... | "variantMapping"> & MUIStyledCommonProps<...>'.
+  Property 'component' does not exist on type 'IntrinsicAttributes & TypographyOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref"> & { ...; }, "className" | ... 112 more ... | "variantMapping"> & MUIStyledCommonProps<...>'.
+src/features/chat/components/MessageBubble.tsx(459,40): error TS2322: Type '{ children: string; component: string; }' is not assignable to type 'IntrinsicAttributes & TypographyOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref"> & { ...; }, "className" | ... 112 more ... | "variantMapping"> & MUIStyledCommonProps<...>'.
+  Property 'component' does not exist on type 'IntrinsicAttributes & TypographyOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref"> & { ...; }, "className" | ... 112 more ... | "variantMapping"> & MUIStyledCommonProps<...>'.
+src/features/chat/components/MessageInput.tsx(100,3): error TS6133: 'hiveId' is declared but its value is never read.
+src/features/chat/components/MessageInput.tsx(119,35): error TS2503: Cannot find namespace 'NodeJS'.
+src/features/chat/components/MessageInput.tsx(258,41): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/chat/components/MessageList.tsx(14,43): error TS6133: 'theme' is declared but its value is never read.
+src/features/chat/components/TypingIndicator.tsx(35,7): error TS2451: Cannot redeclare block-scoped variable 'TypingDots'.
+src/features/chat/components/TypingIndicator.tsx(90,54): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/chat/components/TypingIndicator.tsx(142,59): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/chat/components/TypingIndicator.tsx(178,14): error TS2451: Cannot redeclare block-scoped variable 'TypingDots'.
+src/features/gamification/components/AchievementBadge.tsx(130,6): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ForwardRefComponent<HTMLDivElement, HTMLMotionProps<"div">>; } & CardOwnProps & CommonProps & Omit<...>): Element | null', gave the following error.
+    Type '{ initial: { scale: number; opacity: number; rotateY: number; }; animate: { scale: number; opacity: number; rotateY: number; transition: { duration: number; ease: string; rotateY: { duration: number; }; }; }; hover: { ...; }; tap: { ...; }; }' is not assignable to type 'Variants'.
+      Property 'animate' is incompatible with index signature.
+        Type '{ scale: number; opacity: number; rotateY: number; transition: { duration: number; ease: string; rotateY: { duration: number; }; }; }' is not assignable to type 'Variant'.
+          Type '{ scale: number; opacity: number; rotateY: number; transition: { duration: number; ease: string; rotateY: { duration: number; }; }; }' is not assignable to type 'TargetAndTransition'.
+            Type '{ scale: number; opacity: number; rotateY: number; transition: { duration: number; ease: string; rotateY: { duration: number; }; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+              Types of property 'transition' are incompatible.
+                Type '{ duration: number; ease: string; rotateY: { duration: number; }; }' is not assignable to type 'Transition<any> | undefined'.
+                  Type '{ duration: number; ease: string; rotateY: { duration: number; }; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                    Type '{ duration: number; ease: string; rotateY: { duration: number; }; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                      Types of property 'ease' are incompatible.
+                        Type 'string' is not assignable to type 'Easing | Easing[] | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<CardTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: (false | 0 | Element | undefined)[]; component: ForwardRefComponent<HTMLDivElement, HTMLMotionProps<"div">>; ... 12 more ...; sx: { ...; }; }' is not assignable to type 'IntrinsicAttributes & CardOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 7 more ... | "raised">'.
+      Property 'component' does not exist on type 'IntrinsicAttributes & CardOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 7 more ... | "raised">'.
+src/features/gamification/components/LeaderboardCard.test.tsx(408,40): error TS2322: Type 'Leaderboard | null' is not assignable to type 'Leaderboard'.
+  Type 'null' is not assignable to type 'Leaderboard'.
+src/features/gamification/components/PointsDisplay.tsx(16,57): error TS2345: Argument of type '"sm"' is not assignable to parameter of type 'number | Breakpoint'.
+src/features/gamification/components/PointsDisplay.tsx(17,57): error TS2345: Argument of type '"md"' is not assignable to parameter of type 'number | Breakpoint'.
+src/features/gamification/components/PointsDisplay.tsx(70,6): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: "div" | ForwardRefComponent<HTMLDivElement, HTMLMotionProps<"div">>; } & CardOwnProps & (CommonProps & (Omit<...> | Omit<...>))): Element | null', gave the following error.
+    Type '{ initial: { scale: number; opacity: number; }; animate: { scale: number; opacity: number; transition: { duration: number; ease: string; }; }; exit: { scale: number; opacity: number; }; } | undefined' is not assignable to type 'Variants | undefined'.
+      Type '{ initial: { scale: number; opacity: number; }; animate: { scale: number; opacity: number; transition: { duration: number; ease: string; }; }; exit: { scale: number; opacity: number; }; }' is not assignable to type 'Variants'.
+        Property 'animate' is incompatible with index signature.
+          Type '{ scale: number; opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type 'Variant'.
+            Type '{ scale: number; opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type 'TargetAndTransition'.
+              Type '{ scale: number; opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+                Types of property 'transition' are incompatible.
+                  Type '{ duration: number; ease: string; }' is not assignable to type 'Transition<any> | undefined'.
+                    Type '{ duration: number; ease: string; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                      Type '{ duration: number; ease: string; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                        Types of property 'ease' are incompatible.
+                          Type 'string' is not assignable to type 'Easing | Easing[] | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<CardTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: (false | Element)[]; component: string | ForwardRefComponent<HTMLDivElement, HTMLMotionProps<"div">>; ... 9 more ...; sx: { ...; }; }' is not assignable to type 'IntrinsicAttributes & CardOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 7 more ... | "raised">'.
+      Property 'component' does not exist on type 'IntrinsicAttributes & CardOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 7 more ... | "raised">'.
+src/features/gamification/components/StreakCounter.test.tsx(323,9): error TS2322: Type 'Date | undefined' is not assignable to type 'Date'.
+  Type 'undefined' is not assignable to type 'Date'.
+src/features/gamification/components/StreakCounter.tsx(134,6): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ForwardRefComponent<HTMLDivElement, HTMLMotionProps<"div">>; } & CardOwnProps & CommonProps & Omit<...>): Element | null', gave the following error.
+    Type '{ initial: { scale: number; opacity: number; }; animate: { scale: number; opacity: number; transition: { duration: number; ease: string; }; }; newRecord: { scale: number[]; boxShadow: string[]; transition: { duration: number; repeat: number; repeatDelay: number; }; }; }' is not assignable to type 'Variants'.
+      Property 'animate' is incompatible with index signature.
+        Type '{ scale: number; opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type 'Variant'.
+          Type '{ scale: number; opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type 'TargetAndTransition'.
+            Type '{ scale: number; opacity: number; transition: { duration: number; ease: string; }; }' is not assignable to type '{ transition?: Transition<any> | undefined; transitionEnd?: ResolvedValues | undefined; }'.
+              Types of property 'transition' are incompatible.
+                Type '{ duration: number; ease: string; }' is not assignable to type 'Transition<any> | undefined'.
+                  Type '{ duration: number; ease: string; }' is not assignable to type 'TransitionWithValueOverrides<any>'.
+                    Type '{ duration: number; ease: string; }' is not assignable to type 'ValueAnimationTransition<any>'.
+                      Types of property 'ease' are incompatible.
+                        Type 'string' is not assignable to type 'Easing | Easing[] | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<CardTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: (false | Element)[]; component: ForwardRefComponent<HTMLDivElement, HTMLMotionProps<"div">>; variants: { ...; }; ... 6 more ...; sx: { ...; } | { ...; }; }' is not assignable to type 'IntrinsicAttributes & CardOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 7 more ... | "raised">'.
+      Property 'component' does not exist on type 'IntrinsicAttributes & CardOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 7 more ... | "raised">'.
+src/features/gamification/contexts/GamificationContext.test.tsx(577,7): error TS2304: Cannot find name 'global'.
+src/features/gamification/contexts/GamificationContext.test.tsx(577,26): error TS2352: Conversion of type 'Mock<[], { send: Mock<any, any>; close: Mock<any, any>; addEventListener: Mock<any, any>; removeEventListener: Mock<any, any>; }>' to type '{ new (url: string | URL, protocols?: string | string[] | undefined): WebSocket; prototype: WebSocket; readonly CONNECTING: 0; readonly OPEN: 1; readonly CLOSING: 2; readonly CLOSED: 3; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'Mock<[], { send: Mock<any, any>; close: Mock<any, any>; addEventListener: Mock<any, any>; removeEventListener: Mock<any, any>; }>' is missing the following properties from type '{ new (url: string | URL, protocols?: string | string[] | undefined): WebSocket; prototype: WebSocket; readonly CONNECTING: 0; readonly OPEN: 1; readonly CLOSING: 2; readonly CLOSED: 3; }': CONNECTING, OPEN, CLOSING, CLOSED
+src/features/gamification/contexts/GamificationContext.tsx(168,7): error TS6133: 'debounce' is declared but its value is never read.
+src/features/gamification/contexts/GamificationContext.tsx(172,16): error TS2503: Cannot find namespace 'NodeJS'.
+src/features/gamification/pages/GamificationDemo.tsx(172,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
+    Type '"lg"' is not assignable to type 'false | Breakpoint | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '"lg"' is not assignable to type 'false | Breakpoint | undefined'.
+src/features/gamification/pages/GamificationDemo.tsx(193,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(201,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(207,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(231,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; key: string; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; key: string; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(262,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; key: string; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; key: string; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(277,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(283,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(312,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/gamification/pages/GamificationDemo.tsx(319,12): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/hive/components/HiveCard.tsx(104,34): error TS2339: Property 'profilePicture' does not exist on type 'User'.
+src/features/hive/components/HiveList.tsx(31,32): error TS2307: Cannot find module './CreateHiveForm' or its corresponding type declarations.
+src/features/hive/components/HiveList.tsx(46,25): error TS2304: Cannot find name 'CreateHiveRequest'.
+src/features/hive/components/HiveList.tsx(75,57): error TS2345: Argument of type '"md"' is not assignable to parameter of type 'number | Breakpoint'.
+src/features/hive/components/HiveList.tsx(170,39): error TS2304: Cannot find name 'CreateHiveRequest'.
+src/features/hive/components/HiveList.tsx(178,10): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; key: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; key: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/hive/components/HiveList.tsx(368,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; lg: number; key: string; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; lg: number; key: string; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/hive/components/JoinHiveButton.tsx(116,9): error TS2322: Type '"sm"' is not assignable to type 'false | Breakpoint | undefined'.
+src/features/hive/components/index.ts(2,21): error TS2300: Duplicate identifier 'HiveCard'.
+src/features/hive/components/index.ts(3,21): error TS2300: Duplicate identifier 'HiveList'.
+src/features/hive/components/index.ts(4,21): error TS2300: Duplicate identifier 'JoinHiveButton'.
+src/features/hive/components/index.ts(5,21): error TS2300: Duplicate identifier 'CreateHiveForm'.
+src/features/hive/components/index.ts(5,43): error TS2307: Cannot find module './CreateHiveForm' or its corresponding type declarations.
+src/features/hive/components/index.ts(8,10): error TS2300: Duplicate identifier 'HiveCard'.
+src/features/hive/components/index.ts(8,10): error TS2304: Cannot find name 'HiveCard'.
+src/features/hive/components/index.ts(8,20): error TS2300: Duplicate identifier 'HiveList'.
+src/features/hive/components/index.ts(8,20): error TS2304: Cannot find name 'HiveList'.
+src/features/hive/components/index.ts(8,30): error TS2300: Duplicate identifier 'JoinHiveButton'.
+src/features/hive/components/index.ts(8,30): error TS2304: Cannot find name 'JoinHiveButton'.
+src/features/hive/components/index.ts(8,46): error TS2300: Duplicate identifier 'CreateHiveForm'.
+src/features/hive/components/index.ts(8,46): error TS2304: Cannot find name 'CreateHiveForm'.
+src/features/hive/pages/DashboardPage.tsx(11,3): error TS6133: 'Avatar' is declared but its value is never read.
+src/features/hive/pages/DashboardPage.tsx(36,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DashboardPage.tsx(66,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DashboardPage.tsx(96,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DashboardPage.tsx(128,9): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DashboardPage.tsx(155,9): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DashboardPage.tsx(181,9): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DashboardPage.tsx(201,9): error TS6133: 'theme' is declared but its value is never read.
+src/features/hive/pages/DashboardPage.tsx(283,10): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/hive/pages/DashboardPage.tsx(314,10): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/hive/pages/DashboardPage.tsx(335,10): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/hive/pages/DashboardPage.tsx(356,10): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/hive/pages/DiscoverPage.tsx(27,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DiscoverPage.tsx(57,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DiscoverPage.tsx(87,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DiscoverPage.tsx(117,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/DiscoverPage.tsx(147,7): error TS2353: Object literal may only specify known properties, and 'profilePicture' does not exist in type 'User'.
+src/features/hive/pages/index.ts(2,21): error TS2300: Duplicate identifier 'DashboardPage'.
+src/features/hive/pages/index.ts(3,21): error TS2300: Duplicate identifier 'DiscoverPage'.
+src/features/hive/pages/index.ts(6,10): error TS2300: Duplicate identifier 'DashboardPage'.
+src/features/hive/pages/index.ts(6,10): error TS2304: Cannot find name 'DashboardPage'.
+src/features/hive/pages/index.ts(6,25): error TS2300: Duplicate identifier 'DiscoverPage'.
+src/features/hive/pages/index.ts(6,25): error TS2304: Cannot find name 'DiscoverPage'.
+src/features/presence/components/ActiveUsersList.tsx(12,3): error TS6133: 'Chip' is declared but its value is never read.
+src/features/presence/components/ActiveUsersList.tsx(21,10): error TS2614: Module '"./UserStatusBadge"' has no exported member 'UserStatusBadge'. Did you mean to use 'import UserStatusBadge from "./UserStatusBadge"' instead?
+src/features/presence/components/ActiveUsersList.tsx(36,38): error TS6133: 'theme' is declared but its value is never read.
+src/features/presence/components/ActiveUsersList.tsx(81,9): error TS6133: 'getInitials' is declared but its value is never read.
+src/features/presence/components/ActiveUsersList.tsx(143,27): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/ActiveUsersList.tsx(152,26): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/ActiveUsersList.tsx(217,29): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/ActiveUsersList.tsx(219,13): error TS2322: Type '(e: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0.
+src/features/presence/components/ActiveUsersList.tsx(219,23): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/features/presence/components/ActiveUsersList.tsx(308,27): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(31,10): error TS2724: '"./ActiveUsersList"' has no exported member named 'ActiveUsersList'. Did you mean 'ActiveUsersInline'?
+src/features/presence/components/HivePresencePanel.tsx(32,1): error TS6133: 'UserStatusBadge' is declared but its value is never read.
+src/features/presence/components/HivePresencePanel.tsx(32,10): error TS2614: Module '"./UserStatusBadge"' has no exported member 'UserStatusBadge'. Did you mean to use 'import UserStatusBadge from "./UserStatusBadge"' instead?
+src/features/presence/components/HivePresencePanel.tsx(74,3): error TS6133: 'hiveId' is declared but its value is never read.
+src/features/presence/components/HivePresencePanel.tsx(90,9): error TS6133: 'breakRate' is declared but its value is never read.
+src/features/presence/components/HivePresencePanel.tsx(141,30): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(143,30): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(145,30): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(147,30): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(149,30): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(151,30): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(153,30): error TS2339: Property 'name' does not exist on type 'User'.
+src/features/presence/components/HivePresencePanel.tsx(153,49): error TS2339: Property 'replace' does not exist on type 'never'.
+src/features/presence/components/HivePresencePanel.tsx(159,8): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/presence/components/HivePresencePanel.tsx(169,8): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/presence/components/HivePresencePanel.tsx(179,8): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/presence/components/HivePresencePanel.tsx(189,8): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/presence/components/PresenceIndicator.tsx(97,3): error TS6133: 'size' is declared but its value is never read.
+src/features/presence/components/PresenceIndicator.tsx(102,9): error TS6133: 'theme' is declared but its value is never read.
+src/features/presence/components/UserStatusBadge.tsx(74,6): error TS6133: 'theme' is declared but its value is never read.
+src/features/timer/components/FocusTimer.tsx(197,5): error TS6133: 'addGoal' is declared but its value is never read.
+src/features/timer/components/FocusTimer.tsx(204,10): error TS6133: 'newGoal' is declared but its value is never read.
+src/features/timer/components/FocusTimer.tsx(204,19): error TS6133: 'setNewGoal' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(31,3): error TS2305: Module '"@mui/x-charts"' has no exported member 'GaugeChart'.
+src/features/timer/components/ProductivityChart.tsx(31,3): error TS6133: 'GaugeChart' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(33,34): error TS6133: 'DailyStats' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(33,46): error TS6133: 'WeeklyStats' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(36,27): error TS6133: 'type' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(128,3): error TS6133: 'showLegend' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(129,3): error TS6133: 'responsive' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(132,79): error TS2345: Argument of type '"line" | "bar" | "doughnut"' is not assignable to parameter of type '"line" | "bar" | "area" | "pie" | (() => "line" | "bar" | "area" | "pie")'.
+  Type '"doughnut"' is not assignable to type '"line" | "bar" | "area" | "pie" | (() => "line" | "bar" | "area" | "pie")'.
+src/features/timer/components/ProductivityChart.tsx(134,10): error TS6133: 'metric' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(144,67): error TS2339: Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(145,66): error TS2339: Property 'sessions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'sessions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(146,68): error TS2339: Property 'productivity' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'productivity' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(147,63): error TS2339: Property 'goals' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'goals' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(148,70): error TS2339: Property 'distractions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'distractions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(174,9): error TS6133: 'handleMetricChange' is declared but its value is never read.
+src/features/timer/components/ProductivityChart.tsx(182,17): error TS2339: Property 'date' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'date' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(182,30): error TS2339: Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(182,48): error TS2339: Property 'sessions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'sessions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(182,65): error TS2339: Property 'productivity' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'productivity' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(182,86): error TS2339: Property 'goals' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'goals' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(182,100): error TS2339: Property 'distractions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'distractions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(196,45): error TS2339: Property 'date' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'date' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(197,49): error TS2339: Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(198,48): error TS2339: Property 'sessions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'sessions' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(199,52): error TS2339: Property 'productivity' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'productivity' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(256,59): error TS2339: Property 'breaks' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'breaks' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(376,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/ProductivityChart.tsx(384,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/ProductivityChart.tsx(392,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/ProductivityChart.tsx(401,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/ProductivityChart.tsx(427,25): error TS2339: Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(427,41): error TS2339: Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'focusTime' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/ProductivityChart.tsx(427,78): error TS2339: Property 'date' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; } | { date: string; focusTime: number; sessions: number; productivity: number; goals: number; distractions: number; breaks: number; }'.
+  Property 'date' does not exist on type '{ label: string; data: number[]; backgroundColor?: string | undefined; borderColor?: string | undefined; fill?: boolean | undefined; }'.
+src/features/timer/components/SessionStats.tsx(12,3): error TS6133: 'Tooltip' is declared but its value is never read.
+src/features/timer/components/SessionStats.tsx(19,3): error TS6133: 'ListItemAvatar' is declared but its value is never read.
+src/features/timer/components/SessionStats.tsx(206,3): error TS6133: 'userId' is declared but its value is never read.
+src/features/timer/components/SessionStats.tsx(208,3): error TS6133: 'showCharts' is declared but its value is never read.
+src/features/timer/components/SessionStats.tsx(298,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(307,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(316,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(325,16): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(413,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(424,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(435,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(445,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(456,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/components/SessionStats.tsx(467,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/contexts/TimerContext.tsx(10,3): error TS6133: 'DailyStats' is declared but its value is never read.
+src/features/timer/contexts/TimerContext.tsx(426,46): error TS6133: 'soundType' is declared but its value is never read.
+src/features/timer/pages/ProductivityDashboard.tsx(5,3): error TS6133: 'Paper' is declared but its value is never read.
+src/features/timer/pages/ProductivityDashboard.tsx(160,57): error TS2345: Argument of type '"md"' is not assignable to parameter of type 'number | Breakpoint'.
+src/features/timer/pages/ProductivityDashboard.tsx(161,39): error TS6133: 'timerSettings' is declared but its value is never read.
+src/features/timer/pages/ProductivityDashboard.tsx(232,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; lg: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; lg: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(239,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; lg: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; lg: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(252,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(254,17): error TS2741: Property 'labels' is missing in type '{ datasets: never[]; }' but required in type 'ProductivityChart'.
+src/features/timer/pages/ProductivityDashboard.tsx(261,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(275,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element[]; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element[]; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(281,20): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; sm: number; md: number; key: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; sm: number; md: number; key: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(289,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; lg: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; lg: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(298,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; lg: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; lg: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(307,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridOwnProps & CommonProps & Omit<any, "mobile" | ... 123 more ... | "zeroMinWidth">): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; item: true; xs: number; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; item: true; xs: number; }' is not assignable to type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "mobile" | ... 123 more ... | "zeroMinWidth">'.
+src/features/timer/pages/ProductivityDashboard.tsx(309,17): error TS2741: Property 'labels' is missing in type '{ datasets: never[]; }' but required in type 'ProductivityChart'.
+src/features/timer/pages/ProductivityDashboard.tsx(367,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & AvatarOwnProps & AvatarSlotsAndSlotProps & CommonProps & Omit<...>): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; size: string; sx: { bgcolor: "primary.main"; }; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<AvatarTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; size: string; sx: { bgcolor: "primary.main"; }; }' is not assignable to type 'IntrinsicAttributes & AvatarOwnProps & AvatarSlotsAndSlotProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 11 more ... | "imgProps">'.
+      Property 'size' does not exist on type 'IntrinsicAttributes & AvatarOwnProps & AvatarSlotsAndSlotProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 11 more ... | "imgProps">'. Did you mean 'sizes'?
+src/features/timer/pages/ProductivityDashboard.tsx(494,20): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
+    Type '"xl"' is not assignable to type 'false | Breakpoint | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '"xl"' is not assignable to type 'false | Breakpoint | undefined'.
+src/shared/hooks/useContainerQuery.ts(96,14): error TS2339: Property 'addEventListener' does not exist on type 'never'.
+src/shared/hooks/useContainerQuery.ts(180,14): error TS2323: Cannot redeclare exported variable 'useContainerAspectRatio'.
+src/shared/hooks/useContainerQuery.ts(210,14): error TS2323: Cannot redeclare exported variable 'useContainerColumns'.
+src/shared/hooks/useContainerQuery.ts(228,14): error TS2323: Cannot redeclare exported variable 'useContainerGrid'.
+src/shared/hooks/useContainerQuery.ts(279,14): error TS2323: Cannot redeclare exported variable 'useContainerTextScale'.
+src/shared/hooks/useContainerQuery.ts(300,3): error TS2323: Cannot redeclare exported variable 'useContainerAspectRatio'.
+src/shared/hooks/useContainerQuery.ts(300,3): error TS2484: Export declaration conflicts with exported declaration of 'useContainerAspectRatio'.
+src/shared/hooks/useContainerQuery.ts(301,3): error TS2323: Cannot redeclare exported variable 'useContainerColumns'.
+src/shared/hooks/useContainerQuery.ts(301,3): error TS2484: Export declaration conflicts with exported declaration of 'useContainerColumns'.
+src/shared/hooks/useContainerQuery.ts(302,3): error TS2323: Cannot redeclare exported variable 'useContainerGrid'.
+src/shared/hooks/useContainerQuery.ts(302,3): error TS2484: Export declaration conflicts with exported declaration of 'useContainerGrid'.
+src/shared/hooks/useContainerQuery.ts(303,3): error TS2323: Cannot redeclare exported variable 'useContainerTextScale'.
+src/shared/hooks/useContainerQuery.ts(303,3): error TS2484: Export declaration conflicts with exported declaration of 'useContainerTextScale'.
+src/shared/hooks/useResponsive.ts(14,9): error TS6133: 'theme' is declared but its value is never read.
+src/shared/hooks/useResponsive.ts(130,14): error TS2323: Cannot redeclare exported variable 'useBreakpoint'.
+src/shared/hooks/useResponsive.ts(136,14): error TS2323: Cannot redeclare exported variable 'useBreakpointBetween'.
+src/shared/hooks/useResponsive.ts(142,14): error TS2323: Cannot redeclare exported variable 'useDeviceType'.
+src/shared/hooks/useResponsive.ts(157,14): error TS2323: Cannot redeclare exported variable 'useResponsiveSpacing'.
+src/shared/hooks/useResponsive.ts(167,13): error TS6133: 'breakpointKeys' is declared but its value is never read.
+src/shared/hooks/useResponsive.ts(183,14): error TS2323: Cannot redeclare exported variable 'useResponsiveTypography'.
+src/shared/hooks/useResponsive.ts(184,9): error TS6133: 'theme' is declared but its value is never read.
+src/shared/hooks/useResponsive.ts(219,14): error TS2323: Cannot redeclare exported variable 'useOrientation'.
+src/shared/hooks/useResponsive.ts(243,14): error TS2323: Cannot redeclare exported variable 'useScrollDirection'.
+src/shared/hooks/useResponsive.ts(268,14): error TS2323: Cannot redeclare exported variable 'useReducedMotion'.
+src/shared/hooks/useResponsive.ts(274,3): error TS2323: Cannot redeclare exported variable 'useBreakpoint'.
+src/shared/hooks/useResponsive.ts(274,3): error TS2484: Export declaration conflicts with exported declaration of 'useBreakpoint'.
+src/shared/hooks/useResponsive.ts(275,3): error TS2323: Cannot redeclare exported variable 'useBreakpointBetween'.
+src/shared/hooks/useResponsive.ts(275,3): error TS2484: Export declaration conflicts with exported declaration of 'useBreakpointBetween'.
+src/shared/hooks/useResponsive.ts(276,3): error TS2323: Cannot redeclare exported variable 'useDeviceType'.
+src/shared/hooks/useResponsive.ts(276,3): error TS2484: Export declaration conflicts with exported declaration of 'useDeviceType'.
+src/shared/hooks/useResponsive.ts(277,3): error TS2323: Cannot redeclare exported variable 'useResponsiveSpacing'.
+src/shared/hooks/useResponsive.ts(277,3): error TS2484: Export declaration conflicts with exported declaration of 'useResponsiveSpacing'.
+src/shared/hooks/useResponsive.ts(278,3): error TS2323: Cannot redeclare exported variable 'useResponsiveTypography'.
+src/shared/hooks/useResponsive.ts(278,3): error TS2484: Export declaration conflicts with exported declaration of 'useResponsiveTypography'.
+src/shared/hooks/useResponsive.ts(279,3): error TS2323: Cannot redeclare exported variable 'useOrientation'.
+src/shared/hooks/useResponsive.ts(279,3): error TS2484: Export declaration conflicts with exported declaration of 'useOrientation'.
+src/shared/hooks/useResponsive.ts(280,3): error TS2323: Cannot redeclare exported variable 'useScrollDirection'.
+src/shared/hooks/useResponsive.ts(280,3): error TS2484: Export declaration conflicts with exported declaration of 'useScrollDirection'.
+src/shared/hooks/useResponsive.ts(281,3): error TS2323: Cannot redeclare exported variable 'useReducedMotion'.
+src/shared/hooks/useResponsive.ts(281,3): error TS2484: Export declaration conflicts with exported declaration of 'useReducedMotion'.
+src/shared/hooks/useResponsiveUtils.ts(12,14): error TS2323: Cannot redeclare exported variable 'useViewportVisibility'.
+src/shared/hooks/useResponsiveUtils.ts(51,14): error TS2323: Cannot redeclare exported variable 'useLazyImage'.
+src/shared/hooks/useResponsiveUtils.ts(97,14): error TS2323: Cannot redeclare exported variable 'useAdaptiveLoading'.
+src/shared/hooks/useResponsiveUtils.ts(142,14): error TS2323: Cannot redeclare exported variable 'useSmartLoading'.
+src/shared/hooks/useResponsiveUtils.ts(178,14): error TS2323: Cannot redeclare exported variable 'useResponsiveGrid'.
+src/shared/hooks/useResponsiveUtils.ts(204,14): error TS2323: Cannot redeclare exported variable 'useTouchGestures'.
+src/shared/hooks/useResponsiveUtils.ts(302,14): error TS2323: Cannot redeclare exported variable 'useResponsiveModal'.
+src/shared/hooks/useResponsiveUtils.ts(330,14): error TS2323: Cannot redeclare exported variable 'useDynamicViewportHeight'.
+src/shared/hooks/useResponsiveUtils.ts(373,3): error TS2323: Cannot redeclare exported variable 'useViewportVisibility'.
+src/shared/hooks/useResponsiveUtils.ts(373,3): error TS2484: Export declaration conflicts with exported declaration of 'useViewportVisibility'.
+src/shared/hooks/useResponsiveUtils.ts(374,3): error TS2323: Cannot redeclare exported variable 'useLazyImage'.
+src/shared/hooks/useResponsiveUtils.ts(374,3): error TS2484: Export declaration conflicts with exported declaration of 'useLazyImage'.
+src/shared/hooks/useResponsiveUtils.ts(375,3): error TS2323: Cannot redeclare exported variable 'useAdaptiveLoading'.
+src/shared/hooks/useResponsiveUtils.ts(375,3): error TS2484: Export declaration conflicts with exported declaration of 'useAdaptiveLoading'.
+src/shared/hooks/useResponsiveUtils.ts(376,3): error TS2323: Cannot redeclare exported variable 'useSmartLoading'.
+src/shared/hooks/useResponsiveUtils.ts(376,3): error TS2484: Export declaration conflicts with exported declaration of 'useSmartLoading'.
+src/shared/hooks/useResponsiveUtils.ts(377,3): error TS2323: Cannot redeclare exported variable 'useResponsiveGrid'.
+src/shared/hooks/useResponsiveUtils.ts(377,3): error TS2484: Export declaration conflicts with exported declaration of 'useResponsiveGrid'.
+src/shared/hooks/useResponsiveUtils.ts(378,3): error TS2323: Cannot redeclare exported variable 'useTouchGestures'.
+src/shared/hooks/useResponsiveUtils.ts(378,3): error TS2484: Export declaration conflicts with exported declaration of 'useTouchGestures'.
+src/shared/hooks/useResponsiveUtils.ts(379,3): error TS2323: Cannot redeclare exported variable 'useResponsiveModal'.
+src/shared/hooks/useResponsiveUtils.ts(379,3): error TS2484: Export declaration conflicts with exported declaration of 'useResponsiveModal'.
+src/shared/hooks/useResponsiveUtils.ts(380,3): error TS2323: Cannot redeclare exported variable 'useDynamicViewportHeight'.
+src/shared/hooks/useResponsiveUtils.ts(380,3): error TS2484: Export declaration conflicts with exported declaration of 'useDynamicViewportHeight'.
+src/shared/layout/AdaptiveNavigation.tsx(26,3): error TS6133: 'Divider' is declared but its value is never read.
+src/shared/layout/AdaptiveNavigation.tsx(40,12): error TS6133: 'CloseIcon' is declared but its value is never read.
+src/shared/layout/AdaptiveNavigation.tsx(46,13): error TS6133: 'PersonIcon' is declared but its value is never read.
+src/shared/layout/AdaptiveNavigation.tsx(50,45): error TS6133: 'useTouchGestures' is declared but its value is never read.
+src/shared/layout/AppLayout.tsx(4,3): error TS6133: 'AppBar' is declared but its value is never read.
+src/shared/layout/AppLayout.tsx(5,3): error TS6133: 'Toolbar' is declared but its value is never read.
+src/shared/layout/AppLayout.tsx(9,3): error TS6133: 'Typography' is declared but its value is never read.
+src/shared/layout/AppLayout.tsx(26,57): error TS2345: Argument of type '"md"' is not assignable to parameter of type 'number | Breakpoint'.
+src/shared/layout/AppLayout.tsx(33,23): error TS6133: 'setIsConnected' is declared but its value is never read.
+src/shared/layout/Header.tsx(41,3): error TS6133: 'isMobile' is declared but its value is never read.
+src/shared/layout/ResponsiveContainer.tsx(21,7): error TS6133: 'theme' is declared but its value is never read.
+src/shared/layout/ResponsiveContainer.tsx(87,3): error TS1117: An object literal cannot have multiple properties with the same name.
+src/shared/layout/ResponsiveContainer.tsx(144,9): error TS2322: Type '{ marginX?: string | undefined; maxWidth?: number | false | undefined; }' is not assignable to type 'SxProps<Theme> | undefined'.
+  Type '{ marginX?: string | undefined; maxWidth?: number | false | undefined; }' is not assignable to type 'undefined'.
+src/shared/layout/ResponsiveContainer.tsx(341,29): error TS7053: Element implicitly has an 'any' type because expression of type '("medium" | "small" | "large") & (string | number | (string & {}) | readonly NonNullable<Padding<string | number> | undefined>[] | readonly (Padding<string | number> | readonly NonNullable<...>[] | null | undefined)[] | { ...; } | ((theme: Theme) => ResponsiveStyleValue<...>))' can't be used to index type '{ small: { mobile: number; tablet: number; desktop: number; }; medium: { mobile: number; tablet: number; desktop: number; }; large: { mobile: number; tablet: number; desktop: number; }; }'.
+src/shared/layout/ResponsiveContainer.tsx(342,29): error TS7053: Element implicitly has an 'any' type because expression of type '("medium" | "small" | "large") & (string | number | (string & {}) | readonly NonNullable<Padding<string | number> | undefined>[] | readonly (Padding<string | number> | readonly NonNullable<...>[] | null | undefined)[] | { ...; } | ((theme: Theme) => ResponsiveStyleValue<...>))' can't be used to index type '{ small: { mobile: number; tablet: number; desktop: number; }; medium: { mobile: number; tablet: number; desktop: number; }; large: { mobile: number; tablet: number; desktop: number; }; }'.
+src/shared/layout/ResponsiveContainer.tsx(343,29): error TS7053: Element implicitly has an 'any' type because expression of type '("medium" | "small" | "large") & (string | number | (string & {}) | readonly NonNullable<Padding<string | number> | undefined>[] | readonly (Padding<string | number> | readonly NonNullable<...>[] | null | undefined)[] | { ...; } | ((theme: Theme) => ResponsiveStyleValue<...>))' can't be used to index type '{ small: { mobile: number; tablet: number; desktop: number; }; medium: { mobile: number; tablet: number; desktop: number; }; large: { mobile: number; tablet: number; desktop: number; }; }'.
+src/shared/layout/ResponsiveGrid.tsx(12,35): error TS6133: 'ContainerBreakpointKey' is declared but its value is never read.
+src/shared/layout/ResponsiveGrid.tsx(26,87): error TS6133: 'defaultValue' is declared but its value is never read.
+src/shared/layout/ResponsiveGrid.tsx(84,7): error TS2451: Cannot redeclare block-scoped variable 'GridItem'.
+src/shared/layout/ResponsiveGrid.tsx(93,7): error TS6133: 'theme' is declared but its value is never read.
+src/shared/layout/ResponsiveGrid.tsx(206,14): error TS2451: Cannot redeclare block-scoped variable 'GridItem'.
+src/shared/layout/ResponsiveGrid.tsx(315,32): error TS7053: Element implicitly has an 'any' type because expression of type '"mobile" | "desktop" | "mobileLg" | "tablet" | "tabletLg" | "laptop" | "desktopLg" | "desktopXl" | ("mobile" & readonly NonNullable<MaxWidth<string | number> | undefined>[]) | ... 30 more ... | ("desktopXl" & ((theme: Theme) => ResponsiveStyleValue<...>))' can't be used to index type '{ mobile: number; desktop: number; mobileLg: number; tablet: number; tabletLg: number; laptop: number; desktopLg: number; desktopXl: number; }'.
+src/shared/layout/ResponsiveLayout.tsx(188,11): error TS1117: An object literal cannot have multiple properties with the same name.
+src/shared/layout/ResponsiveLayout.tsx(189,11): error TS1117: An object literal cannot have multiple properties with the same name.
+src/shared/layout/ResponsiveLayout.tsx(190,11): error TS1117: An object literal cannot have multiple properties with the same name.
+src/shared/layout/ResponsiveLayout.tsx(239,3): error TS6133: 'maxWidth' is declared but its value is never read.
+src/shared/layout/Sidebar.tsx(11,3): error TS6133: 'Avatar' is declared but its value is never read.
+src/shared/layout/Sidebar.tsx(25,13): error TS6133: 'CircleIcon' is declared but its value is never read.
+src/shared/layout/Sidebar.tsx(74,9): error TS6133: 'theme' is declared but its value is never read.
+src/shared/layout/index.ts(8,21): error TS2300: Duplicate identifier 'AppLayout'.
+src/shared/layout/index.ts(9,21): error TS2300: Duplicate identifier 'Header'.
+src/shared/layout/index.ts(10,21): error TS2300: Duplicate identifier 'Sidebar'.
+src/shared/layout/index.ts(11,21): error TS2300: Duplicate identifier 'NavigationDrawer'.
+src/shared/layout/index.ts(44,10): error TS2300: Duplicate identifier 'AppLayout'.
+src/shared/layout/index.ts(44,10): error TS2304: Cannot find name 'AppLayout'.
+src/shared/layout/index.ts(44,21): error TS2300: Duplicate identifier 'Header'.
+src/shared/layout/index.ts(44,21): error TS2304: Cannot find name 'Header'.
+src/shared/layout/index.ts(44,29): error TS2300: Duplicate identifier 'Sidebar'.
+src/shared/layout/index.ts(44,29): error TS2304: Cannot find name 'Sidebar'.
+src/shared/layout/index.ts(44,38): error TS2300: Duplicate identifier 'NavigationDrawer'.
+src/shared/layout/index.ts(44,38): error TS2304: Cannot find name 'NavigationDrawer'.
+src/shared/pwa/components/PWAInstallPrompt.tsx(61,57): error TS2345: Argument of type '"sm"' is not assignable to parameter of type 'number | Breakpoint'.
+src/shared/pwa/components/PWAInstallPrompt.tsx(100,7): error TS2322: Type '"sm"' is not assignable to type 'false | Breakpoint | undefined'.
+src/shared/theme/palette.ts(418,15): error TS2304: Cannot find name 'PaletteColor'.
+src/shared/theme/spacing.ts(8,10): error TS6133: 'breakpointValues' is declared but its value is never read.
+src/shared/theme/spacing.ts(223,67): error TS2339: Property 'mobile' does not exist on type 'never'.
+src/shared/theme/spacing.ts(224,65): error TS2339: Property 'desktop' does not exist on type 'never'.
+src/shared/theme/theme.ts(81,9): error TS2353: Object literal may only specify known properties, and 'maxWidthMobile' does not exist in type 'Partial<OverridesStyleRules<keyof ContainerClasses, "MuiContainer", Omit<Theme, "components">>>'.
+src/shared/theme/theme.ts(172,17): error TS6133: 'theme' is declared but its value is never read.
+src/shared/theme/theme.ts(224,16): error TS6133: 'theme' is declared but its value is never read.
+src/shared/theme/theme.ts(237,16): error TS6133: 'theme' is declared but its value is never read.
+src/shared/theme/theme.ts(274,16): error TS6133: 'theme' is declared but its value is never read.
+src/shared/theme/theme.ts(345,11): error TS2698: Spread types may only be created from object types.
+src/shared/theme/typography.ts(8,10): error TS2305: Module '"@mui/material/styles"' has no exported member 'TypographyOptions'.
+src/shared/ui/AdaptiveCard.tsx(23,1): error TS6192: All imports in import declaration are unused.
+src/shared/ui/AdaptiveCard.tsx(133,11): error TS2430: Interface 'AdaptiveCardProps' incorrectly extends interface 'Omit<CardProps, "title">'.
+  Types of property 'variant' are incompatible.
+    Type '"standard" | "horizontal" | "minimal" | "featured" | undefined' is not assignable to type 'OverridableStringUnion<"outlined" | "elevation", PaperPropsVariantOverrides> | undefined'.
+      Type '"standard"' is not assignable to type 'OverridableStringUnion<"outlined" | "elevation", PaperPropsVariantOverrides> | undefined'.
+src/shared/ui/AdaptiveCard.tsx(206,38): error TS2540: Cannot assign to 'current' because it is a read-only property.
+src/shared/ui/AdaptiveCard.tsx(253,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: "img"; } & CardMediaOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>, "ref"> & { ...; }, "image" | ... 5 more ... | "src">): Element | null', gave the following error.
+    Type 'RefObject<Element>' is not assignable to type '((instance: HTMLImageElement | null) => void) | RefObject<HTMLImageElement> | null | undefined'.
+      Type 'RefObject<Element>' is not assignable to type 'RefObject<HTMLImageElement>'.
+        Type 'Element' is missing the following properties from type 'HTMLImageElement': align, alt, border, complete, and 156 more.
+  Overload 2 of 2, '(props: DefaultComponentProps<CardMediaTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'RefObject<Element>' is not assignable to type '((instance: HTMLDivElement | null) => void) | RefObject<HTMLDivElement> | null | undefined'.
+      Type 'RefObject<Element>' is not assignable to type 'RefObject<HTMLDivElement>'.
+        Type 'Element' is missing the following properties from type 'HTMLDivElement': align, accessKey, accessKeyLabel, autocapitalize, and 130 more.
+src/shared/ui/AdaptiveCard.tsx(294,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: "img"; } & CardMediaOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>, "ref"> & { ...; }, "image" | ... 5 more ... | "src">): Element | null', gave the following error.
+    Type 'RefObject<Element>' is not assignable to type '((instance: HTMLImageElement | null) => void) | RefObject<HTMLImageElement> | null | undefined'.
+      Type 'RefObject<Element>' is not assignable to type 'RefObject<HTMLImageElement>'.
+        Type 'Element' is missing the following properties from type 'HTMLImageElement': align, alt, border, complete, and 156 more.
+  Overload 2 of 2, '(props: DefaultComponentProps<CardMediaTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'RefObject<Element>' is not assignable to type '((instance: HTMLDivElement | null) => void) | RefObject<HTMLDivElement> | null | undefined'.
+      Type 'RefObject<Element>' is not assignable to type 'RefObject<HTMLDivElement>'.
+        Type 'Element' is missing the following properties from type 'HTMLDivElement': align, accessKey, accessKeyLabel, autocapitalize, and 130 more.
+src/shared/ui/AdaptiveCard.tsx(335,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: "img"; } & CardMediaOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement>, "ref"> & { ...; }, "image" | ... 5 more ... | "src">): Element | null', gave the following error.
+    Type 'RefObject<Element>' is not assignable to type '((instance: HTMLImageElement | null) => void) | RefObject<HTMLImageElement> | null | undefined'.
+      Type 'RefObject<Element>' is not assignable to type 'RefObject<HTMLImageElement>'.
+        Type 'Element' is missing the following properties from type 'HTMLImageElement': align, alt, border, complete, and 156 more.
+  Overload 2 of 2, '(props: DefaultComponentProps<CardMediaTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'RefObject<Element>' is not assignable to type '((instance: HTMLDivElement | null) => void) | RefObject<HTMLDivElement> | null | undefined'.
+      Type 'RefObject<Element>' is not assignable to type 'RefObject<HTMLDivElement>'.
+        Type 'Element' is missing the following properties from type 'HTMLDivElement': align, accessKey, accessKeyLabel, autocapitalize, and 130 more.

@@ -33,7 +33,8 @@ describe('useServiceWorkerRegistration', () => {
 
   it('should register service worker on mount when enabled', async () => {
     const mockRegisterSW = vi.fn().mockResolvedValue(() => Promise.resolve());
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     const { result } = renderHook(() => useServiceWorkerRegistration({ 
       immediate: true 
@@ -64,7 +65,8 @@ describe('useServiceWorkerRegistration', () => {
       return () => Promise.resolve();
     });
 
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     const { result } = renderHook(() => useServiceWorkerRegistration({ 
       immediate: true 
@@ -91,7 +93,8 @@ describe('useServiceWorkerRegistration', () => {
       return () => Promise.resolve();
     });
 
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     const { result } = renderHook(() => useServiceWorkerRegistration({ 
       immediate: true 
@@ -117,7 +120,8 @@ describe('useServiceWorkerRegistration', () => {
       return () => Promise.resolve();
     });
 
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     const { result } = renderHook(() => useServiceWorkerRegistration({ 
       immediate: true 
@@ -140,7 +144,8 @@ describe('useServiceWorkerRegistration', () => {
       return () => Promise.resolve();
     });
 
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     const { result } = renderHook(() => useServiceWorkerRegistration({ 
       immediate: true 
@@ -164,7 +169,8 @@ describe('useServiceWorkerRegistration', () => {
     const mockUpdateSW = vi.fn().mockResolvedValue(undefined);
     const mockRegisterSW = vi.fn().mockReturnValue(mockUpdateSW);
 
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     const { result } = renderHook(() => useServiceWorkerRegistration());
 
@@ -177,7 +183,8 @@ describe('useServiceWorkerRegistration', () => {
 
   it('should not register service worker when immediate is false', () => {
     const mockRegisterSW = vi.fn();
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     renderHook(() => useServiceWorkerRegistration({ 
       immediate: false 
@@ -207,7 +214,8 @@ describe('useServiceWorkerRegistration', () => {
       return mockUpdateSW;
     });
 
-    vi.mocked(require('virtual:pwa-register').registerSW).mockImplementation(mockRegisterSW);
+    const { registerSW } = await import('virtual:pwa-register');
+    vi.mocked(registerSW).mockImplementation(mockRegisterSW);
 
     const { result } = renderHook(() => useServiceWorkerRegistration({ 
       immediate: true 

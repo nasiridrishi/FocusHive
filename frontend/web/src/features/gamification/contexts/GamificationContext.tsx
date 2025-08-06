@@ -59,9 +59,9 @@ const mockApi = {
     };
   },
   
-  addPoints: async (amount: number, _source: string): Promise<GamificationStats> => {
+  addPoints: async (amount: number, source: string): Promise<GamificationStats> => {
     await new Promise(resolve => setTimeout(resolve, 500));
-    // Return updated stats
+    console.log(`Adding ${amount} points from source: ${source}`);
     const currentStats = await mockApi.getGamificationStats();
     return {
       ...currentStats,
@@ -164,17 +164,6 @@ const defaultContextValue: GamificationContextValue = {
 // Create context
 const GamificationContext = createContext<GamificationContextValue>(defaultContextValue);
 
-// Debounce utility
-const debounce = <T extends (...args: unknown[]) => unknown>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
 
 // Provider component
 export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
@@ -326,6 +315,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
 };
 
 // Hook to use the context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useGamification = (): GamificationContextValue => {
   const context = useContext(GamificationContext);
   

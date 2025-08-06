@@ -78,26 +78,14 @@ const baseThemeConfig: ThemeOptions = {
             paddingRight: '32px',
           },
         },
-        maxWidthMobile: {
-          maxWidth: '100%',
-        },
-        maxWidthTablet: {
-          maxWidth: `${breakpointValues.tablet}px`,
-        },
-        maxWidthLaptop: {
-          maxWidth: `${breakpointValues.laptop}px`,
-        },
-        maxWidthDesktop: {
-          maxWidth: `${breakpointValues.desktop}px`,
-        },
       },
     },
     
     // Card component with responsive design
     MuiCard: {
       styleOverrides: {
-        root: () => ({
-          borderRadius: theme.shape.borderRadius,
+        root: (theme) => ({
+          borderRadius: theme.theme.shape.borderRadius,
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
           transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
           '&:hover': {
@@ -106,7 +94,7 @@ const baseThemeConfig: ThemeOptions = {
           },
           // Responsive padding
           [`@media (max-width: ${breakpointValues.tablet - 1}px)`]: {
-            borderRadius: theme.shape.borderRadius * 0.75,
+            borderRadius: theme.theme.shape.borderRadius * 0.75,
           },
         }),
       },
@@ -115,8 +103,8 @@ const baseThemeConfig: ThemeOptions = {
     // Button component with responsive sizing
     MuiButton: {
       styleOverrides: {
-        root: () => ({
-          borderRadius: theme.shape.borderRadius,
+        root: (theme) => ({
+          borderRadius: theme.theme.shape.borderRadius,
           textTransform: 'none',
           fontWeight: 500,
           transition: 'all 0.2s ease-in-out',
@@ -144,22 +132,22 @@ const baseThemeConfig: ThemeOptions = {
     // AppBar with responsive styling
     MuiAppBar: {
       styleOverrides: {
-        root: () => ({
+        root: (theme) => ({
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
           backdropFilter: 'blur(10px)',
           // Responsive height
           [`@media (max-width: ${breakpointValues.tablet - 1}px)`]: {
             '& .MuiToolbar-root': {
               minHeight: 56,
-              paddingLeft: theme.spacing(2),
-              paddingRight: theme.spacing(2),
+              paddingLeft: theme.theme.spacing(2),
+              paddingRight: theme.theme.spacing(2),
             },
           },
           [`@media (min-width: ${breakpointValues.tablet}px)`]: {
             '& .MuiToolbar-root': {
               minHeight: 64,
-              paddingLeft: theme.spacing(3),
-              paddingRight: theme.spacing(3),
+              paddingLeft: theme.theme.spacing(3),
+              paddingRight: theme.theme.spacing(3),
             },
           },
         }),
@@ -169,7 +157,7 @@ const baseThemeConfig: ThemeOptions = {
     // Drawer with responsive behavior
     MuiDrawer: {
       styleOverrides: {
-        paper: ({ theme }) => ({
+        paper: () => ({
           // Mobile drawer styles
           [`@media (max-width: ${breakpointValues.laptop - 1}px)`]: {
             width: 280,
@@ -206,13 +194,13 @@ const baseThemeConfig: ThemeOptions = {
     // Dialog with responsive behavior
     MuiDialog: {
       styleOverrides: {
-        paper: ({ theme }) => ({
-          borderRadius: theme.shape.borderRadius,
+        paper: (theme) => ({
+          borderRadius: theme.theme.shape.borderRadius,
           // Full screen on mobile
           [`@media (max-width: ${breakpointValues.tablet - 1}px)`]: {
-            margin: theme.spacing(2),
-            width: `calc(100% - ${theme.spacing(4)})`,
-            maxHeight: `calc(100% - ${theme.spacing(4)})`,
+            margin: theme.theme.spacing(2),
+            width: `calc(100% - ${theme.theme.spacing(4)})`,
+            maxHeight: `calc(100% - ${theme.theme.spacing(4)})`,
           },
         }),
       },
@@ -342,7 +330,6 @@ export const createDarkTheme = () => {
       // Dark theme specific overrides
       MuiCssBaseline: {
         styleOverrides: {
-          ...baseThemeConfig.components?.MuiCssBaseline?.styleOverrides,
           '*::-webkit-scrollbar-thumb': {
             backgroundColor: 'rgba(255, 255, 255, 0.2)',
             borderRadius: '4px',

@@ -6,7 +6,8 @@ import {
   alpha, 
   useTheme,
   Typography,
-  Box 
+  Box,
+  Theme 
 } from '@mui/material'
 import {
   FiberManualRecord as OnlineIcon,
@@ -17,7 +18,7 @@ import {
 } from '@mui/icons-material'
 import { PresenceStatus } from '../../../shared/types/presence'
 
-const getStatusConfig = (status: PresenceStatus, theme: any) => {
+const getStatusConfig = (status: PresenceStatus, theme: Theme) => {
   switch (status) {
     case 'online':
       return {
@@ -71,7 +72,7 @@ const getStatusConfig = (status: PresenceStatus, theme: any) => {
 }
 
 const StyledChip = styled(Chip)<{ statusColor: string; statusBg: string }>(
-  ({ theme, statusColor, statusBg }) => ({
+  ({ statusColor, statusBg }) => ({
     height: 24,
     fontSize: '0.75rem',
     fontWeight: 500,
@@ -151,7 +152,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
       return {
         ...baseProps,
         icon: statusConfig.icon,
-        size: size as any,
+        size: size,
         label: '',
       }
     }
@@ -161,7 +162,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
         ...baseProps,
         icon: statusConfig.icon,
         label: statusConfig.label,
-        size: 'small' as any,
+        size: 'small',
       }
     }
 
@@ -169,7 +170,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
       ...baseProps,
       icon: statusConfig.icon,
       label: statusConfig.label,
-      size: size as any,
+      size: size,
     }
   }
 

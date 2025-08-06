@@ -72,7 +72,7 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
         installPrompt: null,
       }));
     }
-  }, [state.installPrompt]);
+  }, [state]);
 
   const cancelInstall = useCallback(() => {
     setState(prev => ({

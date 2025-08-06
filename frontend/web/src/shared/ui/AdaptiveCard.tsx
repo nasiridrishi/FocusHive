@@ -20,12 +20,6 @@ import {
   Skeleton,
   useTheme,
 } from '@mui/material'
-import {
-  MoreVert as MoreVertIcon,
-  Favorite as FavoriteIcon,
-  Share as ShareIcon,
-  Bookmark as BookmarkIcon,
-} from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
 import { useContainerQuery, useResponsive, useLazyImage } from '../hooks'
 
@@ -534,7 +528,7 @@ export const ProfileCard: React.FC<Omit<AdaptiveCardProps, 'variant' | 'image'> 
   status?: 'online' | 'offline' | 'away' | 'busy'
   role?: string
   stats?: Array<{ label: string; value: string | number }>
-}> = ({ avatar, status, role, stats, title, subtitle, ...props }) => (
+}> = ({ avatar, status, role, stats, title, ...props }) => (
   <AdaptiveCard
     variant="minimal"
     {...props}

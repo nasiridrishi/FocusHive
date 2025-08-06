@@ -327,6 +327,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 };
 
 // Custom hook to use Analytics context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAnalytics = (): AnalyticsContextValue => {
   const context = React.useContext(AnalyticsContext);
   if (!context) {

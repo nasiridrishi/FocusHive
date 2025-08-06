@@ -28,9 +28,8 @@ import {
   LineChart,
   BarChart,
   PieChart,
-  GaugeChart,
 } from '@mui/x-charts'
-import { ProductivityChartProps, DailyStats, WeeklyStats } from '../../../shared/types/timer'
+import { ProductivityChartProps } from '../../../shared/types/timer'
 
 // Mock data generator for charts
 const generateMockData = (type: string, period: string) => {
@@ -125,13 +124,10 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
   data: propData,
   type = 'line',
   height = 400,
-  showLegend = true,
-  responsive = true,
 }) => {
   const theme = useTheme()
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area' | 'pie'>(type)
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('week')
-  const [metric, setMetric] = useState<'focusTime' | 'sessions' | 'productivity' | 'goals'>('focusTime')
   
   // Use mock data if no data provided
   const chartData = propData?.datasets ? propData : { datasets: generateMockData(chartType, period) }
@@ -164,16 +160,13 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
   }
 
   const handleChartTypeChange = (_: React.MouseEvent<HTMLElement>, newType: string | null) => {
-    if (newType) setChartType(newType as any)
+    if (newType) setChartType(newType as 'line' | 'bar' | 'area' | 'pie')
   }
 
   const handlePeriodChange = (_: React.MouseEvent<HTMLElement>, newPeriod: string | null) => {
-    if (newPeriod) setPeriod(newPeriod as any)
+    if (newPeriod) setPeriod(newPeriod as 'today' | 'week' | 'month')
   }
 
-  const handleMetricChange = (_: React.MouseEvent<HTMLElement>, newMetric: string | null) => {
-    if (newMetric) setMetric(newMetric as any)
-  }
 
   const exportData = () => {
     const csvContent = "data:text/csv;charset=utf-8," + 
@@ -243,7 +236,7 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
           />
         )
         
-      case 'pie':
+      case 'pie': {
         const pieData = [
           { 
             id: 'focus', 
@@ -282,6 +275,7 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
             margin={{ top: 20, bottom: 20, left: 20, right: 20 }}
           />
         )
+      }
         
       default: // line
         return (

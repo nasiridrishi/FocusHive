@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   Container,
   Grid,
-  Paper,
   Box,
   Typography,
   Fab,
@@ -158,7 +157,7 @@ const AchievementsBanner: React.FC = () => {
 const ProductivityDashboard: React.FC = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const { currentSession, timerState, timerSettings } = useTimer()
+  const { currentSession, timerState } = useTimer()
   const { currentPresence } = usePresence()
   
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
@@ -343,7 +342,7 @@ const ProductivityDashboard: React.FC = () => {
                 borderColor: selectedView === view.key ? 'primary.main' : 'divider',
                 bgcolor: selectedView === view.key ? 'primary.50' : 'background.paper',
               }}
-              onClick={() => setSelectedView(view.key as any)}
+              onClick={() => setSelectedView(view.key as 'overview' | 'timer' | 'analytics')}
             >
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 <Stack direction="row" spacing={2} alignItems="center">
