@@ -17,7 +17,6 @@ import {
   Paper,
   Box,
   Typography,
-  IconButton,
   Chip,
   Avatar,
   Card,
@@ -31,12 +30,9 @@ import {
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  FilterList as FilterListIcon,
-  Search as SearchIcon,
-  MoreVert as MoreVertIcon,
 } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
-import { useResponsive, useContainerQuery } from '../hooks'
+import { useResponsive } from '../hooks'
 
 // Types
 interface TableColumn<T = any> {
@@ -153,7 +149,7 @@ const MobileTableCard: React.FC<{
   columns: TableColumn[]
   onRowClick?: (row: any) => void
   getRowId?: (row: any) => string
-}> = ({ row, columns, onRowClick, getRowId }) => {
+}> = ({ row, columns, onRowClick }) => {
   const [expanded, setExpanded] = useState(false)
   
   // Primary columns (always shown)
@@ -313,22 +309,24 @@ export const ResponsiveTable = <T extends Record<string, any>>({
     }
     
     return (
-      <StyledTableContainer component={Paper}>
-        <Table stickyHeader={stickyHeader}>
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell key={column.id}>
-                  <Skeleton variant="text" width="80%" />
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <LoadingSkeleton columns={columns.length} />
-          </TableBody>
-        </Table>
-      </StyledTableContainer>
+      <Paper>
+        <StyledTableContainer>
+          <Table stickyHeader={stickyHeader}>
+            <TableHead>
+              <TableRow>
+                {columns.map((column) => (
+                  <TableCell key={column.id}>
+                    <Skeleton variant="text" width="80%" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <LoadingSkeleton columns={columns.length} />
+            </TableBody>
+          </Table>
+        </StyledTableContainer>
+      </Paper>
     )
   }
   
@@ -356,12 +354,12 @@ export const ResponsiveTable = <T extends Record<string, any>>({
   if (useMobileLayout) {
     return (
       <Box>
-        {data.map((row, index) => (
+        {data.map((row) => (
           <MobileTableCard
             key={getRowId(row)}
             row={row}
             columns={visibleColumns}
-            onRowClick={onRowClick}
+            onRowClick={onRowClick ? (clickedRow) => onRowClick(clickedRow, 0) : undefined}
             getRowId={getRowId}
           />
         ))}
@@ -371,15 +369,15 @@ export const ResponsiveTable = <T extends Record<string, any>>({
   
   // Desktop table layout
   return (
-    <StyledTableContainer 
-      component={Paper}
-      sx={{ 
-        maxHeight,
-        '& .MuiTableCell-root': {
-          ...densityConfig[density],
-        },
-      }}
-    >
+    <Paper>
+      <StyledTableContainer 
+        sx={{ 
+          maxHeight,
+          '& .MuiTableCell-root': {
+            ...densityConfig[density],
+          },
+        }}
+      >
       <Table stickyHeader={stickyHeader}>
         <TableHead>
           <TableRow>
@@ -442,7 +440,8 @@ export const ResponsiveTable = <T extends Record<string, any>>({
           ))}
         </TableBody>
       </Table>
-    </StyledTableContainer>
+      </StyledTableContainer>
+    </Paper>
   )
 }
 

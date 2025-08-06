@@ -46,8 +46,36 @@ vi.mock('@mui/x-date-pickers/AdapterDateFns', () => ({
   AdapterDateFns: class MockAdapterDateFns {}
 }));
 
+// Mock framer-motion to prevent DOM prop warnings
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: React.forwardRef(({ children, ...props }: any, ref: any) => {
+      // Filter out framer-motion specific props
+      const { 
+        animate, initial, exit, variants, transition, whileHover, whileTap, whileFocus, whileInView,
+        drag, dragConstraints, dragElastic, dragMomentum, dragTransition, dragControls,
+        layout, layoutId, layoutDependency, layoutScroll, layoutRoot,
+        onAnimationStart, onAnimationComplete, onUpdate, onDragStart, onDragEnd, onDrag,
+        onDirectionLock, onViewportEnter, onViewportLeave, onHoverStart, onHoverEnd,
+        onTap, onTapStart, onTapCancel, onFocus, onBlur, onDragTransitionEnd,
+        style, transformTemplate, transformValues, ...filteredProps 
+      } = props;
+      
+      return React.createElement('div', { ...filteredProps, ref }, children);
+    })
+  },
+  AnimatePresence: ({ children }: any) => children,
+  useAnimation: () => ({}),
+  useMotionValue: (value: any) => ({ get: () => value, set: () => {} }),
+  useTransform: (value: any, input: any, output: any) => value,
+  useSpring: (value: any) => value,
+  useInView: () => true,
+  useDragControls: () => ({}),
+}));
+
 // Global test utilities
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
+// @ts-ignore - global is available in test environment
+globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),

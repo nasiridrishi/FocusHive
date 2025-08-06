@@ -37,6 +37,7 @@ public class ApplicationConfig {
         template.setValueSerializer(new StringRedisSerializer());
         template.setHashValueSerializer(new StringRedisSerializer());
         
+        template.setEnableTransactionSupport(true);
         template.afterPropertiesSet();
         return template;
     }
@@ -58,6 +59,7 @@ public class ApplicationConfig {
         template.setValueSerializer(jsonSerializer);
         template.setHashValueSerializer(jsonSerializer);
         
+        template.setEnableTransactionSupport(true);
         template.afterPropertiesSet();
         return template;
     }

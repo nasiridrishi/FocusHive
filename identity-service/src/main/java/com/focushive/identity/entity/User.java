@@ -42,6 +42,7 @@ public class User implements UserDetails {
     private String displayName;
     
     @Column(name = "email_verified", nullable = false)
+    @Builder.Default
     private boolean emailVerified = false;
     
     @Column(name = "email_verification_token")
@@ -54,18 +55,23 @@ public class User implements UserDetails {
     private Instant passwordResetTokenExpiry;
     
     @Column(nullable = false)
+    @Builder.Default
     private boolean enabled = true;
     
     @Column(name = "account_non_expired", nullable = false)
+    @Builder.Default
     private boolean accountNonExpired = true;
     
     @Column(name = "account_non_locked", nullable = false)
+    @Builder.Default
     private boolean accountNonLocked = true;
     
     @Column(name = "credentials_non_expired", nullable = false)
+    @Builder.Default
     private boolean credentialsNonExpired = true;
     
     @Column(name = "two_factor_enabled", nullable = false)
+    @Builder.Default
     private boolean twoFactorEnabled = false;
     
     @Column(name = "two_factor_secret")
@@ -73,21 +79,26 @@ public class User implements UserDetails {
     
     // User preferences
     @Column(name = "preferred_language", length = 10)
+    @Builder.Default
     private String preferredLanguage = "en";
     
     @Column(name = "timezone", length = 50)
+    @Builder.Default
     private String timezone = "UTC";
     
     @Column(name = "notification_preferences", columnDefinition = "jsonb")
     @Convert(converter = JsonAttributeConverter.class)
+    @Builder.Default
     private Map<String, Boolean> notificationPreferences = new HashMap<>();
     
     // Relationships
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt ASC")
+    @Builder.Default
     private List<Persona> personas = new ArrayList<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<OAuthClient> oauthClients = new HashSet<>();
     
     // Audit fields

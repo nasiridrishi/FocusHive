@@ -1,5 +1,6 @@
 package com.focushive.identity.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.focushive.identity.service.EmailService;
 import com.focushive.identity.service.TokenBlacklistService;
 import org.mockito.Mockito;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.util.HashSet;
@@ -18,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Test configuration for Identity Service tests.
- * Provides mock implementations for external services.
+ * Provides mock implementations for external services and Redis.
  */
 @TestConfiguration
 @Profile("test")
@@ -51,8 +53,29 @@ public class TestConfig {
     @Bean
     @Primary
     public RedisConnectionFactory mockRedisConnectionFactory() {
-        LettuceConnectionFactory connectionFactory = Mockito.mock(LettuceConnectionFactory.class);
-        return connectionFactory;
+        return Mockito.mock(RedisConnectionFactory.class);
+    }
+    
+    /**
+     * Mock RedisTemplate for tests.
+     */
+    @Bean
+    @Primary
+    public RedisTemplate<String, String> mockRedisTemplate() {
+        @SuppressWarnings("unchecked")
+        RedisTemplate<String, String> mockTemplate = Mockito.mock(RedisTemplate.class);
+        return mockTemplate;
+    }
+    
+    /**
+     * Mock JSON RedisTemplate for tests.
+     */
+    @Bean
+    @Primary
+    public RedisTemplate<String, Object> mockJsonRedisTemplate() {
+        @SuppressWarnings("unchecked")
+        RedisTemplate<String, Object> mockTemplate = Mockito.mock(RedisTemplate.class);
+        return mockTemplate;
     }
     
 }

@@ -43,9 +43,11 @@ public class Persona {
     private PersonaType type;
     
     @Column(name = "is_default", nullable = false)
+    @Builder.Default
     private boolean isDefault = false;
     
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private boolean isActive = false;
     
     @Column(name = "display_name", length = 100)
@@ -62,6 +64,7 @@ public class Persona {
     
     // Privacy settings as embedded object
     @Embedded
+    @Builder.Default
     private PrivacySettings privacySettings = new PrivacySettings();
     
     // Custom attributes for the persona
@@ -70,15 +73,18 @@ public class Persona {
                      joinColumns = @JoinColumn(name = "persona_id"))
     @MapKeyColumn(name = "attribute_key")
     @Column(name = "attribute_value")
+    @Builder.Default
     private Map<String, String> customAttributes = new HashMap<>();
     
     // Notification preferences specific to this persona
     @Column(name = "notification_preferences", columnDefinition = "jsonb")
     @Convert(converter = JsonAttributeConverter.class)
+    @Builder.Default
     private Map<String, Boolean> notificationPreferences = new HashMap<>();
     
     // Theme and UI preferences
     @Column(name = "theme_preference", length = 20)
+    @Builder.Default
     private String themePreference = "system";
     
     @Column(name = "language_preference", length = 10)

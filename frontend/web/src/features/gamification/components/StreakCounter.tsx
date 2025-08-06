@@ -35,7 +35,7 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
   const theme = useTheme();
   const isActive = streak.isActive;
   const isNewRecord = streak.current === streak.best && streak.current > 0;
-  const daysActive = calculateDaysActive(streak.lastActivity);
+  const daysActive = streak.lastActivity ? calculateDaysActive(streak.lastActivity) : 0;  
   const hoursUntilBreak = calculateTimeUntilStreakBreaks(streak);
   
   // Check if user prefers reduced motion
@@ -125,6 +125,7 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
   };
 
   const formatLastActivity = () => {
+    if (!streak.lastActivity) return 'never';
     if (daysActive === 0) return 'today';
     if (daysActive === 1) return 'yesterday';
     return `${daysActive} days ago`;
@@ -287,12 +288,12 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
               color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
               lineHeight: 1,
             }}
-            aria-label={`Current streak: ${streak.current} days`}
+            aria-label={`Current streak: ${Math.max(0, streak.current)} days`}
           >
-            {streak.current}
+            {Math.max(0, streak.current)}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {streak.current === 1 ? 'day' : 'days'}
+            {Math.max(0, streak.current) === 1 ? 'day' : 'days'}
           </Typography>
         </Box>
 

@@ -5,12 +5,9 @@
  * and user preferences. Provides optimal UX across all devices.
  */
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   DialogProps,
   Slide,
   Fade,
@@ -19,10 +16,10 @@ import {
   IconButton,
   Typography,
   Box,
-  Paper,
-  Backdrop,
   useTheme,
   alpha,
+  SxProps,
+  Theme,
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -137,13 +134,11 @@ interface SmartModalProps extends Omit<DialogProps, 'TransitionComponent'> {
 const useModalBehavior = ({
   variant = 'adaptive',
   mobileFullscreen = false,
-  allowSwipeDown = true,
-}: Pick<SmartModalProps, 'variant' | 'mobileFullscreen' | 'allowSwipeDown'>) => {
+}: Pick<SmartModalProps, 'variant' | 'mobileFullscreen'>) => {
   const { isMobile, isTablet } = useResponsive()
   const { height: viewportHeight } = useDynamicViewportHeight()
   const prefersReducedMotion = useReducedMotion()
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [dragPosition, setDragPosition] = useState(0)
   
   // Determine modal variant based on device and preferences
   const effectiveVariant = React.useMemo(() => {
@@ -168,8 +163,6 @@ const useModalBehavior = ({
     effectiveVariant,
     isFullscreen,
     setIsFullscreen,
-    dragPosition,
-    setDragPosition,
     viewportHeight,
     shouldReduceMotion,
     transitionDuration,
@@ -204,13 +197,11 @@ export const SmartModal: React.FC<SmartModalProps> = ({
     effectiveVariant,
     isFullscreen,
     setIsFullscreen,
-    dragPosition,
-    setDragPosition,
     viewportHeight,
     shouldReduceMotion,
     transitionDuration,
     isMobile,
-  } = useModalBehavior({ variant, mobileFullscreen, allowSwipeDown })
+  } = useModalBehavior({ variant, mobileFullscreen })
   
   const modalRef = React.useRef<HTMLDivElement>(null)
   const gesture = useTouchGestures(modalRef)
@@ -418,11 +409,11 @@ export const SmartModal: React.FC<SmartModalProps> = ({
           className={isMobile && mobileFullscreen ? 'mobile-fullscreen' : ''}
           PaperProps={{
             sx: {
-              ...sizeConfig[size],
               display: 'flex',
               flexDirection: 'column',
               maxHeight: isFullscreen ? '100%' : '90vh',
-            },
+              ...(sizeConfig[size].maxWidth !== false ? { maxWidth: sizeConfig[size].maxWidth } : {}),
+            } as SxProps<Theme>,
           }}
           {...dialogProps}
         >
