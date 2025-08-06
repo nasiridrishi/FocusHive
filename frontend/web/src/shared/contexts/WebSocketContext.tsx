@@ -52,7 +52,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const [lastError, setLastError] = useState<string | null>(null)
   
   const socketRef = useRef<Socket | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const reconnectTimeoutRef = useRef<number | null>(null)
   const isManualDisconnect = useRef(false)
 
   const clearReconnectTimeout = useCallback(() => {

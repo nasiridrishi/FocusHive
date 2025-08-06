@@ -31,7 +31,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   })
 
   // Refs for debouncing and optimistic updates
-  const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({})
+  const typingTimeoutRef = useRef<Record<string, number>>({})
   const optimisticMessagesRef = useRef<Record<string, ChatMessage[]>>({})
   const messageQueueRef = useRef<SendMessageRequest[]>([])
 
@@ -83,7 +83,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
       id: `temp_${Date.now()}_${Math.random()}`,
       content: request.content,
       authorId: userId,
-      author: { id: userId, name: 'You', email: '' }, // Will be populated by backend
+      author: { id: userId, username: 'You', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' }, // Will be populated by backend
       hiveId: request.hiveId,
       type: request.type || 'text',
       metadata: request.metadata,

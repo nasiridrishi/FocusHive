@@ -56,7 +56,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   const [currentSession, setCurrentSession] = useState<SessionStats | null>(null)
   
   // Refs for timer management
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const timerIntervalRef = useRef<number | null>(null)
   const phaseStartTimeRef = useRef<Date | null>(null)
   const sessionStartTimeRef = useRef<Date | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -193,7 +193,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       const newSession: SessionStats = {
         id: generateSessionId(),
         userId,
-        user: { id: userId, name: '', email: '' },
+        user: { id: userId, username: '', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' },
         hiveId: hiveId || currentPresence?.hiveId,
         date: new Date().toISOString().split('T')[0],
         focusTime: 0,

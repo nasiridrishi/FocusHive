@@ -441,7 +441,7 @@ public class AuthenticationService {
         return PersonaDto.builder()
                 .id(persona.getId())
                 .name(persona.getName())
-                .type(persona.getType().name())
+                .type(persona.getType())
                 .displayName(persona.getDisplayName())
                 .avatarUrl(persona.getAvatarUrl())
                 .bio(persona.getBio())

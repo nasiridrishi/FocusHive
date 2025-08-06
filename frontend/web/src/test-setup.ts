@@ -1,1 +1,97 @@
 import '@testing-library/jest-dom';
+import React from 'react';
+
+// Mock MUI X Charts
+vi.mock('@mui/x-charts', () => ({
+  LineChart: vi.fn(({ children, ...props }: any) => {
+    return React.createElement('div', {
+      'data-testid': 'line-chart',
+      'data-props': JSON.stringify(props)
+    }, children);
+  }),
+  BarChart: vi.fn(({ children, ...props }: any) => {
+    return React.createElement('div', {
+      'data-testid': 'bar-chart', 
+      'data-props': JSON.stringify(props)
+    }, children);
+  }),
+  ResponsiveChartContainer: vi.fn(({ children, ...props }: any) => {
+    return React.createElement('div', {
+      'data-testid': 'chart-container',
+      'data-props': JSON.stringify(props)
+    }, children);
+  }),
+  ChartsTooltip: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-tooltip' })),
+  ChartsAxisHighlight: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-axis-highlight' })),
+  ChartsXAxis: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-x-axis' })),
+  ChartsYAxis: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-y-axis' }))
+}));
+
+// Mock MUI X Date Pickers
+vi.mock('@mui/x-date-pickers', () => ({
+  LocalizationProvider: vi.fn(({ children }: any) => React.createElement('div', {}, children)),
+  DatePicker: vi.fn(({ label, onChange, value, slotProps }: any) => {
+    return React.createElement('input', {
+      'aria-label': label,
+      type: 'date',
+      value: value ? value.toISOString().split('T')[0] : '',
+      onChange: (e: any) => onChange && onChange(new Date(e.target.value)),
+      ...slotProps?.textField
+    });
+  })
+}));
+
+// Mock date-fns adapter
+vi.mock('@mui/x-date-pickers/AdapterDateFns', () => ({
+  AdapterDateFns: class MockAdapterDateFns {}
+}));
+
+// Global test utilities
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// Mock canvas context for charts
+HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+  fillRect: vi.fn(),
+  clearRect: vi.fn(),
+  getImageData: vi.fn(() => ({ data: new Array(4) })),
+  putImageData: vi.fn(),
+  createImageData: vi.fn(() => []),
+  setTransform: vi.fn(),
+  drawImage: vi.fn(),
+  save: vi.fn(),
+  fillText: vi.fn(),
+  restore: vi.fn(),
+  beginPath: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  closePath: vi.fn(),
+  stroke: vi.fn(),
+  translate: vi.fn(),
+  scale: vi.fn(),
+  rotate: vi.fn(),
+  arc: vi.fn(),
+  fill: vi.fn(),
+  measureText: vi.fn(() => ({ width: 0 })),
+  transform: vi.fn(),
+  rect: vi.fn(),
+  clip: vi.fn(),
+});
