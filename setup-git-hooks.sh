@@ -84,9 +84,9 @@ echo "  Example: feat(auth): Add login functionality [UOL-32]"
 echo ""
 echo "📦 Checking dependencies..."
 
-if [ -d "frontend/web" ] && [ ! -d "frontend/web/node_modules" ]; then
+if [ -d "frontend" ] && [ ! -d "frontend/node_modules" ]; then
     print_info "Installing frontend dependencies..."
-    cd frontend/web && npm install && cd ../..
+    cd frontend && npm install && cd ..
 fi
 
 print_success "Git hooks setup complete!"

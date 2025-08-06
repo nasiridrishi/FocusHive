@@ -26,8 +26,8 @@ echo "Running all tests before push..."
 FAILED=0
 
 # Frontend checks
-if [ -d "frontend/web" ]; then
-    cd frontend/web
+if [ -d "frontend" ]; then
+    cd frontend
     
     # Run linting
     echo "Running frontend linting..."

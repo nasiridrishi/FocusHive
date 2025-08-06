@@ -142,7 +142,7 @@ services:
   # React Frontend (Vite dev server)
   web:
     build:
-      context: ./frontend/web
+      context: ./frontend
       dockerfile: Dockerfile
       target: development
     container_name: focushive-web
@@ -151,7 +151,7 @@ services:
     environment:
       VITE_API_URL: http://192.168.2.3:8080
     volumes:
-      - ./frontend/web:/app
+      - ./frontend:/app
       - /app/node_modules
     depends_on:
       - backend

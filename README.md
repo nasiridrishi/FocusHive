@@ -20,10 +20,9 @@ focushive/
 │   ├── src/            # Java source code
 │   ├── build.gradle.kts # Gradle build configuration
 │   └── Dockerfile      # Backend container
-├── frontend/
-│   └── web/            # React TypeScript web application
-│       ├── src/        # React source code
-│       └── Dockerfile  # Frontend container
+├── frontend/           # React TypeScript web application
+│   ├── src/            # React source code
+│   └── Dockerfile      # Frontend container
 ├── shared/
 │   └── openapi/        # OpenAPI specifications
 ├── docs/               # Documentation
@@ -66,7 +65,7 @@ cd backend
 
 #### Frontend (React)
 ```bash
-cd frontend/web
+cd frontend
 npm install           # Install dependencies
 npm run dev           # Run development server
 npm test              # Run tests
