@@ -23,7 +23,6 @@ import {
   Badge,
   Fab,
   Collapse,
-  Divider,
   Avatar,
   Chip,
   useTheme,
@@ -37,17 +36,15 @@ import {
   Timer as TimerIcon,
   Settings as SettingsIcon,
   Menu as MenuIcon,
-  Close as CloseIcon,
   Notifications as NotificationsIcon,
   Search as SearchIcon,
   Add as AddIcon,
   ExpandLess,
   ExpandMore,
-  Person as PersonIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { styled } from '@mui/material/styles'
-import { useResponsive, useScrollDirection, useTouchGestures } from '../hooks'
+import { useResponsive, useScrollDirection } from '../hooks'
 
 // Types for navigation items
 interface NavigationItem {

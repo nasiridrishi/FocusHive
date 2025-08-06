@@ -33,212 +33,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   const statusUpdateTimeoutRef = useRef<number | null>(null)
   const heartbeatIntervalRef = useRef<number | null>(null)
 
-  // Initialize presence when connected
-  useEffect(() => {
-    if (isConnected && userId) {
-      initializePresence()
-      startHeartbeat()
-    }
-
-    return () => {
-      stopHeartbeat()
-    }
-  }, [isConnected, userId])
-
-  // Set up WebSocket event listeners
-  useEffect(() => {
-    if (!isConnected) return
-
-    const unsubscribeFunctions = [
-      on('presence:update', handlePresenceUpdate),
-      on('presence:hive_info', handleHivePresenceInfo),
-      on('presence:user_joined', handleUserJoined),
-      on('presence:user_left', handleUserLeft),
-      on('session:started', handleSessionStarted),
-      on('session:ended', handleSessionEnded),
-      on('session:break_started', handleBreakStarted),
-      on('session:break_ended', handleBreakEnded),
-      on('activity:event', handleActivityEvent),
-    ]
-
-    return () => {
-      unsubscribeFunctions.forEach(unsubscribe => unsubscribe())
-    }
-  }, [isConnected, on])
-
-  const initializePresence = useCallback(() => {
-    if (!userId) return
-
-    const initialPresence: UserPresence = {
-      userId,
-      user: { id: userId, username: '', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' }, // Will be populated by backend
-      status: 'online',
-      lastSeen: new Date().toISOString(),
-      deviceInfo: {
-        type: 'web',
-        browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 
-                 navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Other',
-        os: navigator.platform,
-      }
-    }
-
-    setCurrentPresence(initialPresence)
-    emit('presence:initialize', { userId, presence: initialPresence })
-  }, [userId, emit])
-
-  const startHeartbeat = useCallback(() => {
-    if (heartbeatIntervalRef.current) return
-
-    heartbeatIntervalRef.current = setInterval(() => {
-      if (isConnected && currentPresence) {
-        emit('presence:heartbeat', { 
-          userId, 
-          timestamp: new Date().toISOString() 
-        })
-      }
-    }, 30000) // Send heartbeat every 30 seconds
-  }, [isConnected, currentPresence, userId, emit])
-
-  const stopHeartbeat = useCallback(() => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current)
-      heartbeatIntervalRef.current = null
-    }
-  }, [])
-
-  const debouncedStatusUpdate = useCallback((status: PresenceStatus, activity?: string) => {
-    const now = new Date()
-    const timeSinceLastUpdate = now.getTime() - lastStatusUpdate.current.getTime()
-    
-    // Clear existing timeout
-    if (statusUpdateTimeoutRef.current) {
-      clearTimeout(statusUpdateTimeoutRef.current)
-    }
-
-    // If it's been more than 2 seconds since last update, send immediately
-    if (timeSinceLastUpdate > 2000) {
-      sendStatusUpdate(status, activity)
-      lastStatusUpdate.current = now
-    } else {
-      // Otherwise, debounce for 1 second
-      statusUpdateTimeoutRef.current = setTimeout(() => {
-        sendStatusUpdate(status, activity)
-        lastStatusUpdate.current = new Date()
-      }, 1000)
-    }
-  }, [])
-
-  const sendStatusUpdate = useCallback((status: PresenceStatus, activity?: string) => {
-    if (!isConnected || !userId) return
-
-    const update: PresenceUpdate = {
-      userId,
-      status,
-      activity,
-      timestamp: new Date().toISOString(),
-      hiveId: currentPresence?.hiveId,
-    }
-
-    emit('presence:update', update)
-    
-    setCurrentPresence(prev => prev ? {
-      ...prev,
-      status,
-      currentActivity: activity,
-      lastSeen: update.timestamp,
-    } : null)
-  }, [isConnected, userId, currentPresence?.hiveId, emit])
-
-  const updatePresence = useCallback((status: PresenceStatus, activity?: string) => {
-    debouncedStatusUpdate(status, activity)
-  }, [debouncedStatusUpdate])
-
-  const joinHivePresence = useCallback((hiveId: string) => {
-    if (!isConnected || !userId) return
-
-    emit('presence:join_hive', { userId, hiveId })
-    
-    setCurrentPresence(prev => prev ? {
-      ...prev,
-      hiveId,
-      lastSeen: new Date().toISOString(),
-    } : null)
-  }, [isConnected, userId, emit])
-
-  const leaveHivePresence = useCallback((hiveId: string) => {
-    if (!isConnected || !userId) return
-
-    emit('presence:leave_hive', { userId, hiveId })
-    
-    setCurrentPresence(prev => prev ? {
-      ...prev,
-      hiveId: undefined,
-      lastSeen: new Date().toISOString(),
-    } : null)
-
-    // Remove hive from local state
-    setHivePresence(prev => {
-      const updated = { ...prev }
-      delete updated[hiveId]
-      return updated
-    })
-  }, [isConnected, userId, emit])
-
-  const startFocusSession = useCallback((hiveId?: string, targetDuration?: number) => {
-    if (!isConnected || !userId) return
-
-    const sessionData = {
-      userId,
-      hiveId: hiveId || currentPresence?.hiveId,
-      targetDuration,
-      type: targetDuration && targetDuration <= 30 ? 'pomodoro' : 'continuous',
-      timestamp: new Date().toISOString(),
-    }
-
-    emit('session:start', sessionData)
-    updatePresence('focusing', 'Started focus session')
-  }, [isConnected, userId, currentPresence?.hiveId, emit, updatePresence])
-
-  const endFocusSession = useCallback((productivity?: FocusSession['productivity']) => {
-    if (!isConnected || !userId || !currentSession) return
-
-    emit('session:end', { 
-      userId, 
-      sessionId: currentSession.id,
-      productivity,
-      timestamp: new Date().toISOString(),
-    })
-    
-    updatePresence('online', 'Completed focus session')
-    setCurrentSession(null)
-  }, [isConnected, userId, currentSession, emit, updatePresence])
-
-  const takeBreak = useCallback((type: SessionBreak['type']) => {
-    if (!isConnected || !userId) return
-
-    emit('session:break_start', { 
-      userId, 
-      sessionId: currentSession?.id,
-      breakType: type,
-      timestamp: new Date().toISOString(),
-    })
-    
-    updatePresence('break', `Taking ${type} break`)
-  }, [isConnected, userId, currentSession?.id, emit, updatePresence])
-
-  const resumeFromBreak = useCallback(() => {
-    if (!isConnected || !userId) return
-
-    emit('session:break_end', { 
-      userId, 
-      sessionId: currentSession?.id,
-      timestamp: new Date().toISOString(),
-    })
-    
-    updatePresence('focusing', 'Resumed focus session')
-  }, [isConnected, userId, currentSession?.id, emit, updatePresence])
-
-  // Event handlers
+  // Event handlers - define first to avoid dependency issues
   const handlePresenceUpdate = useCallback((data: PresenceUpdate) => {
     setHivePresence(prev => {
       if (!data.hiveId) return prev
@@ -356,6 +151,211 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
     console.log('Activity event:', data)
   }, [])
 
+  const sendStatusUpdate = useCallback((status: PresenceStatus, activity?: string) => {
+    if (!isConnected || !userId) return
+
+    const update: PresenceUpdate = {
+      userId,
+      status,
+      activity,
+      timestamp: new Date().toISOString(),
+      hiveId: currentPresence?.hiveId,
+    }
+
+    emit('presence:update', update)
+    
+    setCurrentPresence(prev => prev ? {
+      ...prev,
+      status,
+      currentActivity: activity,
+      lastSeen: update.timestamp,
+    } : null)
+  }, [isConnected, userId, currentPresence?.hiveId, emit])
+
+  const debouncedStatusUpdate = useCallback((status: PresenceStatus, activity?: string) => {
+    const now = new Date()
+    const timeSinceLastUpdate = now.getTime() - lastStatusUpdate.current.getTime()
+    
+    // Clear existing timeout
+    if (statusUpdateTimeoutRef.current) {
+      clearTimeout(statusUpdateTimeoutRef.current)
+    }
+
+    // If it's been more than 2 seconds since last update, send immediately
+    if (timeSinceLastUpdate > 2000) {
+      sendStatusUpdate(status, activity)
+      lastStatusUpdate.current = now
+    } else {
+      // Otherwise, debounce for 1 second
+      statusUpdateTimeoutRef.current = setTimeout(() => {
+        sendStatusUpdate(status, activity)
+        lastStatusUpdate.current = new Date()
+      }, 1000) as unknown as number
+    }
+  }, [sendStatusUpdate])
+
+  const updatePresence = useCallback((status: PresenceStatus, activity?: string) => {
+    debouncedStatusUpdate(status, activity)
+  }, [debouncedStatusUpdate])
+
+  const initializePresence = useCallback(() => {
+    if (!userId) return
+
+    const initialPresence: UserPresence = {
+      userId,
+      user: { id: userId, username: '', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' }, // Will be populated by backend
+      status: 'online',
+      lastSeen: new Date().toISOString(),
+      deviceInfo: {
+        type: 'web',
+        browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+                 navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Other',
+        os: navigator.platform,
+      }
+    }
+
+    setCurrentPresence(initialPresence)
+    emit('presence:initialize', { userId, presence: initialPresence })
+  }, [userId, emit])
+
+  const stopHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current)
+      heartbeatIntervalRef.current = null
+    }
+  }, [])
+
+  const startHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) return
+
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (isConnected && currentPresence) {
+        emit('presence:heartbeat', { 
+          userId, 
+          timestamp: new Date().toISOString() 
+        })
+      }
+    }, 30000) as unknown as number // Send heartbeat every 30 seconds
+  }, [isConnected, currentPresence, userId, emit])
+
+  const joinHivePresence = useCallback((hiveId: string) => {
+    if (!isConnected || !userId) return
+
+    emit('presence:join_hive', { userId, hiveId })
+    
+    setCurrentPresence(prev => prev ? {
+      ...prev,
+      hiveId,
+      lastSeen: new Date().toISOString(),
+    } : null)
+  }, [isConnected, userId, emit])
+
+  const leaveHivePresence = useCallback((hiveId: string) => {
+    if (!isConnected || !userId) return
+
+    emit('presence:leave_hive', { userId, hiveId })
+    
+    setCurrentPresence(prev => prev ? {
+      ...prev,
+      hiveId: undefined,
+      lastSeen: new Date().toISOString(),
+    } : null)
+
+    // Remove hive from local state
+    setHivePresence(prev => {
+      const updated = { ...prev }
+      delete updated[hiveId]
+      return updated
+    })
+  }, [isConnected, userId, emit])
+
+  const startFocusSession = useCallback((hiveId?: string, targetDuration?: number) => {
+    if (!isConnected || !userId) return
+
+    const sessionData = {
+      userId,
+      hiveId: hiveId || currentPresence?.hiveId,
+      targetDuration,
+      type: targetDuration && targetDuration <= 30 ? 'pomodoro' : 'continuous',
+      timestamp: new Date().toISOString(),
+    }
+
+    emit('session:start', sessionData)
+    updatePresence('focusing', 'Started focus session')
+  }, [isConnected, userId, currentPresence?.hiveId, emit, updatePresence])
+
+  const endFocusSession = useCallback((productivity?: FocusSession['productivity']) => {
+    if (!isConnected || !userId || !currentSession) return
+
+    emit('session:end', { 
+      userId, 
+      sessionId: currentSession.id,
+      productivity,
+      timestamp: new Date().toISOString(),
+    })
+    
+    updatePresence('online', 'Completed focus session')
+    setCurrentSession(null)
+  }, [isConnected, userId, currentSession, emit, updatePresence])
+
+  const takeBreak = useCallback((type: SessionBreak['type']) => {
+    if (!isConnected || !userId) return
+
+    emit('session:break_start', { 
+      userId, 
+      sessionId: currentSession?.id,
+      breakType: type,
+      timestamp: new Date().toISOString(),
+    })
+    
+    updatePresence('break', `Taking ${type} break`)
+  }, [isConnected, userId, currentSession?.id, emit, updatePresence])
+
+  const resumeFromBreak = useCallback(() => {
+    if (!isConnected || !userId) return
+
+    emit('session:break_end', { 
+      userId, 
+      sessionId: currentSession?.id,
+      timestamp: new Date().toISOString(),
+    })
+    
+    updatePresence('focusing', 'Resumed focus session')
+  }, [isConnected, userId, currentSession?.id, emit, updatePresence])
+
+  // Initialize presence when connected
+  useEffect(() => {
+    if (isConnected && userId) {
+      initializePresence()
+      startHeartbeat()
+    }
+
+    return () => {
+      stopHeartbeat()
+    }
+  }, [isConnected, userId, initializePresence, startHeartbeat, stopHeartbeat])
+
+  // Set up WebSocket event listeners
+  useEffect(() => {
+    if (!isConnected) return
+
+    const unsubscribeFunctions = [
+      on('presence:update', (data: unknown) => handlePresenceUpdate(data as PresenceUpdate)),
+      on('presence:hive_info', (data: unknown) => handleHivePresenceInfo(data as HivePresenceInfo)),
+      on('presence:user_joined', (data: unknown) => handleUserJoined(data as { user: UserPresence; hiveId: string })),
+      on('presence:user_left', (data: unknown) => handleUserLeft(data as { userId: string; hiveId: string })),
+      on('session:started', (data: unknown) => handleSessionStarted(data as FocusSession)),
+      on('session:ended', (data: unknown) => handleSessionEnded(data as { sessionId: string; userId: string })),
+      on('session:break_started', (data: unknown) => handleBreakStarted(data as SessionBreak & { userId: string })),
+      on('session:break_ended', (data: unknown) => handleBreakEnded(data as { breakId: string; userId: string })),
+      on('activity:event', (data: unknown) => handleActivityEvent(data as ActivityEvent)),
+    ]
+
+    return () => {
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe())
+    }
+  }, [isConnected, on, handleActivityEvent, handleBreakEnded, handleBreakStarted, handleHivePresenceInfo, handlePresenceUpdate, handleSessionEnded, handleSessionStarted, handleUserJoined, handleUserLeft])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -385,6 +385,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const usePresence = (): PresenceContextType => {
   const context = useContext(PresenceContext)
   if (context === undefined) {

@@ -35,21 +35,21 @@ import { styled } from '@mui/material/styles'
 import { useResponsive } from '../hooks'
 
 // Types
-interface TableColumn<T = any> {
+interface TableColumn<T = Record<string, unknown>> {
   id: string
   label: string
-  accessor: keyof T | ((row: T) => any)
+  accessor: keyof T | ((row: T) => unknown)
   width?: number | string
   minWidth?: number
   align?: 'left' | 'center' | 'right'
   sortable?: boolean
   filterable?: boolean
   hiddenOnMobile?: boolean
-  renderCell?: (value: any, row: T, column: TableColumn<T>) => React.ReactNode
+  renderCell?: (value: unknown, row: T, column: TableColumn<T>) => React.ReactNode
   renderMobileCard?: (row: T) => React.ReactNode
 }
 
-interface ResponsiveTableProps<T = any> {
+interface ResponsiveTableProps<T = Record<string, unknown>> {
   data: T[]
   columns: TableColumn<T>[]
   loading?: boolean
@@ -144,12 +144,12 @@ const LoadingSkeleton: React.FC<{ columns: number }> = ({ columns }) => (
 )
 
 // Mobile card renderer
-const MobileTableCard: React.FC<{
-  row: any
-  columns: TableColumn[]
-  onRowClick?: (row: any) => void
-  getRowId?: (row: any) => string
-}> = ({ row, columns, onRowClick }) => {
+const MobileTableCard = <T extends Record<string, unknown>>({ row, columns, onRowClick }: {
+  row: T
+  columns: TableColumn<T>[]
+  onRowClick?: (row: T) => void
+  getRowId?: (row: T) => string
+}) => {
   const [expanded, setExpanded] = useState(false)
   
   // Primary columns (always shown)
@@ -158,7 +158,7 @@ const MobileTableCard: React.FC<{
   // Secondary columns (shown when expanded)
   const secondaryColumns = columns.filter(col => !col.hiddenOnMobile).slice(3)
   
-  const renderCellValue = (column: TableColumn, value: any) => {
+  const renderCellValue = (column: TableColumn<T>, value: unknown) => {
     if (column.renderCell) {
       return column.renderCell(value, row, column)
     }
@@ -244,14 +244,14 @@ const MobileTableCard: React.FC<{
 }
 
 // Main ResponsiveTable component
-export const ResponsiveTable = <T extends Record<string, any>>({
+export const ResponsiveTable = <T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,
   sortable = true,
   onRowClick,
   onSort,
-  getRowId = (row) => row.id || JSON.stringify(row),
+  getRowId = (row) => (row as any).id || JSON.stringify(row),
   emptyMessage = 'No data available',
   stickyHeader = false,
   maxHeight,
@@ -431,7 +431,7 @@ export const ResponsiveTable = <T extends Record<string, any>>({
                     data-label={column.label}
                   >
                     <div className="cell-content">
-                      {column.renderCell ? column.renderCell(value, row, column) : value}
+                      {column.renderCell ? column.renderCell(value, row, column) : (value as React.ReactNode)}
                     </div>
                   </TableCell>
                 )
@@ -456,25 +456,25 @@ export const UserTable: React.FC<{
     status: 'active' | 'inactive'
     lastSeen: Date
   }>
-  onUserClick?: (user: any) => void
+  onUserClick?: (user: unknown) => void
   loading?: boolean
 }> = ({ users, onUserClick, loading }) => {
-  const columns: TableColumn[] = [
+  const columns: TableColumn<any>[] = [
     {
       id: 'user',
       label: 'User',
       accessor: 'name',
-      renderCell: (value, row) => (
+      renderCell: (value, row: any) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar src={row.avatar} alt={row.name} sx={{ width: 32, height: 32 }}>
-            {row.name[0]}
+          <Avatar src={row.avatar as string} alt={row.name as string} sx={{ width: 32, height: 32 }}>
+            {(row.name as string)?.[0] || ''}
           </Avatar>
           <Box>
             <Typography variant="body2" fontWeight={600}>
-              {value}
+              {value as React.ReactNode}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {row.email}
+              {row.email as string}
             </Typography>
           </Box>
         </Box>
@@ -485,7 +485,7 @@ export const UserTable: React.FC<{
       label: 'Role',
       accessor: 'role',
       renderCell: (value) => (
-        <Chip label={value} size="small" variant="outlined" />
+        <Chip label={value as React.ReactNode} size="small" variant="outlined" />
       ),
     },
     {
@@ -494,9 +494,9 @@ export const UserTable: React.FC<{
       accessor: 'status',
       renderCell: (value) => (
         <Chip
-          label={value}
+          label={value as React.ReactNode}
           size="small"
-          color={value === 'active' ? 'success' : 'default'}
+          color={(value as string) === 'active' ? 'success' : 'default'}
         />
       ),
     },
@@ -505,7 +505,7 @@ export const UserTable: React.FC<{
       label: 'Last Seen',
       accessor: 'lastSeen',
       hiddenOnMobile: true,
-      renderCell: (value) => value.toLocaleDateString(),
+      renderCell: (value) => (value as Date).toLocaleDateString(),
     },
   ]
   

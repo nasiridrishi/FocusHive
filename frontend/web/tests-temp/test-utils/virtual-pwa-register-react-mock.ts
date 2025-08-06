@@ -10,7 +10,7 @@ export interface RegisterSWOptions {
   onOfflineReady?: () => void;
   onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
   onRegisteredSW?: (swUrl: string, registration: ServiceWorkerRegistration | undefined) => void;
-  onRegisterError?: (error: any) => void;
+  onRegisterError?: (error: Error) => void;
 }
 
 export const useRegisterSW = vi.fn((options?: RegisterSWOptions) => {
@@ -18,6 +18,11 @@ export const useRegisterSW = vi.fn((options?: RegisterSWOptions) => {
   const [offlineReady, setOfflineReady] = useState(false);
   
   const updateServiceWorker = vi.fn().mockResolvedValue(undefined);
+
+  // Simulate registering if options provided
+  if (options?.onRegistered) {
+    setTimeout(() => options.onRegistered?.(new ServiceWorkerRegistration()), 100);
+  }
 
   return {
     needRefresh: [needRefresh, setNeedRefresh],

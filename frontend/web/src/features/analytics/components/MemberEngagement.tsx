@@ -31,7 +31,7 @@ const getEngagementColor = (engagement: MemberEngagementData['engagement']) => {
     case 'high': return 'success';
     case 'medium': return 'warning';
     case 'low': return 'error';
-    default: return 'default';
+    default: return 'primary';
   }
 };
 

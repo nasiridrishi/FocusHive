@@ -155,7 +155,7 @@ export const cleanupPWATestEnvironment = () => {
 // Test utilities for PWA state assertions
 export const waitForServiceWorkerReady = async (timeout = 5000): Promise<void> => {
   return new Promise((resolve) => {
-    setTimeout(resolve, 100); // Simulate async SW registration
+    setTimeout(resolve, Math.min(timeout, 100)); // Simulate async SW registration
   });
 };
 

@@ -35,20 +35,189 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   const optimisticMessagesRef = useRef<Record<string, ChatMessage[]>>({})
   const messageQueueRef = useRef<SendMessageRequest[]>([])
 
+  // Event handlers - define first to avoid dependency issues
+  const handleMessageReceived = useCallback((message: ChatMessage) => {
+    // Remove any optimistic message with the same content
+    const optimisticMessages = optimisticMessagesRef.current[message.hiveId] || []
+    const wasOptimistic = optimisticMessages.some(
+      opt => opt.content === message.content && opt.authorId === message.authorId
+    )
+
+    setChatState(prev => {
+      const existingMessages = prev.messages[message.hiveId] || []
+      
+      // If this was an optimistic message, replace it; otherwise, add it
+      let updatedMessages
+      if (wasOptimistic && message.authorId === userId) {
+        // Replace optimistic message
+        updatedMessages = existingMessages.map(msg => 
+          msg.content === message.content && msg.authorId === userId && msg.id.startsWith('temp_')
+            ? message
+            : msg
+        )
+      } else {
+        // Add new message if it doesn't already exist
+        const messageExists = existingMessages.some(msg => msg.id === message.id)
+        if (!messageExists) {
+          updatedMessages = [...existingMessages, message]
+        } else {
+          updatedMessages = existingMessages
+        }
+      }
+
+      return {
+        ...prev,
+        messages: {
+          ...prev.messages,
+          [message.hiveId]: updatedMessages,
+        },
+      }
+    })
+
+    // Clean up optimistic messages
+    if (wasOptimistic) {
+      optimisticMessagesRef.current[message.hiveId] = optimisticMessages.filter(
+        opt => !(opt.content === message.content && opt.authorId === message.authorId)
+      )
+    }
+  }, [userId])
+
+  const handleMessageUpdated = useCallback((message: ChatMessage) => {
+    setChatState(prev => ({
+      ...prev,
+      messages: {
+        ...prev.messages,
+        [message.hiveId]: (prev.messages[message.hiveId] || []).map(msg =>
+          msg.id === message.id ? message : msg
+        ),
+      },
+    }))
+  }, [])
+
+  const handleMessageDeleted = useCallback((data: { messageId: string, hiveId: string }) => {
+    setChatState(prev => ({
+      ...prev,
+      messages: {
+        ...prev.messages,
+        [data.hiveId]: (prev.messages[data.hiveId] || []).filter(msg => msg.id !== data.messageId),
+      },
+    }))
+  }, [])
+
+  const handleReactionAdded = useCallback((reaction: MessageReaction & { hiveId: string }) => {
+    setChatState(prev => ({
+      ...prev,
+      messages: {
+        ...prev.messages,
+        [reaction.hiveId]: (prev.messages[reaction.hiveId] || []).map(msg =>
+          msg.id === reaction.messageId
+            ? {
+                ...msg,
+                reactions: [...msg.reactions.filter(r => 
+                  !(r.userId === reaction.userId && r.emoji === reaction.emoji)
+                ), reaction],
+              }
+            : msg
+        ),
+      },
+    }))
+  }, [])
+
+  const handleReactionRemoved = useCallback((data: { 
+    messageId: string, 
+    userId: string, 
+    emoji: string,
+    hiveId: string 
+  }) => {
+    setChatState(prev => ({
+      ...prev,
+      messages: {
+        ...prev.messages,
+        [data.hiveId]: (prev.messages[data.hiveId] || []).map(msg =>
+          msg.id === data.messageId
+            ? {
+                ...msg,
+                reactions: msg.reactions.filter(r => 
+                  !(r.userId === data.userId && r.emoji === data.emoji)
+                ),
+              }
+            : msg
+        ),
+      },
+    }))
+  }, [])
+
+  const handleTypingStart = useCallback((data: TypingIndicator) => {
+    setChatState(prev => {
+      const existingTyping = prev.typingUsers[data.hiveId] || []
+      const alreadyTyping = existingTyping.some(t => t.userId === data.userId)
+      
+      if (alreadyTyping) return prev
+
+      return {
+        ...prev,
+        typingUsers: {
+          ...prev.typingUsers,
+          [data.hiveId]: [...existingTyping, { ...data, isTyping: true }],
+        },
+      }
+    })
+  }, [])
+
+  const handleTypingStop = useCallback((data: { userId: string, hiveId: string }) => {
+    setChatState(prev => ({
+      ...prev,
+      typingUsers: {
+        ...prev.typingUsers,
+        [data.hiveId]: (prev.typingUsers[data.hiveId] || []).filter(t => t.userId !== data.userId),
+      },
+    }))
+  }, [])
+
+  const handleChatHistory = useCallback((data: { 
+    hiveId: string, 
+    messages: ChatMessage[], 
+    hasMore: boolean 
+  }) => {
+    setChatState(prev => ({
+      ...prev,
+      messages: {
+        ...prev.messages,
+        [data.hiveId]: [
+          ...data.messages,
+          ...(prev.messages[data.hiveId] || []),
+        ],
+      },
+      hasMoreMessages: {
+        ...prev.hasMoreMessages,
+        [data.hiveId]: data.hasMore,
+      },
+      isLoading: false,
+    }))
+  }, [])
+
+  const handleChatError = useCallback((error: { message: string }) => {
+    setChatState(prev => ({
+      ...prev,
+      error: error.message,
+      isLoading: false,
+    }))
+  }, [])
+
   // Set up WebSocket event listeners
   useEffect(() => {
     if (!isConnected) return
 
     const unsubscribeFunctions = [
-      on('chat:message', handleMessageReceived),
-      on('chat:message_updated', handleMessageUpdated),
-      on('chat:message_deleted', handleMessageDeleted),
-      on('chat:reaction_added', handleReactionAdded),
-      on('chat:reaction_removed', handleReactionRemoved),
-      on('chat:typing_start', handleTypingStart),
-      on('chat:typing_stop', handleTypingStop),
-      on('chat:history', handleChatHistory),
-      on('chat:error', handleChatError),
+      on('chat:message', (data: unknown) => handleMessageReceived(data as ChatMessage)),
+      on('chat:message_updated', (data: unknown) => handleMessageUpdated(data as ChatMessage)),
+      on('chat:message_deleted', (data: unknown) => handleMessageDeleted(data as { messageId: string; hiveId: string })),
+      on('chat:reaction_added', (data: unknown) => handleReactionAdded(data as MessageReaction & { hiveId: string })),
+      on('chat:reaction_removed', (data: unknown) => handleReactionRemoved(data as { messageId: string; userId: string; emoji: string; hiveId: string })),
+      on('chat:typing_start', (data: unknown) => handleTypingStart(data as TypingIndicator)),
+      on('chat:typing_stop', (data: unknown) => handleTypingStop(data as { userId: string; hiveId: string })),
+      on('chat:history', (data: unknown) => handleChatHistory(data as { hiveId: string; messages: ChatMessage[]; hasMore: boolean })),
+      on('chat:error', (data: unknown) => handleChatError(data as { message: string })),
     ]
 
     // Process queued messages when reconnected
@@ -62,12 +231,13 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     return () => {
       unsubscribeFunctions.forEach(unsubscribe => unsubscribe())
     }
-  }, [isConnected, on])
+  }, [isConnected, on, emit, handleChatError, handleChatHistory, handleMessageDeleted, handleMessageReceived, handleMessageUpdated, handleReactionAdded, handleReactionRemoved, handleTypingStart, handleTypingStop])
 
   // Cleanup typing timeouts on unmount
   useEffect(() => {
     return () => {
-      Object.values(typingTimeoutRef.current).forEach(timeout => {
+      const currentTimeouts = typingTimeoutRef.current
+      Object.values(currentTimeouts).forEach(timeout => {
         clearTimeout(timeout)
       })
     }
@@ -252,174 +422,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     emit('chat:mark_read', { hiveId, userId })
   }, [isConnected, userId, emit])
 
-  // Event handlers
-  const handleMessageReceived = useCallback((message: ChatMessage) => {
-    // Remove any optimistic message with the same content
-    const optimisticMessages = optimisticMessagesRef.current[message.hiveId] || []
-    const wasOptimistic = optimisticMessages.some(
-      opt => opt.content === message.content && opt.authorId === message.authorId
-    )
-
-    setChatState(prev => {
-      const existingMessages = prev.messages[message.hiveId] || []
-      
-      // If this was an optimistic message, replace it; otherwise, add it
-      let updatedMessages
-      if (wasOptimistic && message.authorId === userId) {
-        // Replace optimistic message
-        updatedMessages = existingMessages.map(msg => 
-          msg.content === message.content && msg.authorId === userId && msg.id.startsWith('temp_')
-            ? message
-            : msg
-        )
-      } else {
-        // Add new message if it doesn't already exist
-        const messageExists = existingMessages.some(msg => msg.id === message.id)
-        if (!messageExists) {
-          updatedMessages = [...existingMessages, message]
-        } else {
-          updatedMessages = existingMessages
-        }
-      }
-
-      return {
-        ...prev,
-        messages: {
-          ...prev.messages,
-          [message.hiveId]: updatedMessages,
-        },
-      }
-    })
-
-    // Clean up optimistic messages
-    if (wasOptimistic) {
-      optimisticMessagesRef.current[message.hiveId] = optimisticMessages.filter(
-        opt => !(opt.content === message.content && opt.authorId === message.authorId)
-      )
-    }
-  }, [userId])
-
-  const handleMessageUpdated = useCallback((message: ChatMessage) => {
-    setChatState(prev => ({
-      ...prev,
-      messages: {
-        ...prev.messages,
-        [message.hiveId]: (prev.messages[message.hiveId] || []).map(msg =>
-          msg.id === message.id ? message : msg
-        ),
-      },
-    }))
-  }, [])
-
-  const handleMessageDeleted = useCallback((data: { messageId: string, hiveId: string }) => {
-    setChatState(prev => ({
-      ...prev,
-      messages: {
-        ...prev.messages,
-        [data.hiveId]: (prev.messages[data.hiveId] || []).filter(msg => msg.id !== data.messageId),
-      },
-    }))
-  }, [])
-
-  const handleReactionAdded = useCallback((reaction: MessageReaction & { hiveId: string }) => {
-    setChatState(prev => ({
-      ...prev,
-      messages: {
-        ...prev.messages,
-        [reaction.hiveId]: (prev.messages[reaction.hiveId] || []).map(msg =>
-          msg.id === reaction.messageId
-            ? {
-                ...msg,
-                reactions: [...msg.reactions.filter(r => 
-                  !(r.userId === reaction.userId && r.emoji === reaction.emoji)
-                ), reaction],
-              }
-            : msg
-        ),
-      },
-    }))
-  }, [])
-
-  const handleReactionRemoved = useCallback((data: { 
-    messageId: string, 
-    userId: string, 
-    emoji: string,
-    hiveId: string 
-  }) => {
-    setChatState(prev => ({
-      ...prev,
-      messages: {
-        ...prev.messages,
-        [data.hiveId]: (prev.messages[data.hiveId] || []).map(msg =>
-          msg.id === data.messageId
-            ? {
-                ...msg,
-                reactions: msg.reactions.filter(r => 
-                  !(r.userId === data.userId && r.emoji === data.emoji)
-                ),
-              }
-            : msg
-        ),
-      },
-    }))
-  }, [])
-
-  const handleTypingStart = useCallback((data: TypingIndicator) => {
-    setChatState(prev => {
-      const existingTyping = prev.typingUsers[data.hiveId] || []
-      const alreadyTyping = existingTyping.some(t => t.userId === data.userId)
-      
-      if (alreadyTyping) return prev
-
-      return {
-        ...prev,
-        typingUsers: {
-          ...prev.typingUsers,
-          [data.hiveId]: [...existingTyping, { ...data, isTyping: true }],
-        },
-      }
-    })
-  }, [])
-
-  const handleTypingStop = useCallback((data: { userId: string, hiveId: string }) => {
-    setChatState(prev => ({
-      ...prev,
-      typingUsers: {
-        ...prev.typingUsers,
-        [data.hiveId]: (prev.typingUsers[data.hiveId] || []).filter(t => t.userId !== data.userId),
-      },
-    }))
-  }, [])
-
-  const handleChatHistory = useCallback((data: { 
-    hiveId: string, 
-    messages: ChatMessage[], 
-    hasMore: boolean 
-  }) => {
-    setChatState(prev => ({
-      ...prev,
-      messages: {
-        ...prev.messages,
-        [data.hiveId]: [
-          ...data.messages,
-          ...(prev.messages[data.hiveId] || []),
-        ],
-      },
-      hasMoreMessages: {
-        ...prev.hasMoreMessages,
-        [data.hiveId]: data.hasMore,
-      },
-      isLoading: false,
-    }))
-  }, [])
-
-  const handleChatError = useCallback((error: { message: string }) => {
-    setChatState(prev => ({
-      ...prev,
-      error: error.message,
-      isLoading: false,
-    }))
-  }, [])
 
   const value: ChatContextType = {
     chatState,
@@ -440,6 +442,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useChat = (): ChatContextType => {
   const context = useContext(ChatContext)
   if (context === undefined) {

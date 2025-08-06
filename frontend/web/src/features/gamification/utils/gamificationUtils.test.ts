@@ -504,9 +504,9 @@ describe('gamificationUtils', () => {
 
   describe('Edge Cases and Error Handling', () => {
     it('handles null and undefined inputs gracefully', () => {
-      expect(() => formatPoints(null as any)).not.toThrow();
-      expect(() => calculateLevel(undefined as any)).not.toThrow();
-      expect(() => formatStreakType(null as any)).not.toThrow();
+      expect(() => formatPoints(null as unknown as number)).not.toThrow();
+      expect(() => calculateLevel(undefined as unknown as number)).not.toThrow();
+      expect(() => formatStreakType(null as unknown as string)).not.toThrow();
     });
 
     it('handles malformed data gracefully', () => {
@@ -514,7 +514,7 @@ describe('gamificationUtils', () => {
         id: 'test',
         title: null,
         points: 'not-a-number',
-      } as any;
+      } as unknown as object;
       
       expect(() => isAchievementUnlocked(malformedAchievement)).not.toThrow();
       expect(() => getAchievementProgress(malformedAchievement)).not.toThrow();

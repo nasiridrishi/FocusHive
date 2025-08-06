@@ -194,14 +194,12 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
     resumeTimer, 
     stopTimer, 
     skipPhase,
-    addGoal,
     recordDistraction 
   } = useTimer()
   
   const [settingsMenuEl, setSettingsMenuEl] = useState<HTMLElement | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showGoals, setShowGoals] = useState(false)
-  const [newGoal, setNewGoal] = useState('')
   
   const theme = useTheme()
 

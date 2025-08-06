@@ -1,5 +1,5 @@
 import React from 'react'
-import { Badge, Avatar, styled, keyframes, useTheme } from '@mui/material'
+import { Badge, Avatar, styled, keyframes, Theme } from '@mui/material'
 import { PresenceStatus } from '../../../shared/types/presence'
 
 const ripple = keyframes`
@@ -25,7 +25,7 @@ const pulse = keyframes`
   }
 `
 
-const getStatusColor = (status: PresenceStatus, theme: any) => {
+const getStatusColor = (status: PresenceStatus, theme: Theme) => {
   switch (status) {
     case 'online':
       return theme.palette.success.main
@@ -94,12 +94,10 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
   status,
   children,
   showAnimation = true,
-  size = 'medium',
   overlap = 'circular',
   anchorOrigin = { vertical: 'bottom', horizontal: 'right' },
   className,
 }) => {
-  const theme = useTheme()
 
   const getBadgeProps = () => {
     const baseProps = {

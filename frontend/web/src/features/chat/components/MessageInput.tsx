@@ -97,7 +97,6 @@ interface MessageInputProps extends Omit<BaseMessageInputProps, 'onSendMessage'>
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
-  hiveId,
   onSendMessage,
   onTypingStart,
   onTypingStop,

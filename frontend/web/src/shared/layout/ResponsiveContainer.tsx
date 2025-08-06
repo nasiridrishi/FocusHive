@@ -18,7 +18,7 @@ const StyledContainer = styled(Container, {
   fluidPadding?: boolean
   adaptiveMaxWidth?: boolean
   contentType?: 'text' | 'media' | 'dashboard' | 'form'
-}>(({ theme, fluidPadding, adaptiveMaxWidth, contentType }) => ({
+}>(({ fluidPadding, adaptiveMaxWidth, contentType }) => ({
   // Fluid padding that scales with viewport
   ...(fluidPadding && {
     paddingLeft: 'clamp(16px, 4vw, 32px)',

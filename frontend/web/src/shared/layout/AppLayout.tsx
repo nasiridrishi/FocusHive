@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import {
   Box,
-  AppBar,
-  Toolbar,
   Drawer,
   useTheme,
   useMediaQuery,
-  Typography,
 } from '@mui/material'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Header } from './Header'
@@ -30,7 +27,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [desktopDrawerOpen, setDesktopDrawerOpen] = useState(true)
   
   // WebSocket connection state (will be managed by context later)
-  const [isConnected, setIsConnected] = useState(false)
+  const [isConnected] = useState(false)
   
   // Auto-close mobile drawer on route change
   useEffect(() => {
@@ -77,7 +74,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         drawerWidth={isMobile ? 0 : (desktopDrawerOpen ? DRAWER_WIDTH : 0)}
         onDrawerToggle={handleDrawerToggle}
         isConnected={isConnected}
-        isMobile={isMobile}
       />
 
       {/* Mobile Navigation Drawer */}

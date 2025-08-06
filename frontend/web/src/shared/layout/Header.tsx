@@ -31,14 +31,12 @@ interface HeaderProps {
   drawerWidth: number
   onDrawerToggle: () => void
   isConnected: boolean
-  isMobile: boolean
 }
 
 export const Header: React.FC<HeaderProps> = ({
   drawerWidth,
   onDrawerToggle,
   isConnected,
-  isMobile,
 }) => {
   const theme = useTheme()
   const navigate = useNavigate()

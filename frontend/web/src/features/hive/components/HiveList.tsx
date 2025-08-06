@@ -143,12 +143,13 @@ export const HiveList: React.FC<HiveListProps> = ({
           return a.name.localeCompare(b.name)
         case 'members':
           return b.currentMembers - a.currentMembers
-        case 'activity':
+        case 'activity': {
           // Sort by online members, then by total members
           const aOnline = members[a.id]?.filter(m => m.isActive).length || 0
           const bOnline = members[b.id]?.filter(m => m.isActive).length || 0
           if (aOnline !== bOnline) return bOnline - aOnline
           return b.currentMembers - a.currentMembers
+        }
         case 'created':
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         default:

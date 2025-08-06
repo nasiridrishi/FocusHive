@@ -5,6 +5,7 @@ export interface User {
   username: string
   firstName: string
   lastName: string
+  name: string // Derived from firstName + lastName or username
   avatar?: string
   isEmailVerified: boolean
   createdAt: string

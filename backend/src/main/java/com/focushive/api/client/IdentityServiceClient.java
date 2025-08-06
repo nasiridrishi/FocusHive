@@ -10,6 +10,7 @@ import java.util.UUID;
 /**
  * Feign client for communicating with the Identity Service.
  * Handles authentication, user management, and persona operations.
+ * Configured with circuit breaker, retry, and other resilience patterns.
  */
 @FeignClient(
     name = "identity-service",

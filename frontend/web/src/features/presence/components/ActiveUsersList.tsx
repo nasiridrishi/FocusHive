@@ -9,7 +9,6 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Chip,
   Card,
   CardContent,
   Divider,
@@ -33,7 +32,7 @@ const StyledAvatarGroup = styled(AvatarGroup)(({ theme }) => ({
   },
 }))
 
-const UserDetailCard = styled(Card)(({ theme }) => ({
+const UserDetailCard = styled(Card)(() => ({
   minWidth: 300,
   maxWidth: 400,
 }))
@@ -78,14 +77,6 @@ const ActiveUsersList: React.FC<ActiveUsersListProps> = ({
     return acc
   }, {} as Record<PresenceStatus, number>)
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
 
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>, clickedUsers: UserPresence[]) => {
     if (!showUserDetails) {

@@ -29,7 +29,6 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material'
 import { ActiveUsersList } from './ActiveUsersList'
-import { UserStatusBadge } from './UserStatusBadge'
 import { HivePresenceInfo, ActivityEvent, UserPresence } from '../../../shared/types/presence'
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -71,7 +70,6 @@ interface HivePresencePanelProps {
 }
 
 const HivePresencePanel: React.FC<HivePresencePanelProps> = ({
-  hiveId,
   presenceInfo,
   recentActivity = [],
   showActivity = true,
@@ -87,7 +85,6 @@ const HivePresencePanel: React.FC<HivePresencePanelProps> = ({
   // Calculate productivity metrics
   const totalActive = totalOnline + totalFocusing
   const focusRate = totalActive > 0 ? (totalFocusing / totalActive) * 100 : 0
-  const breakRate = totalActive > 0 ? (totalOnBreak / totalActive) * 100 : 0
 
   // Sort users by status priority (focusing > online > break > away > offline)
   const sortedUsers = [...activeUsers].sort((a, b) => {
