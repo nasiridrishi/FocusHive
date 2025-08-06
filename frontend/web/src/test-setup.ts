@@ -1,21 +1,30 @@
 import '@testing-library/jest-dom';
 import React from 'react';
+import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
+
+// Make test globals available
+(globalThis as any).beforeEach = beforeEach;
+(globalThis as any).afterEach = afterEach; 
+(globalThis as any).describe = describe;
+(globalThis as any).it = it;
+(globalThis as any).expect = expect;
+(globalThis as any).vi = vi;
 
 // Mock MUI X Charts
 vi.mock('@mui/x-charts', () => ({
-  LineChart: vi.fn(({ children, ...props }: any) => {
+  LineChart: vi.fn(({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
     return React.createElement('div', {
       'data-testid': 'line-chart',
       'data-props': JSON.stringify(props)
     }, children);
   }),
-  BarChart: vi.fn(({ children, ...props }: any) => {
+  BarChart: vi.fn(({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
     return React.createElement('div', {
       'data-testid': 'bar-chart', 
       'data-props': JSON.stringify(props)
     }, children);
   }),
-  ResponsiveChartContainer: vi.fn(({ children, ...props }: any) => {
+  ResponsiveChartContainer: vi.fn(({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
     return React.createElement('div', {
       'data-testid': 'chart-container',
       'data-props': JSON.stringify(props)
@@ -29,14 +38,14 @@ vi.mock('@mui/x-charts', () => ({
 
 // Mock MUI X Date Pickers
 vi.mock('@mui/x-date-pickers', () => ({
-  LocalizationProvider: vi.fn(({ children }: any) => React.createElement('div', {}, children)),
-  DatePicker: vi.fn(({ label, onChange, value, slotProps }: any) => {
+  LocalizationProvider: vi.fn(({ children }: React.PropsWithChildren) => React.createElement('div', {}, children)),
+  DatePicker: vi.fn(({ label, onChange, value, slotProps }: { label?: string; onChange?: (date: Date | null) => void; value?: Date | null; slotProps?: Record<string, unknown> }) => {
     return React.createElement('input', {
       'aria-label': label,
       type: 'date',
       value: value ? value.toISOString().split('T')[0] : '',
-      onChange: (e: any) => onChange && onChange(new Date(e.target.value)),
-      ...slotProps?.textField
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange && onChange(new Date(e.target.value)),
+      ...(slotProps?.textField || {})
     });
   })
 }));
@@ -49,7 +58,7 @@ vi.mock('@mui/x-date-pickers/AdapterDateFns', () => ({
 // Mock framer-motion to prevent DOM prop warnings
 vi.mock('framer-motion', () => ({
   motion: {
-    div: React.forwardRef(({ children, ...props }: any, ref: any) => {
+    div: React.forwardRef<HTMLDivElement, React.PropsWithChildren<Record<string, unknown>>>(({ children, ...props }, ref) => {
       // Filter out framer-motion specific props
       const { 
         animate, initial, exit, variants, transition, whileHover, whileTap, whileFocus, whileInView,
@@ -61,20 +70,19 @@ vi.mock('framer-motion', () => ({
         style, transformTemplate, transformValues, ...filteredProps 
       } = props;
       
-      return React.createElement('div', { ...filteredProps, ref }, children);
+      return React.createElement('div', { ...filteredProps, ref }, children as React.ReactNode);
     })
   },
-  AnimatePresence: ({ children }: any) => children,
+  AnimatePresence: ({ children }: React.PropsWithChildren) => children,
   useAnimation: () => ({}),
-  useMotionValue: (value: any) => ({ get: () => value, set: () => {} }),
-  useTransform: (value: any, input: any, output: any) => value,
-  useSpring: (value: any) => value,
+  useMotionValue: (value: unknown) => ({ get: () => value, set: () => {} }),
+  useTransform: (value: unknown, _input: unknown, _output: unknown) => value,
+  useSpring: (value: unknown) => value,
   useInView: () => true,
   useDragControls: () => ({}),
 }));
 
 // Global test utilities
-// @ts-ignore - global is available in test environment
 globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),

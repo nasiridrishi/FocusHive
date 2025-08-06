@@ -1,11 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { AnalyticsDashboardProps } from '../types';
 
 // Mock all the child components
 vi.mock('./ProductivityChart', () => ({
-  ProductivityChart: ({ loading, error }: any) => (
+  ProductivityChart: ({ loading, error }: { loading?: boolean; error?: string }) => (
     <div data-testid="productivity-chart">
       {loading && <div>Loading chart...</div>}
       {error && <div>Chart error: {error}</div>}
@@ -15,7 +15,7 @@ vi.mock('./ProductivityChart', () => ({
 }));
 
 vi.mock('./TaskCompletionRate', () => ({
-  TaskCompletionRate: ({ data }: any) => (
+  TaskCompletionRate: ({ data }: { data?: { rate?: number } }) => (
     <div data-testid="task-completion-rate">
       Task Completion: {data?.rate ? `${(data.rate * 100).toFixed(1)}%` : 'No data'}
     </div>
@@ -23,7 +23,7 @@ vi.mock('./TaskCompletionRate', () => ({
 }));
 
 vi.mock('./HiveActivityHeatmap', () => ({
-  HiveActivityHeatmap: ({ data }: any) => (
+  HiveActivityHeatmap: ({ data }: { data?: unknown[] }) => (
     <div data-testid="hive-activity-heatmap">
       Hive Activity: {data?.length || 0} days
     </div>
@@ -31,7 +31,7 @@ vi.mock('./HiveActivityHeatmap', () => ({
 }));
 
 vi.mock('./MemberEngagement', () => ({
-  MemberEngagement: ({ data }: any) => (
+  MemberEngagement: ({ data }: { data?: unknown[] }) => (
     <div data-testid="member-engagement">
       Members: {data?.length || 0}
     </div>
@@ -39,7 +39,7 @@ vi.mock('./MemberEngagement', () => ({
 }));
 
 vi.mock('./GoalProgress', () => ({
-  GoalProgress: ({ goals }: any) => (
+  GoalProgress: ({ goals }: { goals?: unknown[] }) => (
     <div data-testid="goal-progress">
       Goals: {goals?.length || 0}
     </div>
@@ -47,7 +47,7 @@ vi.mock('./GoalProgress', () => ({
 }));
 
 vi.mock('./AnalyticsFilters', () => ({
-  AnalyticsFilters: ({ onFilterChange }: any) => (
+  AnalyticsFilters: ({ onFilterChange }: { onFilterChange: (filter: { viewType: string }) => void }) => (
     <div data-testid="analytics-filters">
       <button onClick={() => onFilterChange({ viewType: 'hive' })}>
         Change Filter
@@ -57,7 +57,7 @@ vi.mock('./AnalyticsFilters', () => ({
 }));
 
 vi.mock('./ExportMenu', () => ({
-  ExportMenu: ({ onExport }: any) => (
+  ExportMenu: ({ onExport }: { onExport: (options: { format: string }) => void }) => (
     <div data-testid="export-menu">
       <button onClick={() => onExport({ format: 'csv' })}>
         Export Data
@@ -253,9 +253,10 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByText('This Month')).toBeInTheDocument();
   });
 
-  it('handles loading state', () => {
+  it('handles loading state', async () => {
     // Mock loading state
-    vi.mocked(require('../contexts/AnalyticsContext').useAnalytics).mockReturnValue({
+    const { useAnalytics } = await import('../contexts/AnalyticsContext');
+    vi.mocked(useAnalytics).mockReturnValue({
       data: null,
       filter: {
         timeRange: { start: new Date(), end: new Date(), period: 'week' },
@@ -279,9 +280,10 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('handles error state', () => {
+  it('handles error state', async () => {
     // Mock error state
-    vi.mocked(require('../contexts/AnalyticsContext').useAnalytics).mockReturnValue({
+    const { useAnalytics } = await import('../contexts/AnalyticsContext');
+    vi.mocked(useAnalytics).mockReturnValue({
       data: null,
       filter: {
         timeRange: { start: new Date(), end: new Date(), period: 'week' },
@@ -306,9 +308,10 @@ describe('AnalyticsDashboard', () => {
     expect(screen.getByText('Retry')).toBeInTheDocument();
   });
 
-  it('handles empty data state', () => {
+  it('handles empty data state', async () => {
     // Mock empty data state
-    vi.mocked(require('../contexts/AnalyticsContext').useAnalytics).mockReturnValue({
+    const { useAnalytics } = await import('../contexts/AnalyticsContext');
+    vi.mocked(useAnalytics).mockReturnValue({
       data: {
         productivity: {
           totalFocusTime: 0,
@@ -370,9 +373,10 @@ describe('AnalyticsDashboard', () => {
     // Member engagement should be hidden or minimized in individual view
   });
 
-  it('shows appropriate sections based on view type - hive', () => {
+  it('shows appropriate sections based on view type - hive', async () => {
     // Mock hive view type
-    vi.mocked(require('../contexts/AnalyticsContext').useAnalytics).mockReturnValue({
+    const { useAnalytics } = await import('../contexts/AnalyticsContext');
+    vi.mocked(useAnalytics).mockReturnValue({
       data: {
         productivity: expect.any(Object),
         taskCompletion: expect.any(Object),

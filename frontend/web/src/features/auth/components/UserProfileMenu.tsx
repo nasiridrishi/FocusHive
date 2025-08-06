@@ -12,7 +12,6 @@ import {
   Badge
 } from '@mui/material'
 import {
-  AccountCircle,
   Settings,
   Dashboard,
   Logout,

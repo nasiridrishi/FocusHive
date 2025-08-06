@@ -4,7 +4,7 @@
  */
 
 import { User } from '../../../shared/types/auth';
-import { SessionStats, DailyStats, WeeklyStats } from '../../../shared/types/timer';
+// Unused imports removed - these types are not used in this file
 
 export interface AnalyticsTimeRange {
   start: Date;

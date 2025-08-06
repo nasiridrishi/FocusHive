@@ -15,22 +15,13 @@ import {
   Chip,
   Avatar,
 } from '@mui/material'
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Share as ShareIcon,
-  Favorite as FavoriteIcon,
-  Timer as TimerIcon,
-  People as PeopleIcon,
-} from '@mui/icons-material'
+// Icons will be added as needed
 
 // Import our responsive components
 import {
   ResponsiveGrid,
-  GridItem,
   Section,
   PageLayout,
-  ResponsiveContainer,
   FlexContainer,
 } from '@shared/layout'
 import {
@@ -43,7 +34,7 @@ import {
   ScrollToTopFAB,
   ContextualFAB,
 } from '@shared/ui'
-import { useResponsive, useContainerQuery } from '@shared/hooks'
+import { useResponsive } from '@shared/hooks'
 
 // Mock data
 const mockUsers = [

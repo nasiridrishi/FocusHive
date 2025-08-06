@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import {
   Box,
   Typography,
-  Avatar,
   Paper,
   IconButton,
   Tooltip,
@@ -21,7 +20,6 @@ import {
   Reply as ReplyIcon,
   EmojiEmotions as EmojiIcon,
   Check as CheckIcon,
-  DoneAll as DoneAllIcon,
 } from '@mui/icons-material'
 import { ChatMessage, MessageReaction } from '../../../shared/types/chat'
 import { PresenceAvatar } from '../../presence/components/PresenceIndicator'
@@ -441,7 +439,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <MessageBubbleStyled 
             isOwn={isOwn}
             elevation={1}
-            onMouseEnter={(e) => {
+            onMouseEnter={() => {
               // Show action buttons on hover
             }}
           >

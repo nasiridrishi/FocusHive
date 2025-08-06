@@ -11,7 +11,6 @@ import {
   CardProps,
   CardContent,
   CardActions,
-  CardHeader,
   CardMedia,
   Typography,
   IconButton,
@@ -20,7 +19,6 @@ import {
   Box,
   Skeleton,
   useTheme,
-  alpha,
 } from '@mui/material'
 import {
   MoreVert as MoreVertIcon,

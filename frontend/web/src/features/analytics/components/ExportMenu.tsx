@@ -37,9 +37,7 @@ import {
   TableChart,
   Code,
   Image,
-  Close,
-  Info,
-  History
+  Close
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -134,7 +132,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
 
   const handleSectionToggle = (section: string, checked: boolean) => {
     const newSections = checked
-      ? [...exportOptions.sections, section as any]
+      ? [...exportOptions.sections, section as ExportOptions['sections'][0]]
       : exportOptions.sections.filter(s => s !== section);
     
     handleOptionChange('sections', newSections);
@@ -193,7 +191,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
       </Typography>
       <RadioGroup
         value={exportOptions.format}
-        onChange={(e) => handleOptionChange('format', e.target.value as any)}
+        onChange={(e) => handleOptionChange('format', e.target.value as ExportOptions['format'])}
       >
         {Object.entries(formatIcons).map(([format, icon]) => (
           <FormControlLabel
@@ -226,7 +224,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
       </Typography>
       <RadioGroup
         value={customDateRange ? 'custom' : 'current'}
-        onChange={(e) => handleDateRangeChange(e.target.value as any)}
+        onChange={(e) => handleDateRangeChange(e.target.value as 'current' | 'custom' | 'all')}
       >
         <FormControlLabel
           value="current"

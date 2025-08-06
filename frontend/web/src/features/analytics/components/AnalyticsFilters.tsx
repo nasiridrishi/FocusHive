@@ -14,15 +14,13 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
-  TextField,
   Button,
   Chip,
   Grid,
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Badge,
-  Collapse
+  Badge
 } from '@mui/material';
 import {
   FilterList,
@@ -171,7 +169,7 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
 
   const handleMetricToggle = (metric: string, checked: boolean) => {
     const metrics = checked
-      ? [...filter.metrics, metric as any]
+      ? [...filter.metrics, metric as AnalyticsFilter['metrics'][0]]
       : filter.metrics.filter(m => m !== metric);
     
     onFilterChange({ metrics });
@@ -259,7 +257,7 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
               <InputLabel>Period</InputLabel>
               <Select
                 value={filter.timeRange.period}
-                onChange={(e) => handleTimeRangeChange(e.target.value as any)}
+                onChange={(e) => handleTimeRangeChange(e.target.value as AnalyticsFilter['timeRange']['period'])}
                 label="Period"
               >
                 <MenuItem value="day">Today</MenuItem>

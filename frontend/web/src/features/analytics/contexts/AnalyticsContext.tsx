@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import React, { createContext, useReducer, useCallback, useEffect } from 'react';
 import { 
   AnalyticsContextValue, 
   AnalyticsDashboardData, 
@@ -326,9 +326,10 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
+// Custom hook to use Analytics context
 export const useAnalytics = (): AnalyticsContextValue => {
-  const context = useContext(AnalyticsContext);
-  if (context === undefined) {
+  const context = React.useContext(AnalyticsContext);
+  if (!context) {
     throw new Error('useAnalytics must be used within an AnalyticsProvider');
   }
   return context;

@@ -4,10 +4,8 @@ import {
   CircularProgress,
   Typography,
   Button,
-  Divider,
   styled,
   alpha,
-  useTheme,
 } from '@mui/material'
 import { ExpandLess as ExpandLessIcon } from '@mui/icons-material'
 import MessageBubble from './MessageBubble'
@@ -126,7 +124,6 @@ const MessageList: React.FC<MessageListProps> = ({
   autoScroll = true,
   className,
 }) => {
-  const theme = useTheme()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const lastMessageRef = useRef<HTMLDivElement>(null)
   const [showScrollToBottom, setShowScrollToBottom] = useState(false)
@@ -233,7 +230,7 @@ const MessageList: React.FC<MessageListProps> = ({
         scrollToBottom(false)
       }, 100)
     }
-  }, [hiveId]) // Reset scroll when switching hives
+  }, [hiveId, messages.length, userScrolledUp, scrollToBottom]) // Reset scroll when switching hives
 
   const shouldShowAvatar = useCallback((message: ChatMessage, index: number, groupMessages: ChatMessage[]) => {
     // Show avatar if it's the last message from this user in a sequence
@@ -320,7 +317,7 @@ const MessageList: React.FC<MessageListProps> = ({
           </Box>
         )}
 
-        {groupedMessages.map((group, groupIndex) => (
+        {groupedMessages.map((group) => (
           <Box key={group.date}>
             <DateDivider>
               <DateLabel>{formatDateLabel(group.date)}</DateLabel>

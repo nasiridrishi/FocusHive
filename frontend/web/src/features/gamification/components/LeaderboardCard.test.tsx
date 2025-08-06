@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from '@mui/material/styles';
@@ -9,10 +9,10 @@ import type { Leaderboard, User } from '../types/gamification';
 // Mock framer-motion for testing
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    li: ({ children, ...props }: any) => <li {...props}>{children}</li>,
+    div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
+    li: ({ children, ...props }: React.ComponentProps<'li'>) => <li {...props}>{children}</li>,
   },
-  AnimatePresence: ({ children }: any) => children,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();
@@ -405,7 +405,7 @@ describe('LeaderboardCard', () => {
     it('shows loading state when data is being fetched', () => {
       const loadingLeaderboard = null;
       
-      renderWithTheme(<LeaderboardCard leaderboard={loadingLeaderboard as any} />);
+      renderWithTheme(<LeaderboardCard leaderboard={loadingLeaderboard as Leaderboard | null} />);
       
       expect(screen.getByTestId('leaderboard-skeleton')).toBeInTheDocument();
     });
@@ -416,7 +416,7 @@ describe('LeaderboardCard', () => {
         error: 'Failed to load leaderboard',
       };
       
-      renderWithTheme(<LeaderboardCard leaderboard={errorLeaderboard as any} />);
+      renderWithTheme(<LeaderboardCard leaderboard={errorLeaderboard as Leaderboard & { error: string }} />);
       
       expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
     });

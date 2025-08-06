@@ -109,7 +109,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   replyTo,
   onCancelReply,
   className,
-}) => {
+) => {
   const theme = useTheme()
   const [message, setMessage] = useState('')
   const [emojiAnchorEl, setEmojiAnchorEl] = useState<HTMLElement | null>(null)

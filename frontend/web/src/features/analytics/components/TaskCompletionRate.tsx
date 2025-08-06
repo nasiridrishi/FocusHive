@@ -107,7 +107,7 @@ export const TaskCompletionRate: React.FC<TaskCompletionRateProps> = ({
                   <Box key={priority}>
                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Flag sx={{ color: getPriorityColor(priority as any), fontSize: 16 }} />
+                        <Flag sx={{ color: getPriorityColor(priority as 'high' | 'medium' | 'low'), fontSize: 16 }} />
                         <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
                           {priority} Priority
                         </Typography>
