@@ -13,7 +13,6 @@ import {
   Collapse,
   IconButton,
   Chip,
-  useTheme,
 } from '@mui/material'
 import {
   Dashboard as DashboardIcon,

@@ -1,6 +1,6 @@
 // Common types used across the application
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T
   message?: string
   status: 'success' | 'error'
@@ -10,7 +10,7 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   code: string
   message: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   timestamp: string
 }
 
@@ -31,7 +31,7 @@ export interface QueryOptions {
   limit?: number
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
-  filter?: Record<string, any>
+  filter?: Record<string, unknown>
   search?: string
 }
 
@@ -49,16 +49,16 @@ export interface ValidationRule {
   minLength?: number
   maxLength?: number
   pattern?: RegExp
-  custom?: (value: any) => string | null
+  custom?: (value: unknown) => string | null
 }
 
-export interface FormField<T = any> {
+export interface FormField<T = unknown> {
   name: string
   label: string
   type: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'file'
   value: T
   validation?: ValidationRule
-  options?: Array<{ label: string; value: any }>
+  options?: Array<{ label: string; value: unknown }>
   placeholder?: string
   disabled?: boolean
   required?: boolean
@@ -118,7 +118,7 @@ export interface Theme {
   mode: 'light' | 'dark'
   primaryColor: string
   secondaryColor: string
-  customizations?: Record<string, any>
+  customizations?: Record<string, unknown>
 }
 
 export interface UserPreferences {

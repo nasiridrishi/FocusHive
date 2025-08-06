@@ -237,7 +237,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
         clearInterval(timerIntervalRef.current)
       }
     }
-  }, [timerState.isRunning, timerState.isPaused, timerState.timeRemaining])
+  }, [timerState.isRunning, timerState.isPaused, timerState.timeRemaining, handlePhaseCompletion])
 
   const handlePhaseCompletion = useCallback((completedState: TimerState) => {
     playNotificationSound(completedState.currentPhase + 'End')
@@ -428,7 +428,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       goal: newGoal,
       timestamp: new Date().toISOString(),
     })
-  }, [currentSession, userId, emit])
+  }, [currentSession, userId, emit, generateGoalId])
 
   const completeGoal = useCallback((goalId: string) => {
     if (!currentSession) return

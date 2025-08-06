@@ -237,9 +237,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   useEffect(() => {
     return () => {
       const currentTimeouts = typingTimeoutRef.current
-      Object.values(currentTimeouts).forEach(timeout => {
+      Object.values(currentTimeouts).forEach((timeout: number) => {
         clearTimeout(timeout)
       })
+      typingTimeoutRef.current = {}
     }
   }, [])
 

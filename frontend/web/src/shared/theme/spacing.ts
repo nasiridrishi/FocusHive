@@ -5,7 +5,7 @@
  * Based on 4px base unit with responsive scaling
  */
 
-import { breakpointValues, mediaQueries } from './breakpoints'
+import { mediaQueries } from './breakpoints'
 
 // Base spacing unit (4px)
 export const BASE_SPACING = 4

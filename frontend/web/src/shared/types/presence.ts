@@ -40,7 +40,7 @@ export interface ActivityEvent {
   userId: string
   user: User
   type: 'joined_hive' | 'left_hive' | 'started_session' | 'completed_session' | 'took_break' | 'resumed_session'
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   timestamp: string
   hiveId?: string
 }

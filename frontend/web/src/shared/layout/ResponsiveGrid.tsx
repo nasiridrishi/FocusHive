@@ -95,7 +95,7 @@ const GridItem = styled(Box, {
   order?: number | Partial<Record<BreakpointKey, number>>
   align?: 'start' | 'center' | 'end' | 'stretch'
   justify?: 'start' | 'center' | 'end' | 'stretch'
-}>(({ theme, span, spanRow, order, align, justify }) => ({
+}>(({ span, spanRow, order, align, justify }) => ({
   // Column span
   ...(typeof span === 'number' && {
     gridColumn: `span ${span}`,

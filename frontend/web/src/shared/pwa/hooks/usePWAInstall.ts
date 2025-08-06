@@ -23,7 +23,7 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
   // Check if app is running in standalone mode
   const checkStandaloneMode = useCallback(() => {
     // Check iOS Safari standalone mode
-    const isIOSStandalone = (window.navigator as any).standalone === true;
+    const isIOSStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
     
     // Check display-mode: standalone media query
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
