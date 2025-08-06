@@ -2,8 +2,10 @@ package com.focushive.identity.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.focushive.identity.entity.Persona;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.Map;
@@ -14,12 +16,14 @@ import java.util.UUID;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PersonaDto {
     
     private UUID id;
     private String name;
-    private String type;
+    private Persona.PersonaType type;
     private boolean isDefault;
     private boolean isActive;
     private String displayName;
@@ -32,12 +36,15 @@ public class PersonaDto {
     private String languagePreference;
     private Instant lastActiveAt;
     private Instant createdAt;
+    private Instant updatedAt;
     
     /**
      * Privacy settings DTO.
      */
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class PrivacySettingsDto {
         private boolean showRealName;
         private boolean showEmail;
@@ -76,7 +83,7 @@ public class PersonaDto {
         return PersonaDto.builder()
                 .id(persona.getId())
                 .name(persona.getName())
-                .type(persona.getType().name())
+                .type(persona.getType())
                 .isDefault(persona.isDefault())
                 .isActive(persona.isActive())
                 .displayName(persona.getDisplayName())
@@ -89,6 +96,7 @@ public class PersonaDto {
                 .languagePreference(persona.getLanguagePreference())
                 .lastActiveAt(persona.getLastActiveAt())
                 .createdAt(persona.getCreatedAt())
+                .updatedAt(persona.getUpdatedAt())
                 .build();
     }
 }

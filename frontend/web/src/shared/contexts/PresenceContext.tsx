@@ -30,8 +30,8 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   
   // Use refs to track state for debouncing
   const lastStatusUpdate = useRef<Date>(new Date())
-  const statusUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const heartbeatIntervalRef = useRef<NodeJS.Interval | null>(null)
+  const statusUpdateTimeoutRef = useRef<number | null>(null)
+  const heartbeatIntervalRef = useRef<number | null>(null)
 
   // Initialize presence when connected
   useEffect(() => {
@@ -71,7 +71,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
 
     const initialPresence: UserPresence = {
       userId,
-      user: { id: userId, name: '', email: '' }, // Will be populated by backend
+      user: { id: userId, username: '', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' }, // Will be populated by backend
       status: 'online',
       lastSeen: new Date().toISOString(),
       deviceInfo: {
