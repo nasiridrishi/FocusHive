@@ -108,10 +108,10 @@ if [ -d "identity-service" ] && git diff --cached --name-only | grep -E '^identi
 fi
 
 # 3. FRONTEND TESTS (from GitHub workflow)
-if [ -d "frontend/web" ] && git diff --cached --name-only | grep -E '^frontend/.*\.(ts|tsx|js|jsx|json)$' > /dev/null; then
+if [ -d "frontend" ] && git diff --cached --name-only | grep -E '^frontend/.*\.(ts|tsx|js|jsx|json)$' > /dev/null; then
     echo ""
     print_info "Running Frontend Tests (GitHub Workflow)"
-    cd frontend/web
+    cd frontend
     
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
@@ -211,7 +211,7 @@ fi
 if git diff --cached --name-only | grep -E '^frontend/.*\.(ts|tsx)$' > /dev/null; then
     echo ""
     print_info "Checking TypeScript compilation..."
-    cd frontend/web
+    cd frontend
     if ! npx tsc --noEmit; then
         print_error "TypeScript compilation failed"
         FAILED=1
