@@ -208,6 +208,9 @@ class PresenceServiceImplTest {
         assertThatThrownBy(() -> presenceService.joinHivePresence(hiveId, userId))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("User is not a member of this hive");
+            
+        // Verify the membership check was called
+        verify(hiveMemberRepository).existsByHiveIdAndUserId(hiveId, userId);
     }
     
     @Test

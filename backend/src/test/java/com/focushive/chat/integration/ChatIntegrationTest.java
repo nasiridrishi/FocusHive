@@ -12,11 +12,14 @@ import com.focushive.hive.repository.HiveMemberRepository;
 import com.focushive.hive.repository.HiveRepository;
 import com.focushive.user.entity.User;
 import com.focushive.user.repository.UserRepository;
+import com.focushive.test.TestApplication;
+import com.focushive.test.UnifiedTestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
@@ -27,7 +30,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(UnifiedTestConfig.class)
 @ActiveProfiles("test")
 @Transactional
 public class ChatIntegrationTest {

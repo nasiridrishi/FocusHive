@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.focushive.timer.dto.*;
 import com.focushive.timer.entity.FocusSession;
 import com.focushive.timer.service.TimerService;
+import com.focushive.test.UnifiedTestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         SpringDataWebAutoConfiguration.class
     }
 )
+@Import(UnifiedTestConfig.class)
 @ActiveProfiles("test")
 class TimerControllerTest {
     
@@ -56,12 +59,7 @@ class TimerControllerTest {
     @MockBean
     private TimerService timerService;
     
-    // Mock all dependencies that could be autowired
-    @MockBean(name = "identityServiceClient")
-    private com.focushive.api.client.IdentityServiceClient identityServiceClient;
-    
-    @MockBean(name = "identityServiceAuthenticationFilter")
-    private com.focushive.api.security.IdentityServiceAuthenticationFilter identityServiceAuthenticationFilter;
+    // Dependencies are mocked in UnifiedTestConfig
     
     private String userId;
     private String sessionId;
