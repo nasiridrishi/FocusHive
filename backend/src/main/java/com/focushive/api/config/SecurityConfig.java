@@ -1,6 +1,6 @@
 package com.focushive.api.config;
 
-import com.focushive.api.security.IdentityServiceAuthenticationFilter;
+import com.focushive.backend.security.IdentityServiceAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

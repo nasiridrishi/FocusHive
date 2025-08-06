@@ -4,6 +4,7 @@ import com.focushive.chat.dto.ChatMessageDto;
 import com.focushive.chat.dto.MessageHistoryResponse;
 import com.focushive.chat.entity.ChatMessage;
 import com.focushive.chat.service.ChatService;
+import com.focushive.test.UnifiedTestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         SpringDataWebAutoConfiguration.class
     }
 )
+@Import(UnifiedTestConfig.class)
 class ChatRestControllerTest {
 
     @Autowired

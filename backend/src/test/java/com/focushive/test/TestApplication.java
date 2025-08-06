@@ -15,7 +15,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @SpringBootApplication(
     exclude = {
-        org.springframework.cloud.openfeign.FeignAutoConfiguration.class
+        org.springframework.cloud.openfeign.FeignAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class
     }
 )
 @ComponentScan(
@@ -34,6 +36,14 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         @ComponentScan.Filter(
             type = FilterType.REGEX,
             pattern = "com.focushive.api.config.SecurityConfig"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com.focushive.backend.config.*"
+        ),
+        @ComponentScan.Filter(
+            type = FilterType.REGEX,
+            pattern = "com.focushive.api.config.*"
         )
     }
 )

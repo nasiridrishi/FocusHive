@@ -8,10 +8,13 @@ import com.focushive.timer.repository.HiveTimerRepository;
 import com.focushive.timer.repository.PomodoroSettingsRepository;
 import com.focushive.timer.repository.ProductivityStatsRepository;
 import com.focushive.timer.service.TimerService;
+import com.focushive.test.TestApplication;
+import com.focushive.test.UnifiedTestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +24,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(classes = TestApplication.class)
+@Import(UnifiedTestConfig.class)
 @ActiveProfiles("test")
 @Transactional
 class TimerIntegrationTest {
