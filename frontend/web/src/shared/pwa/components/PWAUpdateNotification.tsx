@@ -42,7 +42,7 @@ export interface PWAUpdateNotificationProps {
 }
 
 // Slide transition component
-const SlideTransition = React.forwardRef<unknown, TransitionProps & { children: React.ReactElement<any, any> }>((props, ref) => {
+const SlideTransition = React.forwardRef<unknown, TransitionProps & { children: React.ReactElement }>((props, ref) => {
   return <Slide {...props} direction="up" ref={ref} />;
 });
 

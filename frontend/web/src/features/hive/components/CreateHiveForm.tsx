@@ -81,7 +81,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     },
   })
 
-  const [newTag, setNewTag] = useState('')
+  // const [newTag, setNewTag] = useState('')
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1)
@@ -139,15 +139,6 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     }))
   }
 
-  const _handleAddCustomTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()],
-      }))
-      setNewTag('')
-    }
-  }
 
   const handleSubmit = () => {
     onSubmit(formData)
@@ -174,7 +165,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
             maxSessionLength: 120,
           },
         })
-        setNewTag('')
+        // setNewTag('')
       }, 300)
     }
   }

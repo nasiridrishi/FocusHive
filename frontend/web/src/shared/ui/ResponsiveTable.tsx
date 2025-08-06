@@ -251,7 +251,7 @@ export const ResponsiveTable = <T extends Record<string, unknown>>({
   sortable = true,
   onRowClick,
   onSort,
-  getRowId = (row) => (row as any).id || JSON.stringify(row),
+  getRowId = (row) => (row as Record<string, unknown> & { id?: string }).id || JSON.stringify(row),
   emptyMessage = 'No data available',
   stickyHeader = false,
   maxHeight,
@@ -459,12 +459,20 @@ export const UserTable: React.FC<{
   onUserClick?: (user: unknown) => void
   loading?: boolean
 }> = ({ users, onUserClick, loading }) => {
-  const columns: TableColumn<any>[] = [
+  const columns: TableColumn<{
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+    role: string;
+    status: 'active' | 'inactive';
+    lastSeen: Date;
+  }>[] = [
     {
       id: 'user',
       label: 'User',
       accessor: 'name',
-      renderCell: (value, row: any) => (
+      renderCell: (value, row) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar src={row.avatar as string} alt={row.name as string} sx={{ width: 32, height: 32 }}>
             {(row.name as string)?.[0] || ''}

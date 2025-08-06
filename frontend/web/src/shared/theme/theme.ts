@@ -5,7 +5,7 @@
  * Integrates typography, spacing, colors, and breakpoints
  */
 
-import { createTheme, ThemeOptions, responsiveFontSizes } from '@mui/material/styles'
+import { createTheme, ThemeOptions, responsiveFontSizes, Theme } from '@mui/material/styles'
 import { breakpointValues, containerBreakpoints } from './breakpoints'
 import { createResponsiveTypography } from './typography'
 import { createLightPalette, createDarkPalette } from './palette'
@@ -368,22 +368,22 @@ export const containerQueries = {
 // Theme utilities
 export const themeUtils = {
   // Get current theme mode
-  getThemeMode: (theme: any): 'light' | 'dark' => theme.palette.mode,
+  getThemeMode: (theme: Theme): 'light' | 'dark' => theme.palette.mode,
   
   // Check if mobile breakpoint
-  isMobile: (theme: any) => `@media (max-width: ${theme.breakpoints.values.tablet - 1}px)`,
+  isMobile: (theme: Theme) => `@media (max-width: ${theme.breakpoints.values.tablet - 1}px)`,
   
   // Check if desktop breakpoint
-  isDesktop: (theme: any) => `@media (min-width: ${theme.breakpoints.values.laptop}px)`,
+  isDesktop: (theme: Theme) => `@media (min-width: ${theme.breakpoints.values.laptop}px)`,
   
   // Get responsive value
-  responsive: (theme: any, mobileValue: any, desktopValue: any) => ({
+  responsive: <T>(theme: Theme, mobileValue: T, desktopValue: T) => ({
     [themeUtils.isMobile(theme)]: mobileValue,
     [themeUtils.isDesktop(theme)]: desktopValue,
   }),
   
   // Get spacing for breakpoint
-  getSpacing: (theme: any, mobile: number, desktop: number) => ({
+  getSpacing: (theme: Theme, mobile: number, desktop: number) => ({
     [themeUtils.isMobile(theme)]: theme.spacing(mobile),
     [themeUtils.isDesktop(theme)]: theme.spacing(desktop),
   }),

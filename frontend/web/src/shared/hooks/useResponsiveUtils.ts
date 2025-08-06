@@ -101,7 +101,14 @@ export const useAdaptiveLoading = () => {
   useEffect(() => {
     // Check for Network Information API
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as Navigator & {
+        connection: {
+          effectiveType: string;
+          saveData: boolean;
+          addEventListener: (event: string, listener: () => void) => void;
+          removeEventListener: (event: string, listener: () => void) => void;
+        };
+      }).connection
       
       const updateConnectionInfo = () => {
         const effectiveType = connection.effectiveType
@@ -147,7 +154,7 @@ export const useSmartLoading = () => {
   useEffect(() => {
     // Check device memory if available
     if ('deviceMemory' in navigator) {
-      setDeviceMemory((navigator as any).deviceMemory)
+      setDeviceMemory((navigator as Navigator & { deviceMemory: number }).deviceMemory)
     }
   }, [])
   

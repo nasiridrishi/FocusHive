@@ -14,8 +14,18 @@ import {
   useMediaQuery
 } from '@mui/material';
 
-// Type assertion for Grid props to handle MUI type issues
-const GridItem = Grid as any;
+// Typed Grid component to handle MUI Grid props properly
+const GridItem = Grid as React.ComponentType<{
+  item?: boolean;
+  xs?: number;
+  sm?: number;
+  md?: number;
+  lg?: number;
+  xl?: number;
+  key?: string;
+  children?: React.ReactNode;
+  [key: string]: unknown;
+}>;
 import {
   Dashboard,
   Refresh,
@@ -73,7 +83,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   compactMode = false
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md' as any));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const {
     data,
     filter,
@@ -231,7 +241,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Summary Statistics */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <GridItem item xs={6} sm={3} key="total-focus-time" {...({} as any)}>
+        <GridItem item xs={6} sm={3} key="total-focus-time">
           <StatCard
             title="Total Focus Time"
             value={formatFocusTime(data.productivity.totalFocusTime)}

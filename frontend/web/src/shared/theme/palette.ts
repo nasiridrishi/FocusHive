@@ -193,7 +193,7 @@ export const createLightPalette = (): PaletteOptions => ({
     paper: '#ffffff',
     secondary: '#f5f5f5',
     tertiary: '#eeeeee',
-  } as any,
+  },
   
   surface: {
     main: '#ffffff',
@@ -201,14 +201,14 @@ export const createLightPalette = (): PaletteOptions => ({
     container: '#fafafa',
     containerHigh: '#eeeeee',
     containerHighest: '#e0e0e0',
-  } as any,
+  },
   
   text: {
     primary: 'rgba(0, 0, 0, 0.87)',
     secondary: 'rgba(0, 0, 0, 0.6)',
     tertiary: 'rgba(0, 0, 0, 0.38)',
     disabled: 'rgba(0, 0, 0, 0.38)',
-  } as any,
+  },
   
   divider: 'rgba(0, 0, 0, 0.12)',
   
@@ -228,7 +228,7 @@ export const createLightPalette = (): PaletteOptions => ({
     hive: contextColors.hive,
     achievement: contextColors.achievement,
     brand: brandColors,
-  } as any,
+  },
 })
 
 // Create dark theme palette
@@ -289,7 +289,7 @@ export const createDarkPalette = (): PaletteOptions => ({
     paper: '#1a1a1a',
     secondary: '#1f1f1f',
     tertiary: '#2a2a2a',
-  } as any,
+  },
   
   surface: {
     main: '#1a1a1a',
@@ -297,14 +297,14 @@ export const createDarkPalette = (): PaletteOptions => ({
     container: '#1f1f1f',
     containerHigh: '#2a2a2a',
     containerHighest: '#353535',
-  } as any,
+  },
   
   text: {
     primary: 'rgba(255, 255, 255, 0.87)',
     secondary: 'rgba(255, 255, 255, 0.6)',
     tertiary: 'rgba(255, 255, 255, 0.38)',
     disabled: 'rgba(255, 255, 255, 0.38)',
-  } as any,
+  },
   
   divider: 'rgba(255, 255, 255, 0.12)',
   
@@ -340,7 +340,7 @@ export const createDarkPalette = (): PaletteOptions => ({
     },
     achievement: contextColors.achievement,
     brand: brandColors,
-  } as any,
+  },
 })
 
 // Adaptive colors that change based on theme

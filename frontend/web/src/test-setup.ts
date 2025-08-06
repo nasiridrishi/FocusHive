@@ -3,12 +3,12 @@ import React from 'react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
 
 // Make test globals available
-(globalThis as any).beforeEach = beforeEach;
-(globalThis as any).afterEach = afterEach; 
-(globalThis as any).describe = describe;
-(globalThis as any).it = it;
-(globalThis as any).expect = expect;
-(globalThis as any).vi = vi;
+(globalThis as Record<string, unknown>).beforeEach = beforeEach;
+(globalThis as Record<string, unknown>).afterEach = afterEach; 
+(globalThis as Record<string, unknown>).describe = describe;
+(globalThis as Record<string, unknown>).it = it;
+(globalThis as Record<string, unknown>).expect = expect;
+(globalThis as Record<string, unknown>).vi = vi;
 
 // Mock MUI X Charts
 vi.mock('@mui/x-charts', () => ({
@@ -61,14 +61,33 @@ vi.mock('framer-motion', () => ({
     div: React.forwardRef<HTMLDivElement, React.PropsWithChildren<Record<string, unknown>>>(({ children, ...props }, ref) => {
       // Filter out framer-motion specific props
       const { 
-        animate, initial, exit, variants, transition, whileHover, whileTap, whileFocus, whileInView,
-        drag, dragConstraints, dragElastic, dragMomentum, dragTransition, dragControls,
+        animate, initial, exit, variants, transition, 
+        whileHover, whileTap, whileFocus, whileInView,
+        drag, dragConstraints, dragElastic, dragMomentum, 
+        dragTransition, dragControls,
         layout, layoutId, layoutDependency, layoutScroll, layoutRoot,
-        onAnimationStart, onAnimationComplete, onUpdate, onDragStart, onDragEnd, onDrag,
-        onDirectionLock, onViewportEnter, onViewportLeave, onHoverStart, onHoverEnd,
-        onTap, onTapStart, onTapCancel, onFocus, onBlur, onDragTransitionEnd,
+        onAnimationStart, onAnimationComplete, onUpdate, 
+        onDragStart, onDragEnd, onDrag,
+        onDirectionLock, onViewportEnter, onViewportLeave, 
+        onHoverStart, onHoverEnd,
+        onTap, onTapStart, onTapCancel, onFocus, onBlur, 
+        onDragTransitionEnd,
         style, transformTemplate, transformValues, ...filteredProps 
       } = props;
+      
+      // Silence unused variable warnings by acknowledging them
+      void animate; void initial; void exit; void variants; void transition;
+      void whileHover; void whileTap; void whileFocus; void whileInView;
+      void drag; void dragConstraints; void dragElastic; void dragMomentum;
+      void dragTransition; void dragControls;
+      void layout; void layoutId; void layoutDependency; void layoutScroll; void layoutRoot;
+      void onAnimationStart; void onAnimationComplete; void onUpdate;
+      void onDragStart; void onDragEnd; void onDrag;
+      void onDirectionLock; void onViewportEnter; void onViewportLeave;
+      void onHoverStart; void onHoverEnd;
+      void onTap; void onTapStart; void onTapCancel; void onFocus; void onBlur;
+      void onDragTransitionEnd;
+      void style; void transformTemplate; void transformValues;
       
       return React.createElement('div', { ...filteredProps, ref }, children as React.ReactNode);
     })
@@ -76,7 +95,10 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: React.PropsWithChildren) => children,
   useAnimation: () => ({}),
   useMotionValue: (value: unknown) => ({ get: () => value, set: () => {} }),
-  useTransform: (value: unknown, _input: unknown, _output: unknown) => value,
+  useTransform: (value: unknown, input: unknown, output: unknown) => {
+    void input; void output; // Acknowledge unused parameters
+    return value;
+  },
   useSpring: (value: unknown) => value,
   useInView: () => true,
   useDragControls: () => ({}),
