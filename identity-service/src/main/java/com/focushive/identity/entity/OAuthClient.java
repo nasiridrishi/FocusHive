@@ -47,30 +47,37 @@ public class OAuthClient {
     @CollectionTable(name = "oauth_client_redirect_uris", 
                      joinColumns = @JoinColumn(name = "client_id"))
     @Column(name = "redirect_uri")
+    @Builder.Default
     private Set<String> redirectUris = new HashSet<>();
     
     @ElementCollection
     @CollectionTable(name = "oauth_client_grant_types", 
                      joinColumns = @JoinColumn(name = "client_id"))
     @Column(name = "grant_type")
+    @Builder.Default
     private Set<String> authorizedGrantTypes = new HashSet<>();
     
     @ElementCollection
     @CollectionTable(name = "oauth_client_scopes", 
                      joinColumns = @JoinColumn(name = "client_id"))
     @Column(name = "scope")
+    @Builder.Default
     private Set<String> authorizedScopes = new HashSet<>();
     
     @Column(name = "access_token_validity_seconds")
+    @Builder.Default
     private Integer accessTokenValiditySeconds = 3600; // 1 hour
     
     @Column(name = "refresh_token_validity_seconds")
+    @Builder.Default
     private Integer refreshTokenValiditySeconds = 2592000; // 30 days
     
     @Column(name = "auto_approve", nullable = false)
+    @Builder.Default
     private boolean autoApprove = false;
     
     @Column(nullable = false)
+    @Builder.Default
     private boolean enabled = true;
     
     @CreationTimestamp

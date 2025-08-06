@@ -74,6 +74,7 @@ public class PersonaActivity {
     @CollectionTable(name = "persona_activity_tags", 
                      joinColumns = @JoinColumn(name = "activity_id"))
     @Column(name = "tag")
+    @Builder.Default
     private Set<String> tags = new HashSet<>();
     
     // Productivity metrics

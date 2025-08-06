@@ -40,7 +40,6 @@ import {
   ProfileCard,
   ResponsiveTable,
   SmartModal,
-  SmartFAB,
   ScrollToTopFAB,
   ContextualFAB,
 } from '@shared/ui'

@@ -5,7 +5,7 @@
  * based on screen size, scroll position, and navigation context
  */
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Fab,
   FabProps,
@@ -29,7 +29,7 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material'
 import { styled } from '@mui/material/styles'
-import { useResponsive, useScrollDirection, useDynamicViewportHeight } from '../hooks'
+import { useResponsive, useScrollDirection } from '../hooks'
 
 // Types
 interface FABAction {
@@ -72,12 +72,11 @@ interface SmartFABProps extends Omit<FabProps, 'color'> {
 
 // Styled components
 const StyledFab = styled(Fab, {
-  shouldForwardProp: (prop) => !['hideOnScroll', 'isVisible', 'transition'].includes(prop as string),
+  shouldForwardProp: (prop) => !['hideOnScroll', 'isVisible'].includes(prop as string),
 })<{
   hideOnScroll?: boolean
   isVisible?: boolean
-  transition?: string
-}>(({ theme, hideOnScroll, isVisible, transition }) => ({
+}>(({ theme, hideOnScroll, isVisible }) => ({
   position: 'fixed',
   zIndex: theme.zIndex.fab,
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -128,7 +127,7 @@ const useFABPosition = ({
   offset = {},
   avoidNavigation = true,
 }: Pick<SmartFABProps, 'position' | 'offset' | 'avoidNavigation'>) => {
-  const { isMobile, isTablet } = useResponsive()
+  const { isMobile } = useResponsive()
   const theme = useTheme()
   
   const getPosition = () => {
@@ -227,8 +226,6 @@ export const SmartFAB: React.FC<SmartFABProps> = ({
   onClick,
   ...fabProps
 }) => {
-  const theme = useTheme()
-  const { isMobile } = useResponsive()
   const fabPosition = useFABPosition({ position, offset, avoidNavigation })
   const { isVisible } = useScrollBehavior({ hideOnScroll, showOnlyWhenScrolled, scrollThreshold })
   
@@ -313,7 +310,6 @@ export const SmartFAB: React.FC<SmartFABProps> = ({
       onClick={handleFABClick}
       hideOnScroll={hideOnScroll || showOnlyWhenScrolled}
       isVisible={isVisible}
-      transition={transition}
       sx={fabPosition}
       {...fabProps}
     >
