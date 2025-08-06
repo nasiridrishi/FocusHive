@@ -14,9 +14,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Tooltip,
-  Button,
-  ButtonGroup,
   Select,
   MenuItem,
   FormControl,
@@ -29,10 +26,7 @@ import {
   CheckCircle,
   RadioButtonUnchecked,
   Schedule,
-  Sort,
-  FilterList,
-  EmojiEvents,
-  TrendingUp
+  EmojiEvents
 } from '@mui/icons-material';
 import { GoalProgressProps, GoalProgressData } from '../types';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
@@ -76,9 +70,10 @@ const sortGoals = (goals: GoalProgressData[], sortBy: string): GoalProgressData[
         if (!b.deadline) return -1;
         return a.deadline.getTime() - b.deadline.getTime();
       });
-    case 'priority':
+    case 'priority': {
       const priorityOrder = { high: 3, medium: 2, low: 1 };
       return sorted.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
+    }
     case 'category':
       return sorted.sort((a, b) => a.category.localeCompare(b.category));
     default:

@@ -59,7 +59,7 @@ const mockApi = {
     };
   },
   
-  addPoints: async (amount: number, source: string): Promise<GamificationStats> => {
+  addPoints: async (amount: number, _source: string): Promise<GamificationStats> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     // Return updated stats
     const currentStats = await mockApi.getGamificationStats();
@@ -165,7 +165,7 @@ const defaultContextValue: GamificationContextValue = {
 const GamificationContext = createContext<GamificationContextValue>(defaultContextValue);
 
 // Debounce utility
-const debounce = <T extends (...args: any[]) => any>(
+const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
@@ -200,7 +200,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   // Debounced API calls to prevent excessive requests
-  const debouncedLoadStats = debounce(loadStats, 1000);
+  // const debouncedLoadStats = debounce(loadStats, 1000);
 
   useEffect(() => {
     loadStats();

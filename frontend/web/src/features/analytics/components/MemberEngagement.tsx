@@ -18,7 +18,6 @@ import {
 } from '@mui/material';
 import { 
   Group, 
-  TrendingUp, 
   Timer, 
   PlayCircle,
   Person
@@ -60,11 +59,12 @@ const sortMembers = (
   switch (sortBy) {
     case 'sessions':
       return sorted.sort((a, b) => b.sessions - a.sessions);
-    case 'engagement':
+    case 'engagement': {
       const engagementOrder = { high: 3, medium: 2, low: 1 };
       return sorted.sort((a, b) => 
         engagementOrder[b.engagement] - engagementOrder[a.engagement]
       );
+    }
     case 'focusTime':
     default:
       return sorted.sort((a, b) => b.focusTime - a.focusTime);

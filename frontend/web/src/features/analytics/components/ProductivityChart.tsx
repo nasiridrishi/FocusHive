@@ -11,9 +11,9 @@ import {
   Chip
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { TrendingUp, TrendingDown, Timer, Target } from '@mui/icons-material';
+import { TrendingUp, TrendingDown, Timer } from '@mui/icons-material';
 import { ProductivityChartProps, ChartDataPoint } from '../types';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 const formatTimeRange = (timeRange: ProductivityChartProps['timeRange']) => {
   const { start, end, period } = timeRange;

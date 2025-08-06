@@ -8,7 +8,7 @@ import {
   alpha,
   Tooltip,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   LocalFireDepartment,
   BrokenImage,
@@ -16,7 +16,6 @@ import {
   FitnessCenter,
   EmojiEvents,
   Group,
-  Schedule,
   TrendingUp,
 } from '@mui/icons-material';
 import type { StreakCounterProps } from '../types/gamification';

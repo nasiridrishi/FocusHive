@@ -5,12 +5,12 @@ import { ProductivityChartProps, ChartDataPoint, AnalyticsTimeRange } from '../t
 
 // Mock MUI X Charts
 vi.mock('@mui/x-charts', () => ({
-  LineChart: ({ children, ...props }: any) => (
+  LineChart: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
     <div data-testid="line-chart" data-props={JSON.stringify(props)}>
       {children}
     </div>
   ),
-  ResponsiveChartContainer: ({ children, ...props }: any) => (
+  ResponsiveChartContainer: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
     <div data-testid="chart-container" data-props={JSON.stringify(props)}>
       {children}
     </div>

@@ -3,7 +3,7 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderHook } from '@testing-library/react';
 import { GamificationProvider, useGamification } from './GamificationContext';
-import type { GamificationStats, Achievement, Streak } from '../types/gamification';
+import type { GamificationStats } from '../types/gamification';
 
 // Mock API calls
 const mockApi = {
@@ -574,7 +574,7 @@ describe('GamificationContext', () => {
       };
       
       // Mock WebSocket
-      global.WebSocket = vi.fn(() => mockWebSocket) as any;
+      global.WebSocket = vi.fn(() => mockWebSocket) as typeof WebSocket;
       
       renderWithProvider(<TestComponent />);
       

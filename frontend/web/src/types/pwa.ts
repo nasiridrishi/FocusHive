@@ -7,7 +7,7 @@
 declare global {
   interface Window {
     beforeinstallprompt?: BeforeInstallPromptEvent;
-    workbox?: any;
+    workbox?: WorkboxWindow;
   }
 
   interface Navigator {
@@ -15,7 +15,7 @@ declare global {
   }
 
   // Global vi for tests
-  var vi: typeof import('vitest')['vi'];
+  const vi: typeof import('vitest')['vi'];
 }
 
 // BeforeInstallPrompt Event interface
@@ -55,7 +55,7 @@ export interface PWANotificationAction {
 export interface PWANotificationOptions extends NotificationOptions {
   actions?: PWANotificationAction[];
   badge?: string;
-  data?: any;
+  data?: unknown;
   image?: string;
   renotify?: boolean;
   requireInteraction?: boolean;
@@ -77,7 +77,7 @@ export interface PushEventData {
   icon?: string;
   badge?: string;
   image?: string;
-  data?: any;
+  data?: unknown;
   actions?: PWANotificationAction[];
   tag?: string;
   requireInteraction?: boolean;
@@ -90,7 +90,7 @@ export interface WorkboxWindow {
   addEventListener(type: string, listener: EventListener): void;
   removeEventListener(type: string, listener: EventListener): void;
   getSW(): Promise<ServiceWorker>;
-  messageSW(data: any): Promise<any>;
+  messageSW(data: unknown): Promise<unknown>;
 }
 
 // Cache Strategy Types

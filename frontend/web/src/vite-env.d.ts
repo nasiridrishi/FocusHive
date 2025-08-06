@@ -8,7 +8,7 @@ declare module 'virtual:pwa-register' {
     onOfflineReady?: () => void;
     onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
     onRegisteredSW?: (swUrl: string, registration: ServiceWorkerRegistration | undefined) => void;
-    onRegisterError?: (error: any) => void;
+    onRegisterError?: (error: Error) => void;
   }
 
   export function registerSW(options?: RegisterSWOptions): (reloadPage?: boolean) => Promise<void>;
@@ -21,7 +21,7 @@ declare module 'virtual:pwa-register/react' {
     onOfflineReady?: () => void;
     onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
     onRegisteredSW?: (swUrl: string, registration: ServiceWorkerRegistration | undefined) => void;
-    onRegisterError?: (error: any) => void;
+    onRegisterError?: (error: Error) => void;
   }
 
   export function useRegisterSW(options?: RegisterSWOptions): {
@@ -54,6 +54,6 @@ declare module 'workbox-window' {
     addEventListener(type: string, listener: EventListener): void;
     removeEventListener(type: string, listener: EventListener): void;
     getSW(): Promise<ServiceWorker>;
-    messageSW(data: any): Promise<any>;
+    messageSW(data: unknown): Promise<unknown>;
   }
 }

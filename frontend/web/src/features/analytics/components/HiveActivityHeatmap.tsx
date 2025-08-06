@@ -10,7 +10,7 @@ import {
   useTheme,
   alpha
 } from '@mui/material';
-import { CalendarMonth, TrendingUp } from '@mui/icons-material';
+import { CalendarMonth } from '@mui/icons-material';
 import { HiveActivityHeatmapProps, HiveActivityData } from '../types';
 import { format, startOfYear, endOfYear, eachDayOfInterval, getDay, getWeek, parseISO } from 'date-fns';
 
@@ -25,7 +25,7 @@ const getActivityLevel = (value: number): number => {
   return 4;
 };
 
-const getActivityColor = (level: number, theme: any): string => {
+const getActivityColor = (level: number, theme: { palette: { primary: { main: string }; grey: { [key: number]: string } } }): string => {
   const baseColor = theme.palette.primary.main;
   switch (level) {
     case 0: return theme.palette.grey[100];
@@ -45,7 +45,7 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
   onDateClick
 }) => {
   const theme = useTheme();
-  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const [, setHoveredDate] = useState<string | null>(null);
 
   // Create a map of date -> activity data for quick lookup
   const activityMap = useMemo(() => {
@@ -166,7 +166,7 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
     let currentMonth = -1;
     let position = 0;
 
-    weeks.forEach(([weekNum, days]) => {
+    weeks.forEach(([, days]) => {
       const firstDay = days[0];
       const month = firstDay.getMonth();
       

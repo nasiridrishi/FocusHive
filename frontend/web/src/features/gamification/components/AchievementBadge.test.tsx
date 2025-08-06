@@ -9,10 +9,10 @@ import type { Achievement } from '../types/gamification';
 // Mock framer-motion for testing
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    img: ({ children, ...props }: any) => <img {...props}>{children}</img>,
+    div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
+    img: ({ children, ...props }: React.ComponentProps<'img'>) => <img {...props}>{children}</img>,
   },
-  AnimatePresence: ({ children }: any) => children,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();

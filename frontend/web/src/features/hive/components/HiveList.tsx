@@ -22,7 +22,6 @@ import {
 } from '@mui/material'
 import {
   Search as SearchIcon,
-  FilterList as FilterListIcon,
   ViewModule as ViewModuleIcon,
   ViewList as ViewListIcon,
   Add as AddIcon,
@@ -44,7 +43,7 @@ interface HiveListProps {
   onSettings?: (hiveId: string) => void
   onShare?: (hiveId: string) => void
   onRefresh?: () => void
-  onCreateHive?: (hive: any) => void
+  onCreateHive?: (hive: CreateHiveRequest) => void
   title?: string
   showCreateButton?: boolean
   showFilters?: boolean
@@ -94,7 +93,7 @@ export const HiveList: React.FC<HiveListProps> = ({
 
   // Filter and sort hives
   const filteredHives = useMemo(() => {
-    let filtered = hives.filter(hive => {
+    const filtered = hives.filter(hive => {
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
@@ -168,7 +167,7 @@ export const HiveList: React.FC<HiveListProps> = ({
     )
   }
 
-  const handleCreateHive = (hiveData: any) => {
+  const handleCreateHive = (hiveData: CreateHiveRequest) => {
     onCreateHive?.(hiveData)
     setCreateDialogOpen(false)
   }

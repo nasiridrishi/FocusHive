@@ -9,10 +9,10 @@ import type { Streak } from '../types/gamification';
 // Mock framer-motion for testing
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
+    span: ({ children, ...props }: React.ComponentProps<'span'>) => <span {...props}>{children}</span>,
   },
-  AnimatePresence: ({ children }: any) => children,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();
@@ -320,7 +320,7 @@ describe('StreakCounter', () => {
     it('handles undefined last activity gracefully', () => {
       const noActivityStreak: Streak = {
         ...mockActiveStreak,
-        lastActivity: undefined as any,
+        lastActivity: undefined as Date | undefined,
       };
       
       expect(() => {
@@ -359,7 +359,7 @@ describe('StreakCounter', () => {
       const calculationSpy = vi.fn(() => 'calculated value');
       
       const TestStreakCounter = ({ streak }: { streak: Streak }) => {
-        const memoizedValue = React.useMemo(() => calculationSpy(), [streak.current]);
+        React.useMemo(() => calculationSpy(), []);
         return <StreakCounter streak={streak} />;
       };
       

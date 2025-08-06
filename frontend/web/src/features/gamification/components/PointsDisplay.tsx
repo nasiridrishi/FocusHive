@@ -1,7 +1,7 @@
 import React from 'react';
-import { Box, Typography, Card, Chip, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Typography, Card, useTheme, useMediaQuery } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, Star, Today, DateRange } from '@mui/icons-material';
+import { Star, Today, DateRange } from '@mui/icons-material';
 import type { PointsDisplayProps } from '../types/gamification';
 import { formatPoints } from '../utils/gamificationUtils';
 

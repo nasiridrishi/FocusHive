@@ -9,7 +9,6 @@ import {
   Snackbar,
   styled,
   alpha,
-  useTheme,
 } from '@mui/material'
 import {
   Close as CloseIcon,
@@ -114,7 +113,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   allowFullscreen = true,
   className,
 }) => {
-  const theme = useTheme()
   const { connectionState, isConnected } = useWebSocket()
   const {
     chatState,

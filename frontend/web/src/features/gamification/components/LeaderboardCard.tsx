@@ -12,20 +12,18 @@ import {
   Skeleton,
   Divider,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  EmojiEvents,
   TrendingUp,
   TrendingDown,
   Remove,
-  Person,
   Schedule,
+  EmojiEvents,
 } from '@mui/icons-material';
-import type { LeaderboardCardProps, LeaderboardEntry } from '../types/gamification';
+import type { LeaderboardCardProps } from '../types/gamification';
 import { 
   formatPoints, 
   formatRankChange, 
-  getLeaderboardPosition,
   getUserInitials,
 } from '../utils/gamificationUtils';
 
@@ -36,6 +34,31 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   showRankChange = true,
 }) => {
   const theme = useTheme();
+
+  // Process entries for display - must be before any early returns
+  const displayEntries = useMemo(() => {
+    if (!leaderboard) return [];
+    
+    let entries = [...leaderboard.entries];
+    
+    // If maxEntries is specified and we have more entries
+    if (maxEntries && entries.length > maxEntries) {
+      // Always include current user if they exist
+      const currentUserEntry = entries.find(entry => entry.user.id === currentUserId);
+      const topEntries = entries.slice(0, maxEntries);
+      
+      // If current user is not in top entries but exists in the list
+      if (currentUserEntry && !topEntries.some(entry => entry.user.id === currentUserId)) {
+        // Remove last top entry and add current user
+        topEntries.pop();
+        topEntries.push(currentUserEntry);
+      }
+      
+      entries = topEntries;
+    }
+    
+    return entries;
+  }, [leaderboard, maxEntries, currentUserId]);
 
   // Handle loading state
   if (!leaderboard) {
@@ -69,29 +92,6 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   }
 
   const isEmpty = leaderboard.entries.length === 0;
-  
-  // Process entries for display
-  const displayEntries = useMemo(() => {
-    let entries = [...leaderboard.entries];
-    
-    // If maxEntries is specified and we have more entries
-    if (maxEntries && entries.length > maxEntries) {
-      // Always include current user if they exist
-      const currentUserEntry = entries.find(entry => entry.user.id === currentUserId);
-      const topEntries = entries.slice(0, maxEntries);
-      
-      // If current user is not in top entries but exists in the list
-      if (currentUserEntry && !topEntries.some(entry => entry.user.id === currentUserId)) {
-        // Remove last top entry and add current user
-        topEntries.pop();
-        topEntries.push(currentUserEntry);
-      }
-      
-      entries = topEntries;
-    }
-    
-    return entries;
-  }, [leaderboard.entries, maxEntries, currentUserId]);
 
   const hasMoreEntries = maxEntries && leaderboard.entries.length > maxEntries;
   const extraCount = hasMoreEntries ? leaderboard.entries.length - displayEntries.length : 0;
@@ -238,7 +238,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
             animate="visible"
             sx={{ p: 0 }}
           >
-            {displayEntries.map((entry, index) => (
+            {displayEntries.map((entry) => (
               <ListItem
                 key={entry.user.id}
                 component={motion.li}

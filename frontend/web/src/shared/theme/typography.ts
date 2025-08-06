@@ -5,7 +5,7 @@
  * Based on Material Design 3 typography scale with custom enhancements
  */
 
-import { TypographyOptions } from '@mui/material/styles'
+import { TypographyVariants } from '@mui/material/styles'
 import { breakpointValues, mediaQueries } from './breakpoints'
 
 // Font families
@@ -145,7 +145,7 @@ export const fluidTypographyScale = {
 } as const
 
 // Create Material-UI typography configuration
-export const createResponsiveTypography = (): TypographyOptions => ({
+export const createResponsiveTypography = (): Partial<TypographyVariants> => ({
   fontFamily: fontFamilies.primary,
   
   // Override default Material-UI variants with our fluid typography

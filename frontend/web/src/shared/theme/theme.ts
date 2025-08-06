@@ -96,7 +96,7 @@ const baseThemeConfig: ThemeOptions = {
     // Card component with responsive design
     MuiCard: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: () => ({
           borderRadius: theme.shape.borderRadius,
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
           transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
@@ -115,7 +115,7 @@ const baseThemeConfig: ThemeOptions = {
     // Button component with responsive sizing
     MuiButton: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: () => ({
           borderRadius: theme.shape.borderRadius,
           textTransform: 'none',
           fontWeight: 500,
@@ -144,7 +144,7 @@ const baseThemeConfig: ThemeOptions = {
     // AppBar with responsive styling
     MuiAppBar: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: () => ({
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)',
           backdropFilter: 'blur(10px)',
           // Responsive height
@@ -221,7 +221,7 @@ const baseThemeConfig: ThemeOptions = {
     // Responsive Chip component
     MuiChip: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: () => ({
           // Touch-friendly sizing on mobile
           [`@media (max-width: ${breakpointValues.tablet - 1}px)`]: {
             height: 36,
@@ -234,7 +234,7 @@ const baseThemeConfig: ThemeOptions = {
     // Form controls with responsive styling
     MuiTextField: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: () => ({
           // Touch-friendly input sizing
           [`@media (max-width: ${breakpointValues.tablet - 1}px)`]: {
             '& .MuiInputBase-root': {
@@ -271,7 +271,7 @@ const baseThemeConfig: ThemeOptions = {
     // Responsive data tables
     MuiTableContainer: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: () => ({
           // Horizontal scroll on mobile
           [`@media (max-width: ${breakpointValues.tablet - 1}px)`]: {
             overflowX: 'auto',
