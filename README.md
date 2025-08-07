@@ -12,16 +12,24 @@ This project is currently in the development phase for the University of London 
 
 ## Project Structure
 
-FocusHive follows a modular architecture with separate backend and frontend:
+FocusHive follows a microservices architecture with separate backend services and frontend:
 
 ```
 focushive/
-├── backend/             # Spring Boot 3.x Java backend
+├── backend/             # Spring Boot 3.x Java backend (Main FocusHive service)
 │   ├── src/            # Java source code
 │   ├── build.gradle.kts # Gradle build configuration
 │   └── Dockerfile      # Backend container
+├── music-service/       # Spring Boot 3.x Music Recommendation microservice
+│   ├── src/            # Java source code
+│   ├── build.gradle.kts # Gradle build configuration
+│   └── Dockerfile      # Music service container
+├── identity-service/    # Spring Boot 3.x Identity Management microservice
+│   ├── src/            # Java source code
+│   ├── build.gradle.kts # Gradle build configuration
+│   └── Dockerfile      # Identity service container
 ├── frontend/           # React TypeScript web application
-│   ├── src/            # React source code
+│   ├── src/            # React source code with music features
 │   └── Dockerfile      # Frontend container
 ├── shared/
 │   └── openapi/        # OpenAPI specifications
@@ -74,25 +82,48 @@ npm run build         # Build production
 
 ## Architecture
 
-- **Backend**: Spring Boot 3.x with Java 21
+### Microservices Architecture
+- **Main Backend**: Spring Boot 3.x with Java 21
   - RESTful APIs with Spring MVC
   - WebSocket support with STOMP
   - PostgreSQL with Spring Data JPA
   - Redis for caching and pub/sub
   - JWT authentication with Spring Security
+- **Music Service**: Spring Boot 3.x microservice
+  - Advanced music recommendation engine
+  - Spotify OAuth2 integration with token encryption
+  - Collaborative playlist management
+  - Real-time music synchronization via WebSockets
+  - Redis caching for performance optimization
+- **Identity Service**: Spring Boot 3.x microservice
+  - Multiple user personas/profiles
+  - OAuth2 authorization server
+  - Advanced privacy controls
+  - Inter-service authentication
 - **Frontend**: React with TypeScript and Vite
-  - Tailwind CSS v4 for styling
+  - Material UI (MUI) component library
+  - Real-time music player integration
+  - Spotify Web SDK integration
   - Real-time updates via WebSockets
-- **Infrastructure**: Docker containerization
-  - PostgreSQL 16 for relational data
-  - Redis 7 for caching and real-time features
+
+### Infrastructure
+- **Databases**: PostgreSQL 16 for all microservices
+- **Caching**: Redis 7 for caching and real-time features
+- **Containerization**: Docker with multi-service orchestration
+- **Authentication**: JWT-based with inter-service communication
 
 ## Documentation
 
-- [Monorepo Setup Guide](docs/monorepo-setup.md)
-- Development Specification (see project docs)
-- Project Design (see project docs)
-- Todo List (see project docs)
+### Service Documentation
+- [Music Service](music-service/README.md) - Music recommendation engine and playlist management
+- [Identity Service](identity-service/README.md) - User identity and profile management
+- [Main Backend Service](backend/README.md) - Core FocusHive functionality
+
+### Architecture & Integration
+- [Music Service Integration Guide](docs/music-service-integration.md)
+- [Inter-service Communication](backend/docs/INTER_SERVICE_COMMUNICATION.md)
+- [Development Specification](archive/docs/FocusHive_Development_Specification.md)
+- [Project Design](archive/docs/FocusHive_Project_Description.md)
 
 ## Testing
 
