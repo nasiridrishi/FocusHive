@@ -125,7 +125,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         }
       }
     } catch (error) {
-      console.error('Failed to toggle playback:', error)
+      // Failed to toggle playback
     }
   }, [isUsingSpotify, spotifyPlayer, effectivePlaybackState.isPlaying, effectivePlaybackState.isPaused, effectiveCurrentTrack, pause, resume, playWithCrossfade])
 
@@ -140,7 +140,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         setVolume(normalizedVolume)
       }
     } catch (error) {
-      console.error('Failed to set volume:', error)
+      // Failed to set volume
     }
   }, [isUsingSpotify, spotifyPlayer, setVolume])
 
@@ -152,7 +152,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         skipNextEnhanced()
       }
     } catch (error) {
-      console.error('Failed to skip next:', error)
+      // Failed to skip next
     }
   }, [isUsingSpotify, spotifyPlayer, skipNextEnhanced])
 
@@ -164,7 +164,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         skipPreviousEnhanced()
       }
     } catch (error) {
-      console.error('Failed to skip previous:', error)
+      // Failed to skip previous
     }
   }, [isUsingSpotify, spotifyPlayer, skipPreviousEnhanced])
 
@@ -197,7 +197,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         seekTo(timeInSeconds)
       }
     } catch (error) {
-      console.error('Failed to seek:', error)
+      // Failed to seek
     }
     setIsDragging(false)
   }, [effectivePlaybackState.duration, isUsingSpotify, spotifyPlayer, seekTo])

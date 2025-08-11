@@ -155,7 +155,9 @@ public class FeignLoggingInterceptor {
                 try {
                     return Long.parseLong(timestamps.iterator().next());
                 } catch (NumberFormatException e) {
-                    log.debug("Invalid timestamp format in request header");
+                    if (log.isDebugEnabled()) {
+                        log.debug("Invalid timestamp format in request header");
+                    }
                 }
             }
             return System.currentTimeMillis();

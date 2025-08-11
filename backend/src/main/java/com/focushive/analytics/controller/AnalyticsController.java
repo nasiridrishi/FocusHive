@@ -3,6 +3,7 @@ package com.focushive.analytics.controller;
 import com.focushive.analytics.dto.SessionRequest;
 import com.focushive.analytics.dto.SessionResponse;
 import com.focushive.analytics.dto.UserStats;
+import com.focushive.analytics.service.AnalyticsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,8 +13,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -23,7 +27,10 @@ import java.util.List;
 @RequestMapping("/api/v1/analytics")
 @Tag(name = "Analytics", description = "Productivity tracking and insights endpoints")
 @SecurityRequirement(name = "bearerAuth")
+@RequiredArgsConstructor
 public class AnalyticsController {
+    
+    private final AnalyticsService analyticsService;
     
     @Operation(summary = "Start a focus session", description = "Records the beginning of a new focus session")
     @ApiResponses(value = {
@@ -33,9 +40,11 @@ public class AnalyticsController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/sessions/start")
-    public ResponseEntity<SessionResponse> startSession(@Valid @RequestBody SessionRequest request) {
-        // TODO: Implement session start logic
-        return ResponseEntity.status(HttpStatus.CREATED).body(new SessionResponse());
+    public ResponseEntity<SessionResponse> startSession(
+            @Valid @RequestBody SessionRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        SessionResponse response = analyticsService.startSession(request, getUserId(userDetails));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
     @Operation(summary = "End a focus session", description = "Records the completion of a focus session")
@@ -48,9 +57,10 @@ public class AnalyticsController {
     @PostMapping("/sessions/{sessionId}/end")
     public ResponseEntity<SessionResponse> endSession(
             @Parameter(description = "Session ID") @PathVariable String sessionId,
-            @RequestBody EndSessionRequest request) {
-        // TODO: Implement session end logic
-        return ResponseEntity.ok(new SessionResponse());
+            @RequestBody EndSessionRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        SessionResponse response = analyticsService.endSession(sessionId, request, getUserId(userDetails));
+        return ResponseEntity.ok(response);
     }
     
     @Operation(summary = "Get user statistics", description = "Retrieves productivity statistics for a user")
@@ -64,9 +74,15 @@ public class AnalyticsController {
     public ResponseEntity<UserStats> getUserStats(
             @Parameter(description = "User ID") @PathVariable String userId,
             @Parameter(description = "Start date") @RequestParam(required = false) LocalDate startDate,
-            @Parameter(description = "End date") @RequestParam(required = false) LocalDate endDate) {
-        // TODO: Implement get user stats logic
-        return ResponseEntity.ok(new UserStats());
+            @Parameter(description = "End date") @RequestParam(required = false) LocalDate endDate,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // Users can only access their own stats unless they have admin role
+        String currentUserId = getUserId(userDetails);
+        if (!userId.equals(currentUserId) && !hasAdminRole(userDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        UserStats stats = analyticsService.getUserStats(userId, startDate, endDate);
+        return ResponseEntity.ok(stats);
     }
     
     @Operation(summary = "Get hive leaderboard", description = "Retrieves productivity leaderboard for a hive")
@@ -78,9 +94,11 @@ public class AnalyticsController {
     @GetMapping("/hives/{hiveId}/leaderboard")
     public ResponseEntity<List<LeaderboardEntry>> getHiveLeaderboard(
             @Parameter(description = "Hive ID") @PathVariable String hiveId,
-            @Parameter(description = "Time period") @RequestParam(defaultValue = "WEEK") TimePeriod period) {
-        // TODO: Implement leaderboard logic
-        return ResponseEntity.ok(List.of());
+            @Parameter(description = "Time period") @RequestParam(defaultValue = "WEEK") TimePeriod period,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // Note: Access control for hive leaderboard should be implemented based on hive membership
+        List<LeaderboardEntry> leaderboard = analyticsService.getHiveLeaderboard(hiveId, period);
+        return ResponseEntity.ok(leaderboard);
     }
     
     public record EndSessionRequest(
@@ -102,5 +120,17 @@ public class AnalyticsController {
     
     public enum TimePeriod {
         DAY, WEEK, MONTH, ALL_TIME
+    }
+    
+    // Helper methods
+    private String getUserId(UserDetails userDetails) {
+        // Assuming the username is the user ID in this implementation
+        // This might need to be adjusted based on your actual User implementation
+        return userDetails.getUsername();
+    }
+    
+    private boolean hasAdminRole(UserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+            .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
     }
 }

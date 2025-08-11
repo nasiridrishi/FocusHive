@@ -236,7 +236,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
     const file = event.target.files?.[0]
     if (file) {
       // Handle file upload logic here
-      console.log('File selected:', file)
       // You would typically upload the file and then send a message with the file URL
     }
     

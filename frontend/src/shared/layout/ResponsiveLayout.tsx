@@ -163,9 +163,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
         currentUser={currentUser}
         isConnected={isConnected}
         notificationCount={notificationCount}
-        onNotificationClick={() => {
-          console.log('Notifications clicked')
-        }}
+        onNotificationClick={() => {}}
       />
       
       {/* Main Content Area */}

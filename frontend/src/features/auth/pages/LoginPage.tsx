@@ -18,7 +18,6 @@ export default function LoginPage() {
 
     try {
       // TODO: Implement actual login API call
-      console.log('Login attempt:', credentials)
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))

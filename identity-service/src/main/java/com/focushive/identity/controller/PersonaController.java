@@ -50,7 +50,7 @@ public class PersonaController {
             @Valid @RequestBody PersonaDto personaDto,
             Authentication authentication) {
         
-        log.debug("Creating persona for user: {}", authentication.getName());
+        // Removed debug log to avoid logging usernames frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         PersonaDto created = personaService.createPersona(userId, personaDto);
@@ -68,7 +68,7 @@ public class PersonaController {
     })
     @GetMapping
     public ResponseEntity<List<PersonaDto>> getUserPersonas(Authentication authentication) {
-        log.debug("Getting personas for user: {}", authentication.getName());
+        // Removed debug log to avoid logging usernames frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         List<PersonaDto> personas = personaService.getUserPersonas(userId);
@@ -89,7 +89,7 @@ public class PersonaController {
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
         
-        log.debug("Getting persona {} for user: {}", personaId, authentication.getName());
+        // Removed debug log to avoid logging user and persona IDs frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         PersonaDto persona = personaService.getPersona(userId, personaId);
@@ -112,7 +112,7 @@ public class PersonaController {
             @Valid @RequestBody PersonaDto personaDto,
             Authentication authentication) {
         
-        log.debug("Updating persona {} for user: {}", personaId, authentication.getName());
+        // Removed debug log to avoid logging user and persona IDs frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         PersonaDto updated = personaService.updatePersona(userId, personaId, personaDto);
@@ -134,7 +134,7 @@ public class PersonaController {
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
         
-        log.debug("Deleting persona {} for user: {}", personaId, authentication.getName());
+        // Removed debug log to avoid logging user and persona IDs frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         personaService.deletePersona(userId, personaId);
@@ -155,7 +155,7 @@ public class PersonaController {
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
         
-        log.debug("Switching to persona {} for user: {}", personaId, authentication.getName());
+        // Removed debug log to avoid logging user and persona IDs frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         PersonaDto switched = personaService.switchPersona(userId, personaId);
@@ -174,7 +174,7 @@ public class PersonaController {
     })
     @GetMapping("/active")
     public ResponseEntity<PersonaDto> getActivePersona(Authentication authentication) {
-        log.debug("Getting active persona for user: {}", authentication.getName());
+        // Removed debug log to avoid logging usernames frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         Optional<PersonaDto> activePersona = personaService.getActivePersona(userId);
@@ -197,7 +197,7 @@ public class PersonaController {
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
         
-        log.debug("Setting persona {} as default for user: {}", personaId, authentication.getName());
+        // Removed debug log to avoid logging user and persona IDs frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         PersonaDto defaultPersona = personaService.setDefaultPersona(userId, personaId);
@@ -219,7 +219,7 @@ public class PersonaController {
             @Parameter(description = "Template type") @PathVariable Persona.PersonaType type,
             Authentication authentication) {
         
-        log.debug("Creating persona from template {} for user: {}", type, authentication.getName());
+        // Removed debug log to avoid logging usernames frequently
         UUID userId = getUserIdFromAuthentication(authentication);
         
         PersonaDto created = personaService.createPersonaFromTemplate(userId, type);
@@ -235,7 +235,7 @@ public class PersonaController {
     })
     @GetMapping("/templates")
     public ResponseEntity<List<PersonaDto>> getPersonaTemplates() {
-        log.debug("Getting persona templates");
+        // Removed debug log - templates request doesn't need logging
         
         List<PersonaDto> templates = personaService.getPersonaTemplates();
         return ResponseEntity.ok(templates);

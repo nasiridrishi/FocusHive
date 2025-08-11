@@ -25,7 +25,7 @@ public class PresenceController {
     @MessageMapping("/presence/update")
     @SendToUser("/queue/presence/confirm")
     public UserPresence updatePresence(@Payload PresenceUpdate update, Principal principal) {
-        log.debug("Updating presence for user {}: {}", principal.getName(), update);
+        // Removed debug log to avoid logging user presence updates frequently
         return presenceService.updateUserPresence(principal.getName(), update);
     }
     
@@ -48,7 +48,7 @@ public class PresenceController {
     
     @SubscribeMapping("/hive/{hiveId}/presence")
     public HivePresenceInfo subscribeToHivePresence(@DestinationVariable String hiveId) {
-        log.debug("Client subscribing to hive {} presence", hiveId);
+        // Removed debug log to avoid logging subscription events frequently
         return HivePresenceInfo.builder()
                 .hiveId(hiveId)
                 .activeUsers(presenceService.getHiveActiveUsers(hiveId).size())

@@ -24,7 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        log.debug("Loading user by username/email: {}", usernameOrEmail);
+        // Removed debug log to avoid logging email addresses and usernames
         
         // Try to find by email first, then by username
         User user = userRepository.findByEmail(usernameOrEmail)
@@ -40,7 +40,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         // Load personas eagerly for the user session
         user.getPersonas().size(); // Force initialization
         
-        log.debug("User found: {} with {} personas", user.getUsername(), user.getPersonas().size());
+        // Removed debug log to avoid logging usernames
         
         return user;
     }

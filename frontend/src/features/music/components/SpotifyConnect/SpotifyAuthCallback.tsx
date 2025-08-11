@@ -73,7 +73,6 @@ export const SpotifyAuthCallback: React.FC<SpotifyAuthCallbackProps> = ({
           throw new Error('Authentication failed')
         }
       } catch (error) {
-        console.error('Spotify auth callback failed:', error)
         const message = error instanceof Error ? error.message : 'Authentication failed'
         setErrorMessage(message)
         setStatus('error')

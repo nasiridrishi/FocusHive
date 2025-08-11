@@ -61,7 +61,6 @@ const mockApi = {
   
   addPoints: async (amount: number, source: string): Promise<GamificationStats> => {
     await new Promise(resolve => setTimeout(resolve, 500));
-    console.log(`Adding ${amount} points from source: ${source}`);
     const currentStats = await mockApi.getGamificationStats();
     return {
       ...currentStats,
@@ -290,7 +289,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
           dispatch({ type: 'SET_STATS', payload: data.payload });
         }
       } catch (error) {
-        console.warn('Invalid WebSocket message:', error);
+        // Invalid WebSocket message
       }
     });
 

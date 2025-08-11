@@ -79,7 +79,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     })
 
     socket.on('connect', () => {
-      console.log('WebSocket connected')
       setConnectionState(ConnectionState.CONNECTED)
       setReconnectCount(0)
       setLastError(null)
@@ -87,7 +86,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     })
 
     socket.on('disconnect', (reason) => {
-      console.log('WebSocket disconnected:', reason)
       setConnectionState(ConnectionState.DISCONNECTED)
       
       if (!isManualDisconnect.current && reason !== 'io client disconnect') {
@@ -96,7 +94,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     })
 
     socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error)
       setConnectionState(ConnectionState.ERROR)
       setLastError(error.message)
       
@@ -147,8 +144,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const emit = useCallback((event: string, data?: unknown) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit(event, data)
-    } else {
-      console.warn('Cannot emit event: WebSocket not connected')
     }
   }, [])
 

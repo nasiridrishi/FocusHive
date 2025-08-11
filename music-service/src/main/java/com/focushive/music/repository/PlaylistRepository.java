@@ -282,4 +282,16 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
            "AVG(p.totalTracks) as avgTracksPerPlaylist " +
            "FROM Playlist p")
     Object[] getPlaylistStatistics();
+    
+    /**
+     * Finds playlists where the user is a collaborator.
+     * 
+     * @param userId The user ID
+     * @param pageable Pagination information
+     * @return Page of playlists where user is a collaborator
+     */
+    @Query("SELECT p FROM Playlist p JOIN p.collaborators c " +
+           "WHERE c.userId = :userId ORDER BY p.updatedAt DESC")
+    Page<Playlist> findPlaylistsWhereUserIsCollaborator(@Param("userId") String userId, 
+                                                       Pageable pageable);
 }

@@ -144,6 +144,7 @@ public class HealthController {
                 health.put("driverVersion", metaData.getDriverVersion());
             }
         } catch (Exception e) {
+            // Keep this debug log for troubleshooting database connectivity issues
             log.debug("Could not retrieve detailed database information", e);
         }
         
@@ -180,6 +181,7 @@ public class HealthController {
             var info = redisTemplate.getConnectionFactory().getConnection().info();
             health.put("info", info.getProperty("redis_version"));
         } catch (Exception e) {
+            // Keep this debug log for troubleshooting Redis connectivity issues
             log.debug("Could not retrieve detailed Redis information", e);
         }
         

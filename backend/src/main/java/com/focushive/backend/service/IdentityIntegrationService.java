@@ -29,11 +29,11 @@ public class IdentityIntegrationService {
      * Not cached as token validation should always be fresh.
      */
     public TokenValidationResponse validateToken(String token) {
-        log.debug("Validating token with Identity Service");
+        // Removed debug log to avoid logging token operations frequently
         try {
             TokenValidationResponse response = identityServiceClient.validateToken(token);
             if (response.isValid()) {
-                log.debug("Token validated successfully for user: {}", response.getUserId());
+                // Token validation successful - user ID not logged for security
             } else {
                 log.warn("Token validation failed: {}", response.getErrorMessage());
             }
@@ -53,7 +53,7 @@ public class IdentityIntegrationService {
      */
     @Cacheable(value = "current-user", key = "#token", unless = "#result == null")
     public IdentityDto getCurrentUser(String token) {
-        log.debug("Fetching current user from Identity Service");
+        // Removed debug log to reduce verbosity of cached operations
         try {
             return identityServiceClient.getCurrentUser(token);
         } catch (Exception e) {
@@ -68,7 +68,7 @@ public class IdentityIntegrationService {
      */
     @Cacheable(value = "identity", key = "#id", unless = "#result == null")
     public IdentityDto getIdentity(UUID id, String serviceToken) {
-        log.debug("Fetching identity {} from Identity Service", id);
+        // Removed debug log to reduce verbosity and avoid logging IDs
         try {
             return identityServiceClient.getIdentity(id, serviceToken);
         } catch (Exception e) {
@@ -83,7 +83,7 @@ public class IdentityIntegrationService {
      */
     @Cacheable(value = "identity-email", key = "#email", unless = "#result == null")
     public IdentityDto getIdentityByEmail(String email, String serviceToken) {
-        log.debug("Fetching identity by email {} from Identity Service", email);
+        // Removed debug log to avoid logging email addresses
         try {
             return identityServiceClient.getIdentityByEmail(email, serviceToken);
         } catch (Exception e) {
@@ -98,7 +98,7 @@ public class IdentityIntegrationService {
      */
     @Cacheable(value = "personas", key = "#identityId", unless = "#result == null || #result.isEmpty()")
     public List<PersonaDto> getPersonasByIdentity(UUID identityId, String serviceToken) {
-        log.debug("Fetching personas for identity {} from Identity Service", identityId);
+        // Removed debug log to reduce verbosity and avoid logging IDs
         try {
             return identityServiceClient.getPersonasByIdentity(identityId, serviceToken);
         } catch (Exception e) {
@@ -113,7 +113,7 @@ public class IdentityIntegrationService {
      */
     @Cacheable(value = "active-persona", key = "#identityId", unless = "#result == null")
     public PersonaDto getActivePersona(UUID identityId, String serviceToken) {
-        log.debug("Fetching active persona for identity {} from Identity Service", identityId);
+        // Removed debug log to reduce verbosity and avoid logging IDs
         try {
             return identityServiceClient.getActivePersona(identityId, serviceToken);
         } catch (Exception e) {

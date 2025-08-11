@@ -39,7 +39,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatMessageDto sendMessage(String hiveId, String senderId, SendMessageRequest request) {
-        log.debug("User {} sending message to hive {}", senderId, hiveId);
+        // Removed debug log to avoid logging user interactions frequently
         
         // Verify user is member of hive
         if (!hiveMemberRepository.existsByHiveIdAndUserId(hiveId, senderId)) {

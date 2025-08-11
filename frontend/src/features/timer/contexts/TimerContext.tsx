@@ -69,7 +69,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
         const parsed = JSON.parse(savedSettings)
         setTimerSettings({ ...DEFAULT_TIMER_SETTINGS, ...parsed })
       } catch (error) {
-        console.error('Failed to parse saved timer settings:', error)
+        // Failed to parse saved settings, using defaults
       }
     }
   }, [userId])
@@ -110,7 +110,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       oscillator.start(audioContextRef.current.currentTime)
       oscillator.stop(audioContextRef.current.currentTime + 0.5)
     } catch (error) {
-      console.warn('Failed to play sound:', error)
+      // Sound playback failed
     }
   }, [timerSettings.soundEnabled])
 
@@ -159,7 +159,6 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     // Handle session started by other devices/tabs
     if (data.userId === userId && data.sessionId !== currentSession?.id) {
       // Sync session state
-      console.log('Session started on another device:', data)
     }
   }, [userId, currentSession?.id])
 
@@ -172,7 +171,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   const handlePhaseCompleted = useCallback((data: { userId: string }) => {
     if (data.userId === userId) {
-      console.log('Phase completed:', data)
+      // Phase completed
     }
   }, [userId])
 
@@ -204,7 +203,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       try {
         audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       } catch (error) {
-        console.warn('Web Audio API not supported:', error)
+        // Web Audio API not supported
       }
     }
   }, [timerSettings.soundEnabled])
@@ -264,7 +263,6 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       // We'll define startTimer later, so avoid the circular dependency for now
       setTimeout(() => {
         // This will be handled by external timer management
-        console.log('Auto-starting next phase:', nextPhase)
       }, 1000)
     } else {
       // Update presence to idle

@@ -135,7 +135,6 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
   const handlePlaylistPlay = useCallback((playlist: Playlist, event: React.MouseEvent) => {
     event.stopPropagation()
     // TODO: Implement play playlist functionality
-    console.log('Playing playlist:', playlist.name)
   }, [])
 
   const handleMenuOpen = useCallback((event: React.MouseEvent<HTMLElement>, playlist: Playlist) => {
@@ -172,7 +171,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
       setCreateDialogOpen(false)
       onPlaylistSelect(playlist)
     } catch (error) {
-      console.error('Failed to create playlist:', error)
+      // Failed to create playlist
     }
   }, [newPlaylist, createPlaylist, onPlaylistSelect])
 
@@ -182,7 +181,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
         await deletePlaylist(selectedPlaylist.id)
         handleMenuClose()
       } catch (error) {
-        console.error('Failed to delete playlist:', error)
+        // Failed to delete playlist
       }
     }
   }, [selectedPlaylist, deletePlaylist, handleMenuClose])

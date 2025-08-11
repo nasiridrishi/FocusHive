@@ -232,6 +232,41 @@ public class PlaylistDTO {
          */
         @Min(value = 0, message = "Position must be non-negative")
         private Integer position;
+        
+        /**
+         * Track name (optional, fetched from Spotify if not provided).
+         */
+        private String trackName;
+        
+        /**
+         * Artist name (optional, fetched from Spotify if not provided).
+         */
+        private String artistName;
+        
+        /**
+         * Album name (optional, fetched from Spotify if not provided).
+         */
+        private String albumName;
+        
+        /**
+         * Track duration in milliseconds (optional).
+         */
+        private Integer durationMs;
+        
+        /**
+         * Track image URL (optional).
+         */
+        private String imageUrl;
+        
+        /**
+         * Preview URL (optional).
+         */
+        private String previewUrl;
+        
+        /**
+         * External URL (optional).
+         */
+        private String externalUrl;
     }
     
     /**
@@ -520,6 +555,83 @@ public class PlaylistDTO {
          */
         @Min(value = 0, message = "Update frequency must be non-negative")
         private Integer autoUpdateFrequencyHours;
+        
+        /**
+         * Minimum energy level (0.0 - 1.0).
+         */
+        @DecimalMin(value = "0.0")
+        @DecimalMax(value = "1.0")
+        private Double minEnergy;
+        
+        /**
+         * Maximum energy level (0.0 - 1.0).
+         */
+        @DecimalMin(value = "0.0")
+        @DecimalMax(value = "1.0")
+        private Double maxEnergy;
+        
+        /**
+         * Minimum danceability (0.0 - 1.0).
+         */
+        @DecimalMin(value = "0.0")
+        @DecimalMax(value = "1.0")
+        private Double minDanceability;
+        
+        /**
+         * Maximum danceability (0.0 - 1.0).
+         */
+        @DecimalMin(value = "0.0")
+        @DecimalMax(value = "1.0")
+        private Double maxDanceability;
+        
+        /**
+         * Minimum valence/positivity (0.0 - 1.0).
+         */
+        @DecimalMin(value = "0.0")
+        @DecimalMax(value = "1.0")
+        private Double minValence;
+        
+        /**
+         * Maximum valence/positivity (0.0 - 1.0).
+         */
+        @DecimalMin(value = "0.0")
+        @DecimalMax(value = "1.0")
+        private Double maxValence;
+        
+        /**
+         * Release date start filter.
+         */
+        private java.time.LocalDate releaseDateStart;
+        
+        /**
+         * Release date end filter.
+         */
+        private java.time.LocalDate releaseDateEnd;
+        
+        /**
+         * List of preferred artists.
+         */
+        private List<String> artists;
+        
+        /**
+         * Hive ID if creating a hive smart playlist.
+         */
+        private String hiveId;
+        
+        /**
+         * Whether to make the playlist public.
+         */
+        private Boolean isPublic;
+        
+        /**
+         * Whether to make the playlist collaborative.
+         */
+        private Boolean isCollaborative;
+        
+        /**
+         * Playlist image URL.
+         */
+        private String imageUrl;
     }
     
     /**
@@ -746,5 +858,224 @@ public class PlaylistDTO {
          * Genre distribution.
          */
         private Map<String, Integer> genreDistribution;
+    }
+    
+    // ===============================
+    // BATCH OPERATIONS DTOs
+    // ===============================
+    
+    /**
+     * Request DTO for batch adding tracks to a playlist.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class BatchAddTracksRequest {
+        
+        @NotEmpty(message = "Track list cannot be empty")
+        @Valid
+        private List<AddTrackRequest> tracks;
+        
+        /**
+         * Whether to skip tracks that are already in the playlist.
+         */
+        private Boolean skipDuplicates;
+    }
+    
+    /**
+     * Request DTO for batch removing tracks from a playlist.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class BatchRemoveTracksRequest {
+        
+        @NotEmpty(message = "Track ID list cannot be empty")
+        private List<Long> trackIds;
+    }
+    
+    /**
+     * Response DTO for batch track operations.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class BatchTrackResponse {
+        
+        private Long playlistId;
+        private Integer totalRequested;
+        private Integer successCount;
+        private Integer skipCount;
+        private List<TrackInfo> addedTracks;
+        private List<Long> removedTrackIds;
+        private List<FailedTrackInfo> failedTracks;
+        
+        public static class Builder {
+            private final BatchTrackResponse response = new BatchTrackResponse();
+            
+            public Builder playlistId(Long playlistId) {
+                response.setPlaylistId(playlistId);
+                return this;
+            }
+            
+            public Builder totalRequested(Integer total) {
+                response.setTotalRequested(total);
+                return this;
+            }
+            
+            public Builder successCount(Integer count) {
+                response.setSuccessCount(count);
+                return this;
+            }
+            
+            public Builder skipCount(Integer count) {
+                response.setSkipCount(count);
+                return this;
+            }
+            
+            public Builder addedTracks(List<TrackInfo> tracks) {
+                response.setAddedTracks(tracks);
+                return this;
+            }
+            
+            public Builder addedTrack(TrackInfo track) {
+                if (response.getAddedTracks() == null) {
+                    response.setAddedTracks(new java.util.ArrayList<>());
+                }
+                response.getAddedTracks().add(track);
+                return this;
+            }
+            
+            public Builder removedTrackIds(List<Long> trackIds) {
+                response.setRemovedTrackIds(trackIds);
+                return this;
+            }
+            
+            public Builder removedTrackId(Long trackId) {
+                if (response.getRemovedTrackIds() == null) {
+                    response.setRemovedTrackIds(new java.util.ArrayList<>());
+                }
+                response.getRemovedTrackIds().add(trackId);
+                return this;
+            }
+            
+            public Builder failedTrack(FailedTrackInfo failedTrack) {
+                if (response.getFailedTracks() == null) {
+                    response.setFailedTracks(new java.util.ArrayList<>());
+                }
+                response.getFailedTracks().add(failedTrack);
+                return this;
+            }
+            
+            public BatchTrackResponse build() {
+                return response;
+            }
+        }
+    }
+    
+    /**
+     * DTO for failed track operations.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class FailedTrackInfo {
+        private String spotifyTrackId;
+        private Long trackId;
+        private String reason;
+    }
+    
+    // ===============================
+    // SHARING & COLLABORATION DTOs
+    // ===============================
+    
+    /**
+     * Response DTO for sharing operations.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class SharingResponse {
+        
+        private Long playlistId;
+        private String hiveId;
+        private Integer totalHiveMembers;
+        private Integer collaboratorsAdded;
+        private Integer usersSkipped;
+        private List<String> addedCollaboratorIds;
+        private List<String> skippedUserIds;
+        private String permissionLevel;
+        private LocalDateTime sharedAt;
+    }
+    
+    /**
+     * Request DTO for updating collaborator permissions.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class UpdateCollaboratorRequest {
+        
+        private String permissionLevel;
+        private Boolean canAddTracks;
+        private Boolean canRemoveTracks;
+        private Boolean canReorderTracks;
+        private Boolean canEditPlaylist;
+        private Boolean canInviteOthers;
+    }
+    
+    /**
+     * Response DTO for collaboration statistics.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class CollaborationStats {
+        
+        private Long playlistId;
+        private Integer totalCollaborators;
+        private Integer totalContributions;
+        private Map<String, Long> contributionsByUser;
+        private String mostActiveContributor;
+        private LocalDateTime lastActivity;
+        private Boolean isCollaborative;
+    }
+    
+    // ===============================
+    // SMART PLAYLIST DTOs
+    // ===============================
+    
+    /**
+     * Response DTO for smart playlist statistics.
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class SmartPlaylistStats {
+        
+        private Long playlistId;
+        private Integer totalTracks;
+        private LocalDateTime lastRefresh;
+        private Boolean criteriaSet;
+        private Integer genreCount;
+        private Long averageTrackLength;
+        private String dateRange;
+        private String energyLevel;
     }
 }

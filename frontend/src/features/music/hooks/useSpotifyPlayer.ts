@@ -81,7 +81,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     player.addListener('player_state_changed', handlePlayerStateChange)
 
     // Initial state fetch
-    player.getCurrentState().then(handlePlayerStateChange).catch(console.warn)
+    player.getCurrentState().then(handlePlayerStateChange).catch(() => {})
 
     return () => {
       player.removeListener('player_state_changed', handlePlayerStateChange)
@@ -213,7 +213,6 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
       }
       return null
     } catch (err) {
-      console.warn('Failed to get current player state:', err)
       return null
     }
   }, [spotify])

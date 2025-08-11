@@ -63,11 +63,15 @@ public class IdentityServiceAuthenticationFilter extends OncePerRequestFilter {
                     
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     
-                    log.debug("Authenticated user: {} with persona: {}", 
-                            validation.getUsername(), 
-                            validation.getActivePersona() != null ? validation.getActivePersona().getName() : "default");
+                    // Authentication successful - detailed logging controlled by config
+                    if (log.isDebugEnabled()) {
+                        log.debug("User authentication successful");
+                    }
                 } else {
-                    log.debug("Token validation failed: {}", validation.getErrorMessage());
+                    // Token validation failed - detailed logging controlled by config
+                    if (log.isDebugEnabled()) {
+                        log.debug("Token validation failed: {}", validation.getErrorMessage());
+                    }
                 }
             }
         } catch (Exception e) {

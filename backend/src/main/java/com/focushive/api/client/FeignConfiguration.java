@@ -56,7 +56,9 @@ public class FeignConfiguration {
             if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
                 String token = jwt.getTokenValue();
                 requestTemplate.header("Authorization", "Bearer " + token);
-                log.debug("Propagating JWT token to Identity Service call");
+                if (log.isDebugEnabled()) {
+                    log.debug("Propagating JWT token to Identity Service call");
+                }
             }
             
             // Add correlation ID for distributed tracing
@@ -68,8 +70,10 @@ public class FeignConfiguration {
             // Add request timestamp for debugging
             requestTemplate.header("X-Request-Timestamp", String.valueOf(System.currentTimeMillis()));
             
-            log.debug("Added service authentication headers for request to: {}", 
-                     requestTemplate.feignTarget().url());
+            if (log.isDebugEnabled()) {
+                log.debug("Added service authentication headers for request to: {}", 
+                         requestTemplate.feignTarget().url());
+            }
         };
     }
     

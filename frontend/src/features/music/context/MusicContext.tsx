@@ -245,11 +245,11 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
     const socket = socketRef.current
     
     socket.on('connect', () => {
-      console.log('Connected to music WebSocket')
+      // Connected to music WebSocket
     })
     
     socket.on('disconnect', () => {
-      console.log('Disconnected from music WebSocket')
+      // Disconnected from music WebSocket
     })
     
     socket.on('queue_updated', (data: QueueItem[]) => {

@@ -60,9 +60,11 @@ public class TracingConfiguration {
             // Timer metrics
             .observationHandler(context -> {
                 if (context.getName().startsWith("identity.service")) {
-                    log.debug("Identity Service operation: {} - Duration: {}ms", 
-                            context.getName(), 
-                            context.getHighCardinalityKeyValue("duration"));
+                    if (log.isDebugEnabled()) {
+                        log.debug("Identity Service operation: {} - Duration: {}ms", 
+                                context.getName(), 
+                                context.getHighCardinalityKeyValue("duration"));
+                    }
                 }
                 return true;
             });
@@ -77,7 +79,9 @@ public class TracingConfiguration {
         
         @Override
         public void onStart(io.micrometer.observation.Observation.Context context) {
-            log.debug("Starting observation: {}", context.getName());
+            if (log.isDebugEnabled()) {
+                log.debug("Starting observation: {}", context.getName());
+            }
         }
         
         @Override
@@ -89,7 +93,9 @@ public class TracingConfiguration {
         
         @Override
         public void onStop(io.micrometer.observation.Observation.Context context) {
-            log.debug("Completed observation: {}", context.getName());
+            if (log.isDebugEnabled()) {
+                log.debug("Completed observation: {}", context.getName());
+            }
         }
         
         @Override

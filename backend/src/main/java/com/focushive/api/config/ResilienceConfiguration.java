@@ -84,8 +84,11 @@ public class ResilienceConfiguration {
         RateLimiter rateLimiter = rateLimiterRegistry.rateLimiter(IDENTITY_SERVICE);
         
         rateLimiter.getEventPublisher()
-            .onSuccess(event ->
-                log.debug("Identity Service rate limiter call succeeded"))
+            .onSuccess(event -> {
+                if (log.isDebugEnabled()) {
+                    log.debug("Identity Service rate limiter call succeeded");
+                }
+            })
             .onFailure(event ->
                 log.warn("Identity Service rate limiter call rejected"));
         
@@ -119,8 +122,11 @@ public class ResilienceConfiguration {
         Bulkhead bulkhead = bulkheadRegistry.bulkhead(IDENTITY_SERVICE);
         
         bulkhead.getEventPublisher()
-            .onCallPermitted(event ->
-                log.debug("Identity Service bulkhead call permitted"))
+            .onCallPermitted(event -> {
+                if (log.isDebugEnabled()) {
+                    log.debug("Identity Service bulkhead call permitted");
+                }
+            })
             .onCallRejected(event ->
                 log.warn("Identity Service bulkhead call rejected"));
         
