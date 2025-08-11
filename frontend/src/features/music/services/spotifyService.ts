@@ -89,7 +89,6 @@ export class SpotifyService {
         })
       }
     } catch (error) {
-      console.warn('Failed to load Spotify auth from storage:', error)
       this.clearAuth()
     }
   }
@@ -146,7 +145,6 @@ export class SpotifyService {
 
       return true
     } catch (error) {
-      console.error('Auth callback failed:', error)
       this.updateAuthState({
         isAuthenticating: false,
         error: error instanceof Error ? error.message : 'Authentication failed'
@@ -183,7 +181,6 @@ export class SpotifyService {
 
       return true
     } catch (error) {
-      console.error('Token refresh failed:', error)
       this.clearAuth()
       return false
     }
@@ -267,7 +264,6 @@ export class SpotifyService {
 
     const sdkLoaded = await this.loadSpotifySDK()
     if (!sdkLoaded || !window.Spotify) {
-      console.error('Failed to load Spotify Web SDK')
       return false
     }
 
@@ -289,7 +285,6 @@ export class SpotifyService {
       const connected = await player.connect()
       return connected
     } catch (error) {
-      console.error('Failed to initialize Spotify player:', error)
       return false
     }
   }
@@ -297,7 +292,6 @@ export class SpotifyService {
   private setupPlayerListeners(player: Spotify.Player): void {
     // Ready
     player.addListener('ready', ({ device_id }) => {
-      console.log('Spotify player ready with device ID:', device_id)
       this.updatePlayerState({
         isReady: true,
         isConnected: true,
@@ -307,7 +301,6 @@ export class SpotifyService {
 
     // Not ready
     player.addListener('not_ready', ({ device_id }) => {
-      console.log('Spotify player not ready, device ID:', device_id)
       this.updatePlayerState({
         isReady: false,
         isConnected: false
@@ -316,24 +309,21 @@ export class SpotifyService {
 
     // Error handling
     player.addListener('initialization_error', ({ message }) => {
-      console.error('Spotify initialization error:', message)
       this.updateAuthState({ error: `Initialization error: ${message}` })
     })
 
     player.addListener('authentication_error', ({ message }) => {
-      console.error('Spotify authentication error:', message)
       this.updateAuthState({ error: `Authentication error: ${message}` })
       // Try to refresh token
       this.refreshAuth()
     })
 
     player.addListener('account_error', ({ message }) => {
-      console.error('Spotify account error:', message)
       this.updateAuthState({ error: `Account error: ${message}` })
     })
 
     player.addListener('playback_error', ({ message }) => {
-      console.error('Spotify playback error:', message)
+      // Playback error occurred
     })
   }
 

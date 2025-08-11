@@ -337,7 +337,6 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // In a real implementation, this would generate and download the file
-    console.log('Exporting data with options:', options);
     
     // Create a mock download
     const data = JSON.stringify(state.data, null, 2);

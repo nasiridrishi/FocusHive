@@ -148,7 +148,6 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
 
   const handleActivityEvent = useCallback((data: ActivityEvent) => {
     // Handle activity events for notifications or analytics
-    console.log('Activity event:', data)
   }, [])
 
   const sendStatusUpdate = useCallback((status: PresenceStatus, activity?: string) => {

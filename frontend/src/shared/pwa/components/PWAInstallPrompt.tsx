@@ -82,7 +82,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       await promptInstall();
       handleClose();
     } catch (error) {
-      console.error('Installation failed:', error);
+      // Installation failed
     }
   };
 

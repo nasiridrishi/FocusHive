@@ -221,7 +221,6 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     setHistory(prev => [historyEntry, ...prev.slice(0, 99)]) // Keep last 100 tracks
     
     // TODO: Send to analytics service
-    console.log('Scrobbled:', { track: track.title, duration: playTime, completed })
     
     if (completed) {
       lastScrobbledTrack.current = null

@@ -35,7 +35,7 @@ public class ChatWebSocketController {
             @Payload SendMessageRequest request,
             Principal principal) {
         
-        log.debug("Message received from {} to hive {}", principal.getName(), hiveId);
+        // Removed debug log to avoid logging user interactions frequently
         
         // The service will handle broadcasting
         chatService.sendMessage(hiveId, principal.getName(), request);
@@ -52,7 +52,7 @@ public class ChatWebSocketController {
             @Payload String newContent,
             Principal principal) {
         
-        log.debug("Edit request for message {} by {}", messageId, principal.getName());
+        // Removed debug log to avoid logging user interactions frequently
         
         // The service will handle broadcasting to hive members
         return chatService.editMessage(messageId, principal.getName(), newContent);
@@ -67,7 +67,7 @@ public class ChatWebSocketController {
             @DestinationVariable String messageId,
             Principal principal) {
         
-        log.debug("Delete request for message {} by {}", messageId, principal.getName());
+        // Removed debug log to avoid logging user interactions frequently
         
         // The service will handle broadcasting
         chatService.deleteMessage(messageId, principal.getName());

@@ -305,6 +305,22 @@ public class Playlist {
     public void incrementPlayCount() {
         this.playCount = (this.playCount != null ? this.playCount : 0L) + 1;
     }
+    
+    /**
+     * Updates the total track count and duration based on current tracks.
+     */
+    public void updateTotalTracksAndDuration() {
+        if (tracks == null) {
+            this.totalTracks = 0;
+            this.totalDurationMs = 0L;
+            return;
+        }
+        
+        this.totalTracks = tracks.size();
+        this.totalDurationMs = tracks.stream()
+            .mapToLong(track -> track.getDurationMs() != null ? track.getDurationMs() : 0L)
+            .sum();
+    }
 
     /**
      * Gets the formatted duration as HH:MM:SS.
@@ -411,5 +427,25 @@ public class Playlist {
     public boolean containsTrack(String spotifyTrackId) {
         return tracks.stream()
             .anyMatch(track -> spotifyTrackId.equals(track.getSpotifyTrackId()));
+    }
+    
+    /**
+     * Shuffles the tracks in this playlist by randomly reassigning positions.
+     */
+    public void shuffleTracks() {
+        if (tracks == null || tracks.size() <= 1) {
+            return;
+        }
+        
+        List<PlaylistTrack> trackList = new ArrayList<>(tracks);
+        java.util.Collections.shuffle(trackList);
+        
+        // Reassign positions
+        for (int i = 0; i < trackList.size(); i++) {
+            trackList.get(i).setPositionInPlaylist(i);
+        }
+        
+        // Update total tracks and duration
+        updateTotalTracksAndDuration();
     }
 }

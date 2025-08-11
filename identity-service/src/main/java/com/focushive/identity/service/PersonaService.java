@@ -36,7 +36,7 @@ public class PersonaService {
      * Create a new persona for a user.
      */
     public PersonaDto createPersona(UUID userId, PersonaDto personaDto) {
-        log.debug("Creating persona for user {}: {}", userId, personaDto.getName());
+        // Removed debug log to avoid logging user IDs frequently
         
         User user = findUserById(userId);
         
@@ -81,7 +81,7 @@ public class PersonaService {
      */
     @Transactional(readOnly = true)
     public List<PersonaDto> getUserPersonas(UUID userId) {
-        log.debug("Getting personas for user {}", userId);
+        // Removed debug log to avoid logging user IDs frequently
         
         findUserById(userId); // Validate user exists
         
@@ -96,7 +96,7 @@ public class PersonaService {
      */
     @Transactional(readOnly = true)
     public PersonaDto getPersona(UUID userId, UUID personaId) {
-        log.debug("Getting persona {} for user {}", personaId, userId);
+        // Removed debug log to avoid logging user and persona IDs frequently
         
         User user = findUserById(userId);
         Persona persona = personaRepository.findByIdAndUser(personaId, user)
@@ -109,7 +109,7 @@ public class PersonaService {
      * Update a persona.
      */
     public PersonaDto updatePersona(UUID userId, UUID personaId, PersonaDto personaDto) {
-        log.debug("Updating persona {} for user {}", personaId, userId);
+        // Removed debug log to avoid logging user and persona IDs frequently
         
         User user = findUserById(userId);
         Persona persona = personaRepository.findByIdAndUser(personaId, user)
@@ -153,7 +153,7 @@ public class PersonaService {
      * Delete a persona.
      */
     public void deletePersona(UUID userId, UUID personaId) {
-        log.debug("Deleting persona {} for user {}", personaId, userId);
+        // Removed debug log to avoid logging user and persona IDs frequently
         
         User user = findUserById(userId);
         Persona persona = personaRepository.findByIdAndUser(personaId, user)
@@ -180,7 +180,7 @@ public class PersonaService {
      * Switch to a different persona (context switching).
      */
     public PersonaDto switchPersona(UUID userId, UUID targetPersonaId) {
-        log.debug("Switching to persona {} for user {}", targetPersonaId, userId);
+        // Removed debug log to avoid logging user and persona IDs frequently
         
         User user = findUserById(userId);
         Persona targetPersona = personaRepository.findByIdAndUser(targetPersonaId, user)
@@ -204,7 +204,7 @@ public class PersonaService {
      */
     @Transactional(readOnly = true)
     public Optional<PersonaDto> getActivePersona(UUID userId) {
-        log.debug("Getting active persona for user {}", userId);
+        // Removed debug log to avoid logging user IDs frequently
         
         findUserById(userId); // Validate user exists
         
@@ -216,7 +216,7 @@ public class PersonaService {
      * Set a persona as the default persona.
      */
     public PersonaDto setDefaultPersona(UUID userId, UUID personaId) {
-        log.debug("Setting persona {} as default for user {}", personaId, userId);
+        // Removed debug log to avoid logging user and persona IDs frequently
         
         User user = findUserById(userId);
         Persona persona = personaRepository.findByIdAndUser(personaId, user)
@@ -237,7 +237,7 @@ public class PersonaService {
      * Create a persona from a predefined template.
      */
     public PersonaDto createPersonaFromTemplate(UUID userId, Persona.PersonaType type) {
-        log.debug("Creating persona from template {} for user {}", type, userId);
+        // Removed debug log to avoid logging user IDs frequently
         
         PersonaDto template = createPersonaTemplate(type);
         return createPersona(userId, template);

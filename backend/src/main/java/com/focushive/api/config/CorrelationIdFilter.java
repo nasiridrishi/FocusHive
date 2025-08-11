@@ -58,10 +58,14 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
                     response.setHeader("X-Trace-ID", traceId);
                 }
             } catch (Exception e) {
-                log.debug("Tracing not available or not configured");
+                if (log.isDebugEnabled()) {
+                    log.debug("Tracing not available or not configured");
+                }
             }
             
-            log.debug("Processing request with correlation ID: {}", correlationId);
+            if (log.isDebugEnabled()) {
+                log.debug("Processing request with correlation ID: {}", correlationId);
+            }
             
             filterChain.doFilter(request, response);
             
@@ -81,9 +85,13 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
         
         if (correlationId == null || correlationId.trim().isEmpty()) {
             correlationId = UUID.randomUUID().toString();
-            log.debug("Generated new correlation ID: {}", correlationId);
+            if (log.isDebugEnabled()) {
+                log.debug("Generated new correlation ID: {}", correlationId);
+            }
         } else {
-            log.debug("Using existing correlation ID: {}", correlationId);
+            if (log.isDebugEnabled()) {
+                log.debug("Using existing correlation ID: {}", correlationId);
+            }
         }
         
         return correlationId;

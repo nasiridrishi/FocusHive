@@ -92,7 +92,6 @@ export const PWAUpdateNotification: React.FC<PWAUpdateNotificationProps> = ({
     try {
       await updateServiceWorker(true); // Reload page after update
     } catch (error) {
-      console.error('Update failed:', error);
       setIsUpdating(false);
     }
   };

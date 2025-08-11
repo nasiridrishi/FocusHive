@@ -130,7 +130,6 @@ export const ResponsiveDemo: React.FC = () => {
   }
   
   const handleFABAction = (action: string) => {
-    console.log('FAB Action:', action)
     // In a real app, you'd handle the specific action
   }
   
@@ -210,7 +209,7 @@ export const ResponsiveDemo: React.FC = () => {
               originalPrice={product.originalPrice}
               discount={product.discount}
               interactive
-              onCardClick={() => console.log('Product clicked:', product.title)}
+              onCardClick={() => {}}
             />
           ))}
         </ResponsiveGrid>
@@ -234,7 +233,7 @@ export const ResponsiveDemo: React.FC = () => {
               readTime={article.readTime}
               category={article.category}
               interactive
-              onCardClick={() => console.log('Article clicked:', article.title)}
+              onCardClick={() => {}}
             />
           ))}
         </ResponsiveGrid>
@@ -261,7 +260,7 @@ export const ResponsiveDemo: React.FC = () => {
                 { label: 'Streak', value: '12' },
               ]}
               interactive
-              onCardClick={() => console.log('Profile clicked:', user.name)}
+              onCardClick={() => {}}
             />
           ))}
         </ResponsiveGrid>
@@ -340,7 +339,7 @@ export const ResponsiveDemo: React.FC = () => {
               renderCell: (value) => (value as Date).toLocaleDateString(),
             },
           ]}
-          onRowClick={(user) => console.log('User clicked:', user.name)}
+          onRowClick={(user) => {}}
           loading={tableLoading}
           density="normal"
         />

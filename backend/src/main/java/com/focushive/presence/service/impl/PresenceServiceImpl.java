@@ -40,7 +40,7 @@ public class PresenceServiceImpl implements PresenceService {
     
     @Override
     public UserPresence updateUserPresence(String userId, PresenceUpdate update) {
-        log.debug("Updating presence for user {}: {}", userId, update);
+        // Removed debug log to avoid logging user presence updates frequently
         
         // Create user presence
         UserPresence presence = UserPresence.builder()
@@ -301,7 +301,10 @@ public class PresenceServiceImpl implements PresenceService {
     @Override
     @Scheduled(fixedDelay = 30000) // Run every 30 seconds
     public void cleanupStalePresence() {
-        log.debug("Running stale presence cleanup");
+        // Keep minimal debug log for scheduled cleanup operations
+        if (log.isDebugEnabled()) {
+            log.debug("Running stale presence cleanup");
+        }
         
         // Get all user presence keys
         Set<String> userKeys = redisTemplate.keys(USER_PRESENCE_KEY + "*");

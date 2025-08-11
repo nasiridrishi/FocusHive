@@ -187,7 +187,6 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
         initializePlayer()
       }
     } catch (error) {
-      console.error('Failed to initialize Spotify service:', error)
       dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize Spotify integration' })
     }
   }, [autoConnect])
@@ -239,7 +238,6 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       
       return success
     } catch (error) {
-      console.error('Auth callback failed:', error)
       dispatch({ type: 'SET_ERROR', payload: 'Authentication failed' })
       return false
     } finally {
@@ -269,7 +267,6 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       
       return success
     } catch (error) {
-      console.error('Player initialization failed:', error)
       dispatch({ type: 'SET_ERROR', payload: 'Failed to connect to Spotify' })
       return false
     } finally {
@@ -286,7 +283,6 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       const success = await state.player.player.connect()
       return success
     } catch (error) {
-      console.error('Player connection failed:', error)
       dispatch({ type: 'SET_ERROR', payload: 'Failed to connect player' })
       return false
     }
@@ -315,7 +311,6 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       })
       return true
     } catch (error) {
-      console.error('Failed to transfer playback:', error)
       dispatch({ type: 'SET_ERROR', payload: 'Failed to transfer playback to this device' })
       return false
     }

@@ -35,7 +35,7 @@ public class TimerWebSocketController {
             @Payload TimerStateDto timerRequest,
             Principal principal) {
         
-        log.debug("Starting hive timer for hive: {} by user: {}", hiveId, principal.getName());
+        // Removed debug log to avoid logging user timer interactions frequently
         return timerService.startHiveTimer(hiveId, principal.getName(), timerRequest);
     }
     
@@ -48,7 +48,7 @@ public class TimerWebSocketController {
             @DestinationVariable String hiveId,
             Principal principal) {
         
-        log.debug("Pausing hive timer for hive: {} by user: {}", hiveId, principal.getName());
+        // Removed debug log to avoid logging user timer interactions frequently
         return timerService.pauseHiveTimer(hiveId, principal.getName());
     }
     
@@ -61,7 +61,7 @@ public class TimerWebSocketController {
             @DestinationVariable String hiveId,
             Principal principal) {
         
-        log.debug("Resuming hive timer for hive: {} by user: {}", hiveId, principal.getName());
+        // Removed debug log to avoid logging user timer interactions frequently
         return timerService.resumeHiveTimer(hiveId, principal.getName());
     }
     
@@ -74,7 +74,7 @@ public class TimerWebSocketController {
             @DestinationVariable String hiveId,
             Principal principal) {
         
-        log.debug("Stopping hive timer for hive: {} by user: {}", hiveId, principal.getName());
+        // Removed debug log to avoid logging user timer interactions frequently
         return timerService.stopHiveTimer(hiveId, principal.getName());
     }
     
@@ -84,7 +84,7 @@ public class TimerWebSocketController {
      */
     @SubscribeMapping("/topic/hive/{hiveId}/timer")
     public TimerStateDto subscribeToTimer(@DestinationVariable String hiveId) {
-        log.debug("Client subscribing to timer updates for hive: {}", hiveId);
+        // Removed debug log to avoid logging subscription events frequently
         return timerService.getHiveTimerState(hiveId);
     }
     
@@ -100,7 +100,7 @@ public class TimerWebSocketController {
             Principal principal,
             SimpMessageHeaderAccessor headerAccessor) {
         
-        log.debug("Broadcasting session start for user: {} in hive: {}", principal.getName(), hiveId);
+        // Removed debug log to avoid logging user session broadcasts frequently
         
         // Start the session
         FocusSessionDto session = timerService.startSession(principal.getName(), request);
@@ -127,7 +127,7 @@ public class TimerWebSocketController {
             Principal principal,
             SimpMessageHeaderAccessor headerAccessor) {
         
-        log.debug("Broadcasting session end for user: {} in hive: {}", principal.getName(), hiveId);
+        // Removed debug log to avoid logging user session broadcasts frequently
         
         // End the session
         FocusSessionDto session = timerService.endSession(principal.getName(), request.getSessionId());
@@ -150,7 +150,7 @@ public class TimerWebSocketController {
      */
     @SubscribeMapping("/topic/hive/{hiveId}/sessions")
     public void subscribeToSessions(@DestinationVariable String hiveId) {
-        log.debug("Client subscribing to session updates for hive: {}", hiveId);
+        // Removed debug log to avoid logging subscription events frequently
         // Current active sessions could be returned here if needed
     }
 }

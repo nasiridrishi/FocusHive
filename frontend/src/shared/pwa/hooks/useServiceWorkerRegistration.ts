@@ -42,7 +42,6 @@ export const useServiceWorkerRegistration = (
       try {
         await updateSW(reloadPage);
       } catch (error) {
-        console.error('Service worker update failed:', error);
         setState(prev => ({ ...prev, error: error as Error }));
       }
     }

@@ -230,36 +230,30 @@ export const DashboardPage: React.FC = () => {
   }, [])
 
   const handleJoinHive = async (hiveId: string, message?: string) => {
-    console.log('Joining hive:', hiveId, 'with message:', message)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   const handleLeaveHive = async (hiveId: string) => {
-    console.log('Leaving hive:', hiveId)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   const handleEnterHive = (hiveId: string) => {
-    console.log('Entering hive:', hiveId)
     // Navigate to hive page
     window.location.href = `/hive/${hiveId}`
   }
 
   const handleHiveSettings = (hiveId: string) => {
-    console.log('Opening settings for hive:', hiveId)
     // Navigate to settings page
     window.location.href = `/hive/${hiveId}/settings`
   }
 
   const handleShareHive = (hiveId: string) => {
-    console.log('Sharing hive:', hiveId)
     // Open share dialog
   }
 
   const handleCreateHive = (hiveData: object) => {
-    console.log('Creating hive:', hiveData)
     // Simulate API call and update state
   }
 
@@ -394,7 +388,7 @@ export const DashboardPage: React.FC = () => {
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <Chip
             label="Start 25min Pomodoro"
-            onClick={() => console.log('Start pomodoro')}
+            onClick={() => {}}
             sx={{ 
               bgcolor: 'primary.contrastText', 
               color: 'primary.main',
@@ -403,7 +397,7 @@ export const DashboardPage: React.FC = () => {
           />
           <Chip
             label="Join Active Hive"
-            onClick={() => console.log('Join active hive')}
+            onClick={() => {}}
             sx={{ 
               bgcolor: 'primary.contrastText', 
               color: 'primary.main',
@@ -412,7 +406,7 @@ export const DashboardPage: React.FC = () => {
           />
           <Chip
             label="Browse Discover"
-            onClick={() => console.log('Browse discover')}
+            onClick={() => {}}
             sx={{ 
               bgcolor: 'primary.contrastText', 
               color: 'primary.main',

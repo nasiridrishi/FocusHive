@@ -220,7 +220,6 @@ export const DiscoverPage: React.FC = () => {
   }, [])
 
   const handleJoinHive = async (hiveId: string, message?: string) => {
-    console.log('Joining hive:', hiveId, 'with message:', message)
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
     
@@ -229,13 +228,11 @@ export const DiscoverPage: React.FC = () => {
   }
 
   const handleEnterHive = (hiveId: string) => {
-    console.log('Entering hive:', hiveId)
     // Navigate to hive page
     window.location.href = `/hive/${hiveId}`
   }
 
   const handleShareHive = (hiveId: string) => {
-    console.log('Sharing hive:', hiveId)
     // Open share dialog or copy link
     navigator.clipboard.writeText(`${window.location.origin}/hive/${hiveId}`)
     alert('Hive link copied to clipboard!')
@@ -286,7 +283,7 @@ export const DiscoverPage: React.FC = () => {
                 label={category}
                 variant="outlined"
                 color="primary"
-                onClick={() => console.log(`Filter by ${category}`)}
+                onClick={() => {}}
                 sx={{ cursor: 'pointer' }}
               />
             ))}

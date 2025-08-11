@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDto getUserById(String userId) {
-        log.debug("Getting user by ID: {}", userId);
+        // Removed debug log to avoid logging user IDs frequently
         
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDto getUserByUsername(String username) {
-        log.debug("Getting user by username: {}", username);
+        // Removed debug log to avoid logging usernames frequently
         
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));

@@ -59,12 +59,11 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
       }));
 
       if (result.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+        // User accepted the install prompt
       } else {
-        console.log('User dismissed the install prompt');
+        // User dismissed the install prompt
       }
     } catch (error) {
-      console.error('Error during install prompt:', error);
       setState(prev => ({
         ...prev,
         isInstalling: false,

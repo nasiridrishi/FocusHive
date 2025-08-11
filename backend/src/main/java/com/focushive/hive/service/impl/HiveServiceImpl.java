@@ -81,7 +81,7 @@ public class HiveServiceImpl implements HiveService {
     @Override
     @Transactional(readOnly = true)
     public HiveResponse getHive(String hiveId, String userId) {
-        log.debug("Getting hive {} for user {}", hiveId, userId);
+        // Removed debug log to avoid logging user data frequently
         
         Hive hive = hiveRepository.findByIdAndActive(hiveId)
                 .orElseThrow(() -> new ResourceNotFoundException("Hive not found or inactive"));
@@ -98,7 +98,7 @@ public class HiveServiceImpl implements HiveService {
     @Override
     @Transactional(readOnly = true)
     public HiveResponse getHiveBySlug(String slug, String userId) {
-        log.debug("Getting hive by slug '{}' for user {}", slug, userId);
+        // Removed debug log to avoid logging user data frequently
         
         Hive hive = hiveRepository.findBySlugAndActive(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Hive not found or inactive"));

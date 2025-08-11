@@ -42,7 +42,7 @@ public class TimerServiceImpl implements TimerService {
     @Override
     @Transactional
     public FocusSessionDto startSession(String userId, StartSessionRequest request) {
-        log.debug("Starting session for user: {} with type: {}", userId, request.getSessionType());
+        // Removed debug log to avoid logging user session data frequently
         
         // Check for existing active session
         if (focusSessionRepository.findByUserIdAndCompletedFalse(userId).isPresent()) {
@@ -77,7 +77,7 @@ public class TimerServiceImpl implements TimerService {
     @Override
     @Transactional
     public FocusSessionDto endSession(String userId, String sessionId) {
-        log.debug("Ending session {} for user: {}", sessionId, userId);
+        // Removed debug log to avoid logging user session data frequently
         
         FocusSession session = focusSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
@@ -128,7 +128,7 @@ public class TimerServiceImpl implements TimerService {
     @Override
     @Transactional
     public FocusSessionDto pauseSession(String userId, String sessionId) {
-        log.debug("Pausing session {} for user: {}", sessionId, userId);
+        // Removed debug log to avoid logging user session data frequently
         
         FocusSession session = focusSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
@@ -255,7 +255,7 @@ public class TimerServiceImpl implements TimerService {
     @Override
     @Transactional
     public TimerStateDto startHiveTimer(String hiveId, String userId, TimerStateDto timerRequest) {
-        log.debug("Starting hive timer for hive: {} by user: {}", hiveId, userId);
+        // Removed debug log to avoid logging user timer data frequently
         
         // Check user is member of hive
         if (!hiveMemberRepository.existsByHiveIdAndUserId(hiveId, userId)) {

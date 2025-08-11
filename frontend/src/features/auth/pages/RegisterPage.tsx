@@ -17,7 +17,6 @@ export default function RegisterPage() {
 
     try {
       // TODO: Implement actual registration API call
-      console.log('Registration attempt:', userData)
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))

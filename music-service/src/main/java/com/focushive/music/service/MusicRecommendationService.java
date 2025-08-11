@@ -323,4 +323,70 @@ public class MusicRecommendationService {
             "tempo", "medium"
         ));
     }
+    
+    /**
+     * Gets music recommendations based on smart playlist criteria.
+     * 
+     * @param criteria The smart playlist criteria
+     * @param userId The user ID
+     * @return List of Spotify track IDs
+     */
+    public List<String> getRecommendationsBySmartCriteria(
+            com.focushive.music.dto.PlaylistDTO.SmartPlaylistCriteriaRequest criteria, 
+            String userId) {
+        
+        log.debug("Getting recommendations for smart playlist criteria: {}", criteria.getName());
+        
+        try {
+            // Build recommendation parameters from criteria
+            Map<String, Object> params = new java.util.HashMap<>();
+            
+            if (criteria.getMinEnergy() != null) {
+                params.put("min_energy", criteria.getMinEnergy());
+            }
+            if (criteria.getMaxEnergy() != null) {
+                params.put("max_energy", criteria.getMaxEnergy());
+            }
+            if (criteria.getMinDanceability() != null) {
+                params.put("min_danceability", criteria.getMinDanceability());
+            }
+            if (criteria.getMaxDanceability() != null) {
+                params.put("max_danceability", criteria.getMaxDanceability());
+            }
+            if (criteria.getMinValence() != null) {
+                params.put("min_valence", criteria.getMinValence());
+            }
+            if (criteria.getMaxValence() != null) {
+                params.put("max_valence", criteria.getMaxValence());
+            }
+            
+            // Use genres if specified
+            List<String> genres = criteria.getGenres() != null && !criteria.getGenres().isEmpty() ?
+                                 criteria.getGenres() : List.of("pop", "indie", "alternative");
+            
+            // Get recommendations from Spotify
+            UUID userUuid = UUID.fromString(userId);
+            List<RecommendationDTO> recommendations = spotifyIntegrationService
+                .getRecommendationsByGenres(userUuid, genres, params);
+            
+            // Extract track IDs
+            List<String> trackIds = recommendations.stream()
+                .map(RecommendationDTO::getSpotifyTrackId)
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .collect(java.util.stream.Collectors.toList());
+            
+            // Limit results if maxTracks is specified
+            if (criteria.getMaxTracks() != null && criteria.getMaxTracks() > 0) {
+                int limit = Math.min(trackIds.size(), criteria.getMaxTracks());
+                trackIds = trackIds.subList(0, limit);
+            }
+            
+            log.debug("Generated {} track recommendations for smart playlist", trackIds.size());
+            return trackIds;
+            
+        } catch (Exception e) {
+            log.warn("Failed to get recommendations for smart playlist criteria: {}", e.getMessage());
+            return List.of(); // Return empty list on failure
+        }
+    }
 }
