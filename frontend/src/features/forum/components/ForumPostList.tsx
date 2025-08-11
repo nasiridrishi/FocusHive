@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Box,
   Container,
@@ -57,13 +57,7 @@ const ForumPostList: React.FC = () => {
 
   const postsPerPage = 20
 
-  useEffect(() => {
-    if (categorySlug) {
-      loadCategoryAndPosts()
-    }
-  }, [categorySlug, currentPage, sortBy])
-
-  const loadCategoryAndPosts = async () => {
+  const loadCategoryAndPosts = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -82,21 +76,28 @@ const ForumPostList: React.FC = () => {
 
       setPosts(postsData.posts)
       setTotalPages(postsData.totalPages)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load posts')
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } }
+      setError(error.response?.data?.message || 'Failed to load posts')
       console.error(err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [categorySlug, currentPage, sortBy])
+
+  useEffect(() => {
+    if (categorySlug) {
+      loadCategoryAndPosts()
+    }
+  }, [categorySlug, currentPage, sortBy, loadCategoryAndPosts])
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page)
     window.scrollTo(0, 0)
   }
 
-  const handleSortChange = (event: any) => {
-    setSortBy(event.target.value)
+  const handleSortChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setSortBy(event.target.value as 'recent' | 'popular' | 'oldest')
     setCurrentPage(1) // Reset to first page when changing sort
   }
 

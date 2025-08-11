@@ -4,10 +4,6 @@ import {
   Paper,
   Typography,
   Button,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Dialog,
   DialogTitle,
@@ -18,20 +14,14 @@ import {
   LinearProgress,
   Alert,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Card,
   CardContent,
   CardActions,
-  Grid,
-  Fab
+  Grid
 } from '@mui/material'
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Flag as FlagIcon,
@@ -77,7 +67,18 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
   })
 
   useEffect(() => {
-    loadGoals()
+    const fetchGoals = async () => {
+      try {
+        setLoading(true)
+        const goalsData = await buddyApi.getRelationshipGoals(relationshipId)
+        setGoals(goalsData)
+      } catch (err) {
+        setError('Failed to load goals')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchGoals()
   }, [relationshipId])
 
   const loadGoals = async () => {
@@ -159,8 +160,9 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
       await loadGoals()
       if (onUpdate) onUpdate()
       handleCloseDialog()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save goal')
+    } catch (err) {
+      const error = err as Error & { response?: { data?: { message?: string } } }
+      setError(error.response?.data?.message || 'Failed to save goal')
     } finally {
       setSubmitting(false)
     }
@@ -274,7 +276,7 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
                     <Chip
                       icon={getStatusIcon(goal.status)}
                       label={goal.status.replace('_', ' ')}
-                      color={getStatusColor(goal.status) as any}
+                      color={getStatusColor(goal.status) as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
                       size="small"
                       sx={{ ml: 1 }}
                     />

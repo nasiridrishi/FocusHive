@@ -10,10 +10,6 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Chip
 } from '@mui/material'
 import {
@@ -102,8 +98,9 @@ const BuddyRequestDialog: React.FC<BuddyRequestDialogProps> = ({
       }
       
       onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send buddy request')
+    } catch (err) {
+      const error = err as Error & { response?: { data?: { message?: string } } }
+      setError(error.response?.data?.message || 'Failed to send buddy request')
     } finally {
       setLoading(false)
     }

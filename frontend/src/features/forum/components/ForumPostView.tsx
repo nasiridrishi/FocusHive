@@ -15,9 +15,6 @@ import {
   Divider,
   Alert,
   CircularProgress,
-  Card,
-  CardContent,
-  CardActions,
   TextField,
   Dialog,
   DialogTitle,
@@ -38,7 +35,6 @@ import {
   Visibility as ViewIcon,
   Home as HomeIcon,
   Category as CategoryIcon,
-  Article as ArticleIcon,
   Schedule as ScheduleIcon
 } from '@mui/icons-material'
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom'
@@ -54,8 +50,7 @@ const ForumPostView: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [post, setPost] = useState<ForumPost | null>(null)
   const [replies, setReplies] = useState<ForumReply[]>([])
-  const [repliesPage, setRepliesPage] = useState(1)
-  const [totalRepliesPages, setTotalRepliesPages] = useState(1)
+  const [repliesPage] = useState(1)
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [replyDialogOpen, setReplyDialogOpen] = useState(false)
   const [replyContent, setReplyContent] = useState('')
@@ -64,36 +59,25 @@ const ForumPostView: React.FC = () => {
   const [userHasDisliked, setUserHasDisliked] = useState(false)
 
   useEffect(() => {
-    if (postSlug) {
-      loadPost()
-      loadReplies()
+    const fetchData = async () => {
+      if (postSlug) {
+        try {
+          setLoading(true)
+          const postData = await forumApi.getPostBySlug(postSlug)
+          setPost(postData)
+          
+          const repliesData = await forumApi.getPostReplies(postSlug, repliesPage)
+          setReplies(repliesData)
+        } catch (err) {
+          const error = err as Error & { response?: { data?: { message?: string } } }
+          setError(error.response?.data?.message || 'Failed to load post')
+        } finally {
+          setLoading(false)
+        }
+      }
     }
+    fetchData()
   }, [postSlug, repliesPage])
-
-  const loadPost = async () => {
-    try {
-      setLoading(true)
-      const postData = await forumApi.getPostBySlug(postSlug!)
-      setPost(postData)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load post')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadReplies = async () => {
-    if (!post) return
-    
-    try {
-      const repliesData = await forumApi.getReplies(post.id, repliesPage, 20, 'oldest')
-      setReplies(repliesData.replies)
-      setTotalRepliesPages(repliesData.totalPages)
-    } catch (err) {
-      console.error('Failed to load replies:', err)
-    }
-  }
 
   const handleLikePost = async () => {
     if (!post) return
@@ -132,8 +116,9 @@ const ForumPostView: React.FC = () => {
       setReplyContent('')
       setReplyDialogOpen(false)
       setPost(prev => prev ? { ...prev, replyCount: prev.replyCount + 1 } : null)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to submit reply')
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } }
+      setError(error.response?.data?.message || 'Failed to submit reply')
     } finally {
       setSubmittingReply(false)
     }

@@ -13,10 +13,6 @@ import {
   Alert,
   Stack,
   Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   IconButton,
   Tooltip
 } from '@mui/material'
@@ -26,9 +22,7 @@ import {
   Star as StarIcon,
   AccessTime as TimeIcon,
   Chat as ChatIcon,
-  FitnessCenter as FitnessIcon,
-  Psychology as PsychologyIcon,
-  Info as InfoIcon
+  Psychology as PsychologyIcon
 } from '@mui/icons-material'
 import { buddyApi } from '../services/buddyApi'
 import { BuddyMatch, BuddyRequest } from '../types'

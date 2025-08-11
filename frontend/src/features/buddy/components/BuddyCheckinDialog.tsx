@@ -12,7 +12,6 @@ import {
   CircularProgress,
   Rating,
   Chip,
-  Divider,
   Avatar,
   Card,
   CardContent,
@@ -28,8 +27,7 @@ import {
   Mood as MoodIcon,
   TrendingUp as ProgressIcon,
   EmojiEvents as WinIcon,
-  Warning as ChallengeIcon,
-  Flag as FocusIcon
+  Warning as ChallengeIcon
 } from '@mui/icons-material'
 import { buddyApi } from '../services/buddyApi'
 import { BuddyRelationship, BuddyCheckin } from '../types'
@@ -132,8 +130,9 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
       }
       
       onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to submit check-in')
+    } catch (err) {
+      const error = err as Error & { response?: { data?: { message?: string } } }
+      setError(error.response?.data?.message || 'Failed to submit check-in')
     } finally {
       setLoading(false)
     }
@@ -148,7 +147,7 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
     }))
   }
 
-  const handleMoodRatingChange = (event: React.SyntheticEvent, value: number | null) => {
+  const handleMoodRatingChange = (_event: React.SyntheticEvent, value: number | null) => {
     setFormData(prev => ({ ...prev, moodRating: value }))
     if (value) {
       const emoji = moodEmojis.find(m => m.value === value)
@@ -156,7 +155,7 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
     }
   }
 
-  const handleProgressRatingChange = (event: React.SyntheticEvent, value: number | null) => {
+  const handleProgressRatingChange = (_event: React.SyntheticEvent, value: number | null) => {
     setFormData(prev => ({ ...prev, progressRating: value }))
   }
 

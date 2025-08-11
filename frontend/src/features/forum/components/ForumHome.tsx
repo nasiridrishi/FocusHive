@@ -20,7 +20,6 @@ import {
   Tab,
   Tabs,
   Badge,
-  IconButton,
   TextField,
   InputAdornment
 } from '@mui/material'
@@ -36,8 +35,7 @@ import {
   Reply as ReplyIcon,
   Visibility as ViewIcon,
   Star as StarIcon,
-  Category as CategoryIcon,
-  Notification as NotificationIcon
+  Category as CategoryIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { forumApi } from '../services/forumApi'

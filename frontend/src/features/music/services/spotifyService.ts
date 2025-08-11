@@ -300,7 +300,7 @@ export class SpotifyService {
     })
 
     // Not ready
-    player.addListener('not_ready', ({ device_id }) => {
+    player.addListener('not_ready', () => {
       this.updatePlayerState({
         isReady: false,
         isConnected: false
@@ -322,7 +322,7 @@ export class SpotifyService {
       this.updateAuthState({ error: `Account error: ${message}` })
     })
 
-    player.addListener('playback_error', ({ message }) => {
+    player.addListener('playback_error', () => {
       // Playback error occurred
     })
   }

@@ -1,10 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import type { IMessage } from '@stomp/stompjs';
 import webSocketService, { 
   WebSocketMessage, 
   PresenceUpdate, 
   PresenceStatus,
   NotificationMessage 
 } from '../services/websocket/WebSocketService';
+import type { BuddyCheckin, BuddyGoal } from '@features/buddy/types';
+import type { ForumPost, ForumReply } from '@features/forum/types';
 
 interface UseWebSocketOptions {
   autoConnect?: boolean;
@@ -85,11 +88,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     webSocketService.disconnect();
   }, []);
 
-  const sendMessage = useCallback((destination: string, body: any) => {
+  const sendMessage = useCallback((destination: string, body: unknown) => {
     webSocketService.sendMessage(destination, body);
   }, []);
 
-  const subscribe = useCallback((destination: string, callback: (message: any) => void) => {
+  const subscribe = useCallback((destination: string, callback: (message: IMessage) => void) => {
     const subId = webSocketService.subscribe(destination, callback);
     if (subId) {
       subscriptionsRef.current.push(subId);
@@ -173,31 +176,31 @@ export function useBuddyWebSocket(relationshipId?: number) {
         if (subId) ws.unsubscribe(subId);
       };
     }
-  }, [relationshipId, ws.isConnected]);
+  }, [relationshipId, ws.isConnected, ws]);
 
   const sendBuddyRequest = useCallback((toUserId: number, message?: string) => {
     ws.service.sendBuddyRequest(toUserId, message);
-  }, []);
+  }, [ws.service]);
 
   const acceptBuddyRequest = useCallback((relationshipId: number) => {
     ws.service.acceptBuddyRequest(relationshipId);
-  }, []);
+  }, [ws.service]);
 
-  const sendCheckin = useCallback((relationshipId: number, checkin: any) => {
+  const sendCheckin = useCallback((relationshipId: number, checkin: BuddyCheckin) => {
     ws.service.sendBuddyCheckin(relationshipId, checkin);
-  }, []);
+  }, [ws.service]);
 
-  const updateGoal = useCallback((goal: any) => {
+  const updateGoal = useCallback((goal: BuddyGoal) => {
     ws.service.updateBuddyGoal(goal);
-  }, []);
+  }, [ws.service]);
 
   const startSession = useCallback((sessionId: number) => {
     ws.service.startBuddySession(sessionId);
-  }, []);
+  }, [ws.service]);
 
   const endSession = useCallback((sessionId: number) => {
     ws.service.endBuddySession(sessionId);
-  }, []);
+  }, [ws.service]);
 
   return {
     ...ws,
@@ -224,7 +227,7 @@ export function useForumWebSocket(postId?: number) {
       }
       
       if (message.type === 'USER_TYPING' || message.type === 'USER_STOPPED_TYPING') {
-        const data = message.payload as any;
+        const data = message.payload as { userId: number; username: string };
         setTypingUsers(prev => {
           const updated = new Map(prev);
           if (message.type === 'USER_TYPING') {
@@ -245,35 +248,35 @@ export function useForumWebSocket(postId?: number) {
         if (subId) ws.unsubscribe(subId);
       };
     }
-  }, [postId, ws.isConnected]);
+  }, [postId, ws.isConnected, ws]);
 
-  const createPost = useCallback((post: any) => {
+  const createPost = useCallback((post: Partial<ForumPost>) => {
     ws.service.createForumPost(post);
-  }, []);
+  }, [ws.service]);
 
-  const createReply = useCallback((reply: any) => {
+  const createReply = useCallback((reply: Partial<ForumReply>) => {
     ws.service.createForumReply(reply);
-  }, []);
+  }, [ws.service]);
 
   const voteOnPost = useCallback((postId: number, voteType: number) => {
     ws.service.voteOnPost(postId, voteType);
-  }, []);
+  }, [ws.service]);
 
   const voteOnReply = useCallback((replyId: number, voteType: number) => {
     ws.service.voteOnReply(replyId, voteType);
-  }, []);
+  }, [ws.service]);
 
   const acceptReply = useCallback((replyId: number) => {
     ws.service.acceptReply(replyId);
-  }, []);
+  }, [ws.service]);
 
-  const editPost = useCallback((postId: number, post: any) => {
+  const editPost = useCallback((postId: number, post: Partial<ForumPost>) => {
     ws.service.editForumPost(postId, post);
-  }, []);
+  }, [ws.service]);
 
   const setTyping = useCallback((location: string, isTyping: boolean) => {
     ws.service.setTypingStatus(location, isTyping);
-  }, []);
+  }, [ws.service]);
 
   return {
     ...ws,
@@ -321,7 +324,7 @@ export function useHivePresence(hiveId?: number) {
         if (subId) ws.unsubscribe(subId);
       };
     }
-  }, [hiveId, ws.isConnected]);
+  }, [hiveId, ws.isConnected, ws]);
 
   const joinHive = useCallback((hiveId: number) => {
     ws.updatePresence(PresenceStatus.ONLINE, hiveId);

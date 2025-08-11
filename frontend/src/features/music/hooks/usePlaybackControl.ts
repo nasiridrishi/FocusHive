@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { Track, PlaybackState } from '../types'
+import { Track } from '../types'
 import { useMusic } from '../context'
 
 interface PlaybackControlOptions {
@@ -40,6 +40,9 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     gaplessPlayback = false,
     scrobbleThreshold = 0.5,
   } = options
+
+  // TODO: Implement gapless playback feature
+  void gaplessPlayback; // Mark as intentionally used for future feature
 
   // Enhanced play function with crossfade
   const playWithCrossfade = useCallback(async (track?: Track) => {

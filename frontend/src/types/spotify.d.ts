@@ -9,8 +9,9 @@ declare global {
 }
 
 export namespace Spotify {
-  interface Player {
-    new (options: SpotifyPlayerOptions): Player;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  class Player {
+    constructor(options: SpotifyPlayerOptions);
     
     // Connection
     connect(): Promise<boolean>;
@@ -42,7 +43,7 @@ export namespace Spotify {
   interface PlaybackState {
     context: {
       uri: string;
-      metadata: any;
+      metadata: Record<string, unknown>;
     };
     disallows: {
       pausing: boolean;

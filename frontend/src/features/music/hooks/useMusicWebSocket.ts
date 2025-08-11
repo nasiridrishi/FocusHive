@@ -25,7 +25,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
 
   const socketRef = useRef<Socket | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const messageQueueRef = useRef<any[]>([])
+  const messageQueueRef = useRef<{ type: string; data: unknown }[]>([])
   const { hiveId, onMessage, onConnect, onDisconnect } = options
 
   // Connect to WebSocket
@@ -90,7 +90,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
         }))
       })
 
-      socket.on('reconnect', (attemptNumber) => {
+      socket.on('reconnect', () => {
         setState(prev => ({ 
           ...prev, 
           isConnected: true, 
@@ -213,7 +213,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
   }, [])
 
   // Send message with queueing support
-  const sendMessage = useCallback((type: string, data: any) => {
+  const sendMessage = useCallback((type: string, data: unknown) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit(type, data)
     } else {
@@ -243,7 +243,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
   }, [sendMessage])
 
   // Update playback state
-  const updatePlaybackState = useCallback((state: any) => {
+  const updatePlaybackState = useCallback((state: unknown) => {
     sendMessage('playback_update', state)
   }, [sendMessage])
 
@@ -268,7 +268,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
     return () => {
       disconnect()
     }
-  }, [hiveId]) // Reconnect when hiveId changes
+  }, [hiveId, connect, disconnect]) // Reconnect when hiveId changes
 
   // Cleanup on unmount
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Track, Playlist, QueueItem } from '../types'
+import { Track } from '../types'
 import { useMusic } from '../context'
 import { useMusicWebSocket } from './useMusicWebSocket'
 

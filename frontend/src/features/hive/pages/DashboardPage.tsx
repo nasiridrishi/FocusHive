@@ -230,11 +230,16 @@ export const DashboardPage: React.FC = () => {
   }, [])
 
   const handleJoinHive = async (hiveId: string, message?: string) => {
+    // Will use hiveId and message when API is implemented
+    void hiveId;
+    void message;
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   const handleLeaveHive = async (hiveId: string) => {
+    // Will use hiveId when API is implemented
+    void hiveId;
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
@@ -250,10 +255,14 @@ export const DashboardPage: React.FC = () => {
   }
 
   const handleShareHive = (hiveId: string) => {
+    // Will use hiveId when share dialog is implemented
+    void hiveId;
     // Open share dialog
   }
 
   const handleCreateHive = (hiveData: object) => {
+    // Will use hiveData when API is implemented
+    void hiveData;
     // Simulate API call and update state
   }
 

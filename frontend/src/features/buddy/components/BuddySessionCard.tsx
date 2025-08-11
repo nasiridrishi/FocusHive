@@ -17,18 +17,14 @@ import {
   TextField,
   Alert,
   CircularProgress,
-  Avatar,
-  Rating,
-  Divider
+  Rating
 } from '@mui/material'
 import {
   PlayArrow as PlayIcon,
   Stop as StopIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   MoreVert as MoreVertIcon,
   AccessTime as TimeIcon,
-  Person as PersonIcon,
   Star as StarIcon,
   Cancel as CancelIcon,
   Event as EventIcon
@@ -230,7 +226,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
           <Box display="flex" alignItems="center" gap={1}>
             <Chip
               label={session.status.replace('_', ' ')}
-              color={getStatusColor(session.status) as any}
+              color={getStatusColor(session.status) as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
               size="small"
             />
             <IconButton size="small" onClick={handleMenuClick}>

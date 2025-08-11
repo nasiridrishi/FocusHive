@@ -18,6 +18,8 @@ export default function LoginPage() {
 
     try {
       // TODO: Implement actual login API call
+      // Will use credentials.email and credentials.password when API is implemented
+      void credentials; // Temporary to satisfy linter
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))

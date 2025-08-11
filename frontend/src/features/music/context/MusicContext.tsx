@@ -13,8 +13,7 @@ import {
   SessionRecommendationRequest,
   SearchTracksRequest,
   AddToQueueRequest,
-  VoteRequest,
-  WebSocketMessage
+  VoteRequest
 } from '../types'
 import { musicApi } from '../services'
 
@@ -205,7 +204,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
         skipNext()
       })
       
-      audio.addEventListener('error', (e) => {
+      audio.addEventListener('error', () => {
         dispatch({ type: 'SET_ERROR', payload: 'Playback error occurred' })
         dispatch({ type: 'UPDATE_PLAYBACK_STATE', payload: { 
           isPlaying: false, 

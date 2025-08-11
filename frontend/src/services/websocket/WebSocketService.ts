@@ -1,7 +1,9 @@
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import type { BuddyCheckin, BuddyGoal } from '@features/buddy/types';
+import type { ForumPost, ForumReply } from '@features/forum/types';
 
-export interface WebSocketMessage<T = any> {
+export interface WebSocketMessage<T = unknown> {
   id: string;
   type: MessageType;
   event: string;
@@ -9,7 +11,7 @@ export interface WebSocketMessage<T = any> {
   senderId?: string;
   senderUsername?: string;
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean | null>;
 }
 
 export enum MessageType {
@@ -83,7 +85,7 @@ export interface NotificationMessage {
   title: string;
   message: string;
   actionUrl?: string;
-  data?: Record<string, any>;
+  data?: Record<string, string | number | boolean | null>;
   priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
   requiresAction?: boolean;
   expiresAt?: string;
@@ -137,7 +139,7 @@ class WebSocketService {
         this.notifyConnectionHandlers(false);
       },
       
-      onStompError: (frame) => {
+      onStompError: () => {
         // Handle WebSocket errors
         // Error details: frame.headers['message'] and frame.body
         
@@ -220,7 +222,7 @@ class WebSocketService {
     }
   }
 
-  sendMessage(destination: string, body: any): void {
+  sendMessage(destination: string, body: unknown): void {
     if (!this.client || !this.isConnected) {
       // Not connected, cannot send message
       return;
@@ -244,11 +246,11 @@ class WebSocketService {
     this.sendMessage(`/app/buddy/accept/${relationshipId}`, {});
   }
 
-  sendBuddyCheckin(relationshipId: number, checkin: any): void {
+  sendBuddyCheckin(relationshipId: number, checkin: BuddyCheckin): void {
     this.sendMessage(`/app/buddy/checkin/${relationshipId}`, checkin);
   }
 
-  updateBuddyGoal(goal: any): void {
+  updateBuddyGoal(goal: BuddyGoal): void {
     this.sendMessage('/app/buddy/goal/update', goal);
   }
 
@@ -261,11 +263,11 @@ class WebSocketService {
   }
 
   // Forum Methods
-  createForumPost(post: any): void {
+  createForumPost(post: Partial<ForumPost>): void {
     this.sendMessage('/app/forum/post/create', post);
   }
 
-  createForumReply(reply: any): void {
+  createForumReply(reply: Partial<ForumReply>): void {
     this.sendMessage('/app/forum/reply/create', reply);
   }
 
@@ -287,7 +289,7 @@ class WebSocketService {
     this.sendMessage(`/app/forum/reply/${replyId}/accept`, {});
   }
 
-  editForumPost(postId: number, post: any): void {
+  editForumPost(postId: number, post: Partial<ForumPost>): void {
     this.sendMessage(`/app/forum/post/${postId}/edit`, post);
   }
 
