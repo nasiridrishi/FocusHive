@@ -60,6 +60,8 @@ const mockApi = {
   },
   
   addPoints: async (amount: number, source: string): Promise<GamificationStats> => {
+    // TODO: Track points source for analytics
+    void source; // Mark as intentionally used
     await new Promise(resolve => setTimeout(resolve, 500));
     const currentStats = await mockApi.getGamificationStats();
     return {

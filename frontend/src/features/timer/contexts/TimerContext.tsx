@@ -259,7 +259,6 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
     // Auto-start next phase if enabled
     if (shouldAutoStartNextPhase(completedState.currentPhase)) {
-      const nextPhase = getNextPhase(completedState)
       // We'll define startTimer later, so avoid the circular dependency for now
       setTimeout(() => {
         // This will be handled by external timer management

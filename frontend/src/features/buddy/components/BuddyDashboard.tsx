@@ -11,7 +11,6 @@ import {
   Tabs,
   Avatar,
   Chip,
-  IconButton,
   List,
   ListItem,
   ListItemText,
@@ -25,16 +24,12 @@ import {
 import {
   People as PeopleIcon,
   PersonAdd as PersonAddIcon,
-  CheckCircle as CheckCircleIcon,
   Schedule as ScheduleIcon,
-  TrendingUp as TrendingUpIcon,
   Mood as MoodIcon,
-  EmojiEvents as TrophyIcon,
-  Settings as SettingsIcon,
-  Notifications as NotificationsIcon
+  EmojiEvents as TrophyIcon
 } from '@mui/icons-material'
 import { buddyApi } from '../services/buddyApi'
-import { BuddyRelationship, BuddySession, BuddyGoal, BuddyStats } from '../types'
+import { BuddyRelationship, BuddySession, BuddyStats } from '../types'
 import BuddyRequestDialog from './BuddyRequestDialog'
 import BuddyGoalsList from './BuddyGoalsList'
 import BuddySessionCard from './BuddySessionCard'

@@ -131,6 +131,7 @@ export const ResponsiveDemo: React.FC = () => {
   
   const handleFABAction = (action: string) => {
     // In a real app, you'd handle the specific action
+    void action; // Temporary to satisfy linter
   }
   
   return (
@@ -339,7 +340,7 @@ export const ResponsiveDemo: React.FC = () => {
               renderCell: (value) => (value as Date).toLocaleDateString(),
             },
           ]}
-          onRowClick={(user) => {}}
+          onRowClick={() => {}}
           loading={tableLoading}
           density="normal"
         />

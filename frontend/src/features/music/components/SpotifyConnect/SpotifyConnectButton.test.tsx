@@ -79,7 +79,6 @@ describe('SpotifyConnectButton', () => {
 
   it('handles connection errors gracefully', () => {
     // Mock a connection error
-    const mockError = new Error('Connection failed')
     vi.spyOn(console, 'error').mockImplementation(() => {})
     
     render(
@@ -130,13 +129,6 @@ describe('Spotify SDK Integration', () => {
 describe('Authentication States', () => {
   it('shows premium status when connected', () => {
     // Mock authenticated premium user state
-    const mockAuthState = {
-      isAuthenticated: true,
-      isPremium: true,
-      user: { display_name: 'Test User', product: 'premium' as const },
-      token: 'mock-token'
-    }
-
     // This would require mocking the SpotifyContext state
     // For now, we'll test the UI elements that should appear
     render(

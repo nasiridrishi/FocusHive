@@ -3,9 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ThemeProvider, createTheme } from '@mui/material'
 import MusicPlayer from './MusicPlayer'
-import { MusicProvider } from '../../context'
 import * as musicContextModule from '../../context'
-import * as playbackControlModule from '../../hooks'
 
 // Mock the contexts and hooks
 const mockMusicState = {

@@ -25,7 +25,7 @@ describe('MusicApiService', () => {
     mockLocalStorage.getItem.mockReturnValue('mock-auth-token')
     
     // Mock axios.create to return mocked axios instance
-    mockedAxios.create.mockReturnValue(mockedAxios as any)
+    mockedAxios.create.mockReturnValue(mockedAxios as unknown as typeof mockedAxios)
   })
 
   afterEach(() => {
@@ -37,8 +37,9 @@ describe('MusicApiService', () => {
       mockLocalStorage.getItem.mockReturnValue('test-token')
       
       // Simulate request interceptor
-      const config = { headers: {} }
-      const interceptor = (mockedAxios.create as any).mock.calls[0][0]
+      // These will be used when interceptor logic is added
+      void { headers: {} } // config placeholder
+      void (mockedAxios.create as jest.MockedFunction<typeof axios.create>).mock.calls[0]?.[0] // interceptor placeholder
       
       expect(mockLocalStorage.getItem).toHaveBeenCalledWith('authToken')
     })
@@ -433,12 +434,13 @@ describe('MusicApiService', () => {
 
       try {
         await musicApi.getPlaylist('invalid-id')
-      } catch (error: any) {
-        expect(error.name).toBe('MusicError')
-        expect(error.message).toBe('Playlist not found')
-        expect(error.code).toBe('PLAYLIST_NOT_FOUND')
-        expect(error.details).toEqual({ playlistId: 'invalid-id' })
-        expect(error.timestamp).toBeDefined()
+      } catch (error) {
+        const musicError = error as { name: string; message: string; code: string; details: unknown; timestamp: unknown }
+        expect(musicError.name).toBe('MusicError')
+        expect(musicError.message).toBe('Playlist not found')
+        expect(musicError.code).toBe('PLAYLIST_NOT_FOUND')
+        expect(musicError.details).toEqual({ playlistId: 'invalid-id' })
+        expect(musicError.timestamp).toBeDefined()
       }
     })
 
@@ -448,9 +450,10 @@ describe('MusicApiService', () => {
 
       try {
         await musicApi.getPlaylists()
-      } catch (error: any) {
-        expect(error.name).toBe('MusicError')
-        expect(error.message).toBe('Network timeout')
+      } catch (error) {
+        const musicError = error as { name: string; message: string }
+        expect(musicError.name).toBe('MusicError')
+        expect(musicError.message).toBe('Network timeout')
         expect(error.code).toBe('UNKNOWN_ERROR')
         expect(error.timestamp).toBeDefined()
       }

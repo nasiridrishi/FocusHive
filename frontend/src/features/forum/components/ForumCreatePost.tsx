@@ -26,7 +26,6 @@ import {
 import {
   Save as SaveIcon,
   Preview as PreviewIcon,
-  Close as CloseIcon,
   Add as AddIcon,
   Home as HomeIcon,
   Category as CategoryIcon,
@@ -194,8 +193,9 @@ const ForumCreatePost: React.FC = () => {
 
       const newPost = await forumApi.createPost(postData)
       navigate(`/forum/posts/${newPost.slug}`)
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create post')
+    } catch (err) {
+      const error = err as Error & { response?: { data?: { message?: string } } }
+      setError(error.response?.data?.message || 'Failed to create post')
     } finally {
       setLoading(false)
     }

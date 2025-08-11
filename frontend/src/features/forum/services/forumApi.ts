@@ -117,7 +117,7 @@ class ForumApiService {
     }
 
     if (postData.attachments && postData.attachments.length > 0) {
-      postData.attachments.forEach((file, index) => {
+      postData.attachments.forEach((file) => {
         formData.append(`attachments`, file)
       })
     }
@@ -206,7 +206,7 @@ class ForumApiService {
     }
 
     if (replyData.attachments && replyData.attachments.length > 0) {
-      replyData.attachments.forEach((file, index) => {
+      replyData.attachments.forEach((file) => {
         formData.append(`attachments`, file)
       })
     }

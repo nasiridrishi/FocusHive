@@ -189,8 +189,8 @@ class MusicApiService {
     })
   }
 
-  async getUserPreferences(): Promise<any> {
-    const response: AxiosResponse<ApiResponse<any>> = await this.api.get('/preferences')
+  async getUserPreferences(): Promise<Record<string, unknown>> {
+    const response: AxiosResponse<ApiResponse<Record<string, unknown>>> = await this.api.get('/preferences')
     return response.data.data
   }
 
@@ -225,12 +225,13 @@ class MusicApiService {
   }
 
   // Error handling helper
-  private handleError(error: any): MusicError {
+  private handleError(error: unknown): MusicError {
+    const err = error as { response?: { data?: { message?: string; code?: string } }; message?: string }
     return {
       name: 'MusicError',
-      message: error.response?.data?.message || error.message || 'Unknown error',
-      code: error.response?.data?.code || 'UNKNOWN_ERROR',
-      details: error.response?.data,
+      message: err.response?.data?.message || err.message || 'Unknown error',
+      code: err.response?.data?.code || 'UNKNOWN_ERROR',
+      details: err.response?.data,
       timestamp: new Date().toISOString(),
     }
   }

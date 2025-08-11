@@ -41,7 +41,7 @@ export interface BuddyMatch {
   commonFocusAreas: string[]
   timezoneOverlapHours: number
   communicationStyle: string
-  matchReasons: Record<string, any>
+  matchReasons: Record<string, string | number | boolean>
   activeBuddyCount: number
   completedGoalsCount: number
   averageSessionRating?: number
@@ -72,7 +72,7 @@ export interface BuddyGoal {
   completedAt?: string
   completedBy?: number
   completedByUsername?: string
-  metrics?: Record<string, any>
+  metrics?: Record<string, string | number | boolean>
   progressPercentage?: number
   createdAt?: string
   updatedAt?: string
@@ -136,6 +136,28 @@ export interface BuddyStats {
   averageProgressRating?: number
   buddyRating?: number
   buddyLevel?: string
+}
+
+export interface MatchScore {
+  userId: number
+  score: number
+  factors: {
+    timezoneMatch: number
+    focusAreaMatch: number
+    communicationStyleMatch: number
+    availabilityMatch: number
+  }
+  recommendation: string
+}
+
+export interface CheckinStats {
+  totalCheckins: number
+  averageMoodRating: number
+  averageProgressRating: number
+  lastCheckinDate?: string
+  checkinStreak: number
+  mostFrequentMood?: string
+  progressTrend: 'IMPROVING' | 'STABLE' | 'DECLINING'
 }
 
 // Forum System Types

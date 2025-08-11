@@ -241,7 +241,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
   const playPlaylist = useCallback(async (playlistUri: string, trackOffset?: number) => {
     try {
       setError(null)
-      const playOptions: any = { context_uri: playlistUri }
+      const playOptions: { context_uri: string; offset?: { position: number } } = { context_uri: playlistUri }
       if (trackOffset !== undefined) {
         playOptions.offset = { position: trackOffset }
       }

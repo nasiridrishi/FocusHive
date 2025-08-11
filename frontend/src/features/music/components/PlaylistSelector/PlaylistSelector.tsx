@@ -3,7 +3,6 @@ import {
   Box,
   Card,
   CardContent,
-  CardMedia,
   CardActions,
   Typography,
   IconButton,
@@ -374,7 +373,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
                 >
                   {/* Cover Image */}
                   <Box position="relative">
-                    <CardMedia
+                    <Box
                       component="div"
                       sx={{
                         height: 140,

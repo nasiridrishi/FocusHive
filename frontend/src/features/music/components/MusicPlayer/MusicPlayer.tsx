@@ -58,6 +58,8 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   showQueue = false,
   showLyrics = false,
 }) => {
+  // TODO: Implement lyrics display feature
+  void showLyrics; // Mark as intentionally used for future feature
   const theme = useTheme()
   const { state } = useMusic()
   const spotify = useSpotify()

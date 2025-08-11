@@ -109,12 +109,12 @@ export interface SpotifyPlayerState {
   isReady: boolean
   isConnected: boolean
   deviceId: string | null
-  player: any | null // Spotify Web SDK player instance
+  player: Spotify.Player | null // Spotify Web SDK player instance
 }
 
 export interface WebSocketMessage {
   type: 'track_added' | 'track_voted' | 'queue_updated' | 'track_changed' | 'user_joined' | 'user_left'
-  payload: any
+  payload: unknown
   timestamp: string
   userId: string
 }
@@ -269,7 +269,7 @@ export interface PaginatedResponse<T> {
 // Error types
 export interface MusicError extends Error {
   code: string
-  details?: any
+  details?: Record<string, unknown>
   timestamp: string
 }
 

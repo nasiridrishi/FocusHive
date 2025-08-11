@@ -7,7 +7,9 @@ import {
   BuddyGoal,
   BuddyCheckin,
   BuddySession,
-  BuddyStats
+  BuddyStats,
+  MatchScore,
+  CheckinStats
 } from '../types'
 
 class BuddyApiService {
@@ -93,7 +95,7 @@ class BuddyApiService {
     return response.data
   }
 
-  async calculateMatchScore(userId: number): Promise<any> {
+  async calculateMatchScore(userId: number): Promise<MatchScore> {
     const response = await this.api.get(`/match-score/${userId}`)
     return response.data
   }
@@ -146,7 +148,7 @@ class BuddyApiService {
     return response.data
   }
 
-  async getCheckinStats(relationshipId: number): Promise<any> {
+  async getCheckinStats(relationshipId: number): Promise<CheckinStats> {
     const response = await this.api.get(`/relationship/${relationshipId}/checkins/stats`)
     return response.data
   }

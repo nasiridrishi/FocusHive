@@ -8,7 +8,6 @@ import type {
   SpotifyAuthState, 
   SpotifyPlayerState, 
   SpotifyConnectionStatus,
-  SpotifyUserProfile,
   PlayOptions
 } from '../../../types/spotify'
 

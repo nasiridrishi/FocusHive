@@ -10,7 +10,6 @@ import {
   TextField,
   Button,
   Grid,
-  Avatar,
   Fade,
   Collapse,
   Tooltip,
@@ -18,13 +17,6 @@ import {
   alpha,
 } from '@mui/material'
 import {
-  // Mood icons
-  SentimentVeryDissatisfied,
-  SentimentDissatisfied,
-  SentimentNeutral,
-  SentimentSatisfied,
-  SentimentVerySatisfied,
-  
   // Activity icons
   Work,
   Lightbulb,
