@@ -39,7 +39,7 @@ describe('MusicApiService', () => {
       // Simulate request interceptor
       // These will be used when interceptor logic is added
       void { headers: {} } // config placeholder
-      void (mockedAxios.create as jest.MockedFunction<typeof axios.create>).mock.calls[0]?.[0] // interceptor placeholder
+      void (mockedAxios.create as unknown).mock?.calls[0]?.[0] // interceptor placeholder
       
       expect(mockLocalStorage.getItem).toHaveBeenCalledWith('authToken')
     })
@@ -438,9 +438,9 @@ describe('MusicApiService', () => {
         const musicError = error as { name: string; message: string; code: string; details: unknown; timestamp: unknown }
         expect(musicError.name).toBe('MusicError')
         expect(musicError.message).toBe('Playlist not found')
-        expect(musicError.code).toBe('PLAYLIST_NOT_FOUND')
-        expect(musicError.details).toEqual({ playlistId: 'invalid-id' })
-        expect(musicError.timestamp).toBeDefined()
+        expect((musicError as any).code).toBe('PLAYLIST_NOT_FOUND')
+        expect((musicError as any).details).toEqual({ playlistId: 'invalid-id' })
+        expect((musicError as any).timestamp).toBeDefined()
       }
     })
 
@@ -454,8 +454,8 @@ describe('MusicApiService', () => {
         const musicError = error as { name: string; message: string }
         expect(musicError.name).toBe('MusicError')
         expect(musicError.message).toBe('Network timeout')
-        expect(error.code).toBe('UNKNOWN_ERROR')
-        expect(error.timestamp).toBeDefined()
+        expect((error as any).code).toBe('UNKNOWN_ERROR')
+        expect((error as any).timestamp).toBeDefined()
       }
     })
   })

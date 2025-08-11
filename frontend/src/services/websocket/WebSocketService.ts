@@ -187,7 +187,7 @@ class WebSocketService {
   }
 
   private startHeartbeat() {
-    this.heartbeatInterval = setInterval(() => {
+    this.heartbeatInterval = window.setInterval(() => {
       if (this.isConnected) {
         this.sendMessage('/app/presence/heartbeat', {});
       }

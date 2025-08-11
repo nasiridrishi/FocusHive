@@ -1,3 +1,4 @@
+/// <reference types="../../../types/spotify" />
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSpotify } from '../context/SpotifyContext'
 import { Track } from '../types'
@@ -33,14 +34,14 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
   })
   const [error, setError] = useState<string | null>(null)
   const positionUpdateRef = useRef<NodeJS.Timeout | null>(null)
-  const lastStateRef = useRef<Spotify.PlaybackState | null>(null)
+  const lastStateRef = useRef<import('../../../types/spotify').Spotify.PlaybackState | null>(null)
 
   // Monitor player state from SDK
   useEffect(() => {
     const player = spotify.getPlayerInstance()
     if (!player) return
 
-    const handlePlayerStateChange = (state: Spotify.PlaybackState | null) => {
+    const handlePlayerStateChange = (state: import('../../../types/spotify').Spotify.PlaybackState | null) => {
       if (!state) {
         setPlaybackState(prev => ({ ...prev, isPlaying: false, currentTrack: null }))
         return

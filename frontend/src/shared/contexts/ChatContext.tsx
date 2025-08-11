@@ -408,7 +408,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
       emit('chat:typing_start', { hiveId, userId })
       
       // Auto-stop typing after 3 seconds
-      typingTimeoutRef.current[hiveId] = setTimeout(() => {
+      typingTimeoutRef.current[hiveId] = window.setTimeout(() => {
         emit('chat:typing_stop', { hiveId, userId })
         delete typingTimeoutRef.current[hiveId]
       }, 3000)

@@ -1,5 +1,6 @@
 // Spotify Web SDK Service
 // Handles SDK initialization, authentication, and device management
+/// <reference types="../../../types/spotify" />
 
 import type { 
   SpotifyConfig, 
@@ -289,9 +290,9 @@ export class SpotifyService {
     }
   }
 
-  private setupPlayerListeners(player: Spotify.Player): void {
+  private setupPlayerListeners(player: any): void {
     // Ready
-    player.addListener('ready', ({ device_id }) => {
+    player.addListener('ready', ({ device_id }: { device_id: string }) => {
       this.updatePlayerState({
         isReady: true,
         isConnected: true,
@@ -308,17 +309,17 @@ export class SpotifyService {
     })
 
     // Error handling
-    player.addListener('initialization_error', ({ message }) => {
+    player.addListener('initialization_error', ({ message }: { message: string }) => {
       this.updateAuthState({ error: `Initialization error: ${message}` })
     })
 
-    player.addListener('authentication_error', ({ message }) => {
+    player.addListener('authentication_error', ({ message }: { message: string }) => {
       this.updateAuthState({ error: `Authentication error: ${message}` })
       // Try to refresh token
       this.refreshAuth()
     })
 
-    player.addListener('account_error', ({ message }) => {
+    player.addListener('account_error', ({ message }: { message: string }) => {
       this.updateAuthState({ error: `Account error: ${message}` })
     })
 
