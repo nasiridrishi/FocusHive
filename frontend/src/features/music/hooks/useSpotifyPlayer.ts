@@ -1,4 +1,3 @@
-/// <reference types="../../../types/spotify" />
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSpotify } from '../context/SpotifyContext'
 import { Track } from '../types'

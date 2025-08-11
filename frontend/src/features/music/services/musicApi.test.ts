@@ -438,9 +438,9 @@ describe('MusicApiService', () => {
         const musicError = error as { name: string; message: string; code: string; details: unknown; timestamp: unknown }
         expect(musicError.name).toBe('MusicError')
         expect(musicError.message).toBe('Playlist not found')
-        expect((musicError as any).code).toBe('PLAYLIST_NOT_FOUND')
-        expect((musicError as any).details).toEqual({ playlistId: 'invalid-id' })
-        expect((musicError as any).timestamp).toBeDefined()
+        expect((musicError as { code: string }).code).toBe('PLAYLIST_NOT_FOUND')
+        expect((musicError as { details: unknown }).details).toEqual({ playlistId: 'invalid-id' })
+        expect((musicError as { timestamp: unknown }).timestamp).toBeDefined()
       }
     })
 
@@ -454,8 +454,8 @@ describe('MusicApiService', () => {
         const musicError = error as { name: string; message: string }
         expect(musicError.name).toBe('MusicError')
         expect(musicError.message).toBe('Network timeout')
-        expect((error as any).code).toBe('UNKNOWN_ERROR')
-        expect((error as any).timestamp).toBeDefined()
+        expect((error as { code: string }).code).toBe('UNKNOWN_ERROR')
+        expect((error as { timestamp: unknown }).timestamp).toBeDefined()
       }
     })
   })

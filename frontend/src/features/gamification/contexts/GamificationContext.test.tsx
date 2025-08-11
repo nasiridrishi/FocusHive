@@ -5,6 +5,7 @@ import { renderHook } from '@testing-library/react';
 import { GamificationProvider, useGamification } from './GamificationContext';
 import type { GamificationStats } from '../types/gamification';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockStats: GamificationStats = {
   points: {
     current: 1250,

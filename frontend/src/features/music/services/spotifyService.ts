@@ -1,6 +1,5 @@
 // Spotify Web SDK Service
 // Handles SDK initialization, authentication, and device management
-/// <reference types="../../../types/spotify" />
 
 import type { 
   SpotifyConfig, 
@@ -290,7 +289,7 @@ export class SpotifyService {
     }
   }
 
-  private setupPlayerListeners(player: any): void {
+  private setupPlayerListeners(player: Spotify.Player): void {
     // Ready
     player.addListener('ready', ({ device_id }: { device_id: string }) => {
       this.updatePlayerState({
