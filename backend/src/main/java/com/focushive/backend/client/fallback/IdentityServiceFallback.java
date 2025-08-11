@@ -18,7 +18,7 @@ import java.util.UUID;
  * Uses caching to serve recent data when possible.
  */
 @Slf4j
-@Component
+@Component("backendIdentityServiceFallback")
 public class IdentityServiceFallback implements IdentityServiceClient {
 
     @Override
