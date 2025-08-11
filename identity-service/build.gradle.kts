@@ -109,7 +109,37 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    
+    // Make tests more resilient in CI environment
     systemProperty("spring.profiles.active", "test")
+    systemProperty("logging.level.com.focushive.identity", "WARN")
+    systemProperty("logging.level.org.springframework", "WARN")
+    
+    // Exclude integration tests that require external dependencies
+    if (project.hasProperty("excludeIntegrationTests")) {
+        exclude("**/*IntegrationTest.class")
+        exclude("**/*IT.class")
+    }
+    
+    // CI-specific settings
+    if (System.getenv("CI") == "true") {
+        maxHeapSize = "1g"
+        jvmArgs("-XX:+UseG1GC", "-XX:MaxGCPauseMillis=100")
+    }
+    
+    // Continue on test failures for better reporting
+    ignoreFailures = project.hasProperty("ignoreTestFailures")
+}
+
+// Add a separate task for unit tests only
+tasks.register<Test>("unitTest") {
+    useJUnitPlatform()
+    include("**/*Test.class")
+    exclude("**/*IntegrationTest.class")
+    exclude("**/*IT.class")
+    
+    systemProperty("spring.profiles.active", "test")
+    systemProperty("logging.level.com.focushive.identity", "WARN")
 }
 
 tasks.bootJar {
