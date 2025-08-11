@@ -63,7 +63,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, [])
 
-  const connect = useCallback(() => {
+  const connect = useCallback((): void => {
     if (socketRef.current?.connected) {
       return
     }
@@ -89,7 +89,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       setConnectionState(ConnectionState.DISCONNECTED)
       
       if (!isManualDisconnect.current && reason !== 'io client disconnect') {
-        scheduleReconnect()
+        if (scheduleReconnectRef.current) {
+          scheduleReconnectRef.current()
+        }
       }
     })
 
@@ -98,14 +100,18 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       setLastError(error.message)
       
       if (!isManualDisconnect.current) {
-        scheduleReconnect()
+        if (scheduleReconnectRef.current) {
+          scheduleReconnectRef.current()
+        }
       }
     })
 
     socketRef.current = socket
     socket.connect()
-  }, [url, options.timeout, clearReconnectTimeout, scheduleReconnect])
+  }, [url, options.timeout, clearReconnectTimeout])
 
+  const scheduleReconnectRef = useRef<() => void>()
+  
   const scheduleReconnect = useCallback(() => {
     if (isManualDisconnect.current || reconnectCount >= (options.reconnectionAttempts || DEFAULT_OPTIONS.reconnectionAttempts)) {
       return
@@ -121,11 +127,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
     setConnectionState(ConnectionState.RECONNECTING)
     
-    reconnectTimeoutRef.current = setTimeout(() => {
+    reconnectTimeoutRef.current = window.setTimeout(() => {
       setReconnectCount(prev => prev + 1)
       connect()
     }, delay)
-  }, [reconnectCount, options.reconnectionDelay, options.reconnectionAttempts, clearReconnectTimeout, connect])
+  }, [reconnectCount, options.reconnectionDelay, options.reconnectionAttempts, clearReconnectTimeout])
+  
+  scheduleReconnectRef.current = scheduleReconnect
 
   const disconnect = useCallback(() => {
     isManualDisconnect.current = true

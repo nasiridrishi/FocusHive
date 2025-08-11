@@ -15,12 +15,12 @@ import {
   Avatar,
   Card,
   CardContent,
-  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem
 } from '@mui/material'
+import Grid from '@mui/material/Grid'
 import {
   Send as SendIcon,
   Close as CloseIcon,
@@ -177,7 +177,7 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth={"sm"} fullWidth>
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box>

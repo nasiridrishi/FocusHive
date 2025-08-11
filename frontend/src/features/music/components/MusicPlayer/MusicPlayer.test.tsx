@@ -4,6 +4,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ThemeProvider, createTheme } from '@mui/material'
 import MusicPlayer from './MusicPlayer'
 import * as musicContextModule from '../../context'
+import * as spotifyContextModule from '../../context/SpotifyContext'
 
 // Mock the contexts and hooks
 const mockMusicState = {
@@ -96,6 +97,50 @@ vi.mock('../../context', () => ({
 
 vi.mock('../../hooks', () => ({
   usePlaybackControl: () => mockPlaybackControl,
+  useSpotifyPlayer: () => ({
+    play: vi.fn(),
+    pause: vi.fn(),
+    resume: vi.fn(),
+    seekTo: vi.fn(),
+    skipNext: vi.fn(),
+    skipPrevious: vi.fn(),
+    setVolume: vi.fn(),
+    isConnected: false,
+    currentDevice: null,
+    availableDevices: [],
+  }),
+}))
+
+// Mock Spotify Context
+const mockSpotifyContext = {
+  isAuthenticated: false,
+  isConnected: false,
+  user: null,
+  devices: [],
+  currentDevice: null,
+  authUrl: 'https://example.com/auth',
+  login: vi.fn(),
+  logout: vi.fn(),
+  selectDevice: vi.fn(),
+  refreshDevices: vi.fn(),
+  transferPlayback: vi.fn(),
+  play: vi.fn(),
+  pause: vi.fn(),
+  resume: vi.fn(),
+  skipNext: vi.fn(),
+  skipPrevious: vi.fn(),
+  seekTo: vi.fn(),
+  setVolume: vi.fn(),
+  getPlaylists: vi.fn(),
+  getCurrentlyPlaying: vi.fn(),
+  addToLibrary: vi.fn(),
+  removeFromLibrary: vi.fn(),
+  isTrackSaved: vi.fn(),
+}
+
+vi.mock('../../context/SpotifyContext', () => ({
+  useSpotify: () => mockSpotifyContext,
+  SpotifyProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
 // Create theme for testing

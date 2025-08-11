@@ -1,4 +1,5 @@
 // Music related types and interfaces
+/// <reference types="../../../types/spotify" />
 
 export interface Track {
   id: string
@@ -109,7 +110,7 @@ export interface SpotifyPlayerState {
   isReady: boolean
   isConnected: boolean
   deviceId: string | null
-  player: Spotify.Player | null // Spotify Web SDK player instance
+  player: import('../../../types/spotify').Spotify.Player | null // Spotify Web SDK player instance
 }
 
 export interface WebSocketMessage {

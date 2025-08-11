@@ -125,7 +125,7 @@ interface SpotifyContextType {
   setVolume: (volume: number) => Promise<void>
   
   // Utility
-  getPlayerInstance: () => Spotify.Player | null
+  getPlayerInstance: () => import('../../../types/spotify').Spotify.Player | null
   isFeatureAvailable: (feature: 'play' | 'premium' | 'connect') => boolean
 }
 
@@ -387,7 +387,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
   }, [state.player.player, state.player.deviceId])
 
   // Utility functions
-  const getPlayerInstance = useCallback((): Spotify.Player | null => {
+  const getPlayerInstance = useCallback((): import('../../../types/spotify').Spotify.Player | null => {
     return state.player.player
   }, [state.player.player])
 

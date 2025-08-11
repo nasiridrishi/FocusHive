@@ -211,7 +211,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   // Timer interval management
   useEffect(() => {
     if (timerState.isRunning && !timerState.isPaused && timerState.timeRemaining > 0) {
-      timerIntervalRef.current = setInterval(() => {
+      timerIntervalRef.current = window.setInterval(() => {
         setTimerState(prev => {
           const newTimeRemaining = Math.max(0, prev.timeRemaining - 1)
           
@@ -242,7 +242,8 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     if (!timerState.isRunning && timerState.timeRemaining === 0 && timerState.currentPhase !== 'idle') {
       handlePhaseCompletion(timerState)
     }
-  }, [timerState, handlePhaseCompletion])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerState])
 
   const handlePhaseCompletion = useCallback((completedState: TimerState) => {
     playNotificationSound(completedState.currentPhase + 'End')

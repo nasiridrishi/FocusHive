@@ -224,17 +224,6 @@ class MusicApiService {
     return response.data.data.version
   }
 
-  // Error handling helper
-  private handleError(error: unknown): MusicError {
-    const err = error as { response?: { data?: { message?: string; code?: string } }; message?: string }
-    return {
-      name: 'MusicError',
-      message: err.response?.data?.message || err.message || 'Unknown error',
-      code: err.response?.data?.code || 'UNKNOWN_ERROR',
-      details: err.response?.data,
-      timestamp: new Date().toISOString(),
-    }
-  }
 }
 
 // Create and export singleton instance
