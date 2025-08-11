@@ -51,7 +51,7 @@ public interface BuddyGoalRepository extends JpaRepository<BuddyGoal, Long> {
            "WHERE (br.user1.id = :userId OR br.user2.id = :userId) " +
            "AND bg.status = 'IN_PROGRESS' " +
            "ORDER BY bg.dueDate ASC")
-    List<BuddyGoal> findActiveGoalsForUser(@Param("userId") Long userId);
+    List<BuddyGoal> findActiveGoalsForUser(@Param("userId") String userId);
     
     @Query("SELECT bg.relationship.id, COUNT(bg) as completedCount " +
            "FROM BuddyGoal bg " +

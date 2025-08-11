@@ -38,7 +38,7 @@ public class BuddyWebSocketController {
         
         log.info("Processing buddy request from user: {}", principal.getName());
         
-        Long fromUserId = getUserIdFromPrincipal(principal);
+        String fromUserId = getUserIdFromPrincipal(principal);
         BuddyRelationshipDTO relationship = buddyService.sendBuddyRequest(
             fromUserId, request.getToUserId(), request
         );
@@ -70,7 +70,7 @@ public class BuddyWebSocketController {
             @DestinationVariable Long relationshipId,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         BuddyRelationshipDTO relationship = buddyService.acceptBuddyRequest(relationshipId, userId);
         
         // Notify both users
@@ -103,7 +103,7 @@ public class BuddyWebSocketController {
             @Payload BuddyCheckinDTO checkin,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         BuddyCheckinDTO created = buddyService.createCheckin(relationshipId, userId, checkin);
         
         return WebSocketMessage.<BuddyCheckinDTO>builder()
@@ -144,7 +144,7 @@ public class BuddyWebSocketController {
             @DestinationVariable Long sessionId,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         BuddySessionDTO session = buddyService.startSession(sessionId, userId);
         
         WebSocketMessage<BuddySessionDTO> message = WebSocketMessage.<BuddySessionDTO>builder()
@@ -170,7 +170,7 @@ public class BuddyWebSocketController {
             @DestinationVariable Long sessionId,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         BuddySessionDTO session = buddyService.endSession(sessionId, userId);
         
         WebSocketMessage<BuddySessionDTO> message = WebSocketMessage.<BuddySessionDTO>builder()
@@ -191,7 +191,7 @@ public class BuddyWebSocketController {
     }
     
     // Session reminder
-    public void sendSessionReminder(Long sessionId, Long userId) {
+    public void sendSessionReminder(Long sessionId, String userId) {
         // This method would be called by a scheduled task
         BuddySessionDTO session = buddyService.getUpcomingSessions().stream()
             .filter(s -> s.getId().equals(sessionId))
@@ -228,14 +228,14 @@ public class BuddyWebSocketController {
     }
     
     // Helper method to extract user ID from principal
-    private Long getUserIdFromPrincipal(Principal principal) {
+    private String getUserIdFromPrincipal(Principal principal) {
         // In a real implementation, this would extract the user ID from the authentication token
-        // For now, we'll parse it from the username or use a service to look it up
+        // For now, we'll return the username directly as User entity uses String IDs
         if (principal instanceof Authentication) {
             Authentication auth = (Authentication) principal;
             // Assuming the user ID is stored in the authentication details
-            return Long.parseLong(auth.getName());
+            return auth.getName();
         }
-        return Long.parseLong(principal.getName());
+        return principal.getName();
     }
 }

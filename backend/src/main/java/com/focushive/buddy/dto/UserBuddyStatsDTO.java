@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class UserBuddyStatsDTO {
-    private Long userId;
+    private String userId;
     private Long totalBuddyRelationships;
     private Long activeBuddies;
     private Long completedRelationships;

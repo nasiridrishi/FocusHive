@@ -30,7 +30,7 @@ public interface BuddyCheckinRepository extends JpaRepository<BuddyCheckin, Long
            "ORDER BY bc.checkinTime DESC")
     List<BuddyCheckin> findByRelationshipAndInitiator(
         @Param("relationshipId") Long relationshipId,
-        @Param("userId") Long userId
+        @Param("userId") String userId
     );
     
     @Query("SELECT COUNT(bc) FROM BuddyCheckin bc " +
@@ -47,7 +47,7 @@ public interface BuddyCheckinRepository extends JpaRepository<BuddyCheckin, Long
            "AND bc.checkinTime >= :since " +
            "ORDER BY bc.checkinTime DESC")
     List<BuddyCheckin> findRecentCheckinsForUser(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("since") LocalDateTime since
     );
     

@@ -16,7 +16,7 @@ public interface ForumVoteRepository extends JpaRepository<ForumVote, Long> {
            "WHERE fv.user.id = :userId " +
            "AND fv.post.id = :postId")
     Optional<ForumVote> findByUserIdAndPostId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("postId") Long postId
     );
     
@@ -24,7 +24,7 @@ public interface ForumVoteRepository extends JpaRepository<ForumVote, Long> {
            "WHERE fv.user.id = :userId " +
            "AND fv.reply.id = :replyId")
     Optional<ForumVote> findByUserIdAndReplyId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("replyId") Long replyId
     );
     
@@ -55,7 +55,7 @@ public interface ForumVoteRepository extends JpaRepository<ForumVote, Long> {
     @Query("SELECT fv FROM ForumVote fv " +
            "WHERE fv.user.id = :userId " +
            "ORDER BY fv.createdAt DESC")
-    List<ForumVote> findByUserId(@Param("userId") Long userId);
+    List<ForumVote> findByUserId(@Param("userId") String userId);
     
     @Query("SELECT fv.post.id, COUNT(fv) as voteCount " +
            "FROM ForumVote fv " +

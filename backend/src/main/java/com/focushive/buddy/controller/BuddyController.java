@@ -16,7 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -35,7 +35,7 @@ public class BuddyController {
     @ApiResponse(responseCode = "201", description = "Buddy request sent successfully")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyRelationshipDTO> sendBuddyRequest(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @Valid @RequestBody BuddyRequestDTO request) {
         
         log.info("User {} sending buddy request to user {}", currentUserId, request.getToUserId());
@@ -47,7 +47,7 @@ public class BuddyController {
     @Operation(summary = "Accept buddy request", description = "Accept a pending buddy request")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyRelationshipDTO> acceptBuddyRequest(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long relationshipId) {
         
         log.info("User {} accepting buddy request {}", currentUserId, relationshipId);
@@ -59,7 +59,7 @@ public class BuddyController {
     @Operation(summary = "Reject buddy request", description = "Reject a pending buddy request")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyRelationshipDTO> rejectBuddyRequest(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long relationshipId) {
         
         log.info("User {} rejecting buddy request {}", currentUserId, relationshipId);
@@ -71,7 +71,7 @@ public class BuddyController {
     @Operation(summary = "Terminate buddy relationship", description = "End an active buddy relationship")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyRelationshipDTO> terminateRelationship(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long relationshipId,
             @RequestParam(required = false) String reason) {
         
@@ -84,7 +84,7 @@ public class BuddyController {
     @Operation(summary = "Get active buddies", description = "Get list of current active buddy relationships")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BuddyRelationshipDTO>> getActiveBuddies(
-            @AuthenticationPrincipal Long currentUserId) {
+            @AuthenticationPrincipal String currentUserId) {
         
         List<BuddyRelationshipDTO> buddies = buddyService.getActiveBuddies(currentUserId);
         return ResponseEntity.ok(buddies);
@@ -94,7 +94,7 @@ public class BuddyController {
     @Operation(summary = "Get pending requests", description = "Get list of pending buddy requests received")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BuddyRelationshipDTO>> getPendingRequests(
-            @AuthenticationPrincipal Long currentUserId) {
+            @AuthenticationPrincipal String currentUserId) {
         
         List<BuddyRelationshipDTO> requests = buddyService.getPendingRequests(currentUserId);
         return ResponseEntity.ok(requests);
@@ -104,7 +104,7 @@ public class BuddyController {
     @Operation(summary = "Get sent requests", description = "Get list of buddy requests sent by the user")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BuddyRelationshipDTO>> getSentRequests(
-            @AuthenticationPrincipal Long currentUserId) {
+            @AuthenticationPrincipal String currentUserId) {
         
         List<BuddyRelationshipDTO> requests = buddyService.getSentRequests(currentUserId);
         return ResponseEntity.ok(requests);
@@ -124,7 +124,7 @@ public class BuddyController {
     @Operation(summary = "Find potential buddy matches", description = "Get list of potential buddy matches based on preferences")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BuddyMatchDTO>> findPotentialMatches(
-            @AuthenticationPrincipal Long currentUserId) {
+            @AuthenticationPrincipal String currentUserId) {
         
         List<BuddyMatchDTO> matches = buddyService.findPotentialMatches(currentUserId);
         return ResponseEntity.ok(matches);
@@ -134,8 +134,8 @@ public class BuddyController {
     @Operation(summary = "Calculate match score", description = "Calculate compatibility score with a specific user")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyMatchScoreDTO> calculateMatchScore(
-            @AuthenticationPrincipal Long currentUserId,
-            @PathVariable Long userId) {
+            @AuthenticationPrincipal String currentUserId,
+            @PathVariable String userId) {
         
         BuddyMatchScoreDTO score = buddyService.calculateMatchScore(currentUserId, userId);
         return ResponseEntity.ok(score);
@@ -147,7 +147,7 @@ public class BuddyController {
     @Operation(summary = "Get user preferences", description = "Get buddy matching preferences for the current user")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyPreferencesDTO> getUserPreferences(
-            @AuthenticationPrincipal Long currentUserId) {
+            @AuthenticationPrincipal String currentUserId) {
         
         BuddyPreferencesDTO preferences = buddyService.getUserPreferences(currentUserId);
         return ResponseEntity.ok(preferences);
@@ -157,7 +157,7 @@ public class BuddyController {
     @Operation(summary = "Update user preferences", description = "Update buddy matching preferences")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyPreferencesDTO> updateUserPreferences(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @Valid @RequestBody BuddyPreferencesDTO preferences) {
         
         BuddyPreferencesDTO updated = buddyService.updateUserPreferences(currentUserId, preferences);
@@ -192,7 +192,7 @@ public class BuddyController {
     @Operation(summary = "Mark goal as complete", description = "Mark a buddy goal as completed")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyGoalDTO> completeGoal(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long goalId) {
         
         BuddyGoalDTO completed = buddyService.markGoalComplete(goalId, currentUserId);
@@ -211,7 +211,7 @@ public class BuddyController {
     @Operation(summary = "Get active goals", description = "Get active goals for a buddy relationship")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BuddyGoalDTO>> getActiveGoals(@PathVariable Long relationshipId) {
-        List<BuddyGoalDTO> goals = buddyService.getActiveGoals(relationshipId);
+        List<BuddyGoalDTO> goals = buddyService.getRelationshipGoals(relationshipId);
         return ResponseEntity.ok(goals);
     }
     
@@ -221,7 +221,7 @@ public class BuddyController {
     @Operation(summary = "Create check-in", description = "Create a new check-in for a buddy relationship")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddyCheckinDTO> createCheckin(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long relationshipId,
             @Valid @RequestBody BuddyCheckinDTO checkin) {
         
@@ -276,7 +276,7 @@ public class BuddyController {
     @Operation(summary = "Start session", description = "Mark user as joined to start a buddy session")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddySessionDTO> startSession(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long sessionId) {
         
         BuddySessionDTO session = buddyService.startSession(sessionId, currentUserId);
@@ -287,7 +287,7 @@ public class BuddyController {
     @Operation(summary = "End session", description = "Mark user as left to end a buddy session")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddySessionDTO> endSession(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long sessionId) {
         
         BuddySessionDTO session = buddyService.endSession(sessionId, currentUserId);
@@ -298,7 +298,7 @@ public class BuddyController {
     @Operation(summary = "Cancel session", description = "Cancel a scheduled buddy session")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddySessionDTO> cancelSession(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long sessionId,
             @RequestParam(required = false) String reason) {
         
@@ -310,7 +310,7 @@ public class BuddyController {
     @Operation(summary = "Rate session", description = "Rate and provide feedback for a completed buddy session")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BuddySessionDTO> rateSession(
-            @AuthenticationPrincipal Long currentUserId,
+            @AuthenticationPrincipal String currentUserId,
             @PathVariable Long sessionId,
             @RequestParam @Parameter(description = "Rating from 1 to 5") Integer rating,
             @RequestParam(required = false) String feedback) {
@@ -323,7 +323,7 @@ public class BuddyController {
     @Operation(summary = "Get upcoming sessions", description = "Get list of upcoming buddy sessions for the current user")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BuddySessionDTO>> getUpcomingSessions(
-            @AuthenticationPrincipal Long currentUserId) {
+            @AuthenticationPrincipal String currentUserId) {
         
         List<BuddySessionDTO> sessions = buddyService.getUpcomingSessions(currentUserId);
         return ResponseEntity.ok(sessions);
@@ -353,7 +353,7 @@ public class BuddyController {
     @GetMapping("/stats")
     @Operation(summary = "Get user buddy stats", description = "Get buddy system statistics for the current user")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserBuddyStatsDTO> getUserStats(@AuthenticationPrincipal Long currentUserId) {
+    public ResponseEntity<UserBuddyStatsDTO> getUserStats(@AuthenticationPrincipal String currentUserId) {
         UserBuddyStatsDTO stats = buddyService.getUserBuddyStats(currentUserId);
         return ResponseEntity.ok(stats);
     }

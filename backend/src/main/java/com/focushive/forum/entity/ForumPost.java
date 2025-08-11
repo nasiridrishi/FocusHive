@@ -1,12 +1,12 @@
 package com.focushive.forum.entity;
 
 import com.focushive.user.entity.User;
-import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -53,26 +53,32 @@ public class ForumPost {
     @Column(length = 255)
     private String slug;
     
-    @Type(StringArrayType.class)
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(columnDefinition = "text[]")
     private String[] tags;
     
     @Column(name = "view_count", nullable = false)
+    @Builder.Default
     private Integer viewCount = 0;
     
     @Column(name = "reply_count", nullable = false)
+    @Builder.Default
     private Integer replyCount = 0;
     
     @Column(name = "vote_score", nullable = false)
+    @Builder.Default
     private Integer voteScore = 0;
     
     @Column(name = "is_pinned", nullable = false)
+    @Builder.Default
     private Boolean isPinned = false;
     
     @Column(name = "is_locked", nullable = false)
+    @Builder.Default
     private Boolean isLocked = false;
     
     @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
     
     @Column(name = "edited_at")
@@ -102,7 +108,7 @@ public class ForumPost {
         return editedAt != null;
     }
     
-    public boolean canEdit(Long userId) {
+    public boolean canEdit(String userId) {
         return user.getId().equals(userId) && !isLocked && !isDeleted;
     }
     

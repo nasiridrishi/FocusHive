@@ -12,8 +12,8 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class BuddyMatchScoreDTO {
-    private Long user1Id;
-    private Long user2Id;
+    private String user1Id;
+    private String user2Id;
     private Double totalScore;
     private Double focusAreaScore;
     private Double timezoneScore;

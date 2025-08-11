@@ -13,7 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class BuddyMatchDTO {
-    private Long userId;
+    private String userId;
     private String username;
     private String avatar;
     private String bio;

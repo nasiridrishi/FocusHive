@@ -38,7 +38,7 @@ public class ForumWebSocketController {
         
         log.info("Creating forum post via WebSocket: {}", post.getTitle());
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         ForumPostDTO created = forumService.createPost(userId, post);
         
         WebSocketMessage<ForumPostDTO> message = WebSocketMessage.<ForumPostDTO>builder()
@@ -46,7 +46,7 @@ public class ForumWebSocketController {
             .type(WebSocketMessage.MessageType.FORUM_NEW_POST)
             .event("forum.post.created")
             .payload(created)
-            .senderId(userId.toString())
+            .senderId(userId)
             .senderUsername(principal.getName())
             .timestamp(LocalDateTime.now())
             .build();
@@ -69,7 +69,7 @@ public class ForumWebSocketController {
             @Payload ForumReplyDTO reply,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         ForumReplyDTO created = forumService.createReply(reply.getPostId(), userId, reply);
         
         WebSocketMessage<ForumReplyDTO> message = WebSocketMessage.<ForumReplyDTO>builder()
@@ -77,7 +77,7 @@ public class ForumWebSocketController {
             .type(WebSocketMessage.MessageType.FORUM_NEW_REPLY)
             .event("forum.reply.created")
             .payload(created)
-            .senderId(userId.toString())
+            .senderId(userId)
             .senderUsername(principal.getName())
             .timestamp(LocalDateTime.now())
             .build();
@@ -115,7 +115,7 @@ public class ForumWebSocketController {
             @Payload Map<String, Object> voteData,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         Long postId = voteData.get("postId") != null ? 
             Long.parseLong(voteData.get("postId").toString()) : null;
         Long replyId = voteData.get("replyId") != null ? 
@@ -142,7 +142,7 @@ public class ForumWebSocketController {
             .type(messageType)
             .event("forum.vote.cast")
             .payload(vote)
-            .senderId(userId.toString())
+            .senderId(userId)
             .senderUsername(principal.getName())
             .timestamp(LocalDateTime.now())
             .build();
@@ -157,7 +157,7 @@ public class ForumWebSocketController {
             @DestinationVariable Long replyId,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         forumService.acceptReply(replyId, userId);
         
         ForumReplyDTO reply = forumService.getReply(replyId);
@@ -167,7 +167,7 @@ public class ForumWebSocketController {
             .type(WebSocketMessage.MessageType.FORUM_REPLY_ACCEPTED)
             .event("forum.reply.accepted")
             .payload(reply)
-            .senderId(userId.toString())
+            .senderId(userId)
             .senderUsername(principal.getName())
             .timestamp(LocalDateTime.now())
             .build();
@@ -203,7 +203,7 @@ public class ForumWebSocketController {
             @Payload ForumPostDTO post,
             Principal principal) {
         
-        Long userId = getUserIdFromPrincipal(principal);
+        String userId = getUserIdFromPrincipal(principal);
         ForumPostDTO updated = forumService.updatePost(postId, userId, post);
         
         return WebSocketMessage.<ForumPostDTO>builder()
@@ -211,7 +211,7 @@ public class ForumWebSocketController {
             .type(WebSocketMessage.MessageType.FORUM_POST_EDITED)
             .event("forum.post.edited")
             .payload(updated)
-            .senderId(userId.toString())
+            .senderId(userId)
             .senderUsername(principal.getName())
             .timestamp(LocalDateTime.now())
             .build();
@@ -235,7 +235,7 @@ public class ForumWebSocketController {
     }
     
     // Helper method to detect and notify mentions
-    private void notifyMentions(String content, Long postId, Long replyId, Long authorId) {
+    private void notifyMentions(String content, Long postId, Long replyId, String authorId) {
         // Pattern to detect @username mentions
         Pattern mentionPattern = Pattern.compile("@([a-zA-Z0-9_]+)");
         Matcher matcher = mentionPattern.matcher(content);
@@ -267,7 +267,7 @@ public class ForumWebSocketController {
     }
     
     // Helper method to send notification to specific user
-    private void sendNotificationToUser(Long userId, NotificationMessage notification) {
+    private void sendNotificationToUser(String userId, NotificationMessage notification) {
         WebSocketMessage<NotificationMessage> message = WebSocketMessage.<NotificationMessage>builder()
             .id(UUID.randomUUID().toString())
             .type(WebSocketMessage.MessageType.NOTIFICATION)
@@ -284,8 +284,8 @@ public class ForumWebSocketController {
     }
     
     // Helper method to extract user ID from principal
-    private Long getUserIdFromPrincipal(Principal principal) {
+    private String getUserIdFromPrincipal(Principal principal) {
         // In a real implementation, extract from authentication token
-        return Long.parseLong(principal.getName());
+        return principal.getName(); // User ID is already a String (UUID)
     }
 }

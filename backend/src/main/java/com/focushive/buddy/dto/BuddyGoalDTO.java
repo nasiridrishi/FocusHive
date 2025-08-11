@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -31,8 +31,9 @@ public class BuddyGoalDTO {
     private GoalStatus status;
     
     private LocalDateTime dueDate;
+    private LocalDateTime deadline; // Alias for dueDate for WebSocket usage
     private LocalDateTime completedAt;
-    private Long completedBy;
+    private String completedBy;
     private String completedByUsername;
     private Map<String, Object> metrics;
     private Integer progressPercentage;

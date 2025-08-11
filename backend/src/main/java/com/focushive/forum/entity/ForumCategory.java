@@ -53,12 +53,15 @@ public class ForumCategory {
     private String icon;
     
     @Column(name = "sort_order")
+    @Builder.Default
     private Integer sortOrder = 0;
     
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
     
     @Column(name = "post_count")
+    @Builder.Default
     private Integer postCount = 0;
     
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)

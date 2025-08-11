@@ -39,7 +39,7 @@ public interface ForumPostRepository extends JpaRepository<ForumPost, Long> {
            "AND fp.isDeleted = false " +
            "ORDER BY fp.createdAt DESC")
     Page<ForumPost> findByUserId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         Pageable pageable
     );
     
@@ -104,7 +104,7 @@ public interface ForumPostRepository extends JpaRepository<ForumPost, Long> {
            "AND fp.isDeleted = false " +
            "AND fp.createdAt >= :since")
     Long countUserPostsSince(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("since") LocalDateTime since
     );
 }

@@ -12,12 +12,12 @@ import java.util.Optional;
 @Repository
 public interface BuddyPreferencesRepository extends JpaRepository<BuddyPreferences, Long> {
     
-    Optional<BuddyPreferences> findByUserId(Long userId);
+    Optional<BuddyPreferences> findByUserId(String userId);
     
     @Query("SELECT bp FROM BuddyPreferences bp " +
            "WHERE bp.matchingEnabled = true " +
            "AND bp.user.id != :excludeUserId")
-    List<BuddyPreferences> findAvailableForMatching(@Param("excludeUserId") Long excludeUserId);
+    List<BuddyPreferences> findAvailableForMatching(@Param("excludeUserId") String excludeUserId);
     
     @Query("SELECT bp FROM BuddyPreferences bp " +
            "WHERE bp.matchingEnabled = true " +
@@ -25,7 +25,7 @@ public interface BuddyPreferencesRepository extends JpaRepository<BuddyPreferenc
            "AND bp.user.id != :excludeUserId")
     List<BuddyPreferences> findByTimezoneForMatching(
         @Param("timezone") String timezone,
-        @Param("excludeUserId") Long excludeUserId
+        @Param("excludeUserId") String excludeUserId
     );
     
     @Query("SELECT bp FROM BuddyPreferences bp " +
@@ -35,7 +35,7 @@ public interface BuddyPreferencesRepository extends JpaRepository<BuddyPreferenc
            "AND bp.user.id != :excludeUserId")
     List<BuddyPreferences> findByFocusAreasForMatching(
         @Param("focusAreas") List<String> focusAreas,
-        @Param("excludeUserId") Long excludeUserId
+        @Param("excludeUserId") String excludeUserId
     );
     
     @Query("SELECT bp FROM BuddyPreferences bp " +
@@ -44,7 +44,7 @@ public interface BuddyPreferencesRepository extends JpaRepository<BuddyPreferenc
            "AND bp.user.id != :excludeUserId")
     List<BuddyPreferences> findByCommunicationStyleForMatching(
         @Param("style") BuddyPreferences.CommunicationStyle style,
-        @Param("excludeUserId") Long excludeUserId
+        @Param("excludeUserId") String excludeUserId
     );
     
     @Query("SELECT COUNT(bp) FROM BuddyPreferences bp " +
