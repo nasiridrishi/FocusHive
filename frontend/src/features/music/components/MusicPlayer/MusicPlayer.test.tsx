@@ -4,6 +4,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ThemeProvider, createTheme } from '@mui/material'
 import MusicPlayer from './MusicPlayer'
 import * as musicContextModule from '../../context'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as spotifyContextModule from '../../context/SpotifyContext'
 
 // Mock the contexts and hooks

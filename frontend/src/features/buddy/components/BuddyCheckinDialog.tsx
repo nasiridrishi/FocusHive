@@ -177,7 +177,7 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth={"sm"} fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box>
