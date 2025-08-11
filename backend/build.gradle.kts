@@ -58,6 +58,7 @@ dependencies {
     // Database
     runtimeOnly("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.3")
     
     // OpenAPI Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")

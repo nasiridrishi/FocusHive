@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * Replaces local JWT validation with microservice-based validation.
  */
 @Slf4j
-@Component
+@Component("backendIdentityServiceAuthenticationFilter")
 @RequiredArgsConstructor
 public class IdentityServiceAuthenticationFilter extends OncePerRequestFilter {
 
