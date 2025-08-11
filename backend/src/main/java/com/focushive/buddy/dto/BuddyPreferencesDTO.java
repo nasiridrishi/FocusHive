@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 @Builder
 public class BuddyPreferencesDTO {
     private Long id;
-    private Long userId;
+    private String userId;
     private String preferredTimezone;
     private Map<String, WorkHours> preferredWorkHours;
     private List<String> focusAreas;

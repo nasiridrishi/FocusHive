@@ -2,7 +2,7 @@ package com.focushive.buddy.service.impl;
 
 import com.focushive.buddy.dto.*;
 import com.focushive.buddy.entity.*;
-import com.focushive.buddy.entity.BuddyRelationship.RelationshipStatus;
+import com.focushive.buddy.entity.BuddyRelationship.BuddyStatus;
 import com.focushive.buddy.entity.BuddyGoal.GoalStatus;
 import com.focushive.buddy.entity.BuddySession.SessionStatus;
 import com.focushive.buddy.entity.BuddyPreferences.CommunicationStyle;
@@ -17,7 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -43,12 +43,12 @@ public class BuddyServiceImpl implements BuddyService {
     private static final double AVAILABILITY_WEIGHT = 0.20;
     
     @Override
-    public BuddyRelationshipDTO sendBuddyRequest(Long fromUserId, Long toUserId, BuddyRequestDTO request) {
+    public BuddyRelationshipDTO sendBuddyRequest(String fromUserId, String toUserId, BuddyRequestDTO request) {
         log.info("Sending buddy request from user {} to user {}", fromUserId, toUserId);
         
         // Check if relationship already exists
         Optional<BuddyRelationship> existing = relationshipRepository.findByUserIds(
-            fromUserId, toUserId, Arrays.asList(RelationshipStatus.PENDING, RelationshipStatus.ACTIVE)
+            fromUserId, toUserId, Arrays.asList(BuddyStatus.PENDING, BuddyStatus.ACTIVE)
         );
         
         if (existing.isPresent()) {
@@ -63,7 +63,7 @@ public class BuddyServiceImpl implements BuddyService {
         BuddyRelationship relationship = BuddyRelationship.builder()
             .user1(fromUser)
             .user2(toUser)
-            .status(RelationshipStatus.PENDING)
+            .status(BuddyStatus.PENDING)
             .build();
         
         relationship = relationshipRepository.save(relationship);
@@ -75,7 +75,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddyRelationshipDTO acceptBuddyRequest(Long relationshipId, Long userId) {
+    public BuddyRelationshipDTO acceptBuddyRequest(Long relationshipId, String userId) {
         log.info("Accepting buddy request {} by user {}", relationshipId, userId);
         
         BuddyRelationship relationship = relationshipRepository.findById(relationshipId)
@@ -86,11 +86,11 @@ public class BuddyServiceImpl implements BuddyService {
             throw new IllegalStateException("Only the recipient can accept the buddy request");
         }
         
-        if (relationship.getStatus() != RelationshipStatus.PENDING) {
+        if (relationship.getStatus() != BuddyStatus.PENDING) {
             throw new IllegalStateException("Can only accept pending requests");
         }
         
-        relationship.setStatus(RelationshipStatus.ACTIVE);
+        relationship.setStatus(BuddyStatus.ACTIVE);
         relationship.setStartDate(LocalDateTime.now());
         relationship = relationshipRepository.save(relationship);
         
@@ -101,7 +101,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddyRelationshipDTO rejectBuddyRequest(Long relationshipId, Long userId) {
+    public BuddyRelationshipDTO rejectBuddyRequest(Long relationshipId, String userId) {
         log.info("Rejecting buddy request {} by user {}", relationshipId, userId);
         
         BuddyRelationship relationship = relationshipRepository.findById(relationshipId)
@@ -112,18 +112,18 @@ public class BuddyServiceImpl implements BuddyService {
             throw new IllegalStateException("Only the recipient can reject the buddy request");
         }
         
-        if (relationship.getStatus() != RelationshipStatus.PENDING) {
+        if (relationship.getStatus() != BuddyStatus.PENDING) {
             throw new IllegalStateException("Can only reject pending requests");
         }
         
-        relationship.setStatus(RelationshipStatus.REJECTED);
+        relationship.setStatus(BuddyStatus.BLOCKED);
         relationship = relationshipRepository.save(relationship);
         
         return mapToRelationshipDTO(relationship, userId);
     }
     
     @Override
-    public BuddyRelationshipDTO terminateBuddyRelationship(Long relationshipId, Long userId, String reason) {
+    public BuddyRelationshipDTO terminateBuddyRelationship(Long relationshipId, String userId, String reason) {
         log.info("Terminating buddy relationship {} by user {}", relationshipId, userId);
         
         BuddyRelationship relationship = relationshipRepository.findById(relationshipId)
@@ -134,11 +134,11 @@ public class BuddyServiceImpl implements BuddyService {
             throw new IllegalStateException("User is not part of this relationship");
         }
         
-        if (relationship.getStatus() != RelationshipStatus.ACTIVE) {
+        if (relationship.getStatus() != BuddyStatus.ACTIVE) {
             throw new IllegalStateException("Can only terminate active relationships");
         }
         
-        relationship.setStatus(RelationshipStatus.TERMINATED);
+        relationship.setStatus(BuddyStatus.ENDED);
         relationship.setEndDate(LocalDateTime.now());
         relationship.setTerminationReason(reason);
         relationship = relationshipRepository.save(relationship);
@@ -147,7 +147,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public List<BuddyRelationshipDTO> getActiveBuddies(Long userId) {
+    public List<BuddyRelationshipDTO> getActiveBuddies(String userId) {
         List<BuddyRelationship> relationships = relationshipRepository.findActiveBuddiesForUser(userId);
         return relationships.stream()
             .map(r -> mapToRelationshipDTO(r, userId))
@@ -155,7 +155,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public List<BuddyRelationshipDTO> getPendingRequests(Long userId) {
+    public List<BuddyRelationshipDTO> getPendingRequests(String userId) {
         List<BuddyRelationship> relationships = relationshipRepository.findPendingRequestsForUser(userId);
         return relationships.stream()
             .map(r -> mapToRelationshipDTO(r, userId))
@@ -163,7 +163,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public List<BuddyRelationshipDTO> getSentRequests(Long userId) {
+    public List<BuddyRelationshipDTO> getSentRequests(String userId) {
         List<BuddyRelationship> relationships = relationshipRepository.findSentRequestsByUser(userId);
         return relationships.stream()
             .map(r -> mapToRelationshipDTO(r, userId))
@@ -178,7 +178,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public List<BuddyMatchDTO> findPotentialMatches(Long userId) {
+    public List<BuddyMatchDTO> findPotentialMatches(String userId) {
         log.info("Finding potential matches for user {}", userId);
         
         BuddyPreferences userPrefs = preferencesRepository.findByUserId(userId)
@@ -211,7 +211,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddyMatchScoreDTO calculateMatchScore(Long userId1, Long userId2) {
+    public BuddyMatchScoreDTO calculateMatchScore(String userId1, String userId2) {
         BuddyPreferences prefs1 = preferencesRepository.findByUserId(userId1)
             .orElseThrow(() -> new EntityNotFoundException("User 1 preferences not found"));
         BuddyPreferences prefs2 = preferencesRepository.findByUserId(userId2)
@@ -251,14 +251,14 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddyPreferencesDTO getUserPreferences(Long userId) {
+    public BuddyPreferencesDTO getUserPreferences(String userId) {
         BuddyPreferences preferences = preferencesRepository.findByUserId(userId)
             .orElse(createDefaultPreferences(userId));
         return mapToPreferencesDTO(preferences);
     }
     
     @Override
-    public BuddyPreferencesDTO updateUserPreferences(Long userId, BuddyPreferencesDTO dto) {
+    public BuddyPreferencesDTO updateUserPreferences(String userId, BuddyPreferencesDTO dto) {
         BuddyPreferences preferences = preferencesRepository.findByUserId(userId)
             .orElse(createDefaultPreferences(userId));
         
@@ -281,7 +281,7 @@ public class BuddyServiceImpl implements BuddyService {
             .relationship(relationship)
             .title(dto.getTitle())
             .description(dto.getDescription())
-            .status(GoalStatus.IN_PROGRESS)
+            .status(GoalStatus.ACTIVE)
             .dueDate(dto.getDueDate())
             .metrics(dto.getMetrics())
             .build();
@@ -306,7 +306,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddyGoalDTO markGoalComplete(Long goalId, Long userId) {
+    public BuddyGoalDTO markGoalComplete(Long goalId, String userId) {
         BuddyGoal goal = goalRepository.findById(goalId)
             .orElseThrow(() -> new EntityNotFoundException("Goal not found"));
         
@@ -329,15 +329,22 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public List<BuddyGoalDTO> getActiveGoals(Long relationshipId) {
-        List<BuddyGoal> goals = goalRepository.findByRelationshipIdAndStatus(
-            relationshipId, GoalStatus.IN_PROGRESS
-        );
+    public List<BuddyGoalDTO> getActiveGoals(String userId) {
+        List<BuddyGoal> goals = goalRepository.findActiveGoalsForUser(userId);
         return goals.stream().map(this::mapToGoalDTO).collect(Collectors.toList());
     }
     
     @Override
-    public BuddyCheckinDTO createCheckin(Long relationshipId, Long initiatorId, BuddyCheckinDTO dto) {
+    public List<BuddyGoalDTO> getActiveGoals() {
+        List<BuddyGoal> goals = goalRepository.findAll()
+            .stream()
+            .filter(g -> g.getStatus() == BuddyGoal.GoalStatus.ACTIVE)
+            .collect(Collectors.toList());
+        return goals.stream().map(this::mapToGoalDTO).collect(Collectors.toList());
+    }
+    
+    @Override
+    public BuddyCheckinDTO createCheckin(Long relationshipId, String initiatorId, BuddyCheckinDTO dto) {
         BuddyRelationship relationship = relationshipRepository.findById(relationshipId)
             .orElseThrow(() -> new EntityNotFoundException("Relationship not found"));
         
@@ -431,7 +438,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddySessionDTO startSession(Long sessionId, Long userId) {
+    public BuddySessionDTO startSession(Long sessionId, String userId) {
         BuddySession session = sessionRepository.findById(sessionId)
             .orElseThrow(() -> new EntityNotFoundException("Session not found"));
         
@@ -441,7 +448,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddySessionDTO endSession(Long sessionId, Long userId) {
+    public BuddySessionDTO endSession(Long sessionId, String userId) {
         BuddySession session = sessionRepository.findById(sessionId)
             .orElseThrow(() -> new EntityNotFoundException("Session not found"));
         
@@ -451,7 +458,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddySessionDTO cancelSession(Long sessionId, Long userId, String reason) {
+    public BuddySessionDTO cancelSession(Long sessionId, String userId, String reason) {
         BuddySession session = sessionRepository.findById(sessionId)
             .orElseThrow(() -> new EntityNotFoundException("Session not found"));
         
@@ -461,7 +468,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public BuddySessionDTO rateSession(Long sessionId, Long userId, Integer rating, String feedback) {
+    public BuddySessionDTO rateSession(Long sessionId, String userId, Integer rating, String feedback) {
         BuddySession session = sessionRepository.findById(sessionId)
             .orElseThrow(() -> new EntityNotFoundException("Session not found"));
         
@@ -471,8 +478,18 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public List<BuddySessionDTO> getUpcomingSessions(Long userId) {
+    public List<BuddySessionDTO> getUpcomingSessions(String userId) {
         List<BuddySession> sessions = sessionRepository.findUpcomingSessionsForUser(userId, LocalDateTime.now());
+        return sessions.stream().map(this::mapToSessionDTO).collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<BuddySessionDTO> getUpcomingSessions() {
+        List<BuddySession> sessions = sessionRepository.findAll()
+            .stream()
+            .filter(s -> s.getSessionDate().isAfter(LocalDateTime.now()) && 
+                        s.getStatus() == BuddySession.SessionStatus.SCHEDULED)
+            .collect(Collectors.toList());
         return sessions.stream().map(this::mapToSessionDTO).collect(Collectors.toList());
     }
     
@@ -514,7 +531,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public UserBuddyStatsDTO getUserBuddyStats(Long userId) {
+    public UserBuddyStatsDTO getUserBuddyStats(String userId) {
         Long activeBuddies = relationshipRepository.countActiveBuddiesForUser(userId);
         List<BuddyGoal> userGoals = goalRepository.findActiveGoalsForUser(userId);
         
@@ -526,7 +543,7 @@ public class BuddyServiceImpl implements BuddyService {
     }
     
     @Override
-    public void notifyBuddyRequest(Long fromUserId, Long toUserId) {
+    public void notifyBuddyRequest(String fromUserId, String toUserId) {
         // TODO: Implement WebSocket notification
         log.info("Notifying user {} of buddy request from user {}", toUserId, fromUserId);
     }
@@ -549,9 +566,20 @@ public class BuddyServiceImpl implements BuddyService {
         log.info("Scheduling notification for goal deadline {}", goalId);
     }
     
+    @Override
+    public List<BuddyRelationshipDTO> getActiveRelationships() {
+        List<BuddyRelationship> relationships = relationshipRepository.findAll()
+            .stream()
+            .filter(r -> r.getStatus() == BuddyRelationship.BuddyStatus.ACTIVE)
+            .collect(Collectors.toList());
+        return relationships.stream()
+            .map(r -> mapToRelationshipDTO(r, null))
+            .collect(Collectors.toList());
+    }
+    
     // Helper methods
     
-    private BuddyRelationshipDTO mapToRelationshipDTO(BuddyRelationship relationship, Long currentUserId) {
+    private BuddyRelationshipDTO mapToRelationshipDTO(BuddyRelationship relationship, String currentUserId) {
         BuddyRelationshipDTO dto = BuddyRelationshipDTO.builder()
             .id(relationship.getId())
             .user1Id(relationship.getUser1().getId())
@@ -567,7 +595,7 @@ public class BuddyServiceImpl implements BuddyService {
             .build();
         
         if (currentUserId != null) {
-            Long partnerId = relationship.getPartnerId(currentUserId);
+            String partnerId = relationship.getPartnerId(currentUserId);
             if (partnerId != null) {
                 User partner = relationship.getUser1().getId().equals(partnerId) ? 
                     relationship.getUser1() : relationship.getUser2();
@@ -655,7 +683,7 @@ public class BuddyServiceImpl implements BuddyService {
         return Math.min(avgOverlap / 8.0, 1.0);
     }
     
-    private BuddyPreferences createDefaultPreferences(Long userId) {
+    private BuddyPreferences createDefaultPreferences(String userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
         

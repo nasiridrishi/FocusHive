@@ -185,7 +185,7 @@ public class WebSocketEventHandler {
     }
     
     // Send achievement notification
-    public void sendAchievementUnlocked(Long userId, String achievementName, String description) {
+    public void sendAchievementUnlocked(String userId, String achievementName, String description) {
         NotificationMessage notification = NotificationMessage.builder()
             .id(UUID.randomUUID().toString())
             .type(NotificationMessage.NotificationType.ACHIEVEMENT_UNLOCKED)
@@ -222,7 +222,7 @@ public class WebSocketEventHandler {
     }
     
     // Helper method to send notification to specific user
-    private void sendNotificationToUser(Long userId, NotificationMessage notification) {
+    private void sendNotificationToUser(String userId, NotificationMessage notification) {
         WebSocketMessage<NotificationMessage> message = WebSocketMessage.<NotificationMessage>builder()
             .id(UUID.randomUUID().toString())
             .type(WebSocketMessage.MessageType.NOTIFICATION)

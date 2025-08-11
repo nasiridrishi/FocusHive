@@ -38,7 +38,7 @@ public interface ForumReplyRepository extends JpaRepository<ForumReply, Long> {
            "AND fr.isDeleted = false " +
            "ORDER BY fr.createdAt DESC")
     Page<ForumReply> findByUserId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         Pageable pageable
     );
     
@@ -58,7 +58,7 @@ public interface ForumReplyRepository extends JpaRepository<ForumReply, Long> {
            "AND fr.isDeleted = false " +
            "AND fr.createdAt >= :since")
     Long countUserRepliesSince(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("since") LocalDateTime since
     );
     
@@ -83,5 +83,5 @@ public interface ForumReplyRepository extends JpaRepository<ForumReply, Long> {
            "WHERE fr.user.id = :userId " +
            "AND fr.isAccepted = true " +
            "AND fr.isDeleted = false")
-    Long countAcceptedRepliesByUser(@Param("userId") Long userId);
+    Long countAcceptedRepliesByUser(@Param("userId") String userId);
 }

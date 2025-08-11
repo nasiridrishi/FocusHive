@@ -15,7 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -134,7 +134,7 @@ public class ForumServiceImpl implements ForumService {
     // Post Management
     
     @Override
-    public ForumPostDTO createPost(Long userId, ForumPostDTO dto) {
+    public ForumPostDTO createPost(String userId, ForumPostDTO dto) {
         log.info("Creating forum post by user {}: {}", userId, dto.getTitle());
         
         User user = userRepository.findById(userId)
@@ -174,7 +174,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public ForumPostDTO updatePost(Long postId, Long userId, ForumPostDTO dto) {
+    public ForumPostDTO updatePost(Long postId, String userId, ForumPostDTO dto) {
         log.info("Updating forum post {} by user {}", postId, userId);
         
         ForumPost post = postRepository.findById(postId)
@@ -199,7 +199,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void deletePost(Long postId, Long userId) {
+    public void deletePost(Long postId, String userId) {
         log.info("Deleting forum post {} by user {}", postId, userId);
         
         ForumPost post = postRepository.findById(postId)
@@ -239,7 +239,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public Page<ForumPostDTO> getPostsByUser(Long userId, Pageable pageable) {
+    public Page<ForumPostDTO> getPostsByUser(String userId, Pageable pageable) {
         Page<ForumPost> posts = postRepository.findByUserId(userId, pageable);
         return posts.map(post -> mapToPostDTO(post, userId));
     }
@@ -276,7 +276,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void togglePinPost(Long postId, Long userId) {
+    public void togglePinPost(Long postId, String userId) {
         ForumPost post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         
@@ -287,7 +287,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void toggleLockPost(Long postId, Long userId) {
+    public void toggleLockPost(Long postId, String userId) {
         ForumPost post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         
@@ -300,7 +300,7 @@ public class ForumServiceImpl implements ForumService {
     // Reply Management
     
     @Override
-    public ForumReplyDTO createReply(Long postId, Long userId, ForumReplyDTO dto) {
+    public ForumReplyDTO createReply(Long postId, String userId, ForumReplyDTO dto) {
         log.info("Creating reply to post {} by user {}", postId, userId);
         
         ForumPost post = postRepository.findById(postId)
@@ -342,7 +342,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public ForumReplyDTO updateReply(Long replyId, Long userId, ForumReplyDTO dto) {
+    public ForumReplyDTO updateReply(Long replyId, String userId, ForumReplyDTO dto) {
         log.info("Updating reply {} by user {}", replyId, userId);
         
         ForumReply reply = replyRepository.findById(replyId)
@@ -365,7 +365,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void deleteReply(Long replyId, Long userId) {
+    public void deleteReply(Long replyId, String userId) {
         log.info("Deleting reply {} by user {}", replyId, userId);
         
         ForumReply reply = replyRepository.findById(replyId)
@@ -419,13 +419,13 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public Page<ForumReplyDTO> getUserReplies(Long userId, Pageable pageable) {
+    public Page<ForumReplyDTO> getUserReplies(String userId, Pageable pageable) {
         Page<ForumReply> replies = replyRepository.findByUserId(userId, pageable);
         return replies.map(reply -> mapToReplyDTO(reply, userId));
     }
     
     @Override
-    public void acceptReply(Long replyId, Long userId) {
+    public void acceptReply(Long replyId, String userId) {
         ForumReply reply = replyRepository.findById(replyId)
             .orElseThrow(() -> new EntityNotFoundException("Reply not found"));
         
@@ -442,7 +442,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void unacceptReply(Long replyId, Long userId) {
+    public void unacceptReply(Long replyId, String userId) {
         ForumReply reply = replyRepository.findById(replyId)
             .orElseThrow(() -> new EntityNotFoundException("Reply not found"));
         
@@ -458,7 +458,7 @@ public class ForumServiceImpl implements ForumService {
     // Voting
     
     @Override
-    public ForumVoteDTO voteOnPost(Long postId, Long userId, Integer voteType) {
+    public ForumVoteDTO voteOnPost(Long postId, String userId, Integer voteType) {
         log.info("User {} voting {} on post {}", userId, voteType, postId);
         
         ForumPost post = postRepository.findById(postId)
@@ -495,7 +495,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public ForumVoteDTO voteOnReply(Long replyId, Long userId, Integer voteType) {
+    public ForumVoteDTO voteOnReply(Long replyId, String userId, Integer voteType) {
         log.info("User {} voting {} on reply {}", userId, voteType, replyId);
         
         ForumReply reply = replyRepository.findById(replyId)
@@ -532,7 +532,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void removeVote(Long postId, Long replyId, Long userId) {
+    public void removeVote(Long postId, Long replyId, String userId) {
         if (postId != null) {
             Optional<ForumVote> vote = voteRepository.findByUserIdAndPostId(userId, postId);
             if (vote.isPresent()) {
@@ -553,13 +553,13 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public Integer getUserVoteOnPost(Long postId, Long userId) {
+    public Integer getUserVoteOnPost(Long postId, String userId) {
         Optional<ForumVote> vote = voteRepository.findByUserIdAndPostId(userId, postId);
         return vote.map(ForumVote::getVoteType).orElse(0);
     }
     
     @Override
-    public Integer getUserVoteOnReply(Long replyId, Long userId) {
+    public Integer getUserVoteOnReply(Long replyId, String userId) {
         Optional<ForumVote> vote = voteRepository.findByUserIdAndReplyId(userId, replyId);
         return vote.map(ForumVote::getVoteType).orElse(0);
     }
@@ -567,7 +567,7 @@ public class ForumServiceImpl implements ForumService {
     // Subscriptions
     
     @Override
-    public ForumSubscriptionDTO subscribeToPost(Long postId, Long userId, ForumSubscriptionDTO dto) {
+    public ForumSubscriptionDTO subscribeToPost(Long postId, String userId, ForumSubscriptionDTO dto) {
         ForumPost post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         
@@ -598,7 +598,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public ForumSubscriptionDTO subscribeToCategory(Long categoryId, Long userId, ForumSubscriptionDTO dto) {
+    public ForumSubscriptionDTO subscribeToCategory(Long categoryId, String userId, ForumSubscriptionDTO dto) {
         ForumCategory category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new EntityNotFoundException("Category not found"));
         
@@ -629,13 +629,13 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void unsubscribeFromPost(Long postId, Long userId) {
+    public void unsubscribeFromPost(Long postId, String userId) {
         Optional<ForumSubscription> subscription = subscriptionRepository.findByUserIdAndPostId(userId, postId);
         subscription.ifPresent(subscriptionRepository::delete);
     }
     
     @Override
-    public void unsubscribeFromCategory(Long categoryId, Long userId) {
+    public void unsubscribeFromCategory(Long categoryId, String userId) {
         Optional<ForumSubscription> subscription = subscriptionRepository.findByUserIdAndCategoryId(userId, categoryId);
         subscription.ifPresent(subscriptionRepository::delete);
     }
@@ -654,7 +654,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public List<ForumSubscriptionDTO> getUserSubscriptions(Long userId) {
+    public List<ForumSubscriptionDTO> getUserSubscriptions(String userId) {
         List<ForumSubscription> subscriptions = subscriptionRepository.findByUserId(userId);
         return subscriptions.stream()
             .map(this::mapToSubscriptionDTO)
@@ -687,19 +687,19 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public Long getUserPostCount(Long userId, int days) {
+    public Long getUserPostCount(String userId, int days) {
         LocalDateTime since = LocalDateTime.now().minus(days, ChronoUnit.DAYS);
         return postRepository.countUserPostsSince(userId, since);
     }
     
     @Override
-    public Long getUserReplyCount(Long userId, int days) {
+    public Long getUserReplyCount(String userId, int days) {
         LocalDateTime since = LocalDateTime.now().minus(days, ChronoUnit.DAYS);
         return replyRepository.countUserRepliesSince(userId, since);
     }
     
     @Override
-    public Long getUserAcceptedReplyCount(Long userId) {
+    public Long getUserAcceptedReplyCount(String userId) {
         return replyRepository.countAcceptedRepliesByUser(userId);
     }
     
@@ -733,7 +733,7 @@ public class ForumServiceImpl implements ForumService {
     }
     
     @Override
-    public void notifyMention(Long userId, Long postId, Long replyId) {
+    public void notifyMention(String userId, Long postId, Long replyId) {
         // TODO: Implement WebSocket notification
         log.info("Notifying user {} of mention", userId);
     }
@@ -765,7 +765,7 @@ public class ForumServiceImpl implements ForumService {
         return dto;
     }
     
-    private ForumPostDTO mapToPostDTO(ForumPost post, Long currentUserId) {
+    private ForumPostDTO mapToPostDTO(ForumPost post, String currentUserId) {
         ForumPostDTO dto = ForumPostDTO.builder()
             .id(post.getId())
             .categoryId(post.getCategory().getId())
@@ -806,7 +806,7 @@ public class ForumServiceImpl implements ForumService {
         return dto;
     }
     
-    private ForumReplyDTO mapToReplyDTO(ForumReply reply, Long currentUserId) {
+    private ForumReplyDTO mapToReplyDTO(ForumReply reply, String currentUserId) {
         ForumReplyDTO dto = ForumReplyDTO.builder()
             .id(reply.getId())
             .postId(reply.getPost().getId())
@@ -876,7 +876,7 @@ public class ForumServiceImpl implements ForumService {
         return dto;
     }
     
-    private List<ForumReplyDTO> buildReplyTree(List<ForumReply> replies, Long currentUserId) {
+    private List<ForumReplyDTO> buildReplyTree(List<ForumReply> replies, String currentUserId) {
         Map<Long, ForumReplyDTO> replyMap = new HashMap<>();
         List<ForumReplyDTO> rootReplies = new ArrayList<>();
         

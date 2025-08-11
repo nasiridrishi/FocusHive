@@ -36,6 +36,7 @@ public class BuddyRelationship {
     
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
+    @Builder.Default
     private BuddyStatus status = BuddyStatus.PENDING;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -45,8 +46,14 @@ public class BuddyRelationship {
     @Column(name = "matched_at")
     private LocalDateTime matchedAt;
     
+    @Column(name = "started_at")
+    private LocalDateTime startDate;
+    
     @Column(name = "ended_at")
-    private LocalDateTime endedAt;
+    private LocalDateTime endDate;
+    
+    @Column(name = "termination_reason", columnDefinition = "TEXT")
+    private String terminationReason;
     
     @Column(name = "match_score", precision = 3, scale = 2)
     private BigDecimal matchScore;
@@ -72,11 +79,11 @@ public class BuddyRelationship {
         return status == BuddyStatus.PENDING;
     }
     
-    public boolean involvesUser(Long userId) {
+    public boolean involvesUser(String userId) {
         return user1.getId().equals(userId) || user2.getId().equals(userId);
     }
     
-    public Long getPartnerId(Long userId) {
+    public String getPartnerId(String userId) {
         if (user1.getId().equals(userId)) {
             return user2.getId();
         } else if (user2.getId().equals(userId)) {
@@ -85,7 +92,7 @@ public class BuddyRelationship {
         return null;
     }
     
-    public User getPartner(Long userId) {
+    public User getPartner(String userId) {
         if (user1.getId().equals(userId)) {
             return user2;
         } else if (user2.getId().equals(userId)) {
@@ -94,7 +101,7 @@ public class BuddyRelationship {
         return null;
     }
     
-    public boolean isRecipient(Long userId) {
+    public boolean isRecipient(String userId) {
         return involvesUser(userId) && !initiatedBy.getId().equals(userId);
     }
     
@@ -102,7 +109,7 @@ public class BuddyRelationship {
     @PreUpdate
     private void ensureUserOrder() {
         // Ensure user1_id is always less than user2_id for consistency
-        if (user1 != null && user2 != null && user1.getId() > user2.getId()) {
+        if (user1 != null && user2 != null && user1.getId().compareTo(user2.getId()) > 0) {
             User temp = user1;
             user1 = user2;
             user2 = temp;

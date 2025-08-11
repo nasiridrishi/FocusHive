@@ -1,6 +1,6 @@
 package com.focushive.buddy.dto;
 
-import com.focushive.buddy.entity.BuddyRelationship.RelationshipStatus;
+import com.focushive.buddy.entity.BuddyRelationship.BuddyStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,13 +14,13 @@ import java.time.LocalDateTime;
 @Builder
 public class BuddyRelationshipDTO {
     private Long id;
-    private Long user1Id;
+    private String user1Id;
     private String user1Username;
     private String user1Avatar;
-    private Long user2Id;
+    private String user2Id;
     private String user2Username;
     private String user2Avatar;
-    private RelationshipStatus status;
+    private BuddyStatus status;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String terminationReason;
@@ -28,11 +28,12 @@ public class BuddyRelationshipDTO {
     private Integer completedGoals;
     private Integer totalSessions;
     private Integer totalCheckins;
+    private LocalDateTime lastCheckinTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     // For the current user's perspective
-    private Long partnerId;
+    private String partnerId;
     private String partnerUsername;
     private String partnerAvatar;
     private boolean isInitiator;

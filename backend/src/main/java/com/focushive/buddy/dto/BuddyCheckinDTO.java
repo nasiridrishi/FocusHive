@@ -5,9 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class BuddyCheckinDTO {
     private Long id;
     private Long relationshipId;
-    private Long initiatedById;
+    private String initiatedById;
     private String initiatedByUsername;
     private LocalDateTime checkinTime;
     

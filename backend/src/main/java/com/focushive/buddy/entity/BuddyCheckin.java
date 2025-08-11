@@ -1,14 +1,16 @@
 package com.focushive.buddy.entity;
 
 import com.focushive.user.entity.User;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 @Entity
 @Table(name = "buddy_checkins")
@@ -31,8 +33,32 @@ public class BuddyCheckin {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "initiated_by", nullable = false)
+    private User initiatedBy;
+    
+    @Column(name = "checkin_time", nullable = false)
+    private LocalDateTime checkinTime;
+    
+    @Min(1) @Max(5)
+    @Column(name = "mood_rating")
+    private Integer moodRating;
+    
+    @Min(1) @Max(5)
+    @Column(name = "progress_rating")
+    private Integer progressRating;
+    
     @Column(columnDefinition = "TEXT")
     private String message;
+    
+    @Column(name = "current_focus", length = 500)
+    private String currentFocus;
+    
+    @Column(length = 500)
+    private String challenges;
+    
+    @Column(length = 500)
+    private String wins;
     
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -41,7 +67,7 @@ public class BuddyCheckin {
     @Column(name = "productivity_score")
     private Integer productivityScore;
     
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "goals_progress", columnDefinition = "jsonb")
     private Map<Long, Integer> goalsProgress;
     

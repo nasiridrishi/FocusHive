@@ -38,7 +38,7 @@ public interface BuddySessionRepository extends JpaRepository<BuddySession, Long
            "AND bs.sessionDate >= :now " +
            "ORDER BY bs.sessionDate ASC")
     List<BuddySession> findUpcomingSessionsForUser(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("now") LocalDateTime now
     );
     

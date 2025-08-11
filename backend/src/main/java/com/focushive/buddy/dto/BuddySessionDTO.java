@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
@@ -21,6 +21,8 @@ public class BuddySessionDTO {
     
     @NotNull
     private LocalDateTime sessionDate;
+    
+    private LocalDateTime scheduledTime; // Alias for sessionDate for WebSocket usage
     
     @NotNull
     @Min(15)
@@ -44,8 +46,12 @@ public class BuddySessionDTO {
     private Integer user2Rating;
     private String user2Feedback;
     private LocalDateTime cancelledAt;
-    private Long cancelledBy;
+    private String cancelledBy;
     private String cancellationReason;
     private Double averageRating;
     private LocalDateTime createdAt;
+    
+    // User IDs for WebSocket usage
+    private String user1Id;
+    private String user2Id;
 }

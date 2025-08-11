@@ -17,7 +17,7 @@ public interface ForumSubscriptionRepository extends JpaRepository<ForumSubscrip
            "WHERE fs.user.id = :userId " +
            "AND fs.post.id = :postId")
     Optional<ForumSubscription> findByUserIdAndPostId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("postId") Long postId
     );
     
@@ -25,7 +25,7 @@ public interface ForumSubscriptionRepository extends JpaRepository<ForumSubscrip
            "WHERE fs.user.id = :userId " +
            "AND fs.category.id = :categoryId")
     Optional<ForumSubscription> findByUserIdAndCategoryId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("categoryId") Long categoryId
     );
     
@@ -44,12 +44,12 @@ public interface ForumSubscriptionRepository extends JpaRepository<ForumSubscrip
     @Query("SELECT fs FROM ForumSubscription fs " +
            "WHERE fs.user.id = :userId " +
            "ORDER BY fs.createdAt DESC")
-    List<ForumSubscription> findByUserId(@Param("userId") Long userId);
+    List<ForumSubscription> findByUserId(@Param("userId") String userId);
     
     @Query("SELECT fs FROM ForumSubscription fs " +
            "WHERE fs.user.id = :userId " +
            "AND fs.isMuted = false")
-    List<ForumSubscription> findActiveSubscriptionsByUserId(@Param("userId") Long userId);
+    List<ForumSubscription> findActiveSubscriptionsByUserId(@Param("userId") String userId);
     
     @Query("SELECT COUNT(fs) FROM ForumSubscription fs " +
            "WHERE fs.post.id = :postId " +
@@ -65,7 +65,7 @@ public interface ForumSubscriptionRepository extends JpaRepository<ForumSubscrip
            "WHERE fs.user.id = :userId " +
            "AND fs.emailNotifications = true " +
            "AND fs.isMuted = false")
-    List<ForumSubscription> findEmailEnabledSubscriptionsByUserId(@Param("userId") Long userId);
+    List<ForumSubscription> findEmailEnabledSubscriptionsByUserId(@Param("userId") String userId);
     
     @Query("SELECT fs FROM ForumSubscription fs " +
            "JOIN fs.post fp " +
@@ -73,7 +73,7 @@ public interface ForumSubscriptionRepository extends JpaRepository<ForumSubscrip
            "WHERE fc.hive.id = :hiveId " +
            "AND fs.user.id = :userId")
     List<ForumSubscription> findByUserIdAndHiveId(
-        @Param("userId") Long userId,
+        @Param("userId") String userId,
         @Param("hiveId") Long hiveId
     );
 }

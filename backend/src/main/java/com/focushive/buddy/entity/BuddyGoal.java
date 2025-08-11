@@ -8,6 +8,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "buddy_goals")
@@ -39,12 +42,31 @@ public class BuddyGoal {
     @Column(name = "target_date")
     private LocalDate targetDate;
     
+    @Column(name = "due_date")
+    private LocalDateTime dueDate;
+    
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metrics", columnDefinition = "jsonb")
+    private Map<String, Object> metrics;
+    
+    @Column(name = "progress_percentage")
+    private Integer progressPercentage;
+    
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
+    @Builder.Default
     private GoalStatus status = GoalStatus.ACTIVE;
     
     @Column(nullable = false)
+    @Builder.Default
     private Integer progress = 0;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "completed_by")
+    private User completedBy;
+    
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

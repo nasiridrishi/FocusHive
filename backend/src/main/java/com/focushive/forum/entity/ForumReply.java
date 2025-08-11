@@ -53,12 +53,15 @@ public class ForumReply {
     private String contentHtml;
     
     @Column(name = "vote_score", nullable = false)
+    @Builder.Default
     private Integer voteScore = 0;
     
     @Column(name = "is_accepted", nullable = false)
+    @Builder.Default
     private Boolean isAccepted = false;
     
     @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
     private Boolean isDeleted = false;
     
     @Column(name = "edited_at")
@@ -84,7 +87,7 @@ public class ForumReply {
         return editedAt != null;
     }
     
-    public boolean canEdit(Long userId) {
+    public boolean canEdit(String userId) {
         return user.getId().equals(userId) && !post.getIsLocked() && !isDeleted;
     }
     

@@ -1,12 +1,12 @@
 package com.focushive.buddy.entity;
 
 import com.focushive.user.entity.User;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +32,7 @@ public class BuddyPreferences {
     @Column(name = "preferred_timezone", length = 50)
     private String preferredTimezone;
     
-    @Type(JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "preferred_work_hours", columnDefinition = "jsonb")
     private Map<String, WorkHours> preferredWorkHours;
     
@@ -46,6 +46,7 @@ public class BuddyPreferences {
     private CommunicationStyle communicationStyle;
     
     @Column(name = "matching_enabled", nullable = false)
+    @Builder.Default
     private Boolean matchingEnabled = true;
     
     @CreationTimestamp

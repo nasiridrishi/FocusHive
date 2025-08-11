@@ -45,15 +45,19 @@ public class ForumSubscription {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "notification_type", nullable = false, length = 50)
+    @Builder.Default
     private NotificationType notificationType = NotificationType.ALL;
     
     @Column(name = "email_notifications", nullable = false)
+    @Builder.Default
     private Boolean emailNotifications = true;
     
     @Column(name = "in_app_notifications", nullable = false)
+    @Builder.Default
     private Boolean inAppNotifications = true;
     
     @Column(name = "is_muted", nullable = false)
+    @Builder.Default
     private Boolean isMuted = false;
     
     @Column(name = "muted_until")

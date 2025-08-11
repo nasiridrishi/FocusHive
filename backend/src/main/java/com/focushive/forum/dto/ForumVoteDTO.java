@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ForumVoteDTO {
     private Long id;
-    private Long userId;
+    private String userId;
     private String username;
     private Long postId;
     private Long replyId;

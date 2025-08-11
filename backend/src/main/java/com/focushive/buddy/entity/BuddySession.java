@@ -47,6 +47,7 @@ public class BuddySession {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
+    @Builder.Default
     private SessionStatus status = SessionStatus.SCHEDULED;
     
     @Column(name = "user1_joined")
@@ -77,7 +78,7 @@ public class BuddySession {
     private LocalDateTime cancelledAt;
     
     @Column(name = "cancelled_by")
-    private Long cancelledBy;
+    private String cancelledBy;
     
     @Column(name = "cancellation_reason", columnDefinition = "TEXT")
     private String cancellationReason;
@@ -122,7 +123,7 @@ public class BuddySession {
         }
     }
     
-    public void userJoined(Long userId) {
+    public void userJoined(String userId) {
         LocalDateTime now = LocalDateTime.now();
         if (relationship.getUser1().getId().equals(userId)) {
             this.user1Joined = now;
@@ -136,7 +137,7 @@ public class BuddySession {
         }
     }
     
-    public void userLeft(Long userId) {
+    public void userLeft(String userId) {
         LocalDateTime now = LocalDateTime.now();
         if (relationship.getUser1().getId().equals(userId)) {
             this.user1Left = now;
@@ -169,7 +170,7 @@ public class BuddySession {
         }
     }
     
-    public void cancelSession(Long userId, String reason) {
+    public void cancelSession(String userId, String reason) {
         this.status = SessionStatus.CANCELLED;
         this.cancelledAt = LocalDateTime.now();
         this.cancelledBy = userId;
@@ -180,7 +181,7 @@ public class BuddySession {
         this.status = SessionStatus.NO_SHOW;
     }
     
-    public boolean canRate(Long userId) {
+    public boolean canRate(String userId) {
         if (status != SessionStatus.COMPLETED) {
             return false;
         }
@@ -194,7 +195,7 @@ public class BuddySession {
         return false;
     }
     
-    public void addRating(Long userId, Integer rating, String feedback) {
+    public void addRating(String userId, Integer rating, String feedback) {
         if (!canRate(userId)) {
             return;
         }
