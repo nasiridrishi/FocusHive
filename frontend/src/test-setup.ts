@@ -2,6 +2,32 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
 
+// Mock axios first before any other imports
+vi.mock('axios', () => {
+  const mockAxios: Record<string, unknown> = {
+    create: vi.fn(() => mockAxios),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    interceptors: {
+      request: {
+        use: vi.fn(),
+        eject: vi.fn(),
+      },
+      response: {
+        use: vi.fn(),
+        eject: vi.fn(),
+      },
+    },
+  };
+  return {
+    default: mockAxios,
+    ...mockAxios,
+  } as Record<string, unknown>;
+});
+
 // Make test globals available
 (globalThis as Record<string, unknown>).beforeEach = beforeEach;
 (globalThis as Record<string, unknown>).afterEach = afterEach; 
@@ -50,47 +76,80 @@ vi.mock('@mui/x-date-pickers', () => ({
   })
 }));
 
+// Mock MUI x-date-pickers specific modules to prevent import errors
+vi.mock('@mui/x-date-pickers/DatePicker', () => ({
+  DatePicker: vi.fn(({ label, onChange, value, slotProps }: { label?: string; onChange?: (date: Date | null) => void; value?: Date | null; slotProps?: Record<string, unknown> }) => {
+    return React.createElement('input', {
+      'aria-label': label,
+      type: 'date',
+      value: value ? value.toISOString().split('T')[0] : '',
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange && onChange(new Date(e.target.value)),
+      ...(slotProps?.textField || {})
+    });
+  })
+}));
+
 // Mock date-fns adapter
 vi.mock('@mui/x-date-pickers/AdapterDateFns', () => ({
   AdapterDateFns: class MockAdapterDateFns {}
 }));
 
 // Mock framer-motion to prevent DOM prop warnings
+const createMotionComponent = (tag: string) => 
+  React.forwardRef<HTMLElement, React.PropsWithChildren<Record<string, unknown>>>(({ children, ...props }, ref) => {
+    // Filter out framer-motion specific props
+    const { 
+      animate, initial, exit, variants, transition, 
+      whileHover, whileTap, whileFocus, whileInView,
+      drag, dragConstraints, dragElastic, dragMomentum, 
+      dragTransition, dragControls,
+      layout, layoutId, layoutDependency, layoutScroll, layoutRoot,
+      onAnimationStart, onAnimationComplete, onUpdate, 
+      onDragStart, onDragEnd, onDrag,
+      onDirectionLock, onViewportEnter, onViewportLeave, 
+      onHoverStart, onHoverEnd,
+      onTap, onTapStart, onTapCancel, onFocus, onBlur, 
+      onDragTransitionEnd,
+      style, transformTemplate, transformValues, ...filteredProps 
+    } = props;
+    
+    // Silence unused variable warnings by acknowledging them
+    void animate; void initial; void exit; void variants; void transition;
+    void whileHover; void whileTap; void whileFocus; void whileInView;
+    void drag; void dragConstraints; void dragElastic; void dragMomentum;
+    void dragTransition; void dragControls;
+    void layout; void layoutId; void layoutDependency; void layoutScroll; void layoutRoot;
+    void onAnimationStart; void onAnimationComplete; void onUpdate;
+    void onDragStart; void onDragEnd; void onDrag;
+    void onDirectionLock; void onViewportEnter; void onViewportLeave;
+    void onHoverStart; void onHoverEnd;
+    void onTap; void onTapStart; void onTapCancel; void onFocus; void onBlur;
+    void onDragTransitionEnd;
+    void style; void transformTemplate; void transformValues;
+    
+    return React.createElement(tag, { ...filteredProps, ref }, children as React.ReactNode);
+  });
+
 vi.mock('framer-motion', () => ({
   motion: {
-    div: React.forwardRef<HTMLDivElement, React.PropsWithChildren<Record<string, unknown>>>(({ children, ...props }, ref) => {
-      // Filter out framer-motion specific props
-      const { 
-        animate, initial, exit, variants, transition, 
-        whileHover, whileTap, whileFocus, whileInView,
-        drag, dragConstraints, dragElastic, dragMomentum, 
-        dragTransition, dragControls,
-        layout, layoutId, layoutDependency, layoutScroll, layoutRoot,
-        onAnimationStart, onAnimationComplete, onUpdate, 
-        onDragStart, onDragEnd, onDrag,
-        onDirectionLock, onViewportEnter, onViewportLeave, 
-        onHoverStart, onHoverEnd,
-        onTap, onTapStart, onTapCancel, onFocus, onBlur, 
-        onDragTransitionEnd,
-        style, transformTemplate, transformValues, ...filteredProps 
-      } = props;
-      
-      // Silence unused variable warnings by acknowledging them
-      void animate; void initial; void exit; void variants; void transition;
-      void whileHover; void whileTap; void whileFocus; void whileInView;
-      void drag; void dragConstraints; void dragElastic; void dragMomentum;
-      void dragTransition; void dragControls;
-      void layout; void layoutId; void layoutDependency; void layoutScroll; void layoutRoot;
-      void onAnimationStart; void onAnimationComplete; void onUpdate;
-      void onDragStart; void onDragEnd; void onDrag;
-      void onDirectionLock; void onViewportEnter; void onViewportLeave;
-      void onHoverStart; void onHoverEnd;
-      void onTap; void onTapStart; void onTapCancel; void onFocus; void onBlur;
-      void onDragTransitionEnd;
-      void style; void transformTemplate; void transformValues;
-      
-      return React.createElement('div', { ...filteredProps, ref }, children as React.ReactNode);
-    })
+    div: createMotionComponent('div'),
+    span: createMotionComponent('span'),
+    img: createMotionComponent('img'),
+    button: createMotionComponent('button'),
+    section: createMotionComponent('section'),
+    article: createMotionComponent('article'),
+    nav: createMotionComponent('nav'),
+    aside: createMotionComponent('aside'),
+    header: createMotionComponent('header'),
+    footer: createMotionComponent('footer'),
+    main: createMotionComponent('main'),
+    p: createMotionComponent('p'),
+    h1: createMotionComponent('h1'),
+    h2: createMotionComponent('h2'),
+    h3: createMotionComponent('h3'),
+    h4: createMotionComponent('h4'),
+    h5: createMotionComponent('h5'),
+    h6: createMotionComponent('h6'),
   },
   AnimatePresence: ({ children }: React.PropsWithChildren) => children,
   useAnimation: () => ({}),
@@ -103,6 +162,43 @@ vi.mock('framer-motion', () => ({
   useInView: () => true,
   useDragControls: () => ({}),
 }));
+
+// Mock PWA virtual modules
+vi.mock('virtual:pwa-register', () => ({
+  registerSW: vi.fn(() => {
+    return vi.fn(); // Mock update function
+  }),
+}));
+
+// Mock MUI useMediaQuery hook and other imports
+vi.mock('@mui/material', async () => {
+  const actual = await vi.importActual('@mui/material');
+  return {
+    ...actual,
+    useMediaQuery: vi.fn(() => false), // Default to false, can be overridden in tests
+  };
+});
+
+// Mock MUI useMediaQuery as a standalone import to prevent directory import errors
+vi.mock('@mui/material/useMediaQuery', () => ({
+  default: vi.fn(() => false),
+  __esModule: true,
+}));
+
+// Mock MUI styles directory imports to prevent ESM errors
+vi.mock('@mui/material/styles', async () => {
+  const actual = await vi.importActual('@mui/material/styles');
+  return {
+    ...actual,
+    responsiveFontSizes: vi.fn((theme: unknown) => theme), // Return theme as-is to avoid line-height issues
+  };
+});
+
+// Mock MUI styles directory for x-date-pickers
+vi.mock('@mui/material/node/styles', async () => {
+  const actual = await vi.importActual('@mui/material/styles');
+  return actual;
+});
 
 // Global test utilities
 globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
@@ -125,6 +221,8 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+// Axios mock is already defined at the top of the file
 
 // Mock canvas context for charts
 HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
