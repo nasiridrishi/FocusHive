@@ -50,7 +50,7 @@ public class AuthenticationService {
      */
     @Transactional
     public AuthenticationResponse register(RegisterRequest request) {
-        log.info("Processing registration for email: {}", request.getEmail());
+        log.info("Processing user registration request");
         
         // Check if user already exists
         if (userRepository.existsByEmail(request.getEmail())) {

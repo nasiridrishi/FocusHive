@@ -37,7 +37,7 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) {
-        log.info("Registering new user with email: {}", request.getEmail());
+        log.info("Processing user registration request");
         AuthenticationResponse response = authenticationService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

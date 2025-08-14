@@ -28,13 +28,15 @@ public class EmailService {
         String verificationLink = baseUrl + "/verify-email?token=" + user.getEmailVerificationToken();
         
         // TODO: Implement actual email sending via SMTP/SendGrid/AWS SES
-        log.info("Sending verification email to {} with link: {}", user.getEmail(), verificationLink);
+        log.info("Email verification initiated for user ID: {}", user.getId());
         
-        // In development, just log the link
-        log.info("=== EMAIL VERIFICATION LINK ===");
-        log.info("User: {} ({})", user.getDisplayName(), user.getEmail());
-        log.info("Link: {}", verificationLink);
-        log.info("===============================");
+        // In development, log the link at DEBUG level only (never in production)
+        if (log.isDebugEnabled()) {
+            log.debug("=== EMAIL VERIFICATION LINK (DEV ONLY) ===");
+            log.debug("User ID: {}", user.getId());
+            log.debug("Link: {}", verificationLink);
+            log.debug("==========================================");
+        }
     }
     
     /**
@@ -44,13 +46,15 @@ public class EmailService {
         String resetLink = baseUrl + "/reset-password?token=" + resetToken;
         
         // TODO: Implement actual email sending
-        log.info("Sending password reset email to {} with link: {}", user.getEmail(), resetLink);
+        log.info("Password reset email initiated for user ID: {}", user.getId());
         
-        // In development, just log the link
-        log.info("=== PASSWORD RESET LINK ===");
-        log.info("User: {} ({})", user.getDisplayName(), user.getEmail());
-        log.info("Link: {}", resetLink);
-        log.info("===========================");
+        // In development, log the link at DEBUG level only (never in production)
+        if (log.isDebugEnabled()) {
+            log.debug("=== PASSWORD RESET LINK (DEV ONLY) ===");
+            log.debug("User ID: {}", user.getId());
+            log.debug("Link: {}", resetLink);
+            log.debug("=====================================");
+        }
     }
     
     /**
@@ -58,7 +62,7 @@ public class EmailService {
      */
     public void sendWelcomeEmail(User user) {
         // TODO: Implement actual email sending
-        log.info("Sending welcome email to {}", user.getEmail());
+        log.info("Welcome email sent to user ID: {}", user.getId());
     }
     
     /**
@@ -66,6 +70,7 @@ public class EmailService {
      */
     public void sendNewDeviceLoginAlert(User user, String deviceInfo, String ipAddress) {
         // TODO: Implement actual email sending
-        log.info("Sending new device login alert to {} from IP: {}", user.getEmail(), ipAddress);
+        log.info("New device login alert sent to user ID: {} from IP: {}", user.getId(), 
+                 ipAddress != null ? ipAddress.substring(0, Math.min(ipAddress.length(), 7)) + "..." : "unknown");
     }
 }
