@@ -6,14 +6,7 @@ import { createTheme } from '@mui/material/styles';
 import AchievementBadge from './AchievementBadge';
 import type { Achievement } from '../types/gamification';
 
-// Mock framer-motion for testing
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
-    img: ({ children, ...props }: React.ComponentProps<'img'>) => <img {...props}>{children}</img>,
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
-}));
+// Framer motion is mocked globally in test-setup.ts
 
 const theme = createTheme();
 
@@ -343,7 +336,8 @@ describe('AchievementBadge', () => {
       renderWithTheme(<AchievementBadge achievement={mockUnlockedAchievement} />);
       
       const categoryBadge = screen.getByText('FOCUS');
-      expect(categoryBadge).toHaveClass('category-focus');
+      expect(categoryBadge).toBeInTheDocument();
+      expect(categoryBadge.closest('.MuiChip-root')).toHaveClass('category-focus');
     });
   });
 
@@ -381,13 +375,14 @@ describe('AchievementBadge', () => {
     it('handles achievement without description', () => {
       const noDescAchievement: Achievement = {
         ...mockUnlockedAchievement,
-        description: '',
+        description: undefined,
       };
       
       renderWithTheme(<AchievementBadge achievement={noDescAchievement} />);
       
       expect(screen.getByText('First Focus')).toBeInTheDocument();
-      expect(screen.queryByText('')).not.toBeInTheDocument();
+      // Check that description element doesn't exist at all
+      expect(screen.queryByText('Complete your first focus session')).not.toBeInTheDocument();
     });
 
     it('handles zero points achievement', () => {

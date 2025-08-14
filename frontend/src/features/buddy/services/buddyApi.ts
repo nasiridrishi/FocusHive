@@ -40,7 +40,7 @@ class BuddyApiService {
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.error('Buddy API Error:', error.response?.data || error.message)
+        // API errors are handled at component level
         throw error
       }
     )

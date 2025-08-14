@@ -96,7 +96,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
         }
       }
     } catch (err) {
-      console.error('Failed to like reply:', err)
+      // Silently handle like/dislike errors
     }
   }
 
@@ -119,7 +119,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
         onReplyUpdate()
       }
     } catch (err) {
-      console.error('Failed to submit reply:', err)
+      // Handle reply submission errors silently
     } finally {
       setSubmitting(false)
     }
@@ -137,7 +137,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
         onReplyUpdate()
       }
     } catch (err) {
-      console.error('Failed to edit reply:', err)
+      // Handle reply edit errors silently
     } finally {
       setSubmitting(false)
     }

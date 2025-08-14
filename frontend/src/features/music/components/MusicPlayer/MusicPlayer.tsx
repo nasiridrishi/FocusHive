@@ -118,9 +118,9 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       if (isUsingSpotify) {
         await spotifyPlayer.togglePlay()
       } else {
-        if (effectivePlaybackState.isPlaying) {
+        if (effectivePlaybackState?.isPlaying) {
           pause()
-        } else if (effectivePlaybackState.isPaused) {
+        } else if (effectivePlaybackState?.isPaused) {
           resume()
         } else if (effectiveCurrentTrack) {
           playWithCrossfade(effectiveCurrentTrack)
@@ -129,7 +129,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     } catch (error) {
       // Failed to toggle playback
     }
-  }, [isUsingSpotify, spotifyPlayer, effectivePlaybackState.isPlaying, effectivePlaybackState.isPaused, effectiveCurrentTrack, pause, resume, playWithCrossfade])
+  }, [isUsingSpotify, spotifyPlayer, effectivePlaybackState?.isPlaying, effectivePlaybackState?.isPaused, effectiveCurrentTrack, pause, resume, playWithCrossfade])
 
   const handleVolumeChange = useCallback(async (_: Event, newValue: number | number[]) => {
     const volume = Array.isArray(newValue) ? newValue[0] : newValue
@@ -190,7 +190,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
   const handlePositionCommit = useCallback(async (_: Event, value: number | number[]) => {
     const position = Array.isArray(value) ? value[0] : value
-    const timeInSeconds = (position / 100) * effectivePlaybackState.duration
+    const timeInSeconds = (position / 100) * (effectivePlaybackState?.duration || 0)
     
     try {
       if (isUsingSpotify) {
@@ -202,7 +202,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       // Failed to seek
     }
     setIsDragging(false)
-  }, [effectivePlaybackState.duration, isUsingSpotify, spotifyPlayer, seekTo])
+  }, [effectivePlaybackState?.duration, isUsingSpotify, spotifyPlayer, seekTo])
 
   const handlePositionMouseDown = useCallback(() => {
     setIsDragging(true)
@@ -221,12 +221,15 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
   const currentPosition = useMemo(() => {
     if (isDragging) {
-      return tempPosition
+      return tempPosition || 0
     }
-    return effectivePlaybackState.duration > 0 
-      ? (effectivePlaybackState.position / effectivePlaybackState.duration) * 100 
+    const position = effectivePlaybackState?.position || 0
+    const duration = effectivePlaybackState?.duration || 0
+    
+    return duration > 0 && !isNaN(position) && !isNaN(duration)
+      ? (position / duration) * 100 
       : 0
-  }, [isDragging, tempPosition, effectivePlaybackState.position, effectivePlaybackState.duration])
+  }, [isDragging, tempPosition, effectivePlaybackState?.position, effectivePlaybackState?.duration])
 
   const repeatIcon = useMemo(() => {
     switch (repeatMode) {
@@ -237,15 +240,15 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   }, [repeatMode])
 
   const volumeIcon = useMemo(() => {
-    const volume = effectivePlaybackState.volume
-    if (volume === 0) {
+    const volume = effectivePlaybackState?.volume || 0
+    if (volume === 0 || isNaN(volume)) {
       return <VolumeOff />
     } else if (volume < 0.5) {
       return <VolumeDown />
     } else {
       return <VolumeUp />
     }
-  }, [effectivePlaybackState.volume])
+  }, [effectivePlaybackState?.volume])
 
   // Spotify connection status component
   const SpotifyStatus = () => {
@@ -755,7 +758,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             <Collapse in={showVolumeSlider} orientation="horizontal">
               <Box width={80}>
                 <Slider
-                  value={effectivePlaybackState.volume * 100}
+                  value={(effectivePlaybackState?.volume || 0) * 100}
                   onChange={handleVolumeChange}
                   size="small"
                   sx={{

@@ -68,102 +68,117 @@ vi.mock('./ExportMenu', () => ({
 
 // Mock the analytics context
 vi.mock('../contexts/AnalyticsContext', () => ({
-  useAnalytics: () => ({
-    data: {
-      productivity: {
-        totalFocusTime: 480,
-        averageSessionLength: 25,
-        completedSessions: 12,
-        totalSessions: 15,
-        completionRate: 0.8,
-        streak: { current: 5, best: 7, type: 'daily' },
-        productivity: { average: 4.2, trend: 'increasing' }
-      },
-      taskCompletion: {
-        completed: 23,
-        total: 30,
-        rate: 0.767,
-        trend: 12.5,
-        byPriority: {
-          high: { completed: 8, total: 10 },
-          medium: { completed: 10, total: 12 },
-          low: { completed: 5, total: 8 }
-        },
-        byCategory: []
-      },
-      hiveActivity: [
-        { date: '2024-01-01', value: 2, focusTime: 120, sessions: 3, members: 5 },
-        { date: '2024-01-02', value: 1, focusTime: 60, sessions: 1, members: 2 }
-      ],
-      memberEngagement: [
-        {
-          user: { id: '1', name: 'Alice Johnson' },
-          focusTime: 480,
-          sessions: 12,
-          lastActive: new Date(),
-          rank: 1,
-          engagement: 'high',
-          contribution: 35.2
-        }
-      ],
-      goalProgress: [
-        {
-          id: '1',
-          title: 'Daily Focus',
-          target: 240,
-          current: 180,
-          unit: 'minutes',
-          progress: 0.75,
-          category: 'focus',
-          priority: 'high',
-          milestones: []
-        }
-      ],
-      trends: {
-        focusTime: [],
-        productivity: [],
-        sessions: [],
-        goals: []
-      },
-      lastUpdated: new Date()
-    },
-    filter: {
-      timeRange: {
-        start: new Date('2024-01-01'),
-        end: new Date('2024-01-31'),
-        period: 'month'
-      },
-      viewType: 'individual',
-      selectedHives: [],
-      selectedMembers: [],
-      metrics: ['focus-time', 'sessions']
-    },
-    loading: false,
-    error: null,
-    updateFilter: vi.fn(),
-    refreshData: vi.fn(),
-    exportData: vi.fn(),
-    setTimeRange: vi.fn(),
-    setViewType: vi.fn()
-  })
+  useAnalytics: vi.fn()
 }));
 
-const defaultProps: AnalyticsDashboardProps = {
-  userId: 'user-1'
+// Default mock implementation
+const defaultAnalyticsData = {
+  data: {
+    productivity: {
+      totalFocusTime: 480,
+      averageSessionLength: 25,
+      completedSessions: 12,
+      totalSessions: 15,
+      completionRate: 0.8,
+      streak: { current: 5, best: 7, type: 'daily' },
+      productivity: { average: 4.2, trend: 'increasing' }
+    },
+    taskCompletion: {
+      completed: 23,
+      total: 30,
+      rate: 0.767,
+      trend: 12.5,
+      byPriority: {
+        high: { completed: 8, total: 10 },
+        medium: { completed: 10, total: 12 },
+        low: { completed: 5, total: 8 }
+      },
+      byCategory: []
+    },
+    hiveActivity: [
+      { date: '2024-01-01', value: 2, focusTime: 120, sessions: 3, members: 5 },
+      { date: '2024-01-02', value: 1, focusTime: 60, sessions: 1, members: 2 }
+    ],
+    memberEngagement: [
+      {
+        user: { id: '1', name: 'Alice Johnson' },
+        focusTime: 480,
+        sessions: 12,
+        lastActive: new Date(),
+        rank: 1,
+        engagement: 'high',
+        contribution: 35.2
+      }
+    ],
+    goalProgress: [
+      {
+        id: '1',
+        title: 'Daily Focus',
+        target: 240,
+        current: 180,
+        unit: 'minutes',
+        progress: 0.75,
+        category: 'focus',
+        priority: 'high',
+        milestones: []
+      }
+    ],
+    trends: {
+      focusTime: [],
+      productivity: [],
+      sessions: [],
+      goals: []
+    },
+    lastUpdated: new Date()
+  },
+  filter: {
+    timeRange: {
+      start: new Date('2024-01-01'),
+      end: new Date('2024-01-31'),
+      period: 'month'
+    },
+    viewType: 'individual',
+    selectedHives: [],
+    selectedMembers: [],
+    metrics: ['focus-time', 'sessions']
+  },
+  loading: false,
+  error: null,
+  updateFilter: vi.fn(),
+  refreshData: vi.fn(),
+  exportData: vi.fn(),
+  setTimeRange: vi.fn(),
+  setViewType: vi.fn()
 };
+
+const defaultProps: AnalyticsDashboardProps = {
+  userId: 'user-1',
+  hiveId: 'hive-1' // Add hiveId to render conditional components
+};
+
+// Import the mocked context after mocking
+import { useAnalytics } from '../contexts/AnalyticsContext';
+const mockUseAnalytics = vi.mocked(useAnalytics);
 
 describe('AnalyticsDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseAnalytics.mockReturnValue(defaultAnalyticsData);
   });
 
   it('renders without crashing', () => {
     render(<AnalyticsDashboard {...defaultProps} />);
-    expect(screen.getByText('Analytics Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Hive Analytics')).toBeInTheDocument();
   });
 
   it('displays the main dashboard title', () => {
     render(<AnalyticsDashboard {...defaultProps} />);
+    expect(screen.getByText('Hive Analytics')).toBeInTheDocument();
+  });
+
+  it('displays Analytics Dashboard title when no hiveId is provided', () => {
+    const propsWithoutHiveId = { userId: 'user-1' };
+    render(<AnalyticsDashboard {...propsWithoutHiveId} />);
     expect(screen.getByText('Analytics Dashboard')).toBeInTheDocument();
   });
 
@@ -249,29 +264,17 @@ describe('AnalyticsDashboard', () => {
   it('shows period selector', () => {
     render(<AnalyticsDashboard {...defaultProps} />);
     
-    expect(screen.getByText('Time Period')).toBeInTheDocument();
-    expect(screen.getByText('This Month')).toBeInTheDocument();
+    expect(screen.getByText(/Time Period:/)).toBeInTheDocument();
+    expect(screen.getByText(/Jan 1 - Jan 31, 2024/)).toBeInTheDocument();
   });
 
   it('handles loading state', async () => {
     // Mock loading state
-    const { useAnalytics } = await import('../contexts/AnalyticsContext');
-    vi.mocked(useAnalytics).mockReturnValue({
+    mockUseAnalytics.mockReturnValue({
+      ...defaultAnalyticsData,
       data: null,
-      filter: {
-        timeRange: { start: new Date(), end: new Date(), period: 'week' },
-        viewType: 'individual',
-        selectedHives: [],
-        selectedMembers: [],
-        metrics: []
-      },
       loading: true,
-      error: null,
-      updateFilter: vi.fn(),
-      refreshData: vi.fn(),
-      exportData: vi.fn(),
-      setTimeRange: vi.fn(),
-      setViewType: vi.fn()
+      error: null
     });
     
     render(<AnalyticsDashboard {...defaultProps} />);
@@ -282,23 +285,11 @@ describe('AnalyticsDashboard', () => {
 
   it('handles error state', async () => {
     // Mock error state
-    const { useAnalytics } = await import('../contexts/AnalyticsContext');
-    vi.mocked(useAnalytics).mockReturnValue({
+    mockUseAnalytics.mockReturnValue({
+      ...defaultAnalyticsData,
       data: null,
-      filter: {
-        timeRange: { start: new Date(), end: new Date(), period: 'week' },
-        viewType: 'individual',
-        selectedHives: [],
-        selectedMembers: [],
-        metrics: []
-      },
       loading: false,
-      error: 'Failed to load analytics data',
-      updateFilter: vi.fn(),
-      refreshData: vi.fn(),
-      exportData: vi.fn(),
-      setTimeRange: vi.fn(),
-      setViewType: vi.fn()
+      error: 'Failed to load analytics data'
     });
     
     render(<AnalyticsDashboard {...defaultProps} />);
@@ -310,9 +301,10 @@ describe('AnalyticsDashboard', () => {
 
   it('handles empty data state', async () => {
     // Mock empty data state
-    const { useAnalytics } = await import('../contexts/AnalyticsContext');
-    vi.mocked(useAnalytics).mockReturnValue({
+    mockUseAnalytics.mockReturnValue({
+      ...defaultAnalyticsData,
       data: {
+        ...defaultAnalyticsData.data,
         productivity: {
           totalFocusTime: 0,
           averageSessionLength: 0,
@@ -332,24 +324,8 @@ describe('AnalyticsDashboard', () => {
         },
         hiveActivity: [],
         memberEngagement: [],
-        goalProgress: [],
-        trends: { focusTime: [], productivity: [], sessions: [], goals: [] },
-        lastUpdated: new Date()
-      },
-      filter: {
-        timeRange: { start: new Date(), end: new Date(), period: 'week' },
-        viewType: 'individual',
-        selectedHives: [],
-        selectedMembers: [],
-        metrics: []
-      },
-      loading: false,
-      error: null,
-      updateFilter: vi.fn(),
-      refreshData: vi.fn(),
-      exportData: vi.fn(),
-      setTimeRange: vi.fn(),
-      setViewType: vi.fn()
+        goalProgress: []
+      }
     });
     
     render(<AnalyticsDashboard {...defaultProps} />);
@@ -375,31 +351,13 @@ describe('AnalyticsDashboard', () => {
 
   it('shows appropriate sections based on view type - hive', async () => {
     // Mock hive view type
-    const { useAnalytics } = await import('../contexts/AnalyticsContext');
-    vi.mocked(useAnalytics).mockReturnValue({
-      data: {
-        productivity: expect.any(Object),
-        taskCompletion: expect.any(Object),
-        hiveActivity: [],
-        memberEngagement: [],
-        goalProgress: [],
-        trends: expect.any(Object),
-        lastUpdated: new Date()
-      },
+    mockUseAnalytics.mockReturnValue({
+      ...defaultAnalyticsData,
       filter: {
-        timeRange: { start: new Date(), end: new Date(), period: 'week' },
+        ...defaultAnalyticsData.filter,
         viewType: 'hive',
-        selectedHives: ['hive-1'],
-        selectedMembers: [],
-        metrics: []
-      },
-      loading: false,
-      error: null,
-      updateFilter: vi.fn(),
-      refreshData: vi.fn(),
-      exportData: vi.fn(),
-      setTimeRange: vi.fn(),
-      setViewType: vi.fn()
+        selectedHives: ['hive-1']
+      }
     });
     
     render(<AnalyticsDashboard {...defaultProps} hiveId="hive-1" />);
@@ -420,6 +378,6 @@ describe('AnalyticsDashboard', () => {
     
     render(<AnalyticsDashboard {...defaultProps} initialFilter={initialFilter} />);
     
-    expect(screen.getByText('Analytics Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Hive Analytics')).toBeInTheDocument();
   });
 });

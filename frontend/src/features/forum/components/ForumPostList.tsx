@@ -79,7 +79,6 @@ const ForumPostList: React.FC = () => {
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } }
       setError(error.response?.data?.message || 'Failed to load posts')
-      console.error(err)
     } finally {
       setLoading(false)
     }

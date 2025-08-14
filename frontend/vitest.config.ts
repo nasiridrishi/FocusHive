@@ -11,12 +11,34 @@ export default defineConfig({
     testTimeout: 10000, // Increase timeout to 10 seconds
     hookTimeout: 10000, // Increase hook timeout
   },
+  esbuild: {
+    // Fix for MUI X DatePickers ESM import issue
+    target: 'esnext'
+  },
+  optimizeDeps: {
+    // Force pre-bundle MUI packages to avoid ESM issues
+    include: [
+      '@mui/material',
+      '@mui/system',
+      '@mui/icons-material',
+      '@mui/x-date-pickers',
+      '@mui/x-date-pickers/DatePicker',
+      '@mui/x-date-pickers/LocalizationProvider',
+      '@mui/x-date-pickers/AdapterDateFns'
+    ]
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@app': path.resolve(__dirname, './src/app'),
       '@features': path.resolve(__dirname, './src/features'),
       '@shared': path.resolve(__dirname, './src/shared'),
+      // Fix MUI X Date Pickers import issue - comprehensive fix
+      '@mui/material/styles$': path.resolve(__dirname, './node_modules/@mui/material/node/styles/index.js'),
+      '@mui/material/styles/': path.resolve(__dirname, './node_modules/@mui/material/node/styles/'),
+      '@mui/material$': path.resolve(__dirname, './node_modules/@mui/material/node/index.js'),
+      '@mui/system$': path.resolve(__dirname, './node_modules/@mui/system/index.js'),
+      '@mui/system/': path.resolve(__dirname, './node_modules/@mui/system/'),
       // Mock virtual PWA modules for testing
       'virtual:pwa-register': path.resolve(__dirname, './src/test-utils/virtual-pwa-register-mock.ts'),
       'virtual:pwa-register/react': path.resolve(__dirname, './src/test-utils/virtual-pwa-register-react-mock.ts'),

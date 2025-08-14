@@ -88,7 +88,6 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
       setGoals(goalsData)
     } catch (err) {
       setError('Failed to load goals')
-      console.error(err)
     } finally {
       setLoading(false)
     }
