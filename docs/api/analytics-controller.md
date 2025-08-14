@@ -578,15 +578,63 @@ The Analytics service publishes events that other services can subscribe to:
 }
 ```
 
+## Additional Alternative Endpoints (Linear Task UOL-188)
+
+The following additional endpoints were added to support specific URL patterns required by the Linear task:
+
+### Alternative Session Start
+
+```http
+POST /api/v1/analytics/session/start
+```
+
+Same functionality as `/sessions/start` but with different URL pattern.
+
+### Alternative Session End
+
+```http
+POST /api/v1/analytics/session/end
+```
+
+Requires sessionId in request body instead of path parameter:
+
+```json
+{
+  "sessionId": "456",
+  "actualDurationMinutes": 115,
+  "completed": true,
+  "breaksTaken": 1,
+  "distractionsLogged": 2,
+  "notes": "Completed work session"
+}
+```
+
+### Alternative User Stats
+
+```http
+GET /api/v1/analytics/user/stats
+```
+
+Returns stats for current authenticated user only (no path parameter required).
+
+### Alternative Leaderboard
+
+```http
+GET /api/v1/analytics/leaderboard?hiveId={hiveId}
+```
+
+Requires hiveId as query parameter instead of path parameter.
+
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2025-08-09 | Initial implementation with 4 core endpoints |
+| 1.0.1 | 2025-08-14 | Added alternative endpoints for Linear task UOL-188 |
 | 1.1.0 | TBD | Add export functionality and advanced analytics |
 
 ---
 
-**Last Updated**: August 9, 2025  
-**API Version**: 1.0.0  
+**Last Updated**: August 14, 2025  
+**API Version**: 1.0.1  
 **Status**: Production Ready

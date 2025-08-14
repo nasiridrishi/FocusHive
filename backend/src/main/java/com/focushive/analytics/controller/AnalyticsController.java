@@ -101,7 +101,92 @@ public class AnalyticsController {
         return ResponseEntity.ok(leaderboard);
     }
     
+    // Additional endpoints for Linear task UOL-188 - specific URL patterns
+    
+    @Operation(summary = "Start focus session (alternative endpoint)", description = "Records the beginning of a new focus session")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Session started successfully",
+            content = @Content(schema = @Schema(implementation = SessionResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @PostMapping("/session/start")
+    public ResponseEntity<SessionResponse> startFocusSession(
+            @Valid @RequestBody SessionRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        SessionResponse response = analyticsService.startSession(request, getUserId(userDetails));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    
+    @Operation(summary = "End focus session (alternative endpoint)", description = "Records the completion of a focus session")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Session ended successfully",
+            content = @Content(schema = @Schema(implementation = SessionResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid session data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @PostMapping("/session/end")
+    public ResponseEntity<SessionResponse> endFocusSession(
+            @RequestBody EndFocusSessionRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        if (request.sessionId() == null || request.sessionId().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        EndSessionRequest endRequest = new EndSessionRequest(
+            request.actualDurationMinutes(),
+            request.completed(),
+            request.breaksTaken(),
+            request.distractionsLogged(),
+            request.notes()
+        );
+        SessionResponse response = analyticsService.endSession(request.sessionId(), endRequest, getUserId(userDetails));
+        return ResponseEntity.ok(response);
+    }
+    
+    @Operation(summary = "Get user statistics (alternative endpoint)", description = "Retrieves productivity statistics for current user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully",
+            content = @Content(schema = @Schema(implementation = UserStats.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @GetMapping("/user/stats")
+    public ResponseEntity<UserStats> getCurrentUserStats(
+            @Parameter(description = "Start date") @RequestParam(required = false) LocalDate startDate,
+            @Parameter(description = "End date") @RequestParam(required = false) LocalDate endDate,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String currentUserId = getUserId(userDetails);
+        UserStats stats = analyticsService.getUserStats(currentUserId, startDate, endDate);
+        return ResponseEntity.ok(stats);
+    }
+    
+    @Operation(summary = "Get leaderboard (alternative endpoint)", description = "Retrieves productivity leaderboard")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Leaderboard retrieved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid hive ID"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<LeaderboardEntry>> getLeaderboard(
+            @Parameter(description = "Hive ID") @RequestParam String hiveId,
+            @Parameter(description = "Time period") @RequestParam(defaultValue = "WEEK") TimePeriod period,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        if (hiveId == null || hiveId.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        List<LeaderboardEntry> leaderboard = analyticsService.getHiveLeaderboard(hiveId, period);
+        return ResponseEntity.ok(leaderboard);
+    }
+    
     public record EndSessionRequest(
+        Integer actualDurationMinutes,
+        Boolean completed,
+        Integer breaksTaken,
+        Integer distractionsLogged,
+        String notes
+    ) {}
+    
+    public record EndFocusSessionRequest(
+        String sessionId,
         Integer actualDurationMinutes,
         Boolean completed,
         Integer breaksTaken,
