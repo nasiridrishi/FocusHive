@@ -60,8 +60,6 @@ public class PresenceTrackingService {
         
         // Broadcast presence update
         broadcastPresenceUpdate(presence);
-        
-        log.debug("Updated presence for user {}: {}", userId, status);
     }
     
     /**

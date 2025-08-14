@@ -29,7 +29,7 @@ public class AuthService {
 
     @Transactional
     public AuthenticationResponse register(RegisterRequest request) {
-        log.info("Registering new user with email: {}", request.getEmail());
+        log.info("Processing user registration request");
 
         // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {

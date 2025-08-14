@@ -72,8 +72,6 @@ public class PresenceServiceImpl implements PresenceService {
     
     @Override
     public void recordHeartbeat(String userId) {
-        log.trace("Recording heartbeat for user {}", userId);
-        
         // Get current presence
         UserPresence presence = getUserPresence(userId);
         if (presence != null) {
