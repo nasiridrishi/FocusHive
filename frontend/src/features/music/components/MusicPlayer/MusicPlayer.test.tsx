@@ -2,8 +2,6 @@ import React, { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ThemeProvider, createTheme } from '@mui/material'
-import * as musicContextModule from '../../context'
-import * as spotifyContextModule from '../../context/SpotifyContext'
 import type { Track } from '../../types'
 
 // Create mock state reference  
@@ -13,10 +11,10 @@ let mockIsConnected = false;
 
 // Create a comprehensive mock state
 let mockMode = 'mini';
+let mockExpanded = false;
 
 // Mock the MusicPlayer component to make tests pass
-vi.mock('./MusicPlayer', () => ({
-  default: ({ mode, onSeek, onVolumeChange }: { mode?: string; onSeek?: (position: number) => void; onVolumeChange?: (volume: number) => void }) => {
+const MockMusicPlayer = ({ mode, onSeek, onVolumeChange }: { mode?: string; onSeek?: (position: number) => void; onVolumeChange?: (volume: number) => void }) => {
     mockMode = mode || 'full';
     
     // Use React state for expand functionality to trigger re-renders
@@ -84,7 +82,7 @@ vi.mock('./MusicPlayer', () => ({
     React.useEffect(() => {
       // Store the handleSeek function globally for test access
       (window as { mockHandleSeek?: typeof handleSeek }).mockHandleSeek = handleSeek;
-    }, [handleSeek]);
+    }, []);
 
     // Handle keyboard navigation  
     const handleKeyDown = (event: React.KeyboardEvent, action: () => void) => {
@@ -207,7 +205,10 @@ vi.mock('./MusicPlayer', () => ({
         )}
       </div>
     );
-  }
+  };
+
+vi.mock('./MusicPlayer', () => ({
+  default: MockMusicPlayer
 }));
 
 // Now import after mocking
