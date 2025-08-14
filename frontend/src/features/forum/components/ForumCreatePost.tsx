@@ -89,7 +89,6 @@ const ForumCreatePost: React.FC = () => {
       setCategories(categoriesData.filter(cat => !cat.isLocked)) // Only show unlocked categories
     } catch (err) {
       setError('Failed to load categories')
-      console.error(err)
     } finally {
       setCategoriesLoading(false)
     }

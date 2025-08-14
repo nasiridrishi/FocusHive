@@ -96,7 +96,6 @@ const BuddyDashboard: React.FC = () => {
       setUserStats(stats)
     } catch (err) {
       setError('Failed to load buddy dashboard data')
-      console.error(err)
     } finally {
       setLoading(false)
     }

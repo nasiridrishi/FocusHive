@@ -40,7 +40,7 @@ class ForumApiService {
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.error('Forum API Error:', error.response?.data || error.message)
+        // API errors are handled at component level
         throw error
       }
     )

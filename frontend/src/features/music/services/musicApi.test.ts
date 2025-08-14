@@ -1,11 +1,34 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import axios from 'axios'
-import musicApi from './musicApi'
 import { CreatePlaylistRequest, SessionRecommendationRequest, SearchTracksRequest } from '../types'
 
-// Mock axios
-vi.mock('axios')
+// Mock axios with interceptors
+const mockAxiosInstance = {
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+  patch: vi.fn(),
+  interceptors: {
+    request: {
+      use: vi.fn(),
+    },
+    response: {
+      use: vi.fn(),
+    },
+  },
+}
+
+vi.mock('axios', () => ({
+  default: {
+    create: vi.fn(() => mockAxiosInstance),
+  },
+}))
+
 const mockedAxios = vi.mocked(axios, true)
+
+// Import after mocking
+import musicApi from './musicApi'
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -23,9 +46,6 @@ describe('MusicApiService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockLocalStorage.getItem.mockReturnValue('mock-auth-token')
-    
-    // Mock axios.create to return mocked axios instance
-    mockedAxios.create.mockReturnValue(mockedAxios as unknown as typeof mockedAxios)
   })
 
   afterEach(() => {
@@ -73,31 +93,31 @@ describe('MusicApiService', () => {
           },
         ]
 
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: mockPlaylists },
         })
 
         const result = await musicApi.getPlaylists()
 
-        expect(mockedAxios.get).toHaveBeenCalledWith('/playlists', { params: {} })
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists', { params: {} })
         expect(result).toEqual(mockPlaylists)
       })
 
       it('fetches playlists with hive filter', async () => {
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: [] },
         })
 
         await musicApi.getPlaylists('hive-123')
 
-        expect(mockedAxios.get).toHaveBeenCalledWith('/playlists', {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists', {
           params: { hiveId: 'hive-123' },
         })
       })
 
       it('handles API error', async () => {
         const errorMessage = 'Network error'
-        mockedAxios.get.mockRejectedValue(new Error(errorMessage))
+        mockAxiosInstance.get.mockRejectedValue(new Error(errorMessage))
 
         await expect(musicApi.getPlaylists()).rejects.toThrow(errorMessage)
       })
@@ -124,24 +144,24 @@ describe('MusicApiService', () => {
           type: 'personal' as const,
         }
 
-        mockedAxios.post.mockResolvedValue({
+        mockAxiosInstance.post.mockResolvedValue({
           data: { data: createdPlaylist },
         })
 
         const result = await musicApi.createPlaylist(newPlaylist)
 
-        expect(mockedAxios.post).toHaveBeenCalledWith('/playlists', newPlaylist)
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/playlists', newPlaylist)
         expect(result).toEqual(createdPlaylist)
       })
     })
 
     describe('deletePlaylist', () => {
       it('deletes playlist successfully', async () => {
-        mockedAxios.delete.mockResolvedValue({})
+        mockAxiosInstance.delete.mockResolvedValue({})
 
         await musicApi.deletePlaylist('playlist-1')
 
-        expect(mockedAxios.delete).toHaveBeenCalledWith('/playlists/playlist-1')
+        expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/playlists/playlist-1')
       })
     })
   })
@@ -162,24 +182,24 @@ describe('MusicApiService', () => {
           },
         ]
 
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: mockQueue },
         })
 
         const result = await musicApi.getQueue()
 
-        expect(mockedAxios.get).toHaveBeenCalledWith('/queue', { params: {} })
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/queue', { params: {} })
         expect(result).toEqual(mockQueue)
       })
 
       it('fetches queue with hive filter', async () => {
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: [] },
         })
 
         await musicApi.getQueue('hive-123')
 
-        expect(mockedAxios.get).toHaveBeenCalledWith('/queue', {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/queue', {
           params: { hiveId: 'hive-123' },
         })
       })
@@ -204,13 +224,13 @@ describe('MusicApiService', () => {
           votes: 0,
         }
 
-        mockedAxios.post.mockResolvedValue({
+        mockAxiosInstance.post.mockResolvedValue({
           data: { data: queueItem },
         })
 
         const result = await musicApi.addToQueue(request)
 
-        expect(mockedAxios.post).toHaveBeenCalledWith('/queue', request)
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/queue', request)
         expect(result).toEqual(queueItem)
       })
     })
@@ -222,11 +242,11 @@ describe('MusicApiService', () => {
           vote: 'up' as const,
         }
 
-        mockedAxios.post.mockResolvedValue({})
+        mockAxiosInstance.post.mockResolvedValue({})
 
         await musicApi.voteOnTrack('queue-1', voteRequest)
 
-        expect(mockedAxios.post).toHaveBeenCalledWith('/queue/queue-1/vote', voteRequest)
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/queue/queue-1/vote', voteRequest)
       })
     })
   })
@@ -256,13 +276,13 @@ describe('MusicApiService', () => {
           limit: 10,
         }
 
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: searchResponse },
         })
 
         const result = await musicApi.searchTracks(searchRequest)
 
-        expect(mockedAxios.get).toHaveBeenCalledWith('/search', {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/search', {
           params: searchRequest,
         })
         expect(result).toEqual(searchResponse)
@@ -291,13 +311,13 @@ describe('MusicApiService', () => {
           },
         ]
 
-        mockedAxios.post.mockResolvedValue({
+        mockAxiosInstance.post.mockResolvedValue({
           data: { data: recommendations },
         })
 
         const result = await musicApi.getSessionRecommendations(request)
 
-        expect(mockedAxios.post).toHaveBeenCalledWith('/recommendations/session', request)
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/recommendations/session', request)
         expect(result).toEqual(recommendations)
       })
     })
@@ -314,13 +334,13 @@ describe('MusicApiService', () => {
           },
         ]
 
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: recommendations },
         })
 
         const result = await musicApi.getPersonalizedRecommendations(15)
 
-        expect(mockedAxios.get).toHaveBeenCalledWith('/recommendations/personalized', {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/recommendations/personalized', {
           params: { limit: 15 },
         })
         expect(result).toEqual(recommendations)
@@ -339,13 +359,13 @@ describe('MusicApiService', () => {
           },
         ]
 
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: recommendations },
         })
 
         const result = await musicApi.getSimilarTracks('track-1', 8)
 
-        expect(mockedAxios.get).toHaveBeenCalledWith('/recommendations/similar/track-1', {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/recommendations/similar/track-1', {
           params: { limit: 8 },
         })
         expect(result).toEqual(recommendations)
@@ -356,11 +376,11 @@ describe('MusicApiService', () => {
   describe('Analytics Operations', () => {
     describe('recordPlayback', () => {
       it('records playback successfully', async () => {
-        mockedAxios.post.mockResolvedValue({})
+        mockAxiosInstance.post.mockResolvedValue({})
 
         await musicApi.recordPlayback('track-1', 120, true)
 
-        expect(mockedAxios.post).toHaveBeenCalledWith('/analytics/playback', {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/analytics/playback', {
           trackId: 'track-1',
           duration: 120,
           completed: true,
@@ -371,11 +391,11 @@ describe('MusicApiService', () => {
 
     describe('recordSkip', () => {
       it('records skip successfully', async () => {
-        mockedAxios.post.mockResolvedValue({})
+        mockAxiosInstance.post.mockResolvedValue({})
 
         await musicApi.recordSkip('track-1', 60)
 
-        expect(mockedAxios.post).toHaveBeenCalledWith('/analytics/skip', {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith('/analytics/skip', {
           trackId: 'track-1',
           position: 60,
           timestamp: expect.any(String),
@@ -387,16 +407,16 @@ describe('MusicApiService', () => {
   describe('Health Check', () => {
     describe('checkHealth', () => {
       it('returns true when service is healthy', async () => {
-        mockedAxios.get.mockResolvedValue({ status: 200 })
+        mockAxiosInstance.get.mockResolvedValue({ status: 200 })
 
         const result = await musicApi.checkHealth()
 
         expect(result).toBe(true)
-        expect(mockedAxios.get).toHaveBeenCalledWith('/health')
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/health')
       })
 
       it('returns false when service is unhealthy', async () => {
-        mockedAxios.get.mockRejectedValue(new Error('Service unavailable'))
+        mockAxiosInstance.get.mockRejectedValue(new Error('Service unavailable'))
 
         const result = await musicApi.checkHealth()
 
@@ -406,14 +426,14 @@ describe('MusicApiService', () => {
 
     describe('getApiVersion', () => {
       it('gets API version successfully', async () => {
-        mockedAxios.get.mockResolvedValue({
+        mockAxiosInstance.get.mockResolvedValue({
           data: { data: { version: '1.0.0' } },
         })
 
         const result = await musicApi.getApiVersion()
 
         expect(result).toBe('1.0.0')
-        expect(mockedAxios.get).toHaveBeenCalledWith('/version')
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/version')
       })
     })
   })
@@ -430,7 +450,7 @@ describe('MusicApiService', () => {
         },
       }
 
-      mockedAxios.get.mockRejectedValue(apiError)
+      mockAxiosInstance.get.mockRejectedValue(apiError)
 
       try {
         await musicApi.getPlaylist('invalid-id')
@@ -446,7 +466,7 @@ describe('MusicApiService', () => {
 
     it('handles generic errors', async () => {
       const genericError = new Error('Network timeout')
-      mockedAxios.get.mockRejectedValue(genericError)
+      mockAxiosInstance.get.mockRejectedValue(genericError)
 
       try {
         await musicApi.getPlaylists()

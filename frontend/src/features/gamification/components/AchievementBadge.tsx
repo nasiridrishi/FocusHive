@@ -352,7 +352,7 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
             variant="determinate"
             value={progress}
             role="progressbar"
-            aria-valuenow={achievement.progress}
+            aria-valuenow={Math.min(achievement.progress || 0, achievement.maxProgress || 100)}
             aria-valuemax={achievement.maxProgress}
             sx={{
               height: 6,

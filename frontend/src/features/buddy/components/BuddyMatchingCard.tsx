@@ -50,7 +50,6 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
       setMatches(matchData)
     } catch (err) {
       setError('Failed to load potential matches')
-      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -70,7 +69,6 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
       }
     } catch (err) {
       setError('Failed to send buddy request')
-      console.error(err)
     } finally {
       setSendingRequest(null)
     }
