@@ -1,14 +1,17 @@
 package com.focushive.analytics.repository;
 
 import com.focushive.analytics.entity.DailySummary;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import javax.persistence.QueryHint;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -17,12 +20,22 @@ import java.util.Optional;
 public interface DailySummaryRepository extends JpaRepository<DailySummary, String> {
     
     // Find by user and date
+    @Cacheable(value = "dailySummaries", key = "#userId + '_' + #date")
+    @QueryHints({
+        @QueryHint(name = "org.hibernate.cacheable", value = "true"),
+        @QueryHint(name = "org.hibernate.cacheMode", value = "NORMAL")
+    })
     Optional<DailySummary> findByUserIdAndDate(String userId, LocalDate date);
     
     // Find range of summaries
+    @Cacheable(value = "dailySummaryRanges", key = "#userId + '_' + #startDate + '_' + #endDate")
     @Query("SELECT ds FROM DailySummary ds WHERE ds.userId = :userId " +
            "AND ds.date >= :startDate AND ds.date <= :endDate " +
            "ORDER BY ds.date DESC")
+    @QueryHints({
+        @QueryHint(name = "org.hibernate.cacheable", value = "true"),
+        @QueryHint(name = "org.hibernate.cacheMode", value = "NORMAL")
+    })
     List<DailySummary> findByUserIdAndDateRange(
         @Param("userId") String userId,
         @Param("startDate") LocalDate startDate,
