@@ -6,66 +6,90 @@ services:
     image: postgres:16-alpine
     container_name: focushive-db
     environment:
-      POSTGRES_DB: focushive
-      POSTGRES_USER: focushive_user
-      POSTGRES_PASSWORD: focushive_pass
+      POSTGRES_DB: ${DB_NAME:-focushive}
+      POSTGRES_USER: ${DB_USER:-focushive_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-focushive_pass}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     ports:
-      - "5432:5432"
+      - "${DB_EXTERNAL_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - app_logs:/var/log/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U focushive_user -d focushive"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-focushive_user} -d ${DB_NAME:-focushive}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - focushive-network
 
   # Redis for presence pub/sub
   redis:
     image: redis:7-alpine
     container_name: focushive-redis
-    command: redis-server --requirepass focushive_pass
+    command: redis-server --requirepass ${REDIS_PASSWORD:-focushive_pass} --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
-      - "6379:6379"
+      - "${REDIS_EXTERNAL_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
+      - app_logs:/var/log/redis
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-focushive_pass}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - focushive-network
 
   # Identity Service Database
   identity-db:
     image: postgres:16-alpine
     container_name: identity-db
     environment:
-      POSTGRES_DB: identity_db
-      POSTGRES_USER: identity_user
-      POSTGRES_PASSWORD: identity_pass
+      POSTGRES_DB: ${IDENTITY_DB_NAME:-identity_db}
+      POSTGRES_USER: ${IDENTITY_DB_USER:-identity_user}
+      POSTGRES_PASSWORD: ${IDENTITY_DB_PASSWORD:-identity_pass}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     ports:
-      - "5433:5432"
+      - "${IDENTITY_DB_EXTERNAL_PORT:-5433}:5432"
     volumes:
       - identity_db_data:/var/lib/postgresql/data
+      - ./scripts/init-identity-db.sh:/docker-entrypoint-initdb.d/init-identity-db.sh
+      - app_logs:/var/log/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U identity_user -d identity_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${IDENTITY_DB_USER:-identity_user} -d ${IDENTITY_DB_NAME:-identity_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - focushive-network
 
   # Identity Service Redis
   identity-redis:
     image: redis:7-alpine
     container_name: identity-redis
-    command: redis-server --requirepass identity_redis_pass
+    command: redis-server --requirepass ${IDENTITY_REDIS_PASSWORD:-identity_redis_pass} --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
-      - "6380:6379"
+      - "${IDENTITY_REDIS_EXTERNAL_PORT:-6380}:6379"
     volumes:
       - identity_redis_data:/data
+      - app_logs:/var/log/redis
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${IDENTITY_REDIS_PASSWORD:-identity_redis_pass}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - focushive-network
 
   # Identity Service (Spring Boot)
   identity-service:
@@ -74,34 +98,48 @@ services:
       dockerfile: Dockerfile
     container_name: identity-service
     ports:
-      - "8081:8081"
+      - "${IDENTITY_SERVICE_PORT:-8081}:8081"
     environment:
       # Database
       DB_HOST: identity-db
       DB_PORT: 5432
-      DB_NAME: identity_db
-      DB_USER: identity_user
-      DB_PASSWORD: identity_pass
+      DB_NAME: ${IDENTITY_DB_NAME:-identity_db}
+      DB_USER: ${IDENTITY_DB_USER:-identity_user}
+      DB_PASSWORD: ${IDENTITY_DB_PASSWORD:-identity_pass}
       # Redis
       REDIS_HOST: identity-redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: identity_redis_pass
+      REDIS_PASSWORD: ${IDENTITY_REDIS_PASSWORD:-identity_redis_pass}
       # Security
-      KEY_STORE_PASSWORD: changeme
-      PRIVATE_KEY_PASSWORD: changeme
-      FOCUSHIVE_CLIENT_SECRET: secret
+      KEY_STORE_PASSWORD: ${KEY_STORE_PASSWORD:-changeme}
+      PRIVATE_KEY_PASSWORD: ${PRIVATE_KEY_PASSWORD:-changeme}
+      FOCUSHIVE_CLIENT_SECRET: ${FOCUSHIVE_CLIENT_SECRET:-secret}
       # CORS
-      CORS_ORIGINS: http://192.168.2.3:3000,http://192.168.2.3:5173,http://192.168.2.3:8080,http://localhost:3000,http://localhost:5173,http://localhost:8080
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8080}
       # Application
       SERVER_PORT: 8081
-      LOG_LEVEL: INFO
-      SHOW_SQL: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SHOW_SQL: ${SHOW_SQL:-false}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+      # Management
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when_authorized
+    volumes:
+      - app_logs:/app/logs
     depends_on:
       identity-db:
         condition: service_healthy
       identity-redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
+    networks:
+      - focushive-network
 
   # Spring Boot Backend
   backend:
@@ -110,34 +148,74 @@ services:
       dockerfile: Dockerfile
     container_name: focushive-backend
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
     environment:
       # Database
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: focushive
-      DB_USER: focushive_user
-      DB_PASSWORD: focushive_pass
+      DB_NAME: ${DB_NAME:-focushive}
+      DB_USER: ${DB_USER:-focushive_user}
+      DB_PASSWORD: ${DB_PASSWORD:-focushive_pass}
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: focushive_pass
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-focushive_pass}
       # Identity Service
       IDENTITY_SERVICE_URL: http://identity-service:8081
       # Application
       SERVER_PORT: 8080
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      JWT_EXPIRATION: 86400000
-      LOG_LEVEL: INFO
-      SHOW_SQL: "false"
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SHOW_SQL: ${SHOW_SQL:-false}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+      # Management
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when_authorized
+    volumes:
+      - app_logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
       identity-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
+    networks:
+      - focushive-network
+
+  # NGINX API Gateway
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: focushive-nginx
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - app_logs:/var/log/nginx
+    depends_on:
+      - backend
+      - identity-service
+      - web
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - focushive-network
 
   # React Frontend (Vite dev server)
   web:
@@ -147,22 +225,38 @@ services:
       target: development
     container_name: focushive-web
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     environment:
-      VITE_API_URL: http://192.168.2.3:8080
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:80}
+      VITE_IDENTITY_SERVICE_URL: ${VITE_IDENTITY_SERVICE_URL:-http://localhost:80}
+      NODE_ENV: ${NODE_ENV:-development}
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - app_logs:/app/logs
     depends_on:
-      - backend
+      - nginx
     command: npm run dev
+    restart: unless-stopped
+    networks:
+      - focushive-network
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
   identity_db_data:
+    driver: local
   identity_redis_data:
+    driver: local
+  app_logs:
+    driver: local
 
 networks:
-  default:
+  focushive-network:
+    driver: bridge
     name: focushive-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -50,16 +50,84 @@ focushive/
 
 ### Getting Started
 
+#### Quick Start (Development)
+
 ```bash
-# Start all services with Docker Compose
+# Clone the repository
+git clone <repository-url>
+cd focushive
+
+# Copy environment variables
+cp .env.example .env
+
+# Start all services with Docker Compose (includes Identity Service)
 docker-compose up -d
 
-# Backend will be available at: http://localhost:8080
-# Frontend will be available at: http://localhost:5173
+# Services will be available at:
+# - Frontend: http://localhost:5173
+# - Main Backend: http://localhost:8080  
+# - Identity Service: http://localhost:8081
+# - NGINX API Gateway: http://localhost:80
+# - PostgreSQL (Main): localhost:5432
+# - PostgreSQL (Identity): localhost:5433
+# - Redis (Main): localhost:6379
+# - Redis (Identity): localhost:6380
+
+# Development tools (auto-included in development):
+# - Adminer (Database UI): http://localhost:8082
+# - Redis Commander: http://localhost:8083
+# - Traefik Dashboard: http://localhost:8084
 
 # Stop all services
 docker-compose down
 ```
+
+#### Environment-Specific Deployments
+
+**Development Environment** (default):
+```bash
+# Uses docker-compose.override.yml automatically
+docker-compose up -d
+
+# Or explicitly:
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
+```
+
+**Production Environment**:
+```bash
+# Production deployment with monitoring
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Additional monitoring services:
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3000
+```
+
+**Testing Environment**:
+```bash
+# Testing environment with isolated databases
+docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d
+
+# Run integration tests
+docker-compose -f docker-compose.yml -f docker-compose.test.yml --profile integration-tests up --abort-on-container-exit
+
+# Run E2E tests
+docker-compose -f docker-compose.yml -f docker-compose.test.yml --profile e2e-tests up --abort-on-container-exit
+```
+
+#### Service Access and Routing
+
+All API requests are routed through NGINX for consistent access:
+
+**Frontend API Calls**:
+- Main Backend APIs: `http://localhost/api/*` → `backend:8080/*`
+- Identity Service APIs: `http://localhost/api/identity/*` → `identity-service:8081/api/v1/*`
+- WebSocket connections: `http://localhost/ws` → `backend:8080/ws`
+
+**Direct Service Access** (for debugging):
+- Main Backend: `http://localhost:8080`
+- Identity Service: `http://localhost:8081`
+- Frontend: `http://localhost:5173`
 
 ### Development Commands
 
@@ -71,6 +139,14 @@ cd backend
 ./gradlew build       # Build JAR
 ```
 
+#### Identity Service (Spring Boot)
+```bash
+cd identity-service
+./gradlew bootRun     # Run identity service
+./gradlew test        # Run tests
+./gradlew build       # Build JAR
+```
+
 #### Frontend (React)
 ```bash
 cd frontend
@@ -78,6 +154,99 @@ npm install           # Install dependencies
 npm run dev           # Run development server
 npm test              # Run tests
 npm run build         # Build production
+```
+
+### Identity Service Configuration
+
+The Identity Service is a separate microservice that provides:
+
+- **OAuth2 Authorization Server**: Full OAuth2.1 compliant authorization server
+- **Multiple User Personas**: Users can have different profiles for work/study/personal contexts
+- **Advanced Privacy Controls**: Granular privacy settings and data portability
+- **Inter-service Authentication**: Secure JWT-based communication between services
+
+#### Environment Variables
+
+Key Identity Service environment variables (see `.env.example` for complete list):
+
+```bash
+# Identity Service Database
+IDENTITY_DB_NAME=identity_db
+IDENTITY_DB_USER=identity_user
+IDENTITY_DB_PASSWORD=identity_pass
+IDENTITY_DB_EXTERNAL_PORT=5433
+
+# Identity Service Redis
+IDENTITY_REDIS_PASSWORD=identity_redis_pass
+IDENTITY_REDIS_EXTERNAL_PORT=6380
+
+# Security Configuration
+KEY_STORE_PASSWORD=changeme
+PRIVATE_KEY_PASSWORD=changeme
+FOCUSHIVE_CLIENT_SECRET=secret
+
+# Service Configuration
+IDENTITY_SERVICE_PORT=8081
+```
+
+#### Health Checks and Monitoring
+
+All services include comprehensive health checks:
+
+- **Identity Service**: `http://localhost:8081/api/v1/health`
+- **Main Backend**: `http://localhost:8080/actuator/health`
+- **Databases**: PostgreSQL `pg_isready` checks
+- **Redis**: Redis `ping` checks
+- **NGINX**: HTTP health endpoint
+
+#### Database Initialization
+
+Database initialization scripts are automatically run when containers start:
+
+- `scripts/init-identity-db.sh`: Production identity database setup
+- `scripts/dev-init-identity-db.sh`: Development identity database with debug tools
+- `scripts/init-db.sh`: Production main database setup
+- `scripts/dev-init-db.sh`: Development main database with debug tools
+
+#### Troubleshooting
+
+**Common Issues:**
+
+1. **Port Conflicts**: Ensure ports 5432, 5433, 6379, 6380, 8080, 8081 are available
+2. **Database Connection**: Check that PostgreSQL containers are healthy before services start
+3. **Redis Connection**: Verify Redis containers are accessible with correct passwords
+4. **NGINX Routing**: Check NGINX logs for routing issues: `docker-compose logs nginx`
+
+**Debug Commands:**
+```bash
+# Check service status
+docker-compose ps
+
+# View logs for specific service
+docker-compose logs identity-service
+docker-compose logs backend
+docker-compose logs nginx
+
+# Check database connectivity
+docker-compose exec identity-db psql -U identity_user -d identity_db -c "SELECT 1;"
+docker-compose exec identity-redis redis-cli -a identity_redis_pass ping
+
+# Access database management tools
+# Adminer: http://localhost:8082
+# Redis Commander: http://localhost:8083
+```
+
+**Development Database Access:**
+```bash
+# Connect to main database
+docker-compose exec db psql -U focushive_user -d focushive
+
+# Connect to identity database  
+docker-compose exec identity-db psql -U identity_user -d identity_db
+
+# Access Redis
+docker-compose exec redis redis-cli -a focushive_pass
+docker-compose exec identity-redis redis-cli -a identity_redis_pass
 ```
 
 ## Architecture
