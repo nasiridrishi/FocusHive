@@ -321,20 +321,27 @@ public class AuditLog {
         }
         
         public AuditLogBuilder dataAccess(User user, OAuthClient client, String dataType, String permissions) {
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("data_type", dataType);
+            metadata.put("permissions", permissions);
+            
             return this.user(user)
                     .client(client)
                     .eventType("DATA_ACCESS")
                     .eventCategory("DATA_PRIVACY")
                     .description("Client accessed user data: " + dataType)
                     .resource("data/" + dataType)
-                    .action("READ")
+                    .action("read")
                     .outcome("SUCCESS")
                     .severity("INFO")
-                    .addMetadata("data_type", dataType)
-                    .addMetadata("permissions", permissions);
+                    .metadata(metadata);
         }
         
         public AuditLogBuilder consentGiven(User user, String consentType, String version) {
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("consent_type", consentType);
+            metadata.put("consent_version", version);
+            
             return this.user(user)
                     .eventType("CONSENT_GIVEN")
                     .eventCategory("DATA_PRIVACY")
@@ -342,8 +349,7 @@ public class AuditLog {
                     .action("GRANT")
                     .outcome("SUCCESS")
                     .severity("INFO")
-                    .addMetadata("consent_type", consentType)
-                    .addMetadata("consent_version", version);
+                    .metadata(metadata);
         }
     }
 }

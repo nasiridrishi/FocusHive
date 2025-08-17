@@ -34,6 +34,12 @@ public class OAuth2TokenRequest {
     @Schema(description = "Requested scope (for client_credentials grant)", example = "read write")
     private String scope;
 
+    @Schema(description = "Client ID (alternative to Authorization header)")
+    private String clientId;
+
+    @Schema(description = "Client secret (alternative to Authorization header)")
+    private String clientSecret;
+
     @Schema(description = "Authorization header containing client credentials")
     private String authorizationHeader;
 }

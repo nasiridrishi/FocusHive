@@ -86,15 +86,27 @@ public class JwtTokenProvider {
     }
     
     /**
+     * Generate OAuth2 token with custom claims and expiration.
+     */
+    public String generateToken(String subject, Map<String, Object> customClaims, int expirationSeconds) {
+        Map<String, Object> claims = new HashMap<>(customClaims);
+        return createToken(claims, subject, expirationSeconds * 1000L);
+    }
+    
+    /**
      * Create JWT token with claims.
      */
     private String createToken(Map<String, Object> claims, String subject, long expirationMs) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
         
+        // Add a unique JWT ID to ensure each token is unique even with identical claims
+        String jti = UUID.randomUUID().toString();
+        
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
+                .id(jti) // Add unique JWT ID to prevent duplicate tokens
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .issuer(issuer)
@@ -235,6 +247,26 @@ public class JwtTokenProvider {
      */
     public Claims getClaimsFromToken(String token) {
         return extractAllClaims(token);
+    }
+    
+    /**
+     * Get JWK Set for token verification.
+     * For HMAC, this returns a simple key representation.
+     */
+    public Map<String, Object> getJwkSet() {
+        Map<String, Object> jwkSet = new HashMap<>();
+        Map<String, Object> key = new HashMap<>();
+        
+        // For HMAC symmetric keys, we would typically not expose the actual key
+        // In a real implementation, you might use RSA keys and expose the public key
+        key.put("kty", "oct"); // Key type: symmetric
+        key.put("use", "sig"); // Use: signature
+        key.put("kid", "1"); // Key ID
+        key.put("alg", "HS512"); // Algorithm
+        // Note: We don't include the actual key value for security reasons
+        
+        jwkSet.put("keys", java.util.List.of(key));
+        return jwkSet;
     }
     
     /**

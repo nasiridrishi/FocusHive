@@ -89,6 +89,8 @@ public class OAuth2AuthorizationController {
             @Parameter(description = "PKCE code verifier") @RequestParam(value = "code_verifier", required = false) String codeVerifier,
             @Parameter(description = "Refresh token (for refresh_token grant)") @RequestParam(value = "refresh_token", required = false) String refreshToken,
             @Parameter(description = "Scope (for client_credentials grant)") @RequestParam(value = "scope", required = false) String scope,
+            @Parameter(description = "Client ID (alternative to Authorization header)") @RequestParam(value = "client_id", required = false) String clientId,
+            @Parameter(description = "Client secret (alternative to Authorization header)") @RequestParam(value = "client_secret", required = false) String clientSecret,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             HttpServletRequest request) {
 
@@ -101,6 +103,8 @@ public class OAuth2AuthorizationController {
                 .codeVerifier(codeVerifier)
                 .refreshToken(refreshToken)
                 .scope(scope)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
                 .authorizationHeader(authorizationHeader)
                 .build();
 
@@ -120,13 +124,17 @@ public class OAuth2AuthorizationController {
     public ResponseEntity<OAuth2IntrospectionResponse> introspect(
             @Parameter(description = "Token to introspect") @RequestParam("token") String token,
             @Parameter(description = "Token type hint") @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint,
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @Parameter(description = "Client ID (alternative to Authorization header)") @RequestParam(value = "client_id", required = false) String clientId,
+            @Parameter(description = "Client secret (alternative to Authorization header)") @RequestParam(value = "client_secret", required = false) String clientSecret,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
         log.debug("OAuth2 token introspection request");
 
         OAuth2IntrospectionRequest introspectionRequest = OAuth2IntrospectionRequest.builder()
                 .token(token)
                 .tokenTypeHint(tokenTypeHint)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
                 .authorizationHeader(authorizationHeader)
                 .build();
 
@@ -146,13 +154,17 @@ public class OAuth2AuthorizationController {
     public ResponseEntity<Void> revoke(
             @Parameter(description = "Token to revoke") @RequestParam("token") String token,
             @Parameter(description = "Token type hint") @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint,
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @Parameter(description = "Client ID (alternative to Authorization header)") @RequestParam(value = "client_id", required = false) String clientId,
+            @Parameter(description = "Client secret (alternative to Authorization header)") @RequestParam(value = "client_secret", required = false) String clientSecret,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
         log.info("OAuth2 token revocation request");
 
         OAuth2RevocationRequest revocationRequest = OAuth2RevocationRequest.builder()
                 .token(token)
                 .tokenTypeHint(tokenTypeHint)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
                 .authorizationHeader(authorizationHeader)
                 .build();
 
