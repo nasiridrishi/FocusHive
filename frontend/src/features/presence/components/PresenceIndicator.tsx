@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Badge, Avatar, styled, keyframes, Theme } from '@mui/material'
 import { PresenceStatus } from '../../../shared/types/presence'
 
@@ -99,7 +99,8 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
   className,
 }) => {
 
-  const getBadgeProps = () => {
+  // Memoize badge properties to prevent unnecessary re-renders
+  const badgeProps = useMemo(() => {
     const baseProps = {
       overlap,
       anchorOrigin,
@@ -118,10 +119,10 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
     }
 
     return baseProps
-  }
+  }, [status, showAnimation, overlap, anchorOrigin, className])
 
   return (
-    <StyledBadge {...getBadgeProps()}>
+    <StyledBadge {...badgeProps}>
       {children}
     </StyledBadge>
   )
@@ -130,7 +131,7 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
 export default React.memo(PresenceIndicator)
 
 // Convenience wrapper for Avatar with presence
-export const PresenceAvatar: React.FC<{
+export const PresenceAvatar = React.memo<{
   status: PresenceStatus
   src?: string
   alt?: string
@@ -138,7 +139,7 @@ export const PresenceAvatar: React.FC<{
   size?: number
   showAnimation?: boolean
   onClick?: () => void
-}> = ({ 
+}>(({ 
   status, 
   src, 
   alt, 
@@ -147,15 +148,27 @@ export const PresenceAvatar: React.FC<{
   showAnimation = true,
   onClick 
 }) => {
-  const getInitials = (fullName?: string) => {
-    if (!fullName) return '?'
-    return fullName
+  // Memoize initials calculation
+  const initials = useMemo(() => {
+    if (!name) return '?'
+    return name
       .split(' ')
       .map(word => word[0])
       .join('')
       .toUpperCase()
       .slice(0, 2)
-  }
+  }, [name])
+
+  // Memoize avatar styles
+  const avatarStyles = useMemo(() => ({
+    width: size,
+    height: size,
+    cursor: onClick ? 'pointer' : 'default',
+    transition: 'transform 0.2s ease-in-out',
+    '&:hover': onClick ? {
+      transform: 'scale(1.05)',
+    } : {},
+  }), [size, onClick])
 
   return (
     <PresenceIndicator status={status} showAnimation={showAnimation}>
@@ -163,18 +176,10 @@ export const PresenceAvatar: React.FC<{
         src={src}
         alt={alt}
         onClick={onClick}
-        sx={{
-          width: size,
-          height: size,
-          cursor: onClick ? 'pointer' : 'default',
-          transition: 'transform 0.2s ease-in-out',
-          '&:hover': onClick ? {
-            transform: 'scale(1.05)',
-          } : {},
-        }}
+        sx={avatarStyles}
       >
-        {!src && getInitials(name)}
+        {!src && initials}
       </Avatar>
     </PresenceIndicator>
   )
-}
+})
