@@ -24,8 +24,8 @@ import java.util.UUID;
  * Provides endpoints for managing user preferences across different personas and contexts.
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/preferences")
+//@RestController
+//@RequestMapping("/api/v1/preferences")
 @Tag(name = "User Preferences", description = "User preferences and settings management per persona")
 @SecurityRequirement(name = "JWT")
 @RequiredArgsConstructor

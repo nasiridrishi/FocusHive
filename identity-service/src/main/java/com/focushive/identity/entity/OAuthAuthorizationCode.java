@@ -40,17 +40,29 @@ public class OAuthAuthorizationCode {
     private String code;
     
     /**
+     * User ID who authorized the code
+     */
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    /**
      * User who authorized the code
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
     private User user;
+    
+    /**
+     * OAuth client ID that requested this code
+     */
+    @Column(name = "client_id", nullable = false)
+    private UUID clientId;
     
     /**
      * OAuth client that requested this code
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "client_id", nullable = false)
+    @JoinColumn(name = "client_id", nullable = false, insertable = false, updatable = false)
     private OAuthClient client;
     
     /**

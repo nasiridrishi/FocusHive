@@ -19,6 +19,13 @@ public class OAuth2IntrospectionResponse {
     @JsonProperty("active")
     @Schema(description = "Whether the token is active", example = "true")
     private Boolean active;
+    
+    /**
+     * Convenience method for checking if token is active
+     */
+    public boolean isActive() {
+        return active != null && active;
+    }
 
     @JsonProperty("scope")
     @Schema(description = "Token scopes", example = "openid profile email")
