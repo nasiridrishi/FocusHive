@@ -276,7 +276,7 @@ export class FeaturePreloader {
   private startAdaptivePreloading() {
     // Check connection quality
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as { connection?: { effectiveType?: string; saveData?: boolean } }).connection
       if (connection) {
         // Only preload on good connections
         if (connection.effectiveType === '4g' && !connection.saveData) {
@@ -294,7 +294,7 @@ export class FeaturePreloader {
 
     // Check device memory (if available)
     if ('deviceMemory' in navigator) {
-      const memory = (navigator as any).deviceMemory
+      const memory = (navigator as { deviceMemory?: number }).deviceMemory
       if (memory >= 4) { // 4GB+ devices
         // Preload more aggressively on high-memory devices
         this.queuePreload('heavy-features', 1, () => {
@@ -439,5 +439,5 @@ export const devUtils = {
 
 // Make dev utils available globally in development
 if (import.meta.env.DEV) {
-  (window as any).bundleDevUtils = devUtils
+  (window as { bundleDevUtils?: typeof devUtils }).bundleDevUtils = devUtils
 }

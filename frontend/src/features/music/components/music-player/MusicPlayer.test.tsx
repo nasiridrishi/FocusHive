@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ThemeProvider, createTheme } from '@mui/material'
-import type { Track, MusicState, MusicContextType } from '../../types'
+import type { Track, MusicState } from '../../types'
 
 // Create mock state reference  
 let _mockCurrentTrack: Track | null = null;
@@ -15,34 +15,11 @@ let _mockExpanded = false;
 
 // First, declare the mock variables that will be used later
 let mockMusicState: MusicState;
-let mockMusicContext: Partial<MusicContextType>;
+// mockMusicContext is declared where it's assigned
 
-// Define a type for the mock playback control based on what's actually used
-interface MockPlaybackControl {
-  playWithCrossfade: ReturnType<typeof vi.fn>;
-  pause: ReturnType<typeof vi.fn>;
-  resume: ReturnType<typeof vi.fn>;
-  stop: ReturnType<typeof vi.fn>;
-  seekTo: ReturnType<typeof vi.fn>;
-  setVolume: ReturnType<typeof vi.fn>;
-  toggleMute: ReturnType<typeof vi.fn>;
-  skipNextEnhanced: ReturnType<typeof vi.fn>;
-  skipPreviousEnhanced: ReturnType<typeof vi.fn>;
-  quickSeekBackward: ReturnType<typeof vi.fn>;
-  quickSeekForward: ReturnType<typeof vi.fn>;
-  isShuffling: boolean;
-  repeatMode: 'none' | 'one' | 'all';
-  toggleShuffle: ReturnType<typeof vi.fn>;
-  toggleRepeat: ReturnType<typeof vi.fn>;
-  history: unknown[];
-  crossfadeState: { isActive: boolean; progress: number };
-  clearHistory: ReturnType<typeof vi.fn>;
-  play: ReturnType<typeof vi.fn>;
-  skipNext: ReturnType<typeof vi.fn>;
-  skipPrevious: ReturnType<typeof vi.fn>;
-}
+// Mock playback control object is typed inline
 
-let mockPlaybackControl: MockPlaybackControl;
+// mockPlaybackControl is declared where it's assigned
 
 // Initialize mock variables
 mockMusicState = {
@@ -73,7 +50,7 @@ mockMusicState = {
   currentMood: null,
 };
 
-mockPlaybackControl = {
+const mockPlaybackControl = {
   playWithCrossfade: vi.fn(),
   pause: vi.fn(),
   resume: vi.fn(),
@@ -97,7 +74,7 @@ mockPlaybackControl = {
   skipPrevious: vi.fn(),
 };
 
-mockMusicContext = {
+const mockMusicContext = {
   state: mockMusicState,
   play: vi.fn(),
   pause: vi.fn(),

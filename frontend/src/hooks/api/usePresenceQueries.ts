@@ -11,7 +11,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { presenceApiService, FocusSession as ApiFocusSession, PresenceUpdate as _ApiPresenceUpdate } from '@services/api/presenceApi';
 import { queryKeys, STALE_TIMES, CACHE_TIMES } from '@lib/queryClient';
-import { transformPresenceDTO, transformHiveDTO as _transformHiveDTO, type PresenceDTO as _PresenceDTO, type HiveDTO as _HiveDTO } from './transformers';
+import { transformPresenceDTO, transformHiveDTO as _transformHiveDTO, type PresenceDTO, type HiveDTO as _HiveDTO } from './transformers';
 import { useAuth } from './useAuthQueries';
 import type { 
   UserPresence,
@@ -38,7 +38,7 @@ export const useMyPresence = () => {
     queryKey: [...queryKeys.presence.all, 'me'],
     queryFn: async () => {
       const dto = await presenceApiService.getMyPresence();
-      return transformPresenceDTO(dto as any, currentUserId);
+      return transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId);
     },
     staleTime: STALE_TIMES.REALTIME, // Always considered stale for real-time updates
     gcTime: CACHE_TIMES.SHORT,
@@ -48,7 +48,7 @@ export const useMyPresence = () => {
     refetchOnReconnect: 'always',
     retry: (failureCount, error: unknown) => {
       // Don't retry too aggressively for presence data  
-      const axiosError = error as any;
+      const axiosError = error as { response?: { status?: number } };
       if (axiosError?.response?.status >= 400 && axiosError?.response?.status < 500) {
         return false;
       }
@@ -73,7 +73,7 @@ export const useUserPresence = (userId: string, enabled = true) => {
     queryKey: queryKeys.presence.user(userId),
     queryFn: async () => {
       const dto = await presenceApiService.getUserPresence(parseInt(userId, 10));
-      return transformPresenceDTO(dto as any, currentUserId);
+      return transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId);
     },
     enabled: enabled && !!userId,
     staleTime: STALE_TIMES.REALTIME,
@@ -101,8 +101,8 @@ export const useHivePresence = (hiveId: string, enabled = true) => {
     queryFn: async () => {
       const response = await presenceApiService.getHivePresence(parseInt(hiveId, 10));
       // Transform the response which contains an array of presence DTOs
-      const transformedPresences = (response as any).presences?.map((dto: any) => 
-        transformPresenceDTO(dto, currentUserId)
+      const transformedPresences = (response as { presences?: unknown[] }).presences?.map((dto: unknown) => 
+        transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId)
       ) || [];
       return { presences: transformedPresences };
     },
@@ -144,10 +144,10 @@ export const useBatchHivePresence = (hiveIds: string[], enabled = true) => {
     queryFn: async () => {
       const response = await presenceApiService.getHivePresenceBatch(hiveIds.map(id => parseInt(id, 10)));
       // Transform the batch response - assuming it's an array of hive presence objects
-      return (response as any[]).map((hivePresence: any) => ({
-        ...hivePresence,
-        presences: hivePresence.presences?.map((dto: any) => 
-          transformPresenceDTO(dto, currentUserId)
+      return (response as unknown[]).map((hivePresence: unknown) => ({
+        ...(hivePresence as object),
+        presences: (hivePresence as { presences?: unknown[] }).presences?.map((dto: unknown) => 
+          transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId)
         ) || []
       }));
     },
@@ -235,9 +235,9 @@ export const usePresenceStats = (period: 'daily' | 'weekly' | 'monthly' = 'weekl
   return useQuery({
     queryKey: [...queryKeys.presence.all, 'stats', period],
     queryFn: async () => {
-      // Map period to the correct parameter type that the API expects
-      const periodMap = { daily: 'day', weekly: 'week', monthly: 'month' } as const;
-      const stats = await presenceApiService.getPresenceStats(periodMap[period] as any);
+      // For now, just call the API without parameters
+      // TODO: Update API to support period parameters or add hiveId if needed
+      const stats = await presenceApiService.getPresenceStats();
       // For now, return stats as-is since they're already transformed by the API service
       // TODO: Create PresenceStats transformer if needed
       return stats;
@@ -263,8 +263,8 @@ export const useUpdatePresence = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (presenceData: Partial<PresenceUpdate>) => 
-      presenceApiService.updateMyPresence(presenceData as any),
+    mutationFn: (presenceData: PresenceUpdate) => 
+      presenceApiService.updateMyPresence(presenceData as unknown as _ApiPresenceUpdate),
     mutationKey: ['presence', 'update'],
 
     onMutate: async (presenceData) => {
@@ -346,7 +346,7 @@ export const useStartFocusSession = () => {
       await queryClient.cancelQueries({ queryKey: queryKeys.presence.sessions() });
       
       // Create optimistic session
-      const optimisticSession: any = {
+      const optimisticSession: unknown = {
         id: 'temp-' + Date.now(),
         startTime: new Date().toISOString(),
         task: sessionData.activity || 'Focusing', // Using 'task' instead of 'activity'

@@ -32,7 +32,7 @@ export function useTranslation<T extends Namespace = 'common'>(
   const { t, i18n, ready } = useI18nextTranslation(namespace, {
     keyPrefix: options?.keyPrefix,
     useSuspense: options?.useSuspense ?? false
-  } as any)
+  } as unknown)
 
   const enhancedI18n = useMemo(() => ({
     ...i18n,
@@ -45,7 +45,7 @@ export function useTranslation<T extends Namespace = 'common'>(
 
   return {
     t: t as TypedTFunction,
-    i18n: enhancedI18n as any,
+    i18n: enhancedI18n as unknown as UseTranslationResult<T>['i18n'],
     ready,
   }
 }
@@ -177,7 +177,7 @@ export function useTranslationWithValues<T extends Namespace = 'common'>(
     values?: InterpolationValues,
     options?: { count?: number; context?: string }
   ) => {
-    return t(key as any, { ...values, ...options } as any)
+    return t(key as string, { ...values, ...options })
   }, [t])
 
   return { t: translate }
@@ -196,7 +196,7 @@ export function usePluralTranslation<T extends Namespace = 'common'>(
     count: number,
     values?: InterpolationValues
   ) => {
-    return t(key as any, { count, ...values } as any)
+    return t(key as string, { count, ...values })
   }, [t])
 
   return { translatePlural }
@@ -340,7 +340,7 @@ export function useErrorTranslation() {
     values?: InterpolationValues
   ): string => {
     const key = `${errorType}`
-    return tValidation(key as any, values as any)
+    return tValidation(key as string, values)
   }, [tValidation])
 
   return {

@@ -56,7 +56,7 @@ const RETRY_CONFIG = {
     retry: (failureCount: number, error: unknown) => {
       // Don't retry on 4xx errors (client errors)
       const hasResponse = error && typeof error === 'object' && 'response' in error;
-      const status = hasResponse ? (error as any).response?.status : undefined;
+      const status = hasResponse ? (error as { response: { status?: number } }).response?.status : undefined;
       if (status >= 400 && status < 500) {
         return false;
       }
@@ -70,7 +70,7 @@ const RETRY_CONFIG = {
   CRITICAL: {
     retry: (failureCount: number, error: unknown) => {
       const hasResponse = error && typeof error === 'object' && 'response' in error;
-      const status = hasResponse ? (error as any).response?.status : undefined;
+      const status = hasResponse ? (error as { response: { status?: number } }).response?.status : undefined;
       if (status >= 400 && status < 500) {
         return false;
       }

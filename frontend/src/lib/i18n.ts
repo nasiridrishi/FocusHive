@@ -293,7 +293,7 @@ i18n
           // Missing translation logged only in development
         }
       : undefined,
-  } as any)
+  } as unknown)
 
 export default i18n
 

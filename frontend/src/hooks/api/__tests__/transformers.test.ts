@@ -491,15 +491,15 @@ describe('DTO Transformers', () => {
   
   describe('Error Handling', () => {
     it('should throw error for null DTO in transformPresenceDTO', () => {
-      expect(() => transformPresenceDTO(null as any, 'user-123')).toThrow('PresenceDTO cannot be null or undefined');
+      expect(() => transformPresenceDTO(null as unknown as PresenceDTO, 'user-123')).toThrow('PresenceDTO cannot be null or undefined');
     });
     
     it('should throw error for undefined DTO in transformHiveDTO', () => {
-      expect(() => transformHiveDTO(undefined as any, 'user-123')).toThrow('HiveDTO cannot be null or undefined');
+      expect(() => transformHiveDTO(undefined as unknown as HiveDTO, 'user-123')).toThrow('HiveDTO cannot be null or undefined');
     });
     
     it('should throw error for null DTO in transformUserDTO', () => {
-      expect(() => transformUserDTO(null as any)).toThrow('UserDTO cannot be null or undefined');
+      expect(() => transformUserDTO(null as unknown as UserDTO)).toThrow('UserDTO cannot be null or undefined');
     });
     
     it('should throw error for missing required fields in PresenceDTO', () => {

@@ -224,7 +224,7 @@ function validateEnvironmentVariable(
   // Type conversion
   try {
     switch (type) {
-      case 'number':
+      case 'number': {
         const numValue = parseInt(rawValue!, 10);
         convertedValue = numValue;
         if (isNaN(numValue)) {
@@ -238,6 +238,7 @@ function validateEnvironmentVariable(
           };
         }
         break;
+      }
       case 'boolean':
         convertedValue = rawValue!.toLowerCase() === 'true';
         break;
