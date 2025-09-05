@@ -5,7 +5,7 @@ import { AnalyticsFiltersProps, AnalyticsFilter } from '../types';
 
 // Mock MUI X Date Pickers to avoid ESM import issues
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({
-  datePicker: ({ label, value, onChange, slotProps }: { label: string; value: Date | null; onChange: (date: Date) => void; slotProps?: { textField?: { ariaLabel?: string } } }) => (
+  DatePicker: ({ label, value, onChange, slotProps }: { label: string; value: Date | null; onChange: (date: Date) => void; slotProps?: { textField?: { ariaLabel?: string } } }) => (
     <input
       aria-label={slotProps?.textField?.ariaLabel || label}
       type="date"
@@ -23,7 +23,7 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
 }));
 
 vi.mock('@mui/x-date-pickers/LocalizationProvider', () => ({
-  localizationProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+  LocalizationProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }));
 
 vi.mock('@mui/x-date-pickers/AdapterDateFns', () => ({

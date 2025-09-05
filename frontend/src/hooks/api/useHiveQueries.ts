@@ -11,7 +11,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { hiveApiService } from '@services/api';
 import { queryKeys, STALE_TIMES, CACHE_TIMES, invalidateQueries } from '@lib/queryClient';
-import { transformHiveDTO, type HiveDTO } from './transformers';
+import { transformHiveDTO, type HiveDTO as _HiveDTO } from './transformers';
 import { useAuth } from './useAuthQueries';
 import type { 
   Hive 
@@ -71,7 +71,7 @@ export const useInfiniteHives = (filters?: HiveSearchFilters) => {
       };
     },
     initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => {
+    getNextPageParam: (lastPage, _allPages) => {
       // Check if we have more pages based on PaginatedResponse
       return !lastPage.last ? lastPage.page + 1 : undefined;
     },

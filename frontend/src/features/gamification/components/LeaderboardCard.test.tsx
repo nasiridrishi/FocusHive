@@ -461,17 +461,17 @@ describe('LeaderboardCard', () => {
     it('renders efficiently with same props', () => {
       const renderSpy = vi.fn();
       
-      const ___TestLeaderboardCard = ({ leaderboard }: { leaderboard: Leaderboard }) => {
+      const TestLeaderboardCard = ({ leaderboard }: { leaderboard: Leaderboard }) => {
         renderSpy();
         return <LeaderboardCard leaderboard={leaderboard} />;
       };
       
-      const { rerender } = renderWithTheme(<___TestLeaderboardCard leaderboard={mockLeaderboard} />);
+      const { rerender } = renderWithTheme(<TestLeaderboardCard leaderboard={mockLeaderboard} />);
       
       expect(renderSpy).toHaveBeenCalledTimes(1);
       
       // Re-render with same data
-      rerender(<___TestLeaderboardCard leaderboard={mockLeaderboard} />);
+      rerender(<TestLeaderboardCard leaderboard={mockLeaderboard} />);
       
       // React will re-render components, this is expected behavior
       expect(renderSpy).toHaveBeenCalledTimes(2);

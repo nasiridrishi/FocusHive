@@ -120,14 +120,14 @@ export const TanStackQueryExample: React.FC = () => {
   const client = useQueryClient();
   
   // Cache statistics
-  const getCacheStats = () => {
+  const getCacheStats = React.useCallback(() => {
     const cache = client.getQueryCache();
     return {
       totalQueries: cache.getAll().length,
       staleQueries: cache.getAll().filter(query => query.isStale()).length,
       fetchingQueries: cache.getAll().filter(query => query.state.isFetching).length,
     };
-  };
+  }, [client]);
   
   const [cacheStats, setCacheStats] = React.useState(getCacheStats());
   

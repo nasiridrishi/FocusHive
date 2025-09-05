@@ -243,18 +243,18 @@ describe('PointsDisplay', () => {
     it('renders efficiently with same props', () => {
       const renderSpy = vi.fn();
       
-      const ___TestComponent = () => {
+      const TestComponent = () => {
         renderSpy();
         return <PointsDisplay points={mockPoints} />;
       };
       
-      const { rerender } = renderWithTheme(<___TestComponent />);
+      const { rerender } = renderWithTheme(<TestComponent />);
       
       // Initial render
       expect(renderSpy).toHaveBeenCalledTimes(1);
       
       // Re-render with same props
-      rerender(<___TestComponent />);
+      rerender(<TestComponent />);
       
       // React will re-render components, this is expected behavior
       expect(renderSpy).toHaveBeenCalledTimes(2);

@@ -5,7 +5,7 @@ import { AnalyticsDashboardProps } from '../types';
 
 // Mock all the child components
 vi.mock('./ProductivityChart', () => ({
-  productivityChart: ({ loading, error }: { loading?: boolean; error?: string }) => (
+  ProductivityChart: ({ loading, error }: { loading?: boolean; error?: string }) => (
     <div data-testid="productivity-chart">
       {loading && <div>Loading chart...</div>}
       {error && <div>Chart error: {error}</div>}
@@ -15,7 +15,7 @@ vi.mock('./ProductivityChart', () => ({
 }));
 
 vi.mock('./TaskCompletionRate', () => ({
-  taskCompletionRate: ({ data }: { data?: { rate?: number } }) => (
+  TaskCompletionRate: ({ data }: { data?: { rate?: number } }) => (
     <div data-testid="task-completion-rate">
       Task Completion: {data?.rate ? `${(data.rate * 100).toFixed(1)}%` : 'No data'}
     </div>
@@ -23,7 +23,7 @@ vi.mock('./TaskCompletionRate', () => ({
 }));
 
 vi.mock('./HiveActivityHeatmap', () => ({
-  hiveActivityHeatmap: ({ data }: { data?: unknown[] }) => (
+  HiveActivityHeatmap: ({ data }: { data?: unknown[] }) => (
     <div data-testid="hive-activity-heatmap">
       Hive Activity: {data?.length || 0} days
     </div>
@@ -31,7 +31,7 @@ vi.mock('./HiveActivityHeatmap', () => ({
 }));
 
 vi.mock('./MemberEngagement', () => ({
-  memberEngagement: ({ data }: { data?: unknown[] }) => (
+  MemberEngagement: ({ data }: { data?: unknown[] }) => (
     <div data-testid="member-engagement">
       Members: {data?.length || 0}
     </div>
@@ -39,7 +39,7 @@ vi.mock('./MemberEngagement', () => ({
 }));
 
 vi.mock('./GoalProgress', () => ({
-  goalProgress: ({ goals }: { goals?: unknown[] }) => (
+  GoalProgress: ({ goals }: { goals?: unknown[] }) => (
     <div data-testid="goal-progress">
       Goals: {goals?.length || 0}
     </div>
@@ -47,7 +47,7 @@ vi.mock('./GoalProgress', () => ({
 }));
 
 vi.mock('./AnalyticsFilters', () => ({
-  analyticsFilters: ({ onFilterChange }: { onFilterChange: (filter: { viewType: string }) => void }) => (
+  AnalyticsFilters: ({ onFilterChange }: { onFilterChange: (filter: { viewType: string }) => void }) => (
     <div data-testid="analytics-filters">
       <button onClick={() => onFilterChange({ viewType: 'hive' })}>
         Change Filter
@@ -57,7 +57,7 @@ vi.mock('./AnalyticsFilters', () => ({
 }));
 
 vi.mock('./ExportMenu', () => ({
-  exportMenu: ({ onExport }: { onExport: (options: { format: string }) => void }) => (
+  ExportMenu: ({ onExport }: { onExport: (options: { format: string }) => void }) => (
     <div data-testid="export-menu">
       <button onClick={() => onExport({ format: 'csv' })}>
         Export Data

@@ -77,7 +77,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     formState: { isValid },
     reset
   } = useForm<CreateHiveRequest>({
-    resolver: yupResolver(createHiveSchema) as any,
+    resolver: yupResolver(createHiveSchema),
     mode: 'onBlur',
     reValidateMode: 'onChange',
     defaultValues: {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import {
   Box,
   Card,
@@ -49,7 +49,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
   selectedPlaylistId,
   showCreateButton = true,
   hiveId,
-  type = 'all',
+  type: _type = 'all',
 }) => {
   const theme = useTheme()
   const { state, createPlaylist, deletePlaylist } = useMusic()
@@ -113,7 +113,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
       if (b.id === selectedPlaylistId) return 1
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     })
-  }, [playlists, searchQuery, selectedPlaylistId])
+  }, [playlists, searchQuery, selectedPlaylistId, filterType, hiveId])
 
   // Handlers
   const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
