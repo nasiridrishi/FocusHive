@@ -1,0 +1,29 @@
+{
+  "title": "Colmenas",
+  "description": "Tus espacios virtuales de co-trabajo",
+  "create_hive": {
+    "title": "Crear Nueva Colmena",
+    "name": "Nombre de la Colmena",
+    "description": "Descripción",
+    "category": "Categoría",
+    "privacy": "Privacidad",
+    "public": "Pública",
+    "private": "Privada",
+    "invite_only": "Solo por Invitación",
+    "max_members": "Máximo de Miembros",
+    "tags": "Etiquetas",
+    "submit": "Crear Colmena",
+    "success": "Colmena creada con éxito",
+    "error": "Error al crear la colmena",
+    "loading": "Creando colmena..."
+  },
+  "join_hive": {
+    "title": "Unirse a Colmena",
+    "request_sent": "Solicitud de unión enviada",
+    "already_member": "Ya eres miembro",
+    "join": "Unirse a Colmena",
+    "request_join": "Solicitar Unirse",
+    "success": "Te uniste con éxito a la colmena",
+    "error": "Error al unirse a la colmena"
+  }
+}

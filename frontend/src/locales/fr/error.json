@@ -1,0 +1,8 @@
+{
+  "page_not_found": "Page Not Found",
+  "server_error": "Server Error",
+  "network_error": "Network Error",
+  "something_went_wrong": "Something went wrong",
+  "try_again": "Try Again",
+  "go_home": "Go Home"
+}

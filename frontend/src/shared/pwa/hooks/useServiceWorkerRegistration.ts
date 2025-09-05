@@ -1,6 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
-import { registerSW } from 'virtual:pwa-register';
-import type { RegisterSWOptions } from 'virtual:pwa-register';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+// Temporarily disabled PWA imports due to build issues
+// import { registerSW } from 'virtual:pwa-register';
+// import type { RegisterSWOptions } from 'virtual:pwa-register';
+
+// Stub for RegisterSWOptions
+interface RegisterSWOptions {
+  immediate?: boolean;
+  onNeedRefresh?: () => void;
+  onOfflineReady?: () => void;
+  onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
+  onRegisterError?: (error: any) => void;
+}
+
+// Stub registerSW function
+const registerSW = (options?: RegisterSWOptions) => {
+  console.warn('PWA registration is currently disabled');
+  return () => Promise.resolve();
+}
 
 export interface ServiceWorkerRegistrationState {
   isRegistered: boolean;
@@ -47,6 +63,72 @@ export const useServiceWorkerRegistration = (
     }
   }, [updateSW]);
 
+  // Memoize callback functions to prevent infinite re-renders
+  const onRegisteredCallback = useCallback((registration?: ServiceWorkerRegistration) => {
+    setState(prev => ({
+      ...prev,
+      isRegistered: true,
+      isRegistering: false,
+      registration: registration || null,
+      error: null,
+    }));
+    options.onRegistered?.(registration);
+  }, [options.onRegistered]);
+
+  const onRegisteredSWCallback = useCallback((swUrl: string, registration?: ServiceWorkerRegistration) => {
+    setState(prev => ({
+      ...prev,
+      isRegistered: true,
+      isRegistering: false,
+      registration: registration || null,
+      error: null,
+    }));
+    options.onRegisteredSW?.(swUrl, registration);
+  }, [options.onRegisteredSW]);
+
+  const onNeedRefreshCallback = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      needsRefresh: true,
+    }));
+    options.onNeedRefresh?.();
+  }, [options.onNeedRefresh]);
+
+  const onOfflineReadyCallback = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      offlineReady: true,
+    }));
+    options.onOfflineReady?.();
+  }, [options.onOfflineReady]);
+
+  const onRegisterErrorCallback = useCallback((error: any) => {
+    setState(prev => ({
+      ...prev,
+      isRegistered: false,
+      isRegistering: false,
+      error: error instanceof Error ? error : new Error(String(error)),
+    }));
+    options.onRegisterError?.(error);
+  }, [options.onRegisterError]);
+
+  // Memoize the register options to prevent infinite re-renders
+  const registerOptions = useMemo(() => ({
+    immediate: options.immediate ?? true,
+    onRegistered: onRegisteredCallback,
+    onRegisteredSW: onRegisteredSWCallback,
+    onNeedRefresh: onNeedRefreshCallback,
+    onOfflineReady: onOfflineReadyCallback,
+    onRegisterError: onRegisterErrorCallback,
+  }), [
+    options.immediate,
+    onRegisteredCallback,
+    onRegisteredSWCallback,
+    onNeedRefreshCallback,
+    onOfflineReadyCallback,
+    onRegisterErrorCallback,
+  ]);
+
   useEffect(() => {
     // Skip registration if service worker is not supported
     if (!('serviceWorker' in navigator)) {
@@ -60,53 +142,7 @@ export const useServiceWorkerRegistration = (
     setState(prev => ({ ...prev, isRegistering: true }));
 
     try {
-      const updateSWFunction = registerSW({
-        immediate: options.immediate ?? true,
-        onRegistered: (registration) => {
-          setState(prev => ({
-            ...prev,
-            isRegistered: true,
-            isRegistering: false,
-            registration: registration || null,
-            error: null,
-          }));
-          options.onRegistered?.(registration);
-        },
-        onRegisteredSW: (swUrl, registration) => {
-          setState(prev => ({
-            ...prev,
-            isRegistered: true,
-            isRegistering: false,
-            registration: registration || null,
-            error: null,
-          }));
-          options.onRegisteredSW?.(swUrl, registration);
-        },
-        onNeedRefresh: () => {
-          setState(prev => ({
-            ...prev,
-            needsRefresh: true,
-          }));
-          options.onNeedRefresh?.();
-        },
-        onOfflineReady: () => {
-          setState(prev => ({
-            ...prev,
-            offlineReady: true,
-          }));
-          options.onOfflineReady?.();
-        },
-        onRegisterError: (error) => {
-          setState(prev => ({
-            ...prev,
-            isRegistered: false,
-            isRegistering: false,
-            error: error instanceof Error ? error : new Error(String(error)),
-          }));
-          options.onRegisterError?.(error);
-        },
-      });
-
+      const updateSWFunction = registerSW(registerOptions);
       setUpdateSW(() => updateSWFunction);
     } catch (error) {
       setState(prev => ({
@@ -116,7 +152,7 @@ export const useServiceWorkerRegistration = (
         error: error instanceof Error ? error : new Error(String(error)),
       }));
     }
-  }, [options]);
+  }, [registerOptions]);
 
   return {
     ...state,

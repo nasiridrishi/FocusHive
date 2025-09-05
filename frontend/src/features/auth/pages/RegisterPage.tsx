@@ -3,34 +3,30 @@ import { Box, Container } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import RegisterForm from '../components/RegisterForm'
 import { RegisterRequest } from '@shared/types'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
-  
-  // TODO: Replace with actual auth context/hook
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const { authState, register, clearError } = useAuth()
+
+  // Clear any existing error when component mounts
+  React.useEffect(() => {
+    if (authState.error) {
+      clearError()
+    }
+  }, [])
 
   const handleRegister = async (userData: RegisterRequest) => {
-    setIsLoading(true)
-    setError(null)
-
     try {
-      // TODO: Implement actual registration API call
-      // Will use userData.email, userData.password, userData.username when API is implemented
-      void userData; // Temporary to satisfy linter
+      await register(userData)
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // For now, just navigate to dashboard
-      // In real implementation, this would be handled by auth context
+      // Navigate to dashboard after successful registration
       navigate('/dashboard', { replace: true })
       
-    } catch (err) {
-      setError('Registration failed. Please try again.')
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      // Error is already handled by the auth context
+      // The error will be displayed via authState.error
+      console.error('Registration failed:', error)
     }
   }
 
@@ -55,8 +51,8 @@ export default function RegisterPage() {
         >
           <RegisterForm
             onSubmit={handleRegister}
-            isLoading={isLoading}
-            error={error}
+            isLoading={authState.isLoading}
+            error={authState.error}
           />
         </Box>
       </Container>

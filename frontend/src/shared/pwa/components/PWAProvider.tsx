@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useServiceWorkerRegistration } from '../hooks/useServiceWorkerRegistration';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 import type { ServiceWorkerRegistrationState } from '../hooks/useServiceWorkerRegistration';
@@ -32,6 +32,11 @@ export interface PWAProviderProps {
    */
   serviceWorkerOptions?: {
     immediate?: boolean;
+    onRegistered?: (registration?: ServiceWorkerRegistration) => void;
+    onRegisteredSW?: (swUrl: string, registration?: ServiceWorkerRegistration) => void;
+    onNeedRefresh?: () => void;
+    onOfflineReady?: () => void;
+    onRegisterError?: (error: any) => void;
   };
   /**
    * Whether to enable automatic install prompts
@@ -57,10 +62,21 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({
   serviceWorkerOptions = { immediate: true },
   enableInstallPrompts = true,
 }) => {
-  const serviceWorkerState = useServiceWorkerRegistration(serviceWorkerOptions);
+  // Memoize serviceWorkerOptions to prevent unnecessary re-renders
+  const memoizedServiceWorkerOptions = useMemo(() => serviceWorkerOptions, [
+    serviceWorkerOptions?.immediate,
+    serviceWorkerOptions?.onRegistered,
+    serviceWorkerOptions?.onRegisteredSW,
+    serviceWorkerOptions?.onNeedRefresh,
+    serviceWorkerOptions?.onOfflineReady,
+    serviceWorkerOptions?.onRegisterError,
+  ]);
+
+  const serviceWorkerState = useServiceWorkerRegistration(memoizedServiceWorkerOptions);
   const installState = usePWAInstall();
 
-  const contextValue: PWAContextValue = {
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue: PWAContextValue = useMemo(() => ({
     serviceWorker: serviceWorkerState,
     install: installState,
     
@@ -68,7 +84,7 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({
     isReady: serviceWorkerState.isRegistered || serviceWorkerState.offlineReady,
     hasUpdates: serviceWorkerState.needsRefresh,
     canInstall: installState.isInstallable && enableInstallPrompts,
-  };
+  }), [serviceWorkerState, installState, enableInstallPrompts]);
 
   return (
     <PWAContext.Provider value={contextValue}>

@@ -109,7 +109,7 @@ describe('GamificationContext', () => {
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
     });
 
     it('provides default context values when no provider is present', () => {
@@ -129,7 +129,7 @@ describe('GamificationContext', () => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
         expect(screen.getByTestId('level')).toHaveTextContent('12');
         expect(screen.getByTestId('rank')).toHaveTextContent('256');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
     });
   });
 
@@ -139,7 +139,7 @@ describe('GamificationContext', () => {
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
       
       const addPointsButton = screen.getByTestId('add-points');
       await act(async () => {
@@ -149,7 +149,7 @@ describe('GamificationContext', () => {
       // The mock API will add 100 points to current value
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1350');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
     });
   });
 
@@ -159,7 +159,7 @@ describe('GamificationContext', () => {
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
       
       const unlockButton = screen.getByTestId('unlock-achievement');
       await act(async () => {
@@ -169,7 +169,7 @@ describe('GamificationContext', () => {
       // The action should complete without error
       await waitFor(() => {
         expect(screen.getByTestId('points')).toBeInTheDocument();
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
     });
   });
 
@@ -179,7 +179,7 @@ describe('GamificationContext', () => {
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
       
       const updateStreakButton = screen.getByTestId('update-streak');
       await act(async () => {
@@ -189,7 +189,7 @@ describe('GamificationContext', () => {
       // The action should complete without error
       await waitFor(() => {
         expect(screen.getByTestId('points')).toBeInTheDocument();
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
     });
   });
 
@@ -199,7 +199,7 @@ describe('GamificationContext', () => {
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
       
       const refreshButton = screen.getByTestId('refresh-stats');
       await act(async () => {
@@ -209,7 +209,7 @@ describe('GamificationContext', () => {
       // Should still show stats after refresh
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
-      }, { timeout: 15000 });
+      }, { timeout: 5000 });
     });
   });
 });

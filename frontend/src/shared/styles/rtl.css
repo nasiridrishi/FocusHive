@@ -1,0 +1,275 @@
+/* RTL Support Styles */
+
+/* Base RTL styles */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="ltr"] {
+  text-align: left;
+}
+
+/* Flexbox direction corrections for RTL */
+[dir="rtl"] .MuiAppBar-root .MuiToolbar-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiDrawer-root .MuiPaper-root {
+  right: 0;
+  left: auto;
+}
+
+[dir="rtl"] .MuiListItemIcon-root {
+  margin-left: 16px;
+  margin-right: -8px;
+}
+
+[dir="rtl"] .MuiListItemText-root {
+  text-align: right;
+}
+
+/* Spacing adjustments for RTL */
+[dir="rtl"] .MuiMenuItem-root .MuiSvgIcon-root {
+  margin-left: 8px;
+  margin-right: -8px;
+}
+
+[dir="rtl"] .MuiChip-root .MuiChip-icon {
+  margin-left: 5px;
+  margin-right: -6px;
+}
+
+[dir="rtl"] .MuiChip-root .MuiChip-deleteIcon {
+  margin-left: -6px;
+  margin-right: 5px;
+}
+
+/* Form input RTL styles */
+[dir="rtl"] .MuiInputBase-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiInputLabel-root {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
+}
+
+[dir="rtl"] .MuiInputLabel-shrink {
+  transform: translate(0, -9px) scale(0.75);
+}
+
+[dir="rtl"] .MuiOutlinedInput-notchedOutline legend {
+  text-align: right;
+}
+
+/* Button group RTL */
+[dir="rtl"] .MuiButtonGroup-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiButtonGroup-root .MuiButton-root:first-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+[dir="rtl"] .MuiButtonGroup-root .MuiButton-root:last-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+/* Dialog RTL */
+[dir="rtl"] .MuiDialog-paper {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiDialogTitle-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiDialogActions-root {
+  justify-content: flex-start;
+}
+
+[dir="rtl"] .MuiDialogActions-root > *:not(:first-child) {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* Table RTL */
+[dir="rtl"] .MuiTableHead-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiTableCell-root {
+  text-align: right;
+}
+
+[dir="rtl"] .MuiTableSortLabel-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiTableSortLabel-icon {
+  margin-left: 4px;
+  margin-right: 0;
+}
+
+/* Stepper RTL */
+[dir="rtl"] .MuiStepper-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiStepConnector-root {
+  flex: 1 1 auto;
+}
+
+/* Navigation RTL */
+[dir="rtl"] .MuiBreadcrumbs-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiBreadcrumbs-separator {
+  transform: scaleX(-1);
+}
+
+/* Tabs RTL */
+[dir="rtl"] .MuiTabs-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiTab-root {
+  flex-direction: row-reverse;
+}
+
+/* Avatar group RTL */
+[dir="rtl"] .MuiAvatarGroup-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiAvatarGroup-avatar {
+  margin-left: -8px;
+  margin-right: 0;
+}
+
+/* Speed dial RTL */
+[dir="rtl"] .MuiSpeedDial-root {
+  left: 16px;
+  right: auto;
+}
+
+[dir="rtl"] .MuiSpeedDialAction-root {
+  flex-direction: row-reverse;
+}
+
+/* Timeline RTL */
+[dir="rtl"] .MuiTimeline-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiTimelineItem-root {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .MuiTimelineContent-root {
+  text-align: right;
+  padding-right: 6px;
+  padding-left: 16px;
+}
+
+[dir="rtl"] .MuiTimelineConnector-root {
+  flex: 1 1 auto;
+}
+
+/* Custom application RTL styles */
+[dir="rtl"] .language-switcher {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .search-input {
+  text-align: right;
+}
+
+[dir="rtl"] .search-input input {
+  padding-right: calc(1em + 32px);
+  padding-left: 8px;
+}
+
+[dir="rtl"] .sidebar-navigation {
+  text-align: right;
+}
+
+[dir="rtl"] .user-menu {
+  transform-origin: top right;
+}
+
+/* Focus styles for RTL */
+[dir="rtl"] *:focus {
+  outline-offset: -2px;
+}
+
+/* Animation adjustments for RTL */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+[dir="rtl"] .slide-in-animation {
+  animation: slideInRight 0.3s ease-out;
+}
+
+[dir="ltr"] .slide-in-animation {
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* Print styles for RTL */
+@media print {
+  [dir="rtl"] * {
+    text-align: right !important;
+  }
+  
+  [dir="rtl"] .page-break {
+    page-break-before: right;
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  [dir="rtl"] .MuiButton-outlined,
+  [dir="rtl"] .MuiTextField-root {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion for RTL animations */
+@media (prefers-reduced-motion: reduce) {
+  [dir="rtl"] .slide-in-animation {
+    animation: none;
+  }
+}
+
+/* Dark mode RTL adjustments */
+[data-theme="dark"][dir="rtl"] .MuiAppBar-root {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"][dir="rtl"] .MuiDrawer-paper {
+  border-left: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}

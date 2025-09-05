@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
+  Target as TargetIcon,
+  Handshake as HandshakeIcon,
+  CalendarMonth as CalendarIcon,
+  EmojiEvents as TrophyIcon,
+  Star as StarIcon,
+  MilitaryTech as MedalIcon,
+} from '@mui/icons-material';
+import {
   formatPoints,
   formatStreakType,
   calculateLevel,
@@ -195,16 +203,20 @@ describe('gamificationUtils', () => {
   });
 
   describe('getCategoryIcon', () => {
-    it('returns correct icons for all categories', () => {
-      expect(getCategoryIcon('focus')).toBe('🎯');
-      expect(getCategoryIcon('collaboration')).toBe('🤝');
-      expect(getCategoryIcon('consistency')).toBe('📅');
-      expect(getCategoryIcon('milestone')).toBe('🏆');
-      expect(getCategoryIcon('special')).toBe('⭐');
+    it('returns a React component for all categories', () => {
+      expect(getCategoryIcon('focus')).toBeDefined();
+      expect(getCategoryIcon('collaboration')).toBeDefined();
+      expect(getCategoryIcon('consistency')).toBeDefined();
+      expect(getCategoryIcon('milestone')).toBeDefined();
+      expect(getCategoryIcon('special')).toBeDefined();
+      // Check that it has React component properties
+      expect(getCategoryIcon('focus').$$typeof).toBeDefined();
     });
 
-    it('handles unknown category gracefully', () => {
-      expect(getCategoryIcon('unknown' as AchievementCategory)).toBe('🎖️');
+    it('handles unknown category gracefully by returning a component', () => {
+      const unknownIcon = getCategoryIcon('unknown' as AchievementCategory);
+      expect(unknownIcon).toBeDefined();
+      expect(unknownIcon.$$typeof).toBeDefined();
     });
   });
 

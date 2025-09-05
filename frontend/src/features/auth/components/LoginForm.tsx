@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   TextField,
-  Button,
   Typography,
   Alert,
   Paper,
@@ -14,10 +13,16 @@ import {
   Visibility,
   VisibilityOff,
   Email,
-  Lock
+  Lock,
+  Login as LoginIcon
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { LoginRequest, FormErrors } from '@shared/types'
+import { useForm, Controller } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { LoginRequest } from '@shared/types'
+import { LoadingButton } from '@shared/components/loading'
+import { loginSchema } from '@shared/validation/schemas'
+import { useTranslation } from '@shared/components/i18n'
 
 interface LoginFormProps {
   onSubmit: (credentials: LoginRequest) => Promise<void>
@@ -27,58 +32,25 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState<LoginRequest>({
-    email: '',
-    password: ''
-  })
+  const { t } = useTranslation('auth')
   const [showPassword, setShowPassword] = useState(false)
-  const [formErrors, setFormErrors] = useState<FormErrors>({})
-
-  const validateForm = (): boolean => {
-    const errors: FormErrors = {}
-
-    if (!formData.email) {
-      errors.email = ['Email is required']
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = ['Please enter a valid email address']
+  
+  const {
+    control,
+    handleSubmit
+  } = useForm<LoginRequest>({
+    resolver: yupResolver(loginSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: ''
     }
+  })
 
-    if (!formData.password) {
-      errors.password = ['Password is required']
-    } else if (formData.password.length < 6) {
-      errors.password = ['Password must be at least 6 characters']
-    }
-
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleInputChange = (field: keyof LoginRequest) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }))
-    
-    // Clear field error when user starts typing
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: []
-      }))
-    }
-  }
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
+  const onFormSubmit = async (data: LoginRequest) => {
     try {
-      await onSubmit(formData)
+      await onSubmit(data)
     } catch (err) {
       // Error handling is done by parent component
     }
@@ -98,7 +70,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
         borderRadius: 2
       }}
     >
-      <Box component="form" onSubmit={handleSubmit} noValidate>
+      <Box component="form" onSubmit={handleSubmit(onFormSubmit)} noValidate>
         <Typography
           variant="h4"
           component="h1"
@@ -110,7 +82,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
             mb: 3
           }}
         >
-          Welcome Back
+          {t('login.title')}
         </Typography>
 
         <Typography
@@ -121,7 +93,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
             mb: 3
           }}
         >
-          Sign in to continue to FocusHive
+          {t('login.subtitle')}
         </Typography>
 
         {error && (
@@ -130,66 +102,78 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
           </Alert>
         )}
 
-        <TextField
-          fullWidth
-          id="email"
-          label="Email Address"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange('email')}
-          error={Boolean(formErrors.email?.length)}
-          helperText={formErrors.email?.[0]}
-          disabled={isLoading}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Email color="action" />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 2 }}
-          autoComplete="email"
-          autoFocus
+        <Controller
+          name="email"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              fullWidth
+              id="email"
+              label={t('login.email')}
+              type="email"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 2 }}
+              autoComplete="email"
+              autoFocus
+            />
+          )}
         />
 
-        <TextField
-          fullWidth
-          id="password"
-          label="Password"
-          type={showPassword ? 'text' : 'password'}
-          value={formData.password}
-          onChange={handleInputChange('password')}
-          error={Boolean(formErrors.password?.length)}
-          helperText={formErrors.password?.[0]}
-          disabled={isLoading}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={handleShowPassword}
-                  edge="end"
-                  aria-label="toggle password visibility"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 3 }}
-          autoComplete="current-password"
+        <Controller
+          name="password"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              fullWidth
+              id="password"
+              label={t('login.password')}
+              type={showPassword ? 'text' : 'password'}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleShowPassword}
+                      edge="end"
+                      aria-label={t('login.togglePasswordVisibility')}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 3 }}
+              autoComplete="current-password"
+            />
+          )}
         />
 
-        <Button
+        <LoadingButton
           type="submit"
           fullWidth
           variant="contained"
           size="large"
-          disabled={isLoading}
+          loading={isLoading}
+          loadingText={t('login.signingIn')}
+          startIcon={<LoginIcon />}
           sx={{
             py: 1.5,
             mb: 2,
@@ -197,8 +181,8 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
             fontWeight: 600
           }}
         >
-          {isLoading ? 'Signing In...' : 'Sign In'}
-        </Button>
+          {t('login.signIn')}
+        </LoadingButton>
 
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Link
@@ -208,20 +192,20 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
             onClick={() => navigate('/forgot-password')}
             sx={{ mr: 2 }}
           >
-            Forgot Password?
+            {t('login.forgotPassword')}
           </Link>
         </Box>
 
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Don't have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link
               component="button"
               type="button"
               onClick={() => navigate('/register')}
               sx={{ fontWeight: 600 }}
             >
-              Sign Up
+              {t('login.signUp')}
             </Link>
           </Typography>
         </Box>

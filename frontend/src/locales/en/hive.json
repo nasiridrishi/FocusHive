@@ -1,0 +1,131 @@
+{
+  "title": "Hives",
+  "description": "Your virtual co-working spaces",
+  "create_hive": {
+    "title": "Create New Hive",
+    "name": "Hive Name",
+    "description": "Description",
+    "category": "Category",
+    "privacy": "Privacy",
+    "public": "Public",
+    "private": "Private",
+    "invite_only": "Invite Only",
+    "max_members": "Maximum Members",
+    "tags": "Tags",
+    "submit": "Create Hive",
+    "success": "Hive created successfully",
+    "error": "Failed to create hive",
+    "loading": "Creating hive..."
+  },
+  "join_hive": {
+    "title": "Join Hive",
+    "request_sent": "Join request sent",
+    "already_member": "You are already a member",
+    "join": "Join Hive",
+    "request_join": "Request to Join",
+    "success": "Successfully joined hive",
+    "error": "Failed to join hive"
+  },
+  "leave_hive": {
+    "title": "Leave Hive",
+    "confirm": "Are you sure you want to leave this hive?",
+    "success": "Left hive successfully",
+    "error": "Failed to leave hive"
+  },
+  "hive_details": {
+    "members": "Members",
+    "member_count": "{{count}} member_one",
+    "member_count_plural": "{{count}} members", 
+    "created": "Created",
+    "category": "Category",
+    "tags": "Tags",
+    "description": "Description",
+    "activity": "Recent Activity",
+    "settings": "Hive Settings",
+    "invite": "Invite Members",
+    "manage": "Manage Hive"
+  },
+  "member_management": {
+    "title": "Manage Members",
+    "owner": "Owner",
+    "admin": "Admin", 
+    "moderator": "Moderator",
+    "member": "Member",
+    "promote": "Promote",
+    "demote": "Demote",
+    "remove": "Remove Member",
+    "ban": "Ban Member",
+    "invite": "Invite New Members",
+    "pending_invitations": "Pending Invitations",
+    "join_requests": "Join Requests",
+    "approve": "Approve",
+    "reject": "Reject"
+  },
+  "categories": {
+    "study": "Study",
+    "work": "Work",
+    "creative": "Creative",
+    "fitness": "Fitness",
+    "reading": "Reading",
+    "programming": "Programming",
+    "design": "Design",
+    "writing": "Writing",
+    "research": "Research",
+    "language": "Language Learning",
+    "music": "Music",
+    "art": "Art",
+    "other": "Other"
+  },
+  "privacy_levels": {
+    "public": {
+      "title": "Public",
+      "description": "Anyone can discover and join this hive"
+    },
+    "private": {
+      "title": "Private", 
+      "description": "Only invited members can join this hive"
+    },
+    "invite_only": {
+      "title": "Invite Only",
+      "description": "Members can only join with an invitation"
+    }
+  },
+  "search": {
+    "placeholder": "Search hives...",
+    "no_results": "No hives found",
+    "popular": "Popular Hives",
+    "recommended": "Recommended for You",
+    "recent": "Recently Active",
+    "filter_by": "Filter by",
+    "sort_by": "Sort by",
+    "all_categories": "All Categories",
+    "all_privacy": "All Privacy Levels"
+  },
+  "activity": {
+    "member_joined": "{{member}} joined the hive",
+    "member_left": "{{member}} left the hive",
+    "session_started": "{{member}} started a focus session",
+    "session_completed": "{{member}} completed a {{duration}} focus session",
+    "achievement_earned": "{{member}} earned the {{achievement}} achievement",
+    "goal_completed": "{{member}} completed their daily goal",
+    "message_posted": "{{member}} posted a message",
+    "no_recent_activity": "No recent activity"
+  },
+  "stats": {
+    "total_members": "Total Members",
+    "active_members": "Active Members",
+    "total_sessions": "Total Sessions",
+    "avg_session_length": "Average Session Length",
+    "total_focus_time": "Total Focus Time",
+    "achievements_earned": "Achievements Earned",
+    "goals_completed": "Goals Completed"
+  },
+  "notifications": {
+    "new_member": "New member joined: {{member}}",
+    "member_left": "Member left: {{member}}",
+    "session_invite": "{{member}} invited you to join their focus session",
+    "achievement_unlocked": "New achievement unlocked in {{hive}}",
+    "goal_reminder": "Don't forget to work on your goal in {{hive}}",
+    "weekly_summary": "Your weekly summary for {{hive}} is ready"
+  }
+}

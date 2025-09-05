@@ -8,6 +8,14 @@
 import React, { useState, useEffect } from 'react'
 import { Box, useTheme } from '@mui/material'
 import { Outlet, useLocation } from 'react-router-dom'
+import { 
+  Home as HomeIcon, 
+  Dashboard as DashboardIcon, 
+  Business as BusinessIcon, 
+  Assignment as AssignmentIcon, 
+  Search as SearchIcon, 
+  Chat as ChatIcon 
+} from '@mui/icons-material'
 import { AdaptiveNavigation } from './AdaptiveNavigation'
 import { ResponsiveContainer } from './ResponsiveContainer'
 import { useResponsive, useScrollDirection, useDynamicViewportHeight } from '../hooks'
@@ -82,33 +90,33 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
     {
       id: 'home',
       label: 'Home',
-      icon: <span>🏠</span>,
+      icon: <HomeIcon />,
       path: '/',
     },
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: <span>📊</span>,
+      icon: <DashboardIcon />,
       path: '/dashboard',
       requiresAuth: true,
     },
     {
       id: 'hives',
       label: 'Hives',
-      icon: <span>🏢</span>,
+      icon: <BusinessIcon />,
       path: '/hives',
       requiresAuth: true,
       children: [
         {
           id: 'my-hives',
           label: 'My Hives',
-          icon: <span>📋</span>,
+          icon: <AssignmentIcon />,
           path: '/hives/my',
         },
         {
           id: 'discover',
           label: 'Discover',
-          icon: <span>🔍</span>,
+          icon: <SearchIcon />,
           path: '/hives/discover',
         },
       ],
@@ -116,7 +124,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
     {
       id: 'chat',
       label: 'Chat',
-      icon: <span>💬</span>,
+      icon: <ChatIcon />,
       path: '/chat',
       badge: 3,
       requiresAuth: true,

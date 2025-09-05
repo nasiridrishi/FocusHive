@@ -1,26 +1,39 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { Box, CircularProgress, Typography } from '@mui/material'
+import { Box, CircularProgress, Typography, Alert } from '@mui/material'
+import { useAuthState } from '../contexts/AuthContext'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  isAuthenticated: boolean
-  isLoading?: boolean
+  isAuthenticated?: boolean // Optional - will use auth context if not provided
+  isLoading?: boolean // Optional - will use auth context if not provided
   requireAuth?: boolean
   redirectTo?: string
+  fallback?: React.ReactNode // Custom loading component
 }
 
 export default function ProtectedRoute({
   children,
-  isAuthenticated,
-  isLoading = false,
+  isAuthenticated: propIsAuthenticated,
+  isLoading: propIsLoading,
   requireAuth = true,
-  redirectTo = '/login'
+  redirectTo = '/login',
+  fallback
 }: ProtectedRouteProps) {
   const location = useLocation()
+  
+  // Use auth context if props not provided
+  const authState = useAuthState()
+  const isAuthenticated = propIsAuthenticated ?? authState.isAuthenticated
+  const isLoading = propIsLoading ?? authState.isLoading
+  const error = authState.error
 
-  // Show loading spinner while authentication status is being determined
+  // Show custom fallback or default loading spinner while authentication status is being determined
   if (isLoading) {
+    if (fallback) {
+      return <>{fallback}</>
+    }
+    
     return (
       <Box
         sx={{
@@ -34,7 +47,37 @@ export default function ProtectedRoute({
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Loading...
+          Authenticating...
+        </Typography>
+      </Box>
+    )
+  }
+
+  // Show authentication error if present
+  if (error && requireAuth) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          gap: 2,
+          px: 3
+        }}
+      >
+        <Alert severity="error" sx={{ maxWidth: 400 }}>
+          {error}
+        </Alert>
+        <Typography variant="body2" color="text.secondary" align="center">
+          Please try refreshing the page or{' '}
+          <strong 
+            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => window.location.href = '/login'}
+          >
+            sign in again
+          </strong>
         </Typography>
       </Box>
     )

@@ -1,3 +1,12 @@
+import React from 'react';
+import {
+  Adjust as TargetIcon,
+  Handshake as HandshakeIcon,
+  CalendarMonth as CalendarIcon,
+  EmojiEvents as TrophyIcon,
+  Star as StarIcon,
+  MilitaryTech as MedalIcon,
+} from '@mui/icons-material';
 import type {
   Achievement,
   Streak,
@@ -68,18 +77,18 @@ export const getRarityColor = (rarity: AchievementRarity): string => {
 };
 
 /**
- * Returns emoji icon for achievement category
+ * Returns Material UI icon for achievement category
  */
-export const getCategoryIcon = (category: AchievementCategory): string => {
-  const iconMap: Record<AchievementCategory, string> = {
-    focus: '🎯',
-    collaboration: '🤝',
-    consistency: '📅',
-    milestone: '🏆',
-    special: '⭐',
+export const getCategoryIcon = (category: AchievementCategory): React.ComponentType => {
+  const iconMap: Record<AchievementCategory, React.ComponentType> = {
+    focus: TargetIcon,
+    collaboration: HandshakeIcon,
+    consistency: CalendarIcon,
+    milestone: TrophyIcon,
+    special: StarIcon,
   };
   
-  return iconMap[category] || '🎖️';
+  return iconMap[category] || MedalIcon;
 };
 
 /**

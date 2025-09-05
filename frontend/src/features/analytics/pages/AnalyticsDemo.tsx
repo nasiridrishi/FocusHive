@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Container, Typography, Button, Paper } from '@mui/material';
-import { Analytics, ArrowBack } from '@mui/icons-material';
+import { Analytics, ArrowBack, BarChart, LocalFireDepartment, Group, AutoAwesome, Adjust as Target, TrendingUp, Build, Palette } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { AnalyticsDashboard } from '../components/AnalyticsDashboard';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import { AnalyticsProvider } from '../contexts/AnalyticsContext';
 
-export const AnalyticsDemo: React.FC = () => {
+const AnalyticsDemo: React.FC = () => {
   const navigate = useNavigate();
 
   const handleGoBack = () => {
@@ -41,8 +41,9 @@ export const AnalyticsDemo: React.FC = () => {
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3, mb: 4 }}>
           <Box>
             <Paper sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" gutterBottom color="primary">
-                📊 Real-time Analytics
+              <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <BarChart />
+                Real-time Analytics
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Track your productivity metrics, focus time, session completion rates, 
@@ -53,8 +54,9 @@ export const AnalyticsDemo: React.FC = () => {
           
           <Box>
             <Paper sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" gutterBottom color="primary">
-                🔥 Activity Heatmaps
+              <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <LocalFireDepartment />
+                Activity Heatmaps
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Visualize your daily activity patterns with GitHub-style heatmaps. 
@@ -65,8 +67,9 @@ export const AnalyticsDemo: React.FC = () => {
           
           <Box>
             <Paper sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" gutterBottom color="primary">
-                👥 Team Insights
+              <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Group />
+                Team Insights
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Analyze hive member engagement, collaboration patterns, and 
@@ -92,8 +95,9 @@ export const AnalyticsDemo: React.FC = () => {
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
             <Box>
               <Box>
-                <Typography variant="h6" gutterBottom>
-                  ✨ Interactive Charts
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AutoAwesome />
+                  Interactive Charts
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
                   Built with MUI X Charts for smooth interactions, tooltips, and responsive design.
@@ -104,8 +108,9 @@ export const AnalyticsDemo: React.FC = () => {
             
             <Box>
               <Box>
-                <Typography variant="h6" gutterBottom>
-                  🎯 Goal Tracking
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Target />
+                  Goal Tracking
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
                   Set and track personal and team goals with milestone progress, 
@@ -116,8 +121,9 @@ export const AnalyticsDemo: React.FC = () => {
             
             <Box>
               <Box>
-                <Typography variant="h6" gutterBottom>
-                  📈 Trend Analysis
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TrendingUp />
+                  Trend Analysis
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
                   Identify productivity patterns, track improvement over time, 
@@ -148,8 +154,9 @@ export const AnalyticsDemo: React.FC = () => {
           <Paper sx={{ p: 3 }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
               <Box>
-                <Typography variant="h6" gutterBottom>
-                  🛠️ Technology Stack
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Build />
+                  Technology Stack
                 </Typography>
                 <ul>
                   <li>React 18 with TypeScript</li>
@@ -162,8 +169,9 @@ export const AnalyticsDemo: React.FC = () => {
               </Box>
               
               <Box>
-                <Typography variant="h6" gutterBottom>
-                  🎨 Design Features
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Palette />
+                  Design Features
                 </Typography>
                 <ul>
                   <li>Responsive design for all screen sizes</li>
@@ -181,3 +189,5 @@ export const AnalyticsDemo: React.FC = () => {
     </AnalyticsProvider>
   );
 };
+
+export default AnalyticsDemo;

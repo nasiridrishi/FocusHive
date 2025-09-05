@@ -1,0 +1,48 @@
+{
+  "title": "Focus Timer",
+  "start": "Start Session",
+  "pause": "Pause",
+  "resume": "Resume",
+  "stop": "Stop",
+  "reset": "Reset",
+  "session_types": {
+    "focus": "Focus Session",
+    "short_break": "Short Break",
+    "long_break": "Long Break",
+    "custom": "Custom Session"
+  },
+  "settings": {
+    "title": "Timer Settings",
+    "focus_duration": "Focus Duration",
+    "short_break_duration": "Short Break Duration",
+    "long_break_duration": "Long Break Duration",
+    "auto_start_breaks": "Auto-start breaks",
+    "auto_start_sessions": "Auto-start focus sessions",
+    "notification_sound": "Notification Sound",
+    "volume": "Volume",
+    "sessions_until_long_break": "Sessions until long break"
+  },
+  "session": {
+    "in_progress": "Session in progress",
+    "completed": "Session completed!",
+    "paused": "Session paused",
+    "remaining": "Time remaining",
+    "elapsed": "Time elapsed",
+    "session_count": "Session {{current}} of {{total}}",
+    "take_break": "Time for a break!",
+    "break_over": "Break is over. Ready to focus?",
+    "well_done": "Well done! You completed a {{duration}} minute focus session."
+  },
+  "statistics": {
+    "title": "Session Statistics",
+    "today": "Today",
+    "this_week": "This Week", 
+    "this_month": "This Month",
+    "total_sessions": "Total Sessions",
+    "total_focus_time": "Total Focus Time",
+    "average_session": "Average Session",
+    "longest_session": "Longest Session",
+    "streak": "Current Streak",
+    "productivity_score": "Productivity Score"
+  }
+}

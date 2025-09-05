@@ -13,9 +13,6 @@ declare global {
   interface Navigator {
     standalone?: boolean;
   }
-
-  // Global vi for tests
-  const vi: typeof import('vitest')['vi'];
 }
 
 // BeforeInstallPrompt Event interface

@@ -6,14 +6,6 @@ export * from './MemberEngagement';
 export * from './GoalProgress';
 export * from './AnalyticsFilters';
 export * from './ExportMenu';
-export * from './AnalyticsDashboard';
 
-// Named exports for convenience
-export { ProductivityChart } from './ProductivityChart';
-export { TaskCompletionRate } from './TaskCompletionRate';
-export { HiveActivityHeatmap } from './HiveActivityHeatmap';
-export { MemberEngagement } from './MemberEngagement';
-export { GoalProgress } from './GoalProgress';
-export { AnalyticsFilters } from './AnalyticsFilters';
-export { ExportMenu } from './ExportMenu';
-export { AnalyticsDashboard } from './AnalyticsDashboard';
+// Default export for AnalyticsDashboard
+export { default as AnalyticsDashboard } from './AnalyticsDashboard';

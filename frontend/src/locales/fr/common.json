@@ -1,0 +1,56 @@
+{
+  "app": {
+    "name": "FocusHive",
+    "description": "Plateforme numérique de co-travail et co-étude",
+    "tagline": "Travaillez ensemble, restez concentré"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "hives": "Ruches",
+    "discover": "Découvrir",
+    "analytics": "Analyses",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "logout": "Déconnexion",
+    "menu": "Menu",
+    "close": "Fermer"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "submit": "Soumettre",
+    "reset": "Réinitialiser",
+    "clear": "Effacer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Actualiser",
+    "reload": "Recharger",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "continue": "Continuer",
+    "finish": "Terminer",
+    "confirm": "Confirmer",
+    "accept": "Accepter",
+    "decline": "Décliner",
+    "loading": "Chargement...",
+    "load_more": "Charger Plus"
+  },
+  "language": {
+    "current": "Langue Actuelle",
+    "change": "Changer de Langue",
+    "select": "Sélectionner la Langue",
+    "english": "Anglais",
+    "spanish": "Espagnol",
+    "french": "Français",
+    "auto_detect": "Détection Automatique",
+    "browser_default": "Par Défaut du Navigateur"
+  }
+}

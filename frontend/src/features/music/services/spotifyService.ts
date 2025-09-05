@@ -10,7 +10,8 @@ import type {
   SpotifyDevice,
   SpotifyUserProfile,
   SpotifyPlaybackContext,
-  SpotifyError
+  SpotifyError,
+  Spotify
 } from '../../../types/spotify'
 
 export class SpotifyService {

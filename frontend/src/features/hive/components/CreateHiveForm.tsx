@@ -13,7 +13,6 @@ import {
   Switch,
   Select,
   MenuItem,
-  SelectChangeEvent,
   InputLabel,
   Chip,
   Box,
@@ -22,7 +21,6 @@ import {
   Step,
   StepLabel,
   Alert,
-  CircularProgress,
   Autocomplete,
   Paper,
   Divider,
@@ -34,7 +32,11 @@ import {
   Group as GroupIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material'
-import { CreateHiveRequest, HiveSettings } from '@shared/types'
+import { useForm, Controller } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { CreateHiveRequest } from '@shared/types'
+import { LoadingButton } from '@shared/components/loading'
+import { createHiveSchema } from '@shared/validation/schemas'
 
 interface CreateHiveFormProps {
   open: boolean
@@ -66,83 +68,62 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
   error = null,
 }) => {
   const [activeStep, setActiveStep] = useState(0)
-  const [formData, setFormData] = useState<CreateHiveRequest>({
-    name: '',
-    description: '',
-    maxMembers: 10,
-    isPublic: true,
-    tags: [],
-    settings: {
-      allowChat: true,
-      allowVoice: false,
-      requireApproval: false,
-      focusMode: 'flexible',
-      defaultSessionLength: 25,
-      maxSessionLength: 120,
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    trigger,
+    formState: { isValid },
+    reset
+  } = useForm<CreateHiveRequest>({
+    resolver: yupResolver(createHiveSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      name: '',
+      description: '',
+      maxMembers: 10,
+      isPublic: true,
+      tags: [],
+      settings: {
+        allowChat: true,
+        allowVoice: false,
+        requireApproval: false,
+        focusMode: 'flexible',
+        defaultSessionLength: 25,
+        maxSessionLength: 120,
+      },
     },
   })
 
-  // const [newTag, setNewTag] = useState('')
+  const watchedValues = watch()
 
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1)
+  const handleNext = async () => {
+    // Validate current step before proceeding
+    let fieldsToValidate: (keyof CreateHiveRequest)[] = []
+    
+    switch (activeStep) {
+      case 0:
+        fieldsToValidate = ['name', 'description', 'maxMembers', 'isPublic', 'tags']
+        break
+      case 1:
+        fieldsToValidate = ['settings']
+        break
+    }
+
+    const isStepValid = await trigger(fieldsToValidate)
+    if (isStepValid) {
+      setActiveStep((prevActiveStep) => prevActiveStep + 1)
+    }
   }
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1)
   }
 
-  const handleInputChange = (field: keyof CreateHiveRequest) => 
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value
-      setFormData(prev => ({
-        ...prev,
-        [field]: value,
-      }))
-    }
-
-  const handleSettingsChange = (field: keyof HiveSettings) => 
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value
-      setFormData(prev => ({
-        ...prev,
-        settings: {
-          ...prev.settings,
-          [field]: value,
-        },
-      }))
-    }
-
-  const handleSelectChange = (field: keyof CreateHiveRequest | keyof HiveSettings) =>
-    (event: SelectChangeEvent<string>) => {
-      const value = event.target.value
-      
-      if (field in formData.settings) {
-        setFormData(prev => ({
-          ...prev,
-          settings: {
-            ...prev.settings,
-            [field]: value,
-          },
-        }))
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [field]: value,
-        }))
-      }
-    }
-
-  const handleTagsChange = (_event: React.SyntheticEvent, newValue: string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: newValue,
-    }))
-  }
-
-
-  const handleSubmit = () => {
-    onSubmit(formData)
+  const onFormSubmit = (data: CreateHiveRequest) => {
+    onSubmit(data)
   }
 
   const handleClose = () => {
@@ -151,22 +132,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
       // Reset form after dialog closes
       setTimeout(() => {
         setActiveStep(0)
-        setFormData({
-          name: '',
-          description: '',
-          maxMembers: 10,
-          isPublic: true,
-          tags: [],
-          settings: {
-            allowChat: true,
-            allowVoice: false,
-            requireApproval: false,
-            focusMode: 'flexible',
-            defaultSessionLength: 25,
-            maxSessionLength: 120,
-          },
-        })
-        // setNewTag('')
+        reset()
       }, 300)
     }
   }
@@ -174,11 +140,11 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
   const isStepValid = (step: number) => {
     switch (step) {
       case 0:
-        return formData.name.trim().length >= 3 && formData.description.trim().length >= 10
+        return watchedValues.name?.trim().length >= 3 && watchedValues.description?.trim().length >= 10
       case 1:
         return true
       case 2:
-        return true
+        return isValid
       default:
         return false
     }
@@ -189,64 +155,90 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
       case 0:
         return (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <TextField
-              autoFocus
-              label="Hive Name"
-              placeholder="e.g., Study Group, Writing Circle, Code Jam"
-              value={formData.name}
-              onChange={handleInputChange('name')}
-              fullWidth
-              required
-              helperText={`${formData.name.length}/50 characters`}
-              inputProps={{ maxLength: 50 }}
-              error={formData.name.length > 0 && formData.name.length < 3}
-            />
-
-            <TextField
-              label="Description"
-              placeholder="Describe the purpose and goals of your hive..."
-              value={formData.description}
-              onChange={handleInputChange('description')}
-              fullWidth
-              required
-              multiline
-              rows={4}
-              helperText={`${formData.description.length}/500 characters`}
-              inputProps={{ maxLength: 500 }}
-              error={formData.description.length > 0 && formData.description.length < 10}
-            />
-
-            <FormControl fullWidth>
-              <InputLabel>Maximum Members</InputLabel>
-              <Select
-                value={formData.maxMembers}
-                label="Maximum Members"
-                onChange={handleSelectChange('maxMembers')}
-              >
-                {[5, 10, 15, 20, 25, 30, 50].map(num => (
-                  <MenuItem key={num} value={num}>{num} members</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.isPublic}
-                  onChange={handleInputChange('isPublic')}
-                  color="primary"
+            <Controller
+              name="name"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  autoFocus
+                  label="Hive Name"
+                  placeholder="e.g., Study Group, Writing Circle, Code Jam"
+                  fullWidth
+                  required
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message || `${field.value?.length || 0}/50 characters`}
+                  inputProps={{ maxLength: 50 }}
                 />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {formData.isPublic ? <PublicIcon /> : <LockIcon />}
-                  {formData.isPublic ? 'Public Hive' : 'Private Hive'}
-                </Box>
-              }
+              )}
+            />
+
+            <Controller
+              name="description"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  label="Description"
+                  placeholder="Describe the purpose and goals of your hive..."
+                  fullWidth
+                  required
+                  multiline
+                  rows={4}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message || `${field.value?.length || 0}/500 characters`}
+                  inputProps={{ maxLength: 500 }}
+                />
+              )}
+            />
+
+            <Controller
+              name="maxMembers"
+              control={control}
+              render={({ field, fieldState }) => (
+                <FormControl fullWidth error={!!fieldState.error}>
+                  <InputLabel>Maximum Members</InputLabel>
+                  <Select
+                    {...field}
+                    label="Maximum Members"
+                  >
+                    {[5, 10, 15, 20, 25, 30, 50].map(num => (
+                      <MenuItem key={num} value={num}>{num} members</MenuItem>
+                    ))}
+                  </Select>
+                  {fieldState.error && (
+                    <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
+                      {fieldState.error.message}
+                    </Typography>
+                  )}
+                </FormControl>
+              )}
+            />
+
+            <Controller
+              name="isPublic"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      {...field}
+                      checked={field.value}
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {field.value ? <PublicIcon /> : <LockIcon />}
+                      {field.value ? 'Public Hive' : 'Private Hive'}
+                    </Box>
+                  }
+                />
+              )}
             />
 
             <Typography variant="body2" color="text.secondary">
-              {formData.isPublic 
+              {watchedValues.isPublic 
                 ? 'Anyone can discover and join this hive'
                 : 'Only invited members can join this hive'
               }
@@ -256,22 +248,30 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
               <Typography variant="subtitle2" gutterBottom>
                 Tags (help others discover your hive)
               </Typography>
-              <Autocomplete
-                multiple
-                freeSolo
-                options={commonTags}
-                value={formData.tags}
-                onChange={handleTagsChange}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip variant="outlined" label={option} {...getTagProps({ index })} />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Add tags..."
-                    helperText="Press Enter to add custom tags"
+              <Controller
+                name="tags"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Autocomplete
+                    {...field}
+                    multiple
+                    freeSolo
+                    options={commonTags}
+                    value={field.value || []}
+                    onChange={(_, newValue) => field.onChange(newValue)}
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => (
+                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
+                      ))
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder="Add tags..."
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message || "Press Enter to add custom tags"}
+                      />
+                    )}
                   />
                 )}
               />
@@ -290,74 +290,116 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
             <FormControl component="fieldset">
               <FormLabel component="legend">Communication</FormLabel>
               <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.settings.allowChat}
-                      onChange={handleSettingsChange('allowChat')}
+                <Controller
+                  name="settings.allowChat"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          {...field}
+                          checked={field.value}
+                        />
+                      }
+                      label="Allow chat messages"
                     />
-                  }
-                  label="Allow chat messages"
+                  )}
                 />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.settings.allowVoice}
-                      onChange={handleSettingsChange('allowVoice')}
+                <Controller
+                  name="settings.allowVoice"
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          {...field}
+                          checked={field.value}
+                        />
+                      }
+                      label="Allow voice calls (coming soon)"
+                      disabled
                     />
-                  }
-                  label="Allow voice calls (coming soon)"
-                  disabled
+                  )}
                 />
               </FormGroup>
             </FormControl>
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.settings.requireApproval}
-                  onChange={handleSettingsChange('requireApproval')}
+            <Controller
+              name="settings.requireApproval"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      {...field}
+                      checked={field.value}
+                    />
+                  }
+                  label="Require approval to join"
                 />
-              }
-              label="Require approval to join"
+              )}
             />
 
-            <FormControl fullWidth>
-              <InputLabel>Focus Mode</InputLabel>
-              <Select
-                value={formData.settings.focusMode}
-                label="Focus Mode"
-                onChange={handleSelectChange('focusMode')}
-              >
-                {focusModeOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    <Box>
-                      <Typography variant="body1">{option.label}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {option.description}
-                      </Typography>
-                    </Box>
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Controller
+              name="settings.focusMode"
+              control={control}
+              render={({ field, fieldState }) => (
+                <FormControl fullWidth error={!!fieldState.error}>
+                  <InputLabel>Focus Mode</InputLabel>
+                  <Select
+                    {...field}
+                    label="Focus Mode"
+                  >
+                    {focusModeOptions.map(option => (
+                      <MenuItem key={option.value} value={option.value}>
+                        <Box>
+                          <Typography variant="body1">{option.label}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {option.description}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {fieldState.error && (
+                    <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
+                      {fieldState.error.message}
+                    </Typography>
+                  )}
+                </FormControl>
+              )}
+            />
 
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Default Session (minutes)"
-                type="number"
-                value={formData.settings.defaultSessionLength}
-                onChange={handleSettingsChange('defaultSessionLength')}
-                inputProps={{ min: 5, max: 120, step: 5 }}
-                sx={{ flex: 1 }}
+              <Controller
+                name="settings.defaultSessionLength"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    label="Default Session (minutes)"
+                    type="number"
+                    inputProps={{ min: 5, max: 120, step: 5 }}
+                    sx={{ flex: 1 }}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                  />
+                )}
               />
-              <TextField
-                label="Max Session (minutes)"
-                type="number"
-                value={formData.settings.maxSessionLength}
-                onChange={handleSettingsChange('maxSessionLength')}
-                inputProps={{ min: 30, max: 480, step: 15 }}
-                sx={{ flex: 1 }}
+              <Controller
+                name="settings.maxSessionLength"
+                control={control}
+                render={({ field, fieldState }) => (
+                  <TextField
+                    {...field}
+                    label="Max Session (minutes)"
+                    type="number"
+                    inputProps={{ min: 30, max: 480, step: 15 }}
+                    sx={{ flex: 1 }}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                  />
+                )}
               />
             </Box>
           </Box>
@@ -371,21 +413,21 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
             <Paper variant="outlined" sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <GroupIcon color="primary" />
-                <Typography variant="h6">{formData.name}</Typography>
+                <Typography variant="h6">{watchedValues.name}</Typography>
                 <Chip
                   size="small"
-                  icon={formData.isPublic ? <PublicIcon /> : <LockIcon />}
-                  label={formData.isPublic ? 'Public' : 'Private'}
-                  color={formData.isPublic ? 'success' : 'warning'}
+                  icon={watchedValues.isPublic ? <PublicIcon /> : <LockIcon />}
+                  label={watchedValues.isPublic ? 'Public' : 'Private'}
+                  color={watchedValues.isPublic ? 'success' : 'warning'}
                 />
               </Box>
 
               <Typography variant="body1" color="text.secondary" paragraph>
-                {formData.description}
+                {watchedValues.description}
               </Typography>
 
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                {formData.tags.map(tag => (
+                {watchedValues.tags?.map(tag => (
                   <Chip key={tag} size="small" label={tag} variant="outlined" />
                 ))}
               </Box>
@@ -394,19 +436,19 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
 
               <Typography variant="subtitle2" gutterBottom>Settings</Typography>
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                <Typography variant="body2">Max Members: {formData.maxMembers}</Typography>
-                <Typography variant="body2">Focus Mode: {formData.settings.focusMode}</Typography>
+                <Typography variant="body2">Max Members: {watchedValues.maxMembers}</Typography>
+                <Typography variant="body2">Focus Mode: {watchedValues.settings?.focusMode}</Typography>
                 <Typography variant="body2">
-                  Chat: {formData.settings.allowChat ? 'Enabled' : 'Disabled'}
+                  Chat: {watchedValues.settings?.allowChat ? 'Enabled' : 'Disabled'}
                 </Typography>
                 <Typography variant="body2">
-                  Approval: {formData.settings.requireApproval ? 'Required' : 'Not Required'}
+                  Approval: {watchedValues.settings?.requireApproval ? 'Required' : 'Not Required'}
                 </Typography>
                 <Typography variant="body2">
-                  Default Session: {formData.settings.defaultSessionLength}m
+                  Default Session: {watchedValues.settings?.defaultSessionLength}m
                 </Typography>
                 <Typography variant="body2">
-                  Max Session: {formData.settings.maxSessionLength}m
+                  Max Session: {watchedValues.settings?.maxSessionLength}m
                 </Typography>
               </Box>
             </Paper>
@@ -474,14 +516,16 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
               Next
             </Button>
           ) : (
-            <Button
+            <LoadingButton
               variant="contained"
-              onClick={handleSubmit}
-              disabled={isLoading || !isStepValid(activeStep)}
-              startIcon={isLoading ? <CircularProgress size={16} /> : <AddIcon />}
+              onClick={handleSubmit(onFormSubmit)}
+              disabled={!isStepValid(activeStep)}
+              loading={isLoading}
+              loadingText="Creating..."
+              startIcon={<AddIcon />}
             >
-              {isLoading ? 'Creating...' : 'Create Hive'}
-            </Button>
+              Create Hive
+            </LoadingButton>
           )}
         </Box>
       </DialogActions>
@@ -490,4 +534,3 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
 }
 
 export default CreateHiveForm
-

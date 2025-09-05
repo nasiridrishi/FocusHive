@@ -12,7 +12,6 @@ import {
   Button,
   Paper,
   InputAdornment,
-  Skeleton,
   Alert,
   ToggleButtonGroup,
   ToggleButton,
@@ -29,6 +28,7 @@ import {
 import { HiveCard } from './HiveCard'
 import { CreateHiveForm } from './CreateHiveForm'
 import { Hive, HiveMember, CreateHiveRequest } from '@shared/types'
+import { ContentSkeleton } from '@shared/components/loading'
 
 interface HiveListProps {
   hives: Hive[]
@@ -173,21 +173,11 @@ export const HiveList: React.FC<HiveListProps> = ({
   }
 
   const renderLoadingSkeleton = () => (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { 
-          mobile: '1fr', 
-          tablet: '1fr 1fr', 
-          desktop: 'repeat(3, 1fr)' 
-        },
-        gap: 3
-      }}
-    >
-      {Array.from({ length: 6 }).map((_, index) => (
-        <Skeleton key={index} variant="rectangular" height={200} sx={{ borderRadius: 1 }} />
-      ))}
-    </Box>
+    <ContentSkeleton 
+      type="hive" 
+      count={6} 
+      animation="wave"
+    />
   )
 
   const renderFilters = () => {

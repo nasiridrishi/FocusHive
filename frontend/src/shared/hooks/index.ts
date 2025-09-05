@@ -37,3 +37,30 @@ export {
   useResponsiveModal,
   useDynamicViewportHeight,
 } from './useResponsiveUtils'
+
+// Async state management hooks
+export {
+  useAsync,
+  useAsyncData,
+  useAsyncSubmit,
+  type AsyncState,
+  type UseAsyncOptions,
+  type UseAsyncReturn
+} from './useAsync'
+
+// Error handling hooks
+export {
+  useAsyncError,
+  withAsyncErrorHandling,
+  type AsyncErrorOptions
+} from './useAsyncError'
+
+// API hooks with loading states - TODO: implement when API services are ready
+// export {
+//   useApi,
+//   useAuthApi,
+//   useHiveApi,
+//   usePresenceApi,
+//   useTimerApi,
+//   useAnalyticsApi
+// } from './useApiHooks'

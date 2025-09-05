@@ -16,6 +16,17 @@ interface UseWebSocketOptions {
   onMessage?: (message: WebSocketMessage) => void;
   onPresenceUpdate?: (presence: PresenceUpdate) => void;
   onNotification?: (notification: NotificationMessage) => void;
+  authTokenProvider?: () => string | null;
+}
+
+export interface WebSocketConnectionInfo {
+  isConnected: boolean;
+  connectionState: string;
+  reconnectionInfo: {
+    attempts: number;
+    maxAttempts: number;
+    isReconnecting: boolean;
+  };
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
@@ -25,20 +36,43 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     onDisconnect,
     onMessage,
     onPresenceUpdate,
-    onNotification
+    onNotification,
+    authTokenProvider
   } = options;
 
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState<string>('DISCONNECTED');
+  const [connectionInfo, setConnectionInfo] = useState<WebSocketConnectionInfo>({
+    isConnected: false,
+    connectionState: 'DISCONNECTED',
+    reconnectionInfo: {
+      attempts: 0,
+      maxAttempts: 10,
+      isReconnecting: false
+    }
+  });
   const [presenceStatus, setPresenceStatus] = useState<PresenceStatus>(PresenceStatus.OFFLINE);
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
   const subscriptionsRef = useRef<string[]>([]);
 
   useEffect(() => {
+    // Set up auth token provider if provided
+    if (authTokenProvider) {
+      webSocketService.setAuthTokenProvider(authTokenProvider);
+    }
+
     // Connection status handler
     const handleConnectionChange = (connected: boolean) => {
+      const state = webSocketService.getConnectionState();
+      const reconnectionInfo = webSocketService.getReconnectionInfo();
+      
       setIsConnected(connected);
-      setConnectionState(webSocketService.getConnectionState());
+      setConnectionState(state);
+      setConnectionInfo({
+        isConnected: connected,
+        connectionState: state,
+        reconnectionInfo
+      });
       
       if (connected) {
         onConnect?.();
@@ -59,8 +93,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
 
     if (onNotification) {
-      webSocketService.onMessage('notification', (message: WebSocketMessage<NotificationMessage>) => {
-        const notification = message.payload;
+      webSocketService.onMessage('notification', (message: WebSocketMessage) => {
+        const notification = message.payload as NotificationMessage;
         setNotifications(prev => [...prev, notification]);
         onNotification(notification);
       });
@@ -78,7 +112,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       });
       subscriptionsRef.current = [];
     };
-  }, [autoConnect, onConnect, onDisconnect, onMessage, onPresenceUpdate, onNotification]);
+  }, [autoConnect, onConnect, onDisconnect, onMessage, onPresenceUpdate, onNotification, authTokenProvider]);
 
   const connect = useCallback(() => {
     webSocketService.connect();
@@ -123,14 +157,25 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     setNotifications([]);
   }, []);
 
+  const retryConnection = useCallback(() => {
+    webSocketService.retryConnection();
+  }, []);
+
+  const reconnectWithNewToken = useCallback(() => {
+    webSocketService.reconnectWithNewToken();
+  }, []);
+
   return {
     // Connection state
     isConnected,
     connectionState,
+    connectionInfo,
     
     // Connection control
     connect,
     disconnect,
+    retryConnection,
+    reconnectWithNewToken,
     
     // Messaging
     sendMessage,

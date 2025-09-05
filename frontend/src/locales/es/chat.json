@@ -1,0 +1,7 @@
+{
+  "title": "Chat",
+  "send_message": "Enviar mensaje",
+  "typing": "{{user}} está escribiendo...",
+  "online": "En Línea",
+  "offline": "Desconectado"
+}

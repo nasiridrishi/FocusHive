@@ -9,6 +9,13 @@ import {
   Divider,
 } from '@mui/material';
 import {
+  SportsEsports as GamingIcon,
+  Assessment as ChartIcon,
+  EmojiEvents as TrophyIcon,
+  LocalFireDepartment as FireIcon,
+  SportsEsports as InteractiveIcon,
+} from '@mui/icons-material';
+import {
   PointsDisplay,
   AchievementBadge,
   StreakCounter,
@@ -169,8 +176,9 @@ const DemoContent: React.FC = () => {
 
   return (
     <Container maxWidth="desktop" sx={{ py: 4 }}>
-      <Typography variant="h3" component="h1" gutterBottom align="center">
-        🎮 FocusHive Gamification System
+      <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+        <GamingIcon sx={{ fontSize: '2.5rem' }} />
+        FocusHive Gamification System
       </Typography>
       
       <Typography variant="body1" align="center" color="text.secondary" paragraph>
@@ -181,8 +189,9 @@ const DemoContent: React.FC = () => {
 
       {/* Points Display Section */}
       <Box sx={{ mb: 6 }}>
-        <Typography variant="h4" gutterBottom>
-          📊 Points Display
+        <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <ChartIcon />
+          Points Display
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
           Dynamic points display with animations and responsive design
@@ -222,8 +231,9 @@ const DemoContent: React.FC = () => {
 
       {/* Achievement Badges Section */}
       <Box sx={{ mb: 6 }}>
-        <Typography variant="h4" gutterBottom>
-          🏆 Achievement Badges
+        <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <TrophyIcon />
+          Achievement Badges
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
           Interactive achievement badges with progress tracking and rarity indicators
@@ -262,8 +272,9 @@ const DemoContent: React.FC = () => {
 
       {/* Streak Counters Section */}
       <Box sx={{ mb: 6 }}>
-        <Typography variant="h4" gutterBottom>
-          🔥 Streak Counters
+        <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FireIcon />
+          Streak Counters
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
           Track user consistency with animated streak counters
@@ -365,8 +376,9 @@ const DemoContent: React.FC = () => {
       {/* Interactive Demo Section */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Typography variant="h5" gutterBottom>
-            🎮 Interactive Demo
+          <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <InteractiveIcon />
+            Interactive Demo
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
             Test the gamification system with live data from the context

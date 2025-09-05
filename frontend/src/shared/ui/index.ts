@@ -33,3 +33,6 @@ export {
   QuickActionFAB,
   ContextualFAB,
 } from './SmartFAB'
+
+// WebSocket Components
+export { default as WebSocketConnectionStatus } from './WebSocketConnectionStatus'

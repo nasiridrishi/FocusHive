@@ -1,0 +1,8 @@
+{
+  "page_not_found": "Página No Encontrada",
+  "server_error": "Error del Servidor",
+  "network_error": "Error de Red",
+  "something_went_wrong": "Algo salió mal",
+  "try_again": "Intentar de Nuevo",
+  "go_home": "Ir al Inicio"
+}

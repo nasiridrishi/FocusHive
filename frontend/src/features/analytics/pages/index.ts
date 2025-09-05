@@ -1,5 +1,2 @@
-// Re-export all analytics pages
-export * from './AnalyticsDemo';
-
-// Named exports for convenience
-export { AnalyticsDemo } from './AnalyticsDemo';
+// Default export for AnalyticsDemo (now uses default export)
+export { default as AnalyticsDemo } from './AnalyticsDemo';
