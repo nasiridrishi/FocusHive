@@ -122,9 +122,10 @@ export const AppErrorBoundary: React.FC<AppErrorBoundaryProps> = ({
   }, [level, boundaryName, isolate])
 
   const defaultFallback = React.useCallback(
-    (fallbackProps: unknown) => (
+    (fallbackProps: { error: Error; resetErrorBoundary: () => void }) => (
       <ErrorFallback
-        {...fallbackProps}
+        error={fallbackProps.error}
+        resetErrorBoundary={fallbackProps.resetErrorBoundary}
         title={getErrorTitle(level)}
         subtitle={getErrorSubtitle(level)}
         errorBoundaryName={boundaryName}
@@ -148,7 +149,7 @@ export const AppErrorBoundary: React.FC<AppErrorBoundaryProps> = ({
       resetKeys={resetKeys}
       resetOnPropsChange={resetOnPropsChange}
       isolate={isolate}
-      {...props}
+      {...props as any}
     >
       {children}
     </ErrorBoundary>

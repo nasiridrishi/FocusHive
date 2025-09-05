@@ -120,14 +120,16 @@ const createAuthApiInstance = (): AxiosInstance => {
       const originalRequest = error.config;
       
       // Check if error is due to expired token
-      if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-        originalRequest._retry = true;
+      if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
+        (originalRequest as any)._retry = true;
         
         try {
           const newTokens = await refreshToken();
           if (newTokens) {
             // Update the authorization header with new token
-            originalRequest.headers = originalRequest.headers || {};
+            if (!originalRequest.headers) {
+              originalRequest.headers = {} as any;
+            }
             originalRequest.headers.Authorization = `Bearer ${newTokens.token}`;
             
             // Retry the original request

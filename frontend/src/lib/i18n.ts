@@ -125,7 +125,7 @@ i18n
   // Initialize i18next
   .init({
     // Debug mode for development
-    debug: import.meta.env.DEV,
+    debug: import.meta.env.DEV || false,
 
     // Fallback language
     fallbackLng: 'en',
@@ -293,7 +293,7 @@ i18n
           // Missing translation logged only in development
         }
       : undefined,
-  })
+  } as any)
 
 export default i18n
 

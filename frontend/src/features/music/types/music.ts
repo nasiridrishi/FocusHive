@@ -300,3 +300,23 @@ export type MusicErrorCode =
   | 'PERMISSION_DENIED'
   | 'QUEUE_FULL'
   | 'UNSUPPORTED_FORMAT'
+
+// Audio features (Spotify API)
+export interface AudioFeatures {
+  danceability: number
+  energy: number
+  key: number
+  loudness: number
+  mode: number
+  speechiness: number
+  acousticness: number
+  instrumentalness: number
+  liveness: number
+  valence: number
+  tempo: number
+  duration_ms: number
+  time_signature: number
+}
+
+// Legacy compatibility type aliases
+export type MusicApiResponse<T = unknown> = ApiResponse<T>

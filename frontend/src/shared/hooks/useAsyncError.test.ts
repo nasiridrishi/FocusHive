@@ -76,7 +76,7 @@ describe('useAsyncError', () => {
         'medium'
       )
 
-      const loggedError = (errorLogger.logAsyncError as unknown).mock.calls[0][0]
+      const loggedError = (errorLogger.logAsyncError as any).mock.calls[0][0]
       expect(loggedError.message).toBe('String error')
     })
 
@@ -279,7 +279,7 @@ describe('useAsyncError', () => {
         'high'
       )
 
-      const loggedError = (errorLogger.logAsyncError as unknown).mock.calls[0][0]
+      const loggedError = (errorLogger.logAsyncError as any).mock.calls[0][0]
       expect(loggedError.message).toContain('unknown')
     })
   })

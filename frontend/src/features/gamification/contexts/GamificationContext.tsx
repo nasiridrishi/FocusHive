@@ -146,6 +146,54 @@ const gamificationReducer = (
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
     
+    case 'UPDATE_POINTS':
+      if (!state.stats) return state;
+      return {
+        ...state,
+        stats: {
+          ...state.stats,
+          points: {
+            ...state.stats.points,
+            current: Math.max(0, state.stats.points.current + action.payload.amount),
+            total: state.stats.points.total + Math.max(0, action.payload.amount),
+            todayEarned: state.stats.points.todayEarned + Math.max(0, action.payload.amount),
+          },
+        },
+      };
+    
+    case 'UNLOCK_ACHIEVEMENT':
+      if (!state.stats) return state;
+      return {
+        ...state,
+        stats: {
+          ...state.stats,
+          achievements: state.stats.achievements.map(achievement =>
+            achievement.id === action.payload
+              ? { ...achievement, isUnlocked: true, unlockedAt: new Date() }
+              : achievement
+          ),
+        },
+      };
+    
+    case 'UPDATE_STREAK':
+      if (!state.stats) return state;
+      return {
+        ...state,
+        stats: {
+          ...state.stats,
+          streaks: state.stats.streaks.map(streak =>
+            streak.type === action.payload
+              ? { 
+                  ...streak, 
+                  current: streak.current + 1,
+                  best: Math.max(streak.best, streak.current + 1),
+                  lastActivity: new Date(),
+                }
+              : streak
+          ),
+        },
+      };
+    
     default:
       return state;
   }
@@ -271,22 +319,8 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
     const setupWebSocket = () => {
       // Simulate periodic updates only if not in test environment
       intervalId = setInterval(() => {
-        // Only update if we have current stats, but don't depend on them in useEffect
-        dispatch(currentState => {
-          if (currentState.stats) {
-            return {
-              type: 'SET_STATS',
-              payload: {
-                ...currentState.stats,
-                points: {
-                  ...currentState.stats.points,
-                  current: currentState.stats.points.current + Math.floor(Math.random() * 10),
-                },
-              },
-            };
-          }
-          return { type: 'SET_LOADING', payload: false };
-        });
+        // Simple action dispatch - the reducer will handle the logic
+        dispatch({ type: 'UPDATE_POINTS', payload: { amount: Math.floor(Math.random() * 10), source: 'auto_update' } });
       }, 30000); // Update every 30 seconds
     };
 

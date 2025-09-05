@@ -58,7 +58,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
   showAddButton = true,
 }) => {
   const theme = useTheme()
-  const { state } = useMusic()
+  const musicContext = useMusic()
   
   const {
     collaborativeState,
@@ -88,7 +88,8 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
 
   const dragRefs = useRef<{ [key: string]: HTMLElement | null }>({})
 
-  const { queue, currentTrack } = state
+  const { state } = musicContext
+  const { queue, currentTrack, playbackState } = state
   const votingSummary = getVotingSummary()
 
   // Sort queue by position and votes
@@ -280,13 +281,13 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
   const estimatedWaitTime = useMemo(() => {
     if (!currentTrack || sortedQueue.length === 0) return 0
     
-    const currentTrackRemaining = Math.max(0, currentTrack.duration - state.playbackState.currentTime)
+    const currentTrackRemaining = Math.max(0, currentTrack.duration - playbackState.currentTime)
     const upcomingDuration = sortedQueue
       .filter(item => item.id !== currentTrack.id)
       .reduce((total, item) => total + item.duration, 0)
     
     return currentTrackRemaining + upcomingDuration
-  }, [currentTrack, sortedQueue, state.playbackState.currentTime])
+  }, [currentTrack, sortedQueue, playbackState.currentTime])
 
   return (
     <Card>

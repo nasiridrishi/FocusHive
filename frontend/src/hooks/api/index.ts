@@ -110,6 +110,15 @@ export {
   STALE_TIMES,
 } from '../../lib/queryClient';
 
+// Extended types with computed properties  
+export type {
+  UserPresence,
+  Hive, 
+  User,
+  PresenceStatus,
+  HiveMembershipStatus
+} from './types';
+
 // Re-export TanStack Query utilities for convenience
 export {
   useQuery,
@@ -121,33 +130,46 @@ export {
   useMutationState,
 } from '@tanstack/react-query';
 
+// Import useAuth specifically for useApiHooks
+import { useAuth as useAuthImported } from './useAuthQueries';
+// Import useQueryClient for utility functions
+import { useQueryClient } from '@tanstack/react-query';
+// Import queryClient functions for cacheUtils
+import { 
+  prefetchQueries as prefetchQueriesImported, 
+  invalidateQueries as invalidateQueriesImported 
+} from '../../lib/queryClient';
+
 // Hook composition utilities
-export const useApiHooks = () => ({
-  auth: useAuth(),
-  // Add more composite hooks as needed
-});
+export const useApiHooks = () => {
+  const auth = useAuthImported();
+  return {
+    auth,
+    // Add more composite hooks as needed
+  };
+};
 
 // Development utilities
 export const useQueryDevtools = () => {
-  const queryClient = useQueryClient();
+  const queryClientInstance = useQueryClient();
   
   return {
     // Get query cache information
     getCacheInfo: () => ({
-      queries: queryClient.getQueryCache().getAll().length,
-      mutations: queryClient.getMutationCache().getAll().length,
+      queries: queryClientInstance.getQueryCache().getAll().length,
+      mutations: queryClientInstance.getMutationCache().getAll().length,
     }),
     
     // Clear specific cache sections
-    clearAuthCache: () => queryClient.removeQueries({ queryKey: ['auth'] }),
-    clearHiveCache: () => queryClient.removeQueries({ queryKey: ['hives'] }),
-    clearPresenceCache: () => queryClient.removeQueries({ queryKey: ['presence'] }),
+    clearAuthCache: () => queryClientInstance.removeQueries({ queryKey: ['auth'] }),
+    clearHiveCache: () => queryClientInstance.removeQueries({ queryKey: ['hives'] }),
+    clearPresenceCache: () => queryClientInstance.removeQueries({ queryKey: ['presence'] }),
     
     // Force refetch all queries
-    refetchAll: () => queryClient.refetchQueries(),
+    refetchAll: () => queryClientInstance.refetchQueries(),
     
     // Reset entire cache
-    resetCache: () => queryClient.clear(),
+    resetCache: () => queryClientInstance.clear(),
   };
 };
 
@@ -177,7 +199,7 @@ export const cacheUtils = {
   // Prefetch common data on app initialization
   prefetchCommonData: async () => {
     const promises = [
-      prefetchQueries.userData(),
+      prefetchQueriesImported.userData(),
       // Add more common prefetch operations
     ];
     
@@ -186,8 +208,8 @@ export const cacheUtils = {
   
   // Clear cache on logout
   clearUserData: () => {
-    invalidateQueries.auth();
-    invalidateQueries.user();
+    invalidateQueriesImported.auth();
+    invalidateQueriesImported.user();
     // Clear other user-specific data
   },
   
@@ -198,63 +220,52 @@ export const cacheUtils = {
   },
 };
 
-// Performance monitoring  
-export const queryPerformanceUtils = {
-  // Monitor query performance
-  useSlowQueries: (threshold = 1000) => {
-    const queryClient = useQueryClient();
-    return queryClient
-      .getQueryCache()
-      .getAll()
-      .filter(query => {
-        const state = query.state;
-        return state.fetchMeta?.duration && state.fetchMeta.duration > threshold;
-      })
-      .map(query => ({
-        queryKey: query.queryKey,
-        duration: query.state.fetchMeta?.duration,
-        dataSize: JSON.stringify(query.state.data).length,
-      }));
-  },
-  
-  // Get cache memory usage estimate
-  useCacheSize: () => {
-    const queryClient = useQueryClient();
-    const allData = queryClient.getQueryCache().getAll().map(q => q.state.data);
-    return JSON.stringify(allData).length;
-  },
-  
-  // Optimize cache by removing stale queries
-  useOptimizeCache: () => {
-    const queryClient = useQueryClient();
-    queryClient.getQueryCache().clear();
-  },
+// Performance monitoring hooks (must be used within React components)
+export const useSlowQueries = (threshold = 1000) => {
+  const queryClientInstance = useQueryClient();
+  return queryClientInstance
+    .getQueryCache()
+    .getAll()
+    .filter(query => {
+      const state = query.state;
+      // Use dataUpdatedAt and fetchFailureCount as proxy for slow queries
+      const lastFetch = state.dataUpdatedAt ? Date.now() - state.dataUpdatedAt : 0;
+      return lastFetch > threshold;
+    })
+    .map(query => ({
+      queryKey: query.queryKey,
+      duration: query.state.dataUpdatedAt ? Date.now() - query.state.dataUpdatedAt : 0,
+      dataSize: JSON.stringify(query.state.data).length,
+    }));
 };
 
-// Default export with commonly used hooks
+export const useCacheSize = () => {
+  const queryClientInstance = useQueryClient();
+  const allData = queryClientInstance.getQueryCache().getAll().map(q => q.state.data);
+  return JSON.stringify(allData).length;
+};
+
+export const useOptimizeCache = () => {
+  const queryClientInstance = useQueryClient();
+  return () => queryClientInstance.getQueryCache().clear();
+};
+
+// Import all required items from lib/queryClient
+import {
+  queryClient as queryClientImported,
+  queryKeys as queryKeysImported,
+  CACHE_TIMES as CACHE_TIMES_IMPORTED,
+  STALE_TIMES as STALE_TIMES_IMPORTED,
+} from '../../lib/queryClient';
+
+// Default export with commonly used utilities
 export default {
-  // Authentication
-  useAuth,
-  useCurrentUser,
-  useLogin,
-  useLogout,
-  
-  // Hives
-  useHives,
-  useHive,
-  useHiveDetails,
-  useHiveManagement,
-  
-  // Presence
-  useMyPresence,
-  useHivePresence,
-  useFocusSessionManagement,
-  useRealTimeHivePresence,
-  
   // Utilities
-  queryClient,
-  queryKeys,
-  invalidateQueries,
+  queryClient: queryClientImported,
+  queryKeys: queryKeysImported,
+  invalidateQueries: invalidateQueriesImported,
+  prefetchQueries: prefetchQueriesImported,
   cacheUtils,
-  queryPerformanceUtils,
+  CACHE_TIMES: CACHE_TIMES_IMPORTED,
+  STALE_TIMES: STALE_TIMES_IMPORTED,
 };

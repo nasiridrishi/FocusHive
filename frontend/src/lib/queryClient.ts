@@ -55,7 +55,9 @@ const RETRY_CONFIG = {
   DEFAULT: {
     retry: (failureCount: number, error: unknown) => {
       // Don't retry on 4xx errors (client errors)
-      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+      const hasResponse = error && typeof error === 'object' && 'response' in error;
+      const status = hasResponse ? (error as any).response?.status : undefined;
+      if (status >= 400 && status < 500) {
         return false;
       }
       // Retry up to 3 times for 5xx errors and network errors
@@ -67,7 +69,9 @@ const RETRY_CONFIG = {
   // More aggressive retry for critical operations
   CRITICAL: {
     retry: (failureCount: number, error: unknown) => {
-      if (error?.response?.status >= 400 && error?.response?.status < 500) {
+      const hasResponse = error && typeof error === 'object' && 'response' in error;
+      const status = hasResponse ? (error as any).response?.status : undefined;
+      if (status >= 400 && status < 500) {
         return false;
       }
       return failureCount < 5;
@@ -105,7 +109,7 @@ const mutationCache = new MutationCache({
     if (typeof window !== 'undefined' && 'gtag' in window) {
       // @ts-expect-error - gtag is loaded by Google Analytics script
       window.gtag('event', 'mutation_error', {
-        mutation_key: mutation.options.mutationKey?.join('_') || 'unknown',
+        mutation_key: _mutation.options.mutationKey?.join('_') || 'unknown',
         error_message: error.message,
       });
     }

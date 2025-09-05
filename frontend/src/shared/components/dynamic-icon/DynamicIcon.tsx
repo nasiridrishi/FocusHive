@@ -80,7 +80,7 @@ export function DynamicIcon({
     if (!iconCache.has(iconName)) {
       const iconPromise = import('@mui/icons-material')
         .then(iconModule => {
-          const IconComponent = (iconModule as unknown)[iconName]
+          const IconComponent = (iconModule as any)[iconName] as React.ComponentType<SvgIconProps>
           if (IconComponent) {
             return { default: IconComponent }
           }
@@ -91,10 +91,10 @@ export function DynamicIcon({
           return { default: fallback || ErrorIcon }
         })
       
-      iconCache.set(iconName, iconPromise)
+      iconCache.set(iconName, iconPromise as unknown as Promise<ComponentType<SvgIconProps>>)
     }
     
-    return iconCache.get(iconName) as Promise<{ default: React.ComponentType<unknown> }>
+    return iconCache.get(iconName) as any
   })
 
   return (

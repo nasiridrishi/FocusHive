@@ -55,7 +55,7 @@ function createLazyFeature<T = Record<string, unknown>>(
         />
       }
     >
-      <LazyFeature {...props} />
+      <LazyFeature {...(props as any)} />
     </Suspense>
   )
   
@@ -196,7 +196,7 @@ export const featurePreloaders = {
 export const preloadHeavyFeatures = () => {
   // Only preload on good connections
   if ('connection' in navigator) {
-    const connection = (navigator as unknown).connection
+    const connection = (navigator as any).connection
     if (connection?.effectiveType === '4g' && !connection.saveData) {
       setTimeout(() => {
         // Preload most commonly used heavy features

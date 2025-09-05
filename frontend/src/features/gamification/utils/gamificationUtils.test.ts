@@ -204,13 +204,13 @@ describe('gamificationUtils', () => {
       expect(getCategoryIcon('milestone')).toBeDefined();
       expect(getCategoryIcon('special')).toBeDefined();
       // Check that it has React component properties
-      expect(getCategoryIcon('focus').$$typeof).toBeDefined();
+      expect(typeof getCategoryIcon('focus')).toBe('function');
     });
 
     it('handles unknown category gracefully by returning a component', () => {
       const unknownIcon = getCategoryIcon('unknown' as AchievementCategory);
       expect(unknownIcon).toBeDefined();
-      expect(unknownIcon.$$typeof).toBeDefined();
+      expect(typeof unknownIcon).toBe('function');
     });
   });
 

@@ -52,10 +52,11 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
   type = 'all',
 }) => {
   const theme = useTheme()
-  const { state, loadPlaylists, createPlaylist, deletePlaylist } = useMusic()
+  const { state, createPlaylist, deletePlaylist } = useMusic()
+  const { playlists } = state
   
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterType, setFilterType] = useState<typeof type>(type)
+  const [filterType, setFilterType] = useState<'all' | 'personal' | 'hive' | 'collaborative' | 'smart'>('all')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null)
@@ -64,18 +65,14 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
     description: '',
     isPublic: true,
     isCollaborative: false,
-    hiveId,
   })
   const [favoritePlaylist, setFavoritePlaylist] = useState<Set<string>>(new Set())
 
-  // Load playlists on mount
-  useEffect(() => {
-    loadPlaylists()
-  }, [loadPlaylists])
+  // Load playlists on mount - handled by context
 
   // Filter and search playlists
   const filteredPlaylists = useMemo(() => {
-    let filtered = state.playlists
+    let filtered = playlists
 
     // Filter by type
     if (filterType !== 'all') {
@@ -116,7 +113,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
       if (b.id === selectedPlaylistId) return 1
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     })
-  }, [state.playlists, filterType, hiveId, searchQuery, selectedPlaylistId])
+  }, [playlists, searchQuery, selectedPlaylistId])
 
   // Handlers
   const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,7 +228,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
     return `${minutes}m`
   }, [])
 
-  if (state.isLoading && filteredPlaylists.length === 0) {
+  if (filteredPlaylists.length === 0) {
     return (
       <Box>
         {/* Search and Filters Skeleton */}
@@ -247,7 +244,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
         {/* Grid Skeleton */}
         <Grid container spacing={3}>
           {Array.from({ length: 6 }).map((_, index) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+            <Grid item key={index} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' }, p: 1.5 }}>
               <Card>
                 <Skeleton variant="rectangular" height={140} />
                 <CardContent>
@@ -356,7 +353,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
           {/* Playlists Grid */}
           <Grid container spacing={3}>
             {filteredPlaylists.map((playlist) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={playlist.id}>
+              <Grid item key={playlist.id} sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' }, p: 1.5 }}>
                 <Card
                   sx={{
                     cursor: 'pointer',

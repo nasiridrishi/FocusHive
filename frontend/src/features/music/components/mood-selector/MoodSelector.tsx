@@ -128,7 +128,7 @@ const moodOptions: MoodOption[] = [
   },
 ]
 
-const taskTypeOptions: { value: TaskType; label: string; icon: React.ReactNode; color: string }[] = [
+const taskTypeOptions: { value: TaskType; label: string; icon: React.ReactElement; color: string }[] = [
   {
     value: 'focus',
     label: 'Deep Work',
@@ -436,7 +436,7 @@ const MoodSelector: React.FC<MoodSelectorProps> = ({
           </Typography>
           <Grid container spacing={1}>
             {moodOptions.map((mood) => (
-              <Grid size={{ xs: 6, sm: 4, md: 3 }} key={mood.id}>
+              <Grid item key={mood.id} sx={{ width: { xs: '50%', sm: '33.33%', md: '25%' }, p: 0.5 }}>
                 <Card
                   sx={{
                     cursor: 'pointer',

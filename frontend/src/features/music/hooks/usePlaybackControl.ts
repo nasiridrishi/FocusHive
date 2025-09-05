@@ -21,7 +21,9 @@ interface PlaybackHistory {
  * Provides enhanced audio control with features like crossfade, gapless playback
  */
 export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
-  const { state, play, pause, resume, stop, seekTo, setVolume, skipNext, skipPrevious } = useMusic()
+  const musicContext = useMusic()
+  const { state, play, pause, resume, stop, seekTo, setVolume, toggleMute, skipNext, skipPrevious } = musicContext
+  const { playbackState, currentTrack, queue } = state
   const [history, setHistory] = useState<PlaybackHistory[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
   const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none')
@@ -46,16 +48,16 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
 
   // Enhanced play function with crossfade
   const playWithCrossfade = useCallback(async (track?: Track) => {
-    if (crossfade > 0 && state.playbackState.isPlaying) {
+    if (crossfade > 0 && playbackState.isPlaying) {
       // Start crossfade
       setCrossfadeState({ isActive: true, progress: 0 })
       
       const fadeOutDuration = crossfade * 1000
       const fadeOutSteps = 20
       const fadeOutInterval = fadeOutDuration / fadeOutSteps
-      const volumeStep = state.playbackState.volume / fadeOutSteps
+      const volumeStep = playbackState.volume / fadeOutSteps
       
-      let currentVolume = state.playbackState.volume
+      let currentVolume = playbackState.volume
       
       const fadeOutTimer = setInterval(() => {
         currentVolume -= volumeStep
@@ -66,7 +68,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
         setVolume(currentVolume)
         setCrossfadeState(prev => ({ 
           ...prev, 
-          progress: (state.playbackState.volume - currentVolume) / state.playbackState.volume 
+          progress: (playbackState.volume - currentVolume) / playbackState.volume 
         }))
       }, fadeOutInterval)
       
@@ -77,7 +79,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
         // Fade in new track
         const fadeInSteps = 20
         const fadeInInterval = fadeOutDuration / fadeInSteps
-        const targetVolume = state.playbackState.volume
+        const targetVolume = playbackState.volume
         currentVolume = 0
         setVolume(0)
         
@@ -95,25 +97,25 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     } else {
       await play(track)
     }
-  }, [crossfade, state.playbackState.isPlaying, state.playbackState.volume, setVolume, play])
+  }, [crossfade, playbackState.isPlaying, playbackState.volume, setVolume, play])
 
   // Enhanced skip next with repeat and shuffle logic
   const skipNextEnhanced = useCallback(() => {
-    if (repeatMode === 'one' && state.currentTrack) {
-      playWithCrossfade(state.currentTrack)
+    if (repeatMode === 'one' && currentTrack) {
+      playWithCrossfade(currentTrack)
       return
     }
 
-    const currentIndex = state.queue.findIndex(item => item.id === state.currentTrack?.id)
+    const currentIndex = queue.findIndex(item => item.id === currentTrack?.id)
     let nextIndex = currentIndex + 1
 
     if (isShuffling) {
       // Shuffle mode: pick random track
-      const availableIndices = state.queue
+      const availableIndices = queue
         .map((_, index) => index)
         .filter(index => index !== currentIndex)
       nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)]
-    } else if (nextIndex >= state.queue.length) {
+    } else if (nextIndex >= queue.length) {
       // End of queue
       if (repeatMode === 'all') {
         nextIndex = 0
@@ -123,30 +125,30 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
       }
     }
 
-    if (nextIndex < state.queue.length && nextIndex >= 0) {
-      const nextTrack = state.queue[nextIndex]
+    if (nextIndex < queue.length && nextIndex >= 0) {
+      const nextTrack = queue[nextIndex]
       playWithCrossfade(nextTrack)
     }
-  }, [repeatMode, state.currentTrack, state.queue, isShuffling, playWithCrossfade])
+  }, [repeatMode, currentTrack, queue, isShuffling, playWithCrossfade])
 
   // Enhanced skip previous
   const skipPreviousEnhanced = useCallback(() => {
-    if (state.playbackState.currentTime > 3) {
+    if (playbackState.currentTime > 3) {
       // If more than 3 seconds played, restart current track
       seekTo(0)
       return
     }
 
-    const currentIndex = state.queue.findIndex(item => item.id === state.currentTrack?.id)
+    const currentIndex = queue.findIndex(item => item.id === currentTrack?.id)
     
     if (currentIndex > 0) {
-      const previousTrack = state.queue[currentIndex - 1]
+      const previousTrack = queue[currentIndex - 1]
       playWithCrossfade(previousTrack)
-    } else if (repeatMode === 'all' && state.queue.length > 0) {
-      const lastTrack = state.queue[state.queue.length - 1]
+    } else if (repeatMode === 'all' && queue.length > 0) {
+      const lastTrack = queue[queue.length - 1]
       playWithCrossfade(lastTrack)
     }
-  }, [state.playbackState.currentTime, state.queue, state.currentTrack, repeatMode, seekTo, playWithCrossfade])
+  }, [playbackState.currentTime, queue, currentTrack, repeatMode, seekTo, playWithCrossfade])
 
   // Toggle shuffle mode
   const toggleShuffle = useCallback(() => {
@@ -167,20 +169,20 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
 
   // Quick seek (±10 seconds)
   const quickSeekBackward = useCallback(() => {
-    const newTime = Math.max(0, state.playbackState.currentTime - 10)
+    const newTime = Math.max(0, playbackState.currentTime - 10)
     seekTo(newTime)
-  }, [state.playbackState.currentTime, seekTo])
+  }, [playbackState.currentTime, seekTo])
 
   const quickSeekForward = useCallback(() => {
-    const newTime = Math.min(state.playbackState.duration, state.playbackState.currentTime + 10)
+    const newTime = Math.min(playbackState.duration, playbackState.currentTime + 10)
     seekTo(newTime)
-  }, [state.playbackState.currentTime, state.playbackState.duration, seekTo])
+  }, [playbackState.currentTime, playbackState.duration, seekTo])
 
   // Volume fade
   const fadeVolume = useCallback((targetVolume: number, duration: number = 1000) => {
     const steps = 20
     const interval = duration / steps
-    const currentVolume = state.playbackState.volume
+    const currentVolume = playbackState.volume
     const volumeStep = (targetVolume - currentVolume) / steps
     
     let step = 0
@@ -196,7 +198,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     }, interval)
     
     return () => clearInterval(timer)
-  }, [state.playbackState.volume, setVolume])
+  }, [playbackState.volume, setVolume])
 
   // Mute with fade
   const muteWithFade = useCallback(() => {
@@ -234,7 +236,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
 
   // Monitor playback for scrobbling
   useEffect(() => {
-    if (!state.currentTrack || !state.playbackState.isPlaying) {
+    if (!currentTrack || !playbackState.isPlaying) {
       if (scrobbleTimerRef.current) {
         clearTimeout(scrobbleTimerRef.current)
         scrobbleTimerRef.current = null
@@ -242,11 +244,11 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
       return
     }
 
-    const track = state.currentTrack
+    const track = currentTrack
     const scrobbleTime = track.duration * scrobbleThreshold
 
     scrobbleTimerRef.current = setTimeout(() => {
-      handleScrobble(track, state.playbackState.currentTime, false)
+      handleScrobble(track, playbackState.currentTime, false)
     }, scrobbleTime * 1000)
 
     return () => {
@@ -255,20 +257,20 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
         scrobbleTimerRef.current = null
       }
     }
-  }, [state.currentTrack, state.playbackState.isPlaying, scrobbleThreshold, handleScrobble, state.playbackState.currentTime])
+  }, [currentTrack, playbackState.isPlaying, scrobbleThreshold, handleScrobble, playbackState.currentTime])
 
   // Handle track end for scrobbling
   useEffect(() => {
-    if (!state.playbackState.isPlaying && state.currentTrack && 
-        state.playbackState.currentTime >= state.playbackState.duration - 1) {
+    if (!playbackState.isPlaying && currentTrack && 
+        playbackState.currentTime >= playbackState.duration - 1) {
       // Track completed
-      handleScrobble(state.currentTrack, state.playbackState.duration, true)
+      handleScrobble(currentTrack, playbackState.duration, true)
       
       if (autoNext) {
         skipNextEnhanced()
       }
     }
-  }, [state.playbackState.isPlaying, state.currentTrack, state.playbackState.currentTime, state.playbackState.duration, autoNext, skipNextEnhanced, handleScrobble])
+  }, [playbackState.isPlaying, currentTrack, playbackState.currentTime, playbackState.duration, autoNext, skipNextEnhanced, handleScrobble])
 
   // Keyboard shortcuts
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
@@ -279,7 +281,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     switch (event.code) {
       case 'Space':
         event.preventDefault()
-        if (state.playbackState.isPlaying) {
+        if (playbackState.isPlaying) {
           pause()
         } else {
           resume()
@@ -300,21 +302,21 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
       case 'ArrowUp':
         if (event.ctrlKey || event.metaKey) {
           event.preventDefault()
-          const newVolume = Math.min(1, state.playbackState.volume + 0.1)
+          const newVolume = Math.min(1, playbackState.volume + 0.1)
           setVolume(newVolume)
         }
         break
       case 'ArrowDown':
         if (event.ctrlKey || event.metaKey) {
           event.preventDefault()
-          const newVolume = Math.max(0, state.playbackState.volume - 0.1)
+          const newVolume = Math.max(0, playbackState.volume - 0.1)
           setVolume(newVolume)
         }
         break
       case 'KeyM':
         if (event.ctrlKey || event.metaKey) {
           event.preventDefault()
-          if (state.playbackState.isMuted) {
+          if (playbackState.isMuted) {
             unmuteWithFade()
           } else {
             muteWithFade()
@@ -334,7 +336,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
         }
         break
     }
-  }, [state.playbackState, pause, resume, skipNextEnhanced, skipPreviousEnhanced, setVolume, unmuteWithFade, muteWithFade, toggleShuffle, toggleRepeat])
+  }, [playbackState, pause, resume, skipNextEnhanced, skipPreviousEnhanced, setVolume, unmuteWithFade, muteWithFade, toggleShuffle, toggleRepeat])
 
   // Register keyboard shortcuts
   useEffect(() => {
@@ -385,5 +387,6 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     setVolume,
     skipNext,
     skipPrevious,
+    toggleMute,
   }
 }

@@ -248,13 +248,13 @@ describe('PointsDisplay', () => {
         return <PointsDisplay points={mockPoints} />;
       };
       
-      const { rerender } = renderWithTheme(<__TestComponent />);
+      const { rerender } = renderWithTheme(<___TestComponent />);
       
       // Initial render
       expect(renderSpy).toHaveBeenCalledTimes(1);
       
       // Re-render with same props
-      rerender(<__TestComponent />);
+      rerender(<___TestComponent />);
       
       // React will re-render components, this is expected behavior
       expect(renderSpy).toHaveBeenCalledTimes(2);

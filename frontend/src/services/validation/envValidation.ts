@@ -225,8 +225,9 @@ function validateEnvironmentVariable(
   try {
     switch (type) {
       case 'number':
-        convertedValue = parseInt(rawValue!, 10);
-        if (isNaN(convertedValue)) {
+        const numValue = parseInt(rawValue!, 10);
+        convertedValue = numValue;
+        if (isNaN(numValue)) {
           return {
             value: undefined,
             error: {

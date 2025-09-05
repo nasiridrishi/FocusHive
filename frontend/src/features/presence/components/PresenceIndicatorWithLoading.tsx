@@ -1,5 +1,5 @@
 import React from 'react'
-import { Badge, Skeleton } from '@mui/material'
+import { Avatar, Badge, Skeleton } from '@mui/material'
 import { PresenceStatus } from '@shared/types/presence'
 import PresenceIndicator from './PresenceIndicator'
 
@@ -72,13 +72,19 @@ const PresenceIndicatorWithLoading: React.FC<PresenceIndicatorWithLoadingProps> 
 
   return (
     <PresenceIndicator
-      avatarSrc={avatarSrc}
-      displayName={displayName}
       status={status}
       size={size}
       showAnimation={showAnimation}
-      onClick={onClick}
-    />
+    >
+      <Avatar 
+        src={avatarSrc} 
+        alt={displayName}
+        onClick={onClick}
+        sx={{ cursor: onClick ? 'pointer' : 'default' }}
+      >
+        {displayName?.charAt(0).toUpperCase()}
+      </Avatar>
+    </PresenceIndicator>
   )
 }
 

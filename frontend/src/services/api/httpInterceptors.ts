@@ -38,7 +38,7 @@ export function createAuthenticatedAxiosInstance(baseURL: string = API_BASE_URL)
 
   // Request interceptor
   instance.interceptors.request.use(
-    (config: AxiosRequestConfig) => {
+    (config) => {
       // Add authentication token if available
       const token = tokenStorage.getAccessToken();
       if (token && config.headers) {
@@ -176,6 +176,7 @@ async function refreshTokenRequest(): Promise<{ token: string; refreshToken: str
  */
 function standardizeError(error: AxiosError): StandardizedError {
   const standardized: StandardizedError = {
+    name: 'StandardizedError',
     message: 'An unexpected error occurred',
     status: 500,
     code: 'UNKNOWN_ERROR',
@@ -207,9 +208,12 @@ function standardizeError(error: AxiosError): StandardizedError {
  */
 function getErrorMessage(data: unknown): string {
   if (typeof data === 'string') return data;
-  if (data?.message) return data.message;
-  if (data?.error) return data.error;
-  if (data?.detail) return data.detail;
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    if (typeof obj.message === 'string') return obj.message;
+    if (typeof obj.error === 'string') return obj.error;
+    if (typeof obj.detail === 'string') return obj.detail;
+  }
   return 'An error occurred';
 }
 
@@ -218,7 +222,10 @@ function getErrorMessage(data: unknown): string {
  */
 function getErrorCode(status: number, data: unknown): string {
   // Check if response includes specific error code
-  if (data?.code) return data.code;
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    if (typeof obj.code === 'string') return obj.code;
+  }
   
   // Default codes based on HTTP status
   switch (status) {

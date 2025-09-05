@@ -207,7 +207,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
 
   return (
     <Tooltip
-      title={<tooltipContent />}
+      title={<_tooltipContent />}
       placement="top"
       arrow
       enterDelay={500}
