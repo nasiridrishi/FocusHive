@@ -466,12 +466,12 @@ describe('LeaderboardCard', () => {
         return <LeaderboardCard leaderboard={leaderboard} />;
       };
       
-      const { rerender } = renderWithTheme(<__TestLeaderboardCard leaderboard={mockLeaderboard} />);
+      const { rerender } = renderWithTheme(<___TestLeaderboardCard leaderboard={mockLeaderboard} />);
       
       expect(renderSpy).toHaveBeenCalledTimes(1);
       
       // Re-render with same data
-      rerender(<__TestLeaderboardCard leaderboard={mockLeaderboard} />);
+      rerender(<___TestLeaderboardCard leaderboard={mockLeaderboard} />);
       
       // React will re-render components, this is expected behavior
       expect(renderSpy).toHaveBeenCalledTimes(2);

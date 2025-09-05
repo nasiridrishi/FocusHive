@@ -22,7 +22,9 @@ interface RecommendationState {
  * Provides various recommendation strategies and caching
  */
 export const useMusicRecommendations = (options: UseRecommendationsOptions = {}) => {
-  const { state } = useMusic()
+  const musicContext = useMusic()
+  const { state } = musicContext
+  const { queue, currentMood, currentTrack } = state
   const [recommendationState, setRecommendationState] = useState<RecommendationState>({
     recommendations: [],
     isLoading: false,
@@ -40,11 +42,11 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
       
       const recommendations = await musicApi.getSessionRecommendations({
         hiveId: hiveId || request.hiveId,
-        mood: request.mood || state.currentMood?.mood,
-        energy: request.energy || state.currentMood?.energy,
-        taskType: request.taskType || state.currentMood?.taskType,
+        mood: request.mood || currentMood?.mood,
+        energy: request.energy || currentMood?.energy,
+        taskType: request.taskType,
         duration: request.duration,
-        previousTracks: request.previousTracks || state.queue.map(item => item.id),
+        previousTracks: request.previousTracks || queue.map(item => item.id),
       })
 
       setRecommendationState({
@@ -65,7 +67,7 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
       }))
       throw error
     }
-  }, [hiveId, state.currentMood, state.queue])
+  }, [hiveId, currentMood, queue])
 
   // Get personalized recommendations
   const getPersonalizedRecommendations = useCallback(async (limit = 20) => {
@@ -136,20 +138,20 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
     return getSessionRecommendations({
       hiveId,
       taskType,
-      energy: energy || state.currentMood?.energy || 50,
+      energy: energy || currentMood?.energy || 50,
     })
-  }, [getSessionRecommendations, hiveId, state.currentMood])
+  }, [getSessionRecommendations, hiveId, currentMood])
 
   // Get recommendations based on current context
   const getContextualRecommendations = useCallback(async () => {
-    if (state.currentMood) {
-      return getMoodRecommendations(state.currentMood)
-    } else if (state.currentTrack) {
-      return getSimilarTracks(state.currentTrack.id)
+    if (currentMood) {
+      return getMoodRecommendations(currentMood)
+    } else if (currentTrack) {
+      return getSimilarTracks(currentTrack.id)
     } else {
       return getPersonalizedRecommendations()
     }
-  }, [state.currentMood, state.currentTrack, getMoodRecommendations, getSimilarTracks, getPersonalizedRecommendations])
+  }, [currentMood, currentTrack, getMoodRecommendations, getSimilarTracks, getPersonalizedRecommendations])
 
   // Refresh current recommendations
   const refreshRecommendations = useCallback(async () => {
@@ -161,14 +163,14 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
       case 'personalized':
         return getPersonalizedRecommendations()
       case 'similar':
-        if (state.currentTrack) {
-          return getSimilarTracks(state.currentTrack.id)
+        if (currentTrack) {
+          return getSimilarTracks(currentTrack.id)
         }
         break
       default:
         return getContextualRecommendations()
     }
-  }, [recommendationState.source, getContextualRecommendations, getPersonalizedRecommendations, getSimilarTracks, state.currentTrack])
+  }, [recommendationState.source, getContextualRecommendations, getPersonalizedRecommendations, getSimilarTracks, currentTrack])
 
   // Clear recommendations
   const clearRecommendations = useCallback(() => {

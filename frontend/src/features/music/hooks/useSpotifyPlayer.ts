@@ -1,14 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSpotify } from '../context/SpotifyContext'
-import { Track } from '../types'
+import { Track, PlaybackState } from '../types'
 import type { UseSpotifyPlayerOptions } from '../../../types/spotify'
 
-// Enhanced playback state for the hook
-interface PlaybackState {
-  isPlaying: boolean
-  position: number
-  duration: number
-  volume: number
+// Enhanced playback state for the hook (extending the base PlaybackState)
+interface SpotifyPlaybackState extends PlaybackState {
   currentTrack: Track | null
   canSkipNext: boolean
   canSkipPrevious: boolean
@@ -21,11 +17,15 @@ interface PlaybackState {
  */
 export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => {
   const spotify = useSpotify()
-  const [playbackState, setPlaybackState] = useState<PlaybackState>({
+  const [playbackState, setPlaybackState] = useState<SpotifyPlaybackState>({
     isPlaying: false,
-    position: 0,
+    isPaused: true,
+    isBuffering: false,
+    currentTime: 0,
     duration: 0,
     volume: options?.volume || 0.5,
+    isMuted: false,
+    playbackRate: 1,
     currentTrack: null,
     canSkipNext: true,
     canSkipPrevious: true,
@@ -42,7 +42,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
 
     const handlePlayerStateChange = (state: import('../../../types/spotify').Spotify.PlaybackState | null) => {
       if (!state) {
-        setPlaybackState(prev => ({ ...prev, isPlaying: false, currentTrack: null }))
+        setPlaybackState(prev => ({ ...prev, isPlaying: false, isPaused: true, currentTrack: null }))
         return
       }
 
@@ -68,7 +68,9 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
       setPlaybackState(prev => ({
         ...prev,
         isPlaying: !state.paused,
-        position: state.position / 1000, // Convert to seconds
+        isPaused: state.paused,
+        isBuffering: false, // Spotify SDK doesn't provide loading state directly
+        currentTime: state.position / 1000, // Convert to seconds
         duration: currentTrack?.duration || 0,
         currentTrack,
         canSkipNext: !state.disallows.skipping_next,
@@ -94,7 +96,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
       positionUpdateRef.current = setInterval(() => {
         setPlaybackState(prev => ({
           ...prev,
-          position: Math.min(prev.position + 1, prev.duration)
+          currentTime: Math.min(prev.currentTime + 1, prev.duration)
         }))
       }, 1000)
     } else {
@@ -154,7 +156,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     try {
       setError(null)
       await spotify.seek(positionSeconds * 1000) // Convert to ms
-      setPlaybackState(prev => ({ ...prev, position: positionSeconds }))
+      setPlaybackState(prev => ({ ...prev, currentTime: positionSeconds }))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to seek'
       setError(message)

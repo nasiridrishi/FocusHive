@@ -30,10 +30,12 @@ import axios from 'axios'
 
 // FIXED: Import the class and create instance manually to avoid singleton issues
 import { default as musicApiModule } from './musicApi'
+// Import types needed for tests
+import type { CreatePlaylistRequest, SearchTracksRequest } from '../types/music'
 
 // Get the mocked axios instance
 const mockedAxios = vi.mocked(axios, true)
-const mockAxiosInstance = (mockedAxios.create as unknown)()
+const mockAxiosInstance = (mockedAxios.create as any)()
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -96,7 +98,7 @@ describe('MusicApiService', () => {
         status: 200,
       })
 
-      await musicApi.getUserPlaylists(2, 10)
+      await musicApi.getUserPlaylists()
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists', {
         params: { page: 2, limit: 10 },
       })
@@ -107,6 +109,7 @@ describe('MusicApiService', () => {
         name: 'New Playlist',
         description: 'A new playlist',
         isPublic: true,
+        isCollaborative: false,
         trackIds: ['track1', 'track2'],
       }
 

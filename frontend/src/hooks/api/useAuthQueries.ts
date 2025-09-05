@@ -36,7 +36,9 @@ export const useCurrentUser = () => {
     gcTime: CACHE_TIMES.SHORT,
     retry: (failureCount, _error: unknown) => {
       // Don't retry on 401/403 _errors (user not authenticated)
-      if (_error?.response?.status === 401 || _error?.response?.status === 403) {
+      const hasResponse = _error && typeof _error === 'object' && 'response' in _error;
+      const status = hasResponse ? (_error as any).response?.status : undefined;
+      if (status === 401 || status === 403) {
         return false;
       }
       return failureCount < 2;
@@ -346,9 +348,9 @@ export const useAuth = () => {
     isAuthStatusLoading: authStatusQuery.isLoading,
     
     // Error states
-    _error: userQuery._error || authStatusQuery._error,
-    userError: userQuery._error,
-    authStatusError: authStatusQuery._error,
+    error: userQuery.error || authStatusQuery.error,
+    userError: userQuery.error,
+    authStatusError: authStatusQuery.error,
     
     // Mutations
     login: loginMutation.mutate,
@@ -360,9 +362,9 @@ export const useAuth = () => {
     isLoggingOut: logoutMutation.isPending,
     isRegistering: registerMutation.isPending,
     
-    loginError: loginMutation._error,
-    logoutError: logoutMutation._error,
-    registerError: registerMutation._error,
+    loginError: loginMutation.error,
+    logoutError: logoutMutation.error,
+    registerError: registerMutation.error,
     
     // Utilities
     refetchUser: userQuery.refetch,
@@ -391,7 +393,7 @@ export const usePermissions = () => {
   return {
     permissions: permissionsQuery.data ?? [],
     isLoading: permissionsQuery.isLoading,
-    _error: permissionsQuery._error,
+    error: permissionsQuery.error,
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,

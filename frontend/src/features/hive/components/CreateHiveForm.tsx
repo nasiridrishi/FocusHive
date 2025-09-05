@@ -32,7 +32,7 @@ import {
   Group as GroupIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, SubmitHandler } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { CreateHiveRequest } from '@shared/types'
 import { LoadingButton } from '@shared/components/loading'
@@ -77,7 +77,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     formState: { isValid },
     reset
   } = useForm<CreateHiveRequest>({
-    resolver: yupResolver(createHiveSchema),
+    resolver: yupResolver(createHiveSchema) as any,
     mode: 'onBlur',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -122,7 +122,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     setActiveStep((prevActiveStep) => prevActiveStep - 1)
   }
 
-  const onFormSubmit = (data: CreateHiveRequest) => {
+  const onFormSubmit: SubmitHandler<CreateHiveRequest> = (data: CreateHiveRequest) => {
     onSubmit(data)
   }
 

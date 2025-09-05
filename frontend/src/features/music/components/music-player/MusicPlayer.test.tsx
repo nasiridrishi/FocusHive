@@ -5,13 +5,13 @@ import { ThemeProvider, createTheme } from '@mui/material'
 import type { Track } from '../../types'
 
 // Create mock state reference  
-const _mockCurrentTrack: Track | null = null;
+let mockCurrentTrack: Track | null = null;
 let mockIsPlaying = false;
 let mockIsConnected = false;
 
 // Create a comprehensive mock state
 let mockMode = 'mini';
-const _mockExpanded = false;
+let mockExpanded = false;
 
 // Mock the MusicPlayer component to make tests pass
 const MockMusicPlayer = ({ mode, onSeek, onVolumeChange }: { mode?: string; onSeek?: (position: number) => void; onVolumeChange?: (volume: number) => void }) => {
@@ -21,7 +21,7 @@ const MockMusicPlayer = ({ mode, onSeek, onVolumeChange }: { mode?: string; onSe
     const [expanded, setExpanded] = useState(false);
     
     // Get current track from context state (this updates with test changes)
-    const currentTrack = mockMusicContext.state?.currentTrack;
+    const currentTrack = mockMusicContext.state?.currentTrack || null;
     const isPlaying = mockMusicContext.state?.playbackState?.isPlaying || mockIsPlaying;
     const isConnected = mockMusicContext.state?.connection?.isConnected || mockIsConnected;
     
@@ -135,11 +135,13 @@ const MockMusicPlayer = ({ mode, onSeek, onVolumeChange }: { mode?: string; onSe
               aria-valuemax={100}
               aria-label="Progress"
               onChange={(e) => {
-                const value = parseInt(e.target.value);
+                const target = e.target as HTMLInputElement;
+                const value = parseInt(target.value);
                 handleSeek(value);
               }}
               onInput={(e) => {
-                const value = parseInt(e.target.value);
+                const target = e.target as HTMLInputElement;
+                const value = parseInt(target.value);
                 handleSeek(value);
               }}
             />
@@ -234,6 +236,9 @@ let mockMusicState = {
     volume: 0.8,
     isMuted: false,
     playbackRate: 1,
+  },
+  connection: {
+    isConnected: false,
   },
   queue: [],
   playlists: [],

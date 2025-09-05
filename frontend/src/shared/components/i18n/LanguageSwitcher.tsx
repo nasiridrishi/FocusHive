@@ -102,7 +102,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   if (variant === 'select') {
     return (
       <Box className={className}>
-        <FormControl size={size} disabled={disabled || loading} fullWidth>
+        <FormControl size={size as 'small' | 'medium'} disabled={disabled || loading} fullWidth>
           <InputLabel id="language-select-label">
             {t('language.select')}
           </InputLabel>

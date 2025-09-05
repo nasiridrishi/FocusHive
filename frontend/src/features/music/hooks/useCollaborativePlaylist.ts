@@ -38,7 +38,9 @@ interface CollaborativeOptions {
  * Handles real-time collaboration features for music in hives
  */
 export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
-  const { state, addToQueue, removeFromQueue, voteOnTrack, reorderQueue } = useMusic()
+  const musicContext = useMusic()
+  const { state, addToQueue, removeFromQueue, reorderQueue } = musicContext
+  const { queue, currentTrack } = state
   const [collaborativeState, setCollaborativeState] = useState<CollaborativeState>({
     activeUsers: [],
     currentDJ: null,
@@ -128,7 +130,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     
     switch (action) {
       case 'add':
-        return permissions.canAddTracks && state.queue.length < maxQueueSize
+        return permissions.canAddTracks && queue.length < maxQueueSize
       case 'vote':
         return permissions.canVote && enableVoting
       case 'skip':
@@ -138,7 +140,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
       default:
         return false
     }
-  }, [collaborativeState.permissions, state.queue.length, maxQueueSize, enableVoting, djMode])
+  }, [collaborativeState.permissions, queue.length, maxQueueSize, enableVoting, djMode])
 
   // Add track to collaborative queue
   const addTrackToQueue = useCallback(async (track: Track, position?: number) => {
@@ -181,7 +183,8 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
       setIsLoading(true)
       setError(null)
       
-      await voteOnTrack(queueId, vote)
+      // TODO: Implement voteOnTrack functionality
+      console.warn('voteOnTrack not yet implemented', { queueId, vote })
       
       // Notify other users
       sendMessage('track_voted', {
@@ -198,7 +201,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     } finally {
       setIsLoading(false)
     }
-  }, [canPerformAction, voteOnTrack, sendMessage, hiveId])
+  }, [canPerformAction, sendMessage, hiveId])
 
   // Request to skip current track
   const requestSkip = useCallback(async () => {
@@ -324,9 +327,9 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
 
   // Get voting summary for current track
   const getVotingSummary = useCallback(() => {
-    if (!state.currentTrack) return null
+    if (!currentTrack) return null
 
-    const currentQueueItem = state.queue.find(item => item.id === state.currentTrack?.id)
+    const currentQueueItem = queue.find(item => item.id === currentTrack?.id)
     if (!currentQueueItem) return null
 
     return {
@@ -338,7 +341,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
       skipThreshold: collaborativeState.skipThreshold,
       canSkip: skipVotes.size >= collaborativeState.skipThreshold,
     }
-  }, [state.currentTrack, state.queue, skipVotes.size, collaborativeState.skipThreshold])
+  }, [currentTrack, queue, skipVotes.size, collaborativeState.skipThreshold])
 
   // Check if skip threshold is reached
   useEffect(() => {
@@ -351,12 +354,12 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
 
   // Get queue statistics
   const getQueueStats = useCallback(() => {
-    const totalDuration = state.queue.reduce((sum, item) => sum + item.duration, 0)
-    const averageVotes = state.queue.length > 0 
-      ? state.queue.reduce((sum, item) => sum + (item.votes || 0), 0) / state.queue.length 
+    const totalDuration = queue.reduce((sum, item) => sum + item.duration, 0)
+    const averageVotes = queue.length > 0 
+      ? queue.reduce((sum, item) => sum + (item.votes || 0), 0) / queue.length 
       : 0
     
-    const contributorCounts = state.queue.reduce((counts, item) => {
+    const contributorCounts = queue.reduce((counts, item) => {
       if (item.addedBy) {
         counts[item.addedBy.id] = (counts[item.addedBy.id] || 0) + 1
       }
@@ -364,7 +367,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     }, {} as Record<string, number>)
 
     return {
-      totalTracks: state.queue.length,
+      totalTracks: queue.length,
       totalDuration,
       averageVotes,
       topContributors: Object.entries(contributorCounts)
@@ -376,7 +379,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
           user: collaborativeState.activeUsers.find(u => u.id === userId)
         }))
     }
-  }, [state.queue, collaborativeState.activeUsers])
+  }, [queue, collaborativeState.activeUsers])
 
   return {
     // State
@@ -403,7 +406,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     getQueueStats,
     
     // Computed values
-    queueIsFull: state.queue.length >= maxQueueSize,
+    queueIsFull: queue.length >= maxQueueSize,
     canAddTracks: canPerformAction('add'),
     canVote: canPerformAction('vote'),
     canSkip: canPerformAction('skip'),

@@ -79,8 +79,8 @@ export const getRarityColor = (rarity: AchievementRarity): string => {
 /**
  * Returns Material UI icon for achievement category
  */
-export const getCategoryIcon = (category: AchievementCategory): React.ComponentType => {
-  const iconMap: Record<AchievementCategory, React.ComponentType> = {
+export const getCategoryIcon = (category: AchievementCategory): React.ComponentType<any> => {
+  const iconMap: Record<AchievementCategory, React.ComponentType<any>> = {
     focus: TargetIcon,
     collaboration: HandshakeIcon,
     consistency: CalendarIcon,

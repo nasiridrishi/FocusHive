@@ -76,6 +76,10 @@ export interface LazyChartWrapperProps {
   height?: number
   showFallback?: boolean
   fallbackComponent?: React.ComponentType
+  children?: React.ReactNode
+  series?: unknown[]
+  data?: unknown[]
+  [key: string]: unknown
 }
 
 export const LineChartWrapper = ({ 
@@ -96,7 +100,11 @@ export const LineChartWrapper = ({
       )
     ) : null
   }>
-    <LazyLineChart width={width} height={height} {...props}>
+    <LazyLineChart 
+      {...props as any}
+      width={typeof width === 'string' ? parseInt(width, 10) : width} 
+      height={height}
+    >
       {children}
     </LazyLineChart>
   </Suspense>
@@ -120,7 +128,11 @@ export const BarChartWrapper = ({
       )
     ) : null
   }>
-    <LazyBarChart width={width} height={height} {...props}>
+    <LazyBarChart 
+      {...props as any}
+      width={typeof width === 'string' ? parseInt(width, 10) : width} 
+      height={height}
+    >
       {children}
     </LazyBarChart>
   </Suspense>
@@ -144,7 +156,11 @@ export const PieChartWrapper = ({
       )
     ) : null
   }>
-    <LazyPieChart width={width} height={height} {...props}>
+    <LazyPieChart 
+      {...props as any}
+      width={typeof width === 'string' ? parseInt(width, 10) : width} 
+      height={height}
+    >
       {children}
     </LazyPieChart>
   </Suspense>
@@ -168,7 +184,11 @@ export const ScatterChartWrapper = ({
       )
     ) : null
   }>
-    <LazyScatterChart width={width} height={height} {...props}>
+    <LazyScatterChart 
+      {...props as any}
+      width={typeof width === 'string' ? parseInt(width, 10) : width} 
+      height={height}
+    >
       {children}
     </LazyScatterChart>
   </Suspense>
@@ -191,7 +211,7 @@ export const GaugeWrapper = ({
       )
     ) : null
   }>
-    <LazyGauge width={width} height={height} {...props} />
+    <LazyGauge width={typeof width === 'string' ? parseInt(width, 10) : width} height={height} {...props} />
   </Suspense>
 )
 
@@ -212,7 +232,11 @@ export const SparkLineChartWrapper = ({
       )
     ) : null
   }>
-    <LazySparkLineChart width={width} height={height} {...props} />
+    <LazySparkLineChart 
+      {...props as any}
+      width={typeof width === 'string' ? parseInt(width, 10) : width} 
+      height={height}
+    />
   </Suspense>
 )
 

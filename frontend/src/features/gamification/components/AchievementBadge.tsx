@@ -272,7 +272,7 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
           }}
         >
           {imageError ? (
-            <__CategoryIconComponent 
+            <___CategoryIconComponent 
               sx={{ 
                 fontSize: sizeStyles.iconSize * 0.4,
                 filter: isUnlocked ? 'none' : 'grayscale(100%)',

@@ -156,7 +156,7 @@ class TimerApiService {
     totalPages: number;
   }> {
     try {
-      const params: unknown = { page, size };
+      const params: Record<string, any> = { page, size };
       if (dateRange) {
         params.startDate = dateRange.start;
         params.endDate = dateRange.end;

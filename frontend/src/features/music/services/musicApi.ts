@@ -13,7 +13,7 @@ import {
   SessionRecommendationRequest,
   MusicError,
   QueueItem
-} from '../types'
+} from '../types/music'
 
 class MusicApiService {
   private api: AxiosInstance
@@ -61,6 +61,13 @@ class MusicApiService {
   async getPlaylists(hiveId?: string): Promise<Playlist[]> {
     const params = hiveId ? { hiveId } : {}
     const response: AxiosResponse<ApiResponse<Playlist[]>> = await this.api.get('/playlists', { params })
+    return response.data.data
+  }
+
+  // Alias for getUserPlaylists to support existing test code
+  async getUserPlaylists(userId?: string): Promise<Playlist[]> {
+    const params = userId ? { userId } : {}
+    const response: AxiosResponse<ApiResponse<Playlist[]>> = await this.api.get('/playlists/user', { params })
     return response.data.data
   }
 

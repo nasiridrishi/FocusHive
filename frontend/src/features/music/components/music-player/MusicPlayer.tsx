@@ -61,7 +61,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   // TODO: Implement lyrics display feature
   void showLyrics; // Mark as intentionally used for future feature
   const theme = useTheme()
-  const { state } = useMusic()
+  const musicContext = useMusic()
   const spotify = useSpotify()
   const spotifyPlayer = useSpotifyPlayer()
   const {
@@ -90,7 +90,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
   const volumeTimeoutRef = useRef<NodeJS.Timeout>()
 
-  const { currentTrack, playbackState, isLoading } = state
+  const { currentTrack, playbackState, isLoading } = musicContext.state
 
   // Determine which playback source to use
   const isUsingSpotify = spotifyPlayer.isConnected && spotifyPlayer.isPremium
@@ -223,13 +223,13 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     if (isDragging) {
       return tempPosition || 0
     }
-    const position = effectivePlaybackState?.position || 0
+    const position = effectivePlaybackState?.currentTime || 0
     const duration = effectivePlaybackState?.duration || 0
     
     return duration > 0 && !isNaN(position) && !isNaN(duration)
       ? (position / duration) * 100 
       : 0
-  }, [isDragging, tempPosition, effectivePlaybackState?.position, effectivePlaybackState?.duration])
+  }, [isDragging, tempPosition, effectivePlaybackState?.currentTime, effectivePlaybackState?.duration])
 
   const repeatIcon = useMemo(() => {
     switch (repeatMode) {
@@ -614,7 +614,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         <Box mb={3}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="caption" color="text.secondary">
-              {formatTime(effectivePlaybackState.position)}
+              {formatTime(effectivePlaybackState.currentTime)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {formatTime(effectivePlaybackState.duration)}
@@ -785,7 +785,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
         {/* Spotify Status */}
         <Box mt={2}>
-          <spotifyStatus />
+          {_spotifyStatus()}
         </Box>
 
         {/* Spotify Connect Modal */}
