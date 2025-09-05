@@ -310,12 +310,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const interval = setInterval(() => {
       const metrics = performanceMetricsRef.current
       if (process.env.NODE_ENV === 'development') {
-        console.debug('WebSocket Performance Metrics:', {
-          sent: metrics.messagesSent,
-          received: metrics.messagesReceived,
-          uptime: Date.now() - metrics.connectionTime,
-          queueSize: messageQueueRef.current.length,
-        })
+        // WebSocket performance metrics tracked internally
       }
     }, 30000) // Log every 30 seconds in development
 

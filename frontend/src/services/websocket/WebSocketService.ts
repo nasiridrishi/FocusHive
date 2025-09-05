@@ -2,6 +2,13 @@ import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import type { BuddyCheckin, BuddyGoal } from '@features/buddy/types';
 import type { ForumPost, ForumReply } from '@features/forum/types';
+import { getWebSocketConfig } from '../config/environmentConfig';
+
+// WebSocket configuration from validated environment variables
+const WEBSOCKET_CONFIG = {
+  ...getWebSocketConfig(),
+  maxReconnectDelay: 30000, // Max 30 seconds between reconnection attempts
+} as const;
 
 export interface WebSocketMessage<T = unknown> {
   id: string;
@@ -96,35 +103,48 @@ class WebSocketService {
   private client: Client | null = null;
   private subscriptions: Map<string, StompSubscription> = new Map();
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
-  private heartbeatInterval: NodeJS.Timer | null = null;
+  private heartbeatInterval: number | null = null;
   private isConnected = false;
   private messageHandlers: Map<string, ((message: WebSocketMessage) => void)[]> = new Map();
   private presenceHandlers: ((presence: PresenceUpdate) => void)[] = [];
   private connectionHandlers: ((connected: boolean) => void)[] = [];
+  private authTokenProvider: (() => string | null) | null = null;
 
   constructor() {
     this.setupClient();
   }
 
+  // Method to set auth token provider (from auth context)
+  setAuthTokenProvider(provider: () => string | null): void {
+    this.authTokenProvider = provider;
+  }
+
   private setupClient() {
-    const token = localStorage.getItem('auth_token');
+    // Get auth token from provider or localStorage
+    const getToken = () => {
+      return this.authTokenProvider?.() || localStorage.getItem('auth_token');
+    };
+
+    // Build WebSocket URL - convert http/https to ws/wss if needed
+    const wsUrl = this.buildWebSocketUrl();
     
     this.client = new Client({
-      webSocketFactory: () => new SockJS('/ws'),
+      webSocketFactory: () => new SockJS(`${wsUrl}/ws`),
       connectHeaders: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${getToken()}`
       },
-      debug: () => {
-        // Debug logging disabled in production
+      debug: (str) => {
+        // Debug logging only in development
+        if (import.meta.env.DEV) {
+          // STOMP debug messages in development only
+        }
       },
-      reconnectDelay: this.reconnectDelay,
+      reconnectDelay: WEBSOCKET_CONFIG.reconnectDelay,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
       
-      onConnect: () => {
-        // WebSocket connected
+      onConnect: (frame) => {
+        // WebSocket connected - handled by connection handlers
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.setupSubscriptions();
@@ -132,29 +152,86 @@ class WebSocketService {
         this.notifyConnectionHandlers(true);
       },
       
-      onDisconnect: () => {
-        // WebSocket disconnected
+      onDisconnect: (frame) => {
+        // WebSocket disconnected - handled by connection handlers
         this.isConnected = false;
         this.stopHeartbeat();
         this.notifyConnectionHandlers(false);
       },
       
-      onStompError: () => {
-        // Handle WebSocket errors
-        // Error details: frame.headers['message'] and frame.body
-        
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.reconnectAttempts++;
-          setTimeout(() => this.connect(), this.reconnectDelay * this.reconnectAttempts);
-        }
+      onStompError: (frame) => {
+        // WebSocket STOMP error handled by reconnection logic
+        this.handleReconnection();
+      },
+
+      onWebSocketClose: (event) => {
+        // WebSocket closed - handled by reconnection logic
+        this.handleReconnection();
+      },
+
+      onWebSocketError: (event) => {
+        // WebSocket error handled by reconnection logic
+        this.handleReconnection();
       }
     });
+  }
+
+  private buildWebSocketUrl(): string {
+    let wsUrl = WEBSOCKET_CONFIG.url;
+    
+    // Auto-detect protocol based on page protocol if not specified
+    if (wsUrl.startsWith('//')) {
+      wsUrl = window.location.protocol === 'https:' ? `wss:${wsUrl}` : `ws:${wsUrl}`;
+    } else if (wsUrl.startsWith('http://')) {
+      wsUrl = wsUrl.replace('http://', 'ws://');
+    } else if (wsUrl.startsWith('https://')) {
+      wsUrl = wsUrl.replace('https://', 'wss://');
+    }
+    
+    return wsUrl;
+  }
+
+  private handleReconnection(): void {
+    if (this.reconnectAttempts < WEBSOCKET_CONFIG.reconnectAttempts) {
+      this.reconnectAttempts++;
+      
+      // Exponential backoff with jitter
+      const baseDelay = WEBSOCKET_CONFIG.reconnectDelay;
+      const exponentialDelay = Math.min(
+        baseDelay * Math.pow(2, this.reconnectAttempts - 1),
+        WEBSOCKET_CONFIG.maxReconnectDelay
+      );
+      // Add jitter (±25%)
+      const jitter = exponentialDelay * 0.25 * (Math.random() * 2 - 1);
+      const delay = exponentialDelay + jitter;
+
+      // Reconnection attempt scheduled
+      
+      setTimeout(() => {
+        if (!this.isConnected) {
+          this.connect();
+        }
+      }, delay);
+    } else {
+      // Maximum reconnection attempts reached - user notification required
+      this.notifyConnectionHandlers(false);
+    }
   }
 
   connect(): void {
     if (this.client && !this.isConnected) {
       this.client.activate();
     }
+  }
+
+  // Method to reconnect with new auth token (useful when token refreshes)
+  reconnectWithNewToken(): void {
+    if (this.isConnected) {
+      this.disconnect();
+    }
+    // Setup client with new token and reconnect
+    this.setupClient();
+    this.connect();
   }
 
   disconnect(): void {
@@ -191,7 +268,7 @@ class WebSocketService {
       if (this.isConnected) {
         this.sendMessage('/app/presence/heartbeat', {});
       }
-    }, 30000); // Send heartbeat every 30 seconds
+    }, WEBSOCKET_CONFIG.heartbeatInterval);
   }
 
   private stopHeartbeat() {
@@ -409,8 +486,28 @@ class WebSocketService {
 
   getConnectionState(): string {
     if (this.isConnected) return 'CONNECTED';
-    if (this.reconnectAttempts > 0) return 'RECONNECTING';
+    if (this.reconnectAttempts > 0 && this.reconnectAttempts < WEBSOCKET_CONFIG.reconnectAttempts) {
+      return 'RECONNECTING';
+    }
+    if (this.reconnectAttempts >= WEBSOCKET_CONFIG.reconnectAttempts) {
+      return 'FAILED';
+    }
     return 'DISCONNECTED';
+  }
+
+  getReconnectionInfo(): { attempts: number; maxAttempts: number; isReconnecting: boolean } {
+    return {
+      attempts: this.reconnectAttempts,
+      maxAttempts: WEBSOCKET_CONFIG.reconnectAttempts,
+      isReconnecting: this.reconnectAttempts > 0 && this.reconnectAttempts < WEBSOCKET_CONFIG.reconnectAttempts
+    };
+  }
+
+  // Method to manually retry connection (after max attempts reached)
+  retryConnection(): void {
+    this.reconnectAttempts = 0;
+    this.setupClient();
+    this.connect();
   }
 }
 

@@ -3,36 +3,32 @@ import { Box, Container } from '@mui/material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import LoginForm from '../components/LoginForm'
 import { LoginRequest } from '@shared/types'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  
-  // TODO: Replace with actual auth context/hook
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const { authState, login, clearError } = useAuth()
+
+  // Clear any existing error when component mounts
+  React.useEffect(() => {
+    if (authState.error) {
+      clearError()
+    }
+  }, [])
 
   const handleLogin = async (credentials: LoginRequest) => {
-    setIsLoading(true)
-    setError(null)
-
     try {
-      // TODO: Implement actual login API call
-      // Will use credentials.email and credentials.password when API is implemented
-      void credentials; // Temporary to satisfy linter
+      await login(credentials)
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // For now, just navigate to dashboard
-      // In real implementation, this would be handled by auth context
+      // Navigate to the intended destination or dashboard
       const from = location.state?.from?.pathname || '/dashboard'
       navigate(from, { replace: true })
       
-    } catch (err) {
-      setError('Invalid email or password. Please try again.')
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      // Error is already handled by the auth context
+      // The error will be displayed via authState.error
+      console.error('Login failed:', error)
     }
   }
 
@@ -57,8 +53,8 @@ export default function LoginPage() {
         >
           <LoginForm
             onSubmit={handleLogin}
-            isLoading={isLoading}
-            error={error}
+            isLoading={authState.isLoading}
+            error={authState.error}
           />
         </Box>
       </Container>

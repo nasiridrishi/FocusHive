@@ -1,0 +1,5 @@
+tunnel: bc19ca54-5d23-424c-95e1-72ac66684133
+ingress:
+  - hostname: dev.focushive.app
+    service: http://nginx:80
+  - service: http_status:404

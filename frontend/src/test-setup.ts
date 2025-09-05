@@ -1,6 +1,26 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
+import { vi, beforeEach, afterEach, beforeAll, afterAll, describe, it, expect } from 'vitest';
+import { server } from './test-utils/msw-server';
+import { toHaveNoViolations } from 'jest-axe';
+
+// Extend expect with accessibility matchers
+expect.extend(toHaveNoViolations);
+
+// Start MSW server before all tests
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'error' });
+});
+
+// Reset handlers after each test
+afterEach(() => {
+  server.resetHandlers();
+});
+
+// Clean up after all tests are done
+afterAll(() => {
+  server.close();
+});
 
 // Mock axios first before any other imports
 vi.mock('axios', () => {
@@ -71,7 +91,7 @@ vi.mock('@mui/x-date-pickers', () => ({
       type: 'date',
       value: value ? value.toISOString().split('T')[0] : '',
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange && onChange(new Date(e.target.value)),
-      ...(slotProps?.textField || {})
+      ...(slotProps?.textField && typeof slotProps.textField === 'object' ? slotProps.textField : {})
     });
   })
 }));
@@ -84,7 +104,7 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
       type: 'date',
       value: value ? value.toISOString().split('T')[0] : '',
       onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange && onChange(new Date(e.target.value)),
-      ...(slotProps?.textField || {})
+      ...(slotProps?.textField && typeof slotProps.textField === 'object' ? slotProps.textField : {})
     });
   })
 }));

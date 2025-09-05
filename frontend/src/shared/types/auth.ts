@@ -68,4 +68,5 @@ export interface AuthContextType {
   logout: () => void
   refreshAuth: () => Promise<void>
   updateProfile: (userData: Partial<User>) => Promise<void>
+  clearError: () => void
 }

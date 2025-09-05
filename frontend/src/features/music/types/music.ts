@@ -113,11 +113,27 @@ export interface SpotifyPlayerState {
   player: import('../../../types/spotify').Spotify.Player | null // Spotify Web SDK player instance
 }
 
-export interface WebSocketMessage {
+export interface WebSocketMessage<T = unknown> {
   type: 'track_added' | 'track_voted' | 'queue_updated' | 'track_changed' | 'user_joined' | 'user_left'
-  payload: unknown
+  payload: T
   timestamp: string
   userId: string
+}
+
+// Specific payload types for different message types
+export interface UserJoinedPayload {
+  name: string
+  avatar?: string
+}
+
+export interface UserLeftPayload {
+  name: string
+}
+
+export interface TrackVotedPayload {
+  trackId: string
+  type: 'skip' | 'up' | 'down'
+  votes: number
 }
 
 export interface VoteRequest {
@@ -214,7 +230,7 @@ export interface UseSpotifyPlayerOptions {
 
 export interface UseMusicWebSocketOptions {
   hiveId?: string
-  onMessage?: (message: WebSocketMessage) => void
+  onMessage?: (message: WebSocketMessage<unknown>) => void
   onConnect?: () => void
   onDisconnect?: () => void
 }

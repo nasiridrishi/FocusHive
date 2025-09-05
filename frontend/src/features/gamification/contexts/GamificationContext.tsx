@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
 import type { 
   GamificationContextValue, 
   GamificationStats, 
@@ -171,6 +171,8 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children 
 }) => {
   const [state, dispatch] = useReducer(gamificationReducer, initialState);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
 
   // Load stats on mount
   const loadStats = useCallback(async () => {
@@ -178,19 +180,21 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const stats = await mockApi.getGamificationStats();
       dispatch({ type: 'SET_STATS', payload: stats });
+      retryCountRef.current = 0; // Reset retry count on success
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load stats';
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
       
-      // Auto-retry after 3 seconds
-      setTimeout(() => {
-        loadStats();
-      }, 3000);
+      // FIXED: Add exponential backoff and max retry limit
+      if (retryCountRef.current < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 10000); // Cap at 10s
+        retryCountRef.current++;
+        setTimeout(() => {
+          loadStats();
+        }, delay);
+      }
     }
   }, []);
-
-  // Debounced API calls to prevent excessive requests
-  // const debouncedLoadStats = debounce(loadStats, 1000);
 
   useEffect(() => {
     loadStats();
@@ -255,48 +259,46 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // WebSocket connection for real-time updates (mock implementation)
+  // FIXED: WebSocket connection for real-time updates (proper cleanup, no dependency on state.stats)
   useEffect(() => {
-    // Mock WebSocket connection
-    const mockWebSocket = {
-      addEventListener: (event: string, handler: (e: MessageEvent) => void) => {
-        if (event === 'message') {
-          // Simulate periodic updates
-          const interval = setInterval(() => {
-            const mockEvent = new MessageEvent('message', {
-              data: JSON.stringify({
-                type: 'STATS_UPDATE',
-                payload: state.stats ? {
-                  ...state.stats,
-                  points: {
-                    ...state.stats.points,
-                    current: state.stats.points.current + Math.floor(Math.random() * 10),
-                  },
-                } : null,
-              }),
-            });
-            handler(mockEvent);
-          }, 30000); // Update every 30 seconds
+    // Only setup WebSocket in production/non-test environment
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
 
-          return () => clearInterval(interval);
-        }
-      },
-      close: () => {},
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const setupWebSocket = () => {
+      // Simulate periodic updates only if not in test environment
+      intervalId = setInterval(() => {
+        // Only update if we have current stats, but don't depend on them in useEffect
+        dispatch(currentState => {
+          if (currentState.stats) {
+            return {
+              type: 'SET_STATS',
+              payload: {
+                ...currentState.stats,
+                points: {
+                  ...currentState.stats.points,
+                  current: currentState.stats.points.current + Math.floor(Math.random() * 10),
+                },
+              },
+            };
+          }
+          return { type: 'SET_LOADING', payload: false };
+        });
+      }, 30000); // Update every 30 seconds
     };
 
-    const cleanup = mockWebSocket.addEventListener('message', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'STATS_UPDATE' && data.payload) {
-          dispatch({ type: 'SET_STATS', payload: data.payload });
-        }
-      } catch (error) {
-        // Invalid WebSocket message
-      }
-    });
+    setupWebSocket();
 
-    return cleanup;
-  }, [state.stats]);
+    // Proper cleanup
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, []); // FIXED: No dependencies to prevent infinite loop
 
   const contextValue: GamificationContextValue = {
     stats: state.stats,

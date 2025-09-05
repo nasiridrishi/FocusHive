@@ -26,6 +26,7 @@ import {
   Logout as LogoutIcon,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
+import { CompactLanguageSwitcher, useTranslation } from '../components/i18n'
 
 interface HeaderProps {
   drawerWidth: number
@@ -40,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const theme = useTheme()
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
   
   // State for menus and search
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -131,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
             display: { xs: 'none', sm: 'block' },
           }}
         >
-          FocusHive
+          {t('app.name')}
         </Typography>
 
         {/* Search Bar */}
@@ -166,10 +168,10 @@ export const Header: React.FC<HeaderProps> = ({
             <SearchIcon color="action" />
           </Box>
           <InputBase
-            placeholder="Search hives, users..."
+            placeholder={t('placeholders.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            inputProps={{ 'aria-label': 'search' }}
+            inputProps={{ 'aria-label': t('accessibility.aria_label_search') }}
             sx={{
               color: 'inherit',
               width: '100%',
@@ -188,11 +190,16 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Side Actions */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Language Switcher */}
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+            <CompactLanguageSwitcher />
+          </Box>
+
           {/* Connection Status */}
-          <Tooltip title={isConnected ? 'Connected' : 'Disconnected'}>
+          <Tooltip title={isConnected ? t('status.connected') : t('status.disconnected')}>
             <Chip
               icon={isConnected ? <WifiIcon /> : <WifiOffIcon />}
-              label={isConnected ? 'Online' : 'Offline'}
+              label={isConnected ? t('status.online') : t('status.offline')}
               color={isConnected ? 'success' : 'error'}
               variant="outlined"
               size="small"
@@ -206,7 +213,7 @@ export const Header: React.FC<HeaderProps> = ({
           </Tooltip>
 
           {/* Notifications */}
-          <Tooltip title="Notifications">
+          <Tooltip title={t('navigation.notifications') || 'Notifications'}>
             <IconButton
               color="inherit"
               onClick={handleNotificationsOpen}
@@ -219,7 +226,7 @@ export const Header: React.FC<HeaderProps> = ({
           </Tooltip>
 
           {/* User Profile */}
-          <Tooltip title="Account">
+          <Tooltip title={t('navigation.profile')}>
             <IconButton
               edge="end"
               aria-label="account of current user"
@@ -272,15 +279,15 @@ export const Header: React.FC<HeaderProps> = ({
           </Box>
           <MenuItem onClick={handleProfile}>
             <AccountCircleIcon sx={{ mr: 1 }} />
-            Profile
+            {t('navigation.profile')}
           </MenuItem>
           <MenuItem onClick={handleSettings}>
             <SettingsIcon sx={{ mr: 1 }} />
-            Settings
+            {t('navigation.settings')}
           </MenuItem>
           <MenuItem onClick={handleLogout}>
             <LogoutIcon sx={{ mr: 1 }} />
-            Logout
+            {t('navigation.logout')}
           </MenuItem>
         </Menu>
 
@@ -307,7 +314,7 @@ export const Header: React.FC<HeaderProps> = ({
           }}
         >
           <Box sx={{ px: 2, py: 1, borderBottom: `1px solid ${theme.palette.divider}` }}>
-            <Typography variant="h6">Notifications</Typography>
+            <Typography variant="h6">{t('navigation.notifications') || 'Notifications'}</Typography>
           </Box>
           {/* Mock notifications */}
           <MenuItem onClick={handleMenuClose}>

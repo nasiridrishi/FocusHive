@@ -1,0 +1,36 @@
+{
+  "title": "Temporizador de Enfoque",
+  "start": "Iniciar Sesión",
+  "pause": "Pausar",
+  "resume": "Reanudar",
+  "stop": "Detener",
+  "reset": "Restablecer",
+  "session_types": {
+    "focus": "Sesión de Enfoque",
+    "short_break": "Descanso Corto",
+    "long_break": "Descanso Largo",
+    "custom": "Sesión Personalizada"
+  },
+  "settings": {
+    "title": "Configuración del Temporizador",
+    "focus_duration": "Duración del Enfoque",
+    "short_break_duration": "Duración del Descanso Corto",
+    "long_break_duration": "Duración del Descanso Largo",
+    "auto_start_breaks": "Iniciar descansos automáticamente",
+    "auto_start_sessions": "Iniciar sesiones de enfoque automáticamente",
+    "notification_sound": "Sonido de Notificación",
+    "volume": "Volumen",
+    "sessions_until_long_break": "Sesiones hasta descanso largo"
+  },
+  "session": {
+    "in_progress": "Sesión en progreso",
+    "completed": "¡Sesión completada!",
+    "paused": "Sesión pausada",
+    "remaining": "Tiempo restante",
+    "elapsed": "Tiempo transcurrido",
+    "session_count": "Sesión {{current}} de {{total}}",
+    "take_break": "¡Hora del descanso!",
+    "break_over": "El descanso terminó. ¿Listo para enfocarte?",
+    "well_done": "¡Bien hecho! Completaste una sesión de enfoque de {{duration}} minutos."
+  }
+}

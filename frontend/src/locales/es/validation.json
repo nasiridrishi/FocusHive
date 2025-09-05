@@ -1,0 +1,8 @@
+{
+  "required": "Este campo es obligatorio",
+  "email": "Por favor ingresa un correo electrónico válido",
+  "min_length": "Debe tener al menos {{min}} caracteres",
+  "max_length": "No debe tener más de {{max}} caracteres",
+  "numeric": "Debe ser un número",
+  "positive": "Debe ser un número positivo"
+}

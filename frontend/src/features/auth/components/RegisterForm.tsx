@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   TextField,
-  Button,
   Typography,
   Alert,
   Paper,
@@ -18,10 +17,16 @@ import {
   Email,
   Lock,
   Person,
-  PersonOutline
+  PersonOutline,
+  PersonAdd
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { RegisterRequest, FormErrors } from '@shared/types'
+import { useForm, Controller } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { RegisterRequest } from '@shared/types'
+import { LoadingButton } from '@shared/components/loading'
+import { registerSchema } from '@shared/validation/schemas'
+import PasswordStrengthIndicator from '@shared/components/PasswordStrengthIndicator'
 
 interface RegisterFormProps {
   onSubmit: (userData: RegisterRequest) => Promise<void>
@@ -29,100 +34,43 @@ interface RegisterFormProps {
   error?: string | null
 }
 
+type RegisterFormData = RegisterRequest & {
+  confirmPassword: string
+  acceptTerms: boolean
+}
+
 export default function RegisterForm({ onSubmit, isLoading = false, error }: RegisterFormProps) {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState<RegisterRequest>({
-    email: '',
-    password: '',
-    username: '',
-    firstName: '',
-    lastName: ''
-  })
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [acceptTerms, setAcceptTerms] = useState(false)
-  const [formErrors, setFormErrors] = useState<FormErrors>({})
 
-  const validateForm = (): boolean => {
-    const errors: FormErrors = {}
-
-    if (!formData.firstName.trim()) {
-      errors.firstName = ['First name is required']
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { touchedFields }
+  } = useForm<RegisterFormData>({
+    resolver: yupResolver(registerSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      acceptTerms: false
     }
+  })
 
-    if (!formData.lastName.trim()) {
-      errors.lastName = ['Last name is required']
-    }
+  const password = watch('password')
 
-    if (!formData.username.trim()) {
-      errors.username = ['Username is required']
-    } else if (formData.username.length < 3) {
-      errors.username = ['Username must be at least 3 characters']
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      errors.username = ['Username can only contain letters, numbers, and underscores']
-    }
-
-    if (!formData.email) {
-      errors.email = ['Email is required']
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = ['Please enter a valid email address']
-    }
-
-    if (!formData.password) {
-      errors.password = ['Password is required']
-    } else if (formData.password.length < 8) {
-      errors.password = ['Password must be at least 8 characters']
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = ['Password must contain at least one uppercase letter, one lowercase letter, and one number']
-    }
-
-    if (!confirmPassword) {
-      errors.confirmPassword = ['Please confirm your password']
-    } else if (formData.password !== confirmPassword) {
-      errors.confirmPassword = ['Passwords do not match']
-    }
-
-    if (!acceptTerms) {
-      errors.terms = ['You must accept the terms and conditions']
-    }
-
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleInputChange = (field: keyof RegisterRequest | 'confirmPassword') => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.value
-
-    if (field === 'confirmPassword') {
-      setConfirmPassword(value)
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }))
-    }
-    
-    // Clear field error when user starts typing
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: []
-      }))
-    }
-  }
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
+  const onFormSubmit = async (data: RegisterFormData) => {
     try {
-      await onSubmit(formData)
+      // Remove confirmPassword and acceptTerms before submitting
+      const { confirmPassword: _, acceptTerms: __, ...submitData } = data
+      await onSubmit(submitData)
     } catch (err) {
       // Registration error handled by parent component
     }
@@ -141,7 +89,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
         borderRadius: 2
       }}
     >
-      <Box component="form" onSubmit={handleSubmit} noValidate>
+      <Box component="form" onSubmit={handleSubmit(onFormSubmit)} noValidate>
         <Typography
           variant="h4"
           component="h1"
@@ -180,178 +128,223 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
             gap: 2
           }}
         >
-          <TextField
-            fullWidth
-            id="firstName"
-            label="First Name"
-            value={formData.firstName}
-            onChange={handleInputChange('firstName')}
-            error={Boolean(formErrors.firstName?.length)}
-            helperText={formErrors.firstName?.[0]}
-            disabled={isLoading}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Person color="action" />
-                </InputAdornment>
-              ),
-            }}
-            autoComplete="given-name"
-            autoFocus
+          <Controller
+            name="firstName"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                fullWidth
+                id="firstName"
+                label="First Name"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                disabled={isLoading}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                autoComplete="given-name"
+                autoFocus
+              />
+            )}
           />
-          <TextField
-            fullWidth
-            id="lastName"
-            label="Last Name"
-            value={formData.lastName}
-            onChange={handleInputChange('lastName')}
-            error={Boolean(formErrors.lastName?.length)}
-            helperText={formErrors.lastName?.[0]}
-            disabled={isLoading}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonOutline color="action" />
-                </InputAdornment>
-              ),
-            }}
-            autoComplete="family-name"
+          
+          <Controller
+            name="lastName"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                fullWidth
+                id="lastName"
+                label="Last Name"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                disabled={isLoading}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonOutline color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                autoComplete="family-name"
+              />
+            )}
           />
         </Box>
 
-        <TextField
-          fullWidth
-          id="username"
-          label="Username"
-          value={formData.username}
-          onChange={handleInputChange('username')}
-          error={Boolean(formErrors.username?.length)}
-          helperText={formErrors.username?.[0]}
-          disabled={isLoading}
-          sx={{ mt: 2 }}
-          autoComplete="username"
-        />
-
-        <TextField
-          fullWidth
-          id="email"
-          label="Email Address"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange('email')}
-          error={Boolean(formErrors.email?.length)}
-          helperText={formErrors.email?.[0]}
-          disabled={isLoading}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Email color="action" />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mt: 2 }}
-          autoComplete="email"
-        />
-
-        <TextField
-          fullWidth
-          id="password"
-          label="Password"
-          type={showPassword ? 'text' : 'password'}
-          value={formData.password}
-          onChange={handleInputChange('password')}
-          error={Boolean(formErrors.password?.length)}
-          helperText={formErrors.password?.[0]}
-          disabled={isLoading}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={handleShowPassword}
-                  edge="end"
-                  aria-label="toggle password visibility"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mt: 2 }}
-          autoComplete="new-password"
-        />
-
-        <TextField
-          fullWidth
-          id="confirmPassword"
-          label="Confirm Password"
-          type={showConfirmPassword ? 'text' : 'password'}
-          value={confirmPassword}
-          onChange={handleInputChange('confirmPassword')}
-          error={Boolean(formErrors.confirmPassword?.length)}
-          helperText={formErrors.confirmPassword?.[0]}
-          disabled={isLoading}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Lock color="action" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={handleShowConfirmPassword}
-                  edge="end"
-                  aria-label="toggle confirm password visibility"
-                >
-                  {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mt: 2 }}
-          autoComplete="new-password"
-        />
-
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={acceptTerms}
-              onChange={(e) => setAcceptTerms(e.target.checked)}
+        <Controller
+          name="username"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              fullWidth
+              id="username"
+              label="Username"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
               disabled={isLoading}
+              sx={{ mt: 2 }}
+              autoComplete="username"
             />
-          }
-          label={
-            <Typography variant="body2">
-              I agree to the{' '}
-              <Link href="/terms" target="_blank" rel="noopener">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" target="_blank" rel="noopener">
-                Privacy Policy
-              </Link>
-            </Typography>
-          }
-          sx={{ mt: 2, mb: 1 }}
+          )}
         />
 
-        {formErrors.terms && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {formErrors.terms[0]}
-          </Alert>
-        )}
+        <Controller
+          name="email"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              fullWidth
+              id="email"
+              label="Email Address"
+              type="email"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mt: 2 }}
+              autoComplete="email"
+            />
+          )}
+        />
 
-        <Button
+        <Controller
+          name="password"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Box sx={{ mt: 2 }}>
+              <TextField
+                {...field}
+                fullWidth
+                id="password"
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                disabled={isLoading}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={handleShowPassword}
+                        edge="end"
+                        aria-label="toggle password visibility"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                autoComplete="new-password"
+              />
+              <PasswordStrengthIndicator 
+                password={password || ''} 
+                show={touchedFields.password && !!password}
+              />
+            </Box>
+          )}
+        />
+
+        <Controller
+          name="confirmPassword"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              fullWidth
+              id="confirmPassword"
+              label="Confirm Password"
+              type={showConfirmPassword ? 'text' : 'password'}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleShowConfirmPassword}
+                      edge="end"
+                      aria-label="toggle confirm password visibility"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mt: 2 }}
+              autoComplete="new-password"
+            />
+          )}
+        />
+
+        <Controller
+          name="acceptTerms"
+          control={control}
+          render={({ field, fieldState }) => (
+            <Box>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    {...field}
+                    checked={field.value}
+                    disabled={isLoading}
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    I agree to the{' '}
+                    <Link href="/terms" target="_blank" rel="noopener">
+                      Terms of Service
+                    </Link>{' '}
+                    and{' '}
+                    <Link href="/privacy" target="_blank" rel="noopener">
+                      Privacy Policy
+                    </Link>
+                  </Typography>
+                }
+                sx={{ mt: 2, mb: 1 }}
+              />
+              {fieldState.error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {fieldState.error.message}
+                </Alert>
+              )}
+            </Box>
+          )}
+        />
+
+        <LoadingButton
           type="submit"
           fullWidth
           variant="contained"
           size="large"
-          disabled={isLoading}
+          loading={isLoading}
+          loadingText="Creating Account..."
+          startIcon={<PersonAdd />}
           sx={{
             py: 1.5,
             mb: 2,
@@ -359,8 +352,8 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
             fontWeight: 600
           }}
         >
-          {isLoading ? 'Creating Account...' : 'Create Account'}
-        </Button>
+          Create Account
+        </LoadingButton>
 
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Typography variant="body2" color="text.secondary">

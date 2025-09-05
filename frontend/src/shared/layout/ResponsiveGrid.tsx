@@ -171,10 +171,101 @@ export const ResponsiveGrid = forwardRef<HTMLDivElement, ResponsiveGridProps>(
 ResponsiveGrid.displayName = 'ResponsiveGrid'
 
 // Grid item component
+const StyledGridItem = styled(Box, {
+  shouldForwardProp: (prop) => 
+    !['span', 'spanRow', 'order', 'align', 'justify'].includes(prop as string),
+})<{
+  span?: number | Partial<Record<BreakpointKey, number>>
+  spanRow?: number | Partial<Record<BreakpointKey, number>>
+  order?: number | Partial<Record<BreakpointKey, number>>
+  align?: 'start' | 'center' | 'end' | 'stretch'
+  justify?: 'start' | 'center' | 'end' | 'stretch'
+}>(({ theme, span, spanRow, order, align, justify }) => ({
+  // Grid column span
+  ...(span && {
+    gridColumn: typeof span === 'number' ? `span ${span}` : undefined,
+  }),
+  
+  // Grid row span
+  ...(spanRow && {
+    gridRow: typeof spanRow === 'number' ? `span ${spanRow}` : undefined,
+  }),
+  
+  // Grid order
+  ...(order && {
+    order: typeof order === 'number' ? order : undefined,
+  }),
+  
+  // Item alignment
+  ...(align && {
+    alignSelf: align === 'start' ? 'flex-start' : align === 'end' ? 'flex-end' : align,
+  }),
+  
+  // Item justification
+  ...(justify && {
+    justifySelf: justify === 'start' ? 'flex-start' : justify === 'end' ? 'flex-end' : justify,
+  }),
+  
+  // Responsive handling for span, spanRow, order
+  ...(typeof span === 'object' && Object.keys(span).length > 0 && {
+    [theme.breakpoints.up('mobile')]: {
+      gridColumn: span.mobile ? `span ${span.mobile}` : undefined,
+    },
+    [theme.breakpoints.up('tablet')]: {
+      gridColumn: span.tablet ? `span ${span.tablet}` : undefined,
+    },
+    [theme.breakpoints.up('laptop')]: {
+      gridColumn: span.laptop ? `span ${span.laptop}` : undefined,
+    },
+    [theme.breakpoints.up('desktop')]: {
+      gridColumn: span.desktop ? `span ${span.desktop}` : undefined,
+    },
+    [theme.breakpoints.up('desktopLg')]: {
+      gridColumn: span.desktopLg ? `span ${span.desktopLg}` : undefined,
+    },
+  }),
+  
+  ...(typeof spanRow === 'object' && Object.keys(spanRow).length > 0 && {
+    [theme.breakpoints.up('mobile')]: {
+      gridRow: spanRow.mobile ? `span ${spanRow.mobile}` : undefined,
+    },
+    [theme.breakpoints.up('tablet')]: {
+      gridRow: spanRow.tablet ? `span ${spanRow.tablet}` : undefined,
+    },
+    [theme.breakpoints.up('laptop')]: {
+      gridRow: spanRow.laptop ? `span ${spanRow.laptop}` : undefined,
+    },
+    [theme.breakpoints.up('desktop')]: {
+      gridRow: spanRow.desktop ? `span ${spanRow.desktop}` : undefined,
+    },
+    [theme.breakpoints.up('desktopLg')]: {
+      gridRow: spanRow.desktopLg ? `span ${spanRow.desktopLg}` : undefined,
+    },
+  }),
+  
+  ...(typeof order === 'object' && Object.keys(order).length > 0 && {
+    [theme.breakpoints.up('mobile')]: {
+      order: order.mobile || undefined,
+    },
+    [theme.breakpoints.up('tablet')]: {
+      order: order.tablet || undefined,
+    },
+    [theme.breakpoints.up('laptop')]: {
+      order: order.laptop || undefined,
+    },
+    [theme.breakpoints.up('desktop')]: {
+      order: order.desktop || undefined,
+    },
+    [theme.breakpoints.up('desktopLg')]: {
+      order: order.desktopLg || undefined,
+    },
+  }),
+}))
+
 export const GridItem = forwardRef<HTMLDivElement, GridItemProps>(
   ({ span, spanRow, order, align, justify, children, ...props }, ref) => {
     return (
-      <GridItem
+      <StyledGridItem
         ref={ref}
         span={span}
         spanRow={spanRow}
@@ -184,7 +275,7 @@ export const GridItem = forwardRef<HTMLDivElement, GridItemProps>(
         {...props}
       >
         {children}
-      </GridItem>
+      </StyledGridItem>
     )
   }
 )
@@ -300,4 +391,4 @@ export const ResponsiveContainer: React.FC<{
 }
 
 // Export all grid components
-export { GridContainer, GridItem as StyledGridItem }
+export { GridContainer, StyledGridItem }

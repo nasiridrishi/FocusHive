@@ -14,6 +14,7 @@ import {
   Timer as TimerIcon,
   People as PeopleIcon,
   Star as StarIcon,
+  Rocket as RocketIcon,
 } from '@mui/icons-material'
 import { HiveList } from '../components'
 import { Hive, HiveMember } from '@shared/types'
@@ -391,8 +392,9 @@ export const DashboardPage: React.FC = () => {
 
       {/* Quick Actions */}
       <Paper sx={{ p: 3, mb: 4, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-        <Typography variant="h6" gutterBottom>
-          🚀 Quick Start
+        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <RocketIcon />
+          Quick Start
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <Chip

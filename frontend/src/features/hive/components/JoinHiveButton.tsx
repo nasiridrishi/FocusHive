@@ -8,7 +8,6 @@ import {
   TextField,
   Typography,
   Box,
-  CircularProgress,
   Alert,
 } from '@mui/material'
 import {
@@ -17,6 +16,7 @@ import {
   Public as PublicIcon,
 } from '@mui/icons-material'
 import { Hive } from '@shared/types'
+import { LoadingButton } from '@shared/components/loading'
 
 interface JoinHiveButtonProps {
   hive: Hive
@@ -93,13 +93,14 @@ export const JoinHiveButton: React.FC<JoinHiveButtonProps> = ({
 
   return (
     <>
-      <Button
+      <LoadingButton
         variant={variant}
         size={size}
         fullWidth={fullWidth}
-        startIcon={joining || isLoading ? <CircularProgress size={16} /> : getButtonIcon()}
+        loading={joining || isLoading}
+        startIcon={getButtonIcon()}
         onClick={handleJoinClick}
-        disabled={isLoading || joining || isFull}
+        disabled={isFull}
         color={requiresApproval ? 'warning' : 'primary'}
         sx={{
           minWidth: fullWidth ? undefined : 120,
@@ -107,7 +108,7 @@ export const JoinHiveButton: React.FC<JoinHiveButtonProps> = ({
         }}
       >
         {getButtonText()}
-      </Button>
+      </LoadingButton>
 
       {/* Join Request Dialog */}
       <Dialog
@@ -170,14 +171,15 @@ export const JoinHiveButton: React.FC<JoinHiveButtonProps> = ({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleDialogSubmit}
             variant="contained"
-            disabled={joining}
-            startIcon={joining ? <CircularProgress size={16} /> : <PersonAddIcon />}
+            loading={joining}
+            loadingText="Sending Request..."
+            startIcon={<PersonAddIcon />}
           >
-            {joining ? 'Sending Request...' : 'Send Request'}
-          </Button>
+            Send Request
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </>

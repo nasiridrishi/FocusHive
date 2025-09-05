@@ -16,26 +16,38 @@ FocusHive follows a microservices architecture with separate backend services an
 
 ```
 focushive/
-├── backend/             # Spring Boot 3.x Java backend (Main FocusHive service)
-│   ├── src/            # Java source code
-│   ├── build.gradle.kts # Gradle build configuration
-│   └── Dockerfile      # Backend container
-├── music-service/       # Spring Boot 3.x Music Recommendation microservice
-│   ├── src/            # Java source code
-│   ├── build.gradle.kts # Gradle build configuration
-│   └── Dockerfile      # Music service container
-├── identity-service/    # Spring Boot 3.x Identity Management microservice
-│   ├── src/            # Java source code
-│   ├── build.gradle.kts # Gradle build configuration
-│   └── Dockerfile      # Identity service container
-├── frontend/           # React TypeScript web application
-│   ├── src/            # React source code with music features
-│   └── Dockerfile      # Frontend container
+├── services/                    # Microservices
+│   ├── focushive-backend/      # Spring Boot 3.x Java backend (Main service)
+│   │   ├── src/                # Java source code
+│   │   ├── build.gradle.kts    # Gradle build configuration
+│   │   └── Dockerfile          # Backend container
+│   ├── music-service/          # Spring Boot 3.x Music Recommendation microservice
+│   │   ├── src/                # Java source code
+│   │   ├── build.gradle.kts    # Gradle build configuration
+│   │   └── Dockerfile          # Music service container
+│   └── identity-service/       # Spring Boot 3.x Identity Management microservice
+│       ├── src/                # Java source code
+│       ├── build.gradle.kts    # Gradle build configuration
+│       └── Dockerfile          # Identity service container
+├── frontend/                   # React TypeScript web application
+│   ├── src/                    # React source code with music features
+│   └── Dockerfile              # Frontend container
+├── docker/                     # Docker configuration
+│   ├── docker-compose.yml      # Main compose file
+│   ├── docker-compose.override.yml  # Development overrides
+│   ├── docker-compose.prod.yml      # Production overrides
+│   ├── docker-compose.test.yml      # Testing overrides
+│   ├── .env.example            # Example environment variables
+│   └── nginx/                  # Nginx configurations
+├── scripts/                    # Deployment and utility scripts
+│   ├── dev/                    # Development scripts
+│   ├── deploy/                 # Deployment scripts
+│   ├── db/                     # Database initialization scripts
+│   └── utils/                  # Utility scripts
 ├── shared/
-│   └── openapi/        # OpenAPI specifications
-├── docs/               # Documentation
-├── docker-compose.yml  # Docker development environment
-└── .github/            # GitHub Actions CI/CD
+│   └── openapi/                # OpenAPI specifications
+├── docs/                       # Documentation
+└── .github/                    # GitHub Actions CI/CD
 ```
 
 ## Development
@@ -58,10 +70,10 @@ git clone <repository-url>
 cd focushive
 
 # Copy environment variables
-cp .env.example .env
+cp docker/.env.example docker/.env
 
 # Start all services with Docker Compose (includes Identity Service)
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Services will be available at:
 # - Frontend: http://localhost:5173
@@ -79,7 +91,7 @@ docker-compose up -d
 # - Traefik Dashboard: http://localhost:8084
 
 # Stop all services
-docker-compose down
+docker compose -f docker/docker-compose.yml down
 ```
 
 #### Environment-Specific Deployments
@@ -87,16 +99,16 @@ docker-compose down
 **Development Environment** (default):
 ```bash
 # Uses docker-compose.override.yml automatically
-docker-compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Or explicitly:
-docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.override.yml up -d
 ```
 
 **Production Environment**:
 ```bash
 # Production deployment with monitoring
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
 
 # Additional monitoring services:
 # - Prometheus: http://localhost:9090
@@ -106,13 +118,13 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 **Testing Environment**:
 ```bash
 # Testing environment with isolated databases
-docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml up -d
 
 # Run integration tests
-docker-compose -f docker-compose.yml -f docker-compose.test.yml --profile integration-tests up --abort-on-container-exit
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml --profile integration-tests up --abort-on-container-exit
 
 # Run E2E tests
-docker-compose -f docker-compose.yml -f docker-compose.test.yml --profile e2e-tests up --abort-on-container-exit
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml --profile e2e-tests up --abort-on-container-exit
 ```
 
 #### Service Access and Routing
@@ -133,7 +145,7 @@ All API requests are routed through NGINX for consistent access:
 
 #### Backend (Spring Boot)
 ```bash
-cd backend
+cd services/focushive-backend
 ./gradlew bootRun     # Run backend
 ./gradlew test        # Run tests
 ./gradlew build       # Build JAR
@@ -141,7 +153,7 @@ cd backend
 
 #### Identity Service (Spring Boot)
 ```bash
-cd identity-service
+cd services/identity-service
 ./gradlew bootRun     # Run identity service
 ./gradlew test        # Run tests
 ./gradlew build       # Build JAR
@@ -155,6 +167,45 @@ npm run dev           # Run development server
 npm test              # Run tests
 npm run build         # Build production
 ```
+
+### Convenience Scripts
+
+The project includes organized scripts for common development and deployment tasks:
+
+#### Development Scripts
+```bash
+# Start backend service locally
+./scripts/dev/start-backend.sh
+
+# Start services for LAN access (mobile testing)
+./scripts/dev/start-lan.sh
+
+# Run all services locally without Docker
+./scripts/dev/run-local.sh
+
+# Stop all local services
+./scripts/dev/stop-local.sh
+```
+
+#### Deployment Scripts
+```bash
+# Deploy to local Docker environment
+./scripts/deploy/deploy-local.sh
+
+# Deploy to remote Docker host
+./scripts/deploy/deploy-remote-docker.sh
+```
+
+#### Database Management
+```bash
+# Create demo users for testing
+psql -h localhost -p 5434 -U focushive_user -d focushive -f scripts/db/create-demo-user.sql
+
+# Setup Git hooks
+./scripts/utils/setup-git-hooks.sh
+```
+
+See `scripts/README.md` for detailed documentation of all available scripts.
 
 ### Identity Service Configuration
 
@@ -215,21 +266,21 @@ Database initialization scripts are automatically run when containers start:
 1. **Port Conflicts**: Ensure ports 5432, 5433, 6379, 6380, 8080, 8081 are available
 2. **Database Connection**: Check that PostgreSQL containers are healthy before services start
 3. **Redis Connection**: Verify Redis containers are accessible with correct passwords
-4. **NGINX Routing**: Check NGINX logs for routing issues: `docker-compose logs nginx`
+4. **NGINX Routing**: Check NGINX logs for routing issues: `docker compose -f docker/docker-compose.yml logs nginx`
 
 **Debug Commands:**
 ```bash
 # Check service status
-docker-compose ps
+docker compose -f docker/docker-compose.yml ps
 
 # View logs for specific service
-docker-compose logs identity-service
-docker-compose logs backend
-docker-compose logs nginx
+docker compose -f docker/docker-compose.yml logs identity-service
+docker compose -f docker/docker-compose.yml logs backend
+docker compose -f docker/docker-compose.yml logs nginx
 
 # Check database connectivity
-docker-compose exec identity-db psql -U identity_user -d identity_db -c "SELECT 1;"
-docker-compose exec identity-redis redis-cli -a identity_redis_pass ping
+docker compose -f docker/docker-compose.yml exec identity-db psql -U identity_user -d identity_db -c "SELECT 1;"
+docker compose -f docker/docker-compose.yml exec identity-redis redis-cli -a identity_redis_pass ping
 
 # Access database management tools
 # Adminer: http://localhost:8082
@@ -239,14 +290,14 @@ docker-compose exec identity-redis redis-cli -a identity_redis_pass ping
 **Development Database Access:**
 ```bash
 # Connect to main database
-docker-compose exec db psql -U focushive_user -d focushive
+docker compose -f docker/docker-compose.yml exec db psql -U focushive_user -d focushive
 
 # Connect to identity database  
-docker-compose exec identity-db psql -U identity_user -d identity_db
+docker compose -f docker/docker-compose.yml exec identity-db psql -U identity_user -d identity_db
 
 # Access Redis
-docker-compose exec redis redis-cli -a focushive_pass
-docker-compose exec identity-redis redis-cli -a identity_redis_pass
+docker compose -f docker/docker-compose.yml exec redis redis-cli -a focushive_pass
+docker compose -f docker/docker-compose.yml exec identity-redis redis-cli -a identity_redis_pass
 ```
 
 ## Architecture

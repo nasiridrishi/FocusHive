@@ -19,11 +19,14 @@ import {
   EmojiEvents,
   Analytics
 } from '@mui/icons-material';
-import { ProductivityChart } from './ProductivityChart';
-import { TaskCompletionRate } from './TaskCompletionRate';
-import { HiveActivityHeatmap } from './HiveActivityHeatmap';
-import { MemberEngagement } from './MemberEngagement';
-import { GoalProgress } from './GoalProgress';
+// Use lazy-loaded chart components for better bundle splitting
+import { 
+  LazyProductivityChart as ProductivityChart,
+  LazyTaskCompletionRate as TaskCompletionRate,
+  LazyHiveActivityHeatmap as HiveActivityHeatmap,
+  LazyMemberEngagement as MemberEngagement,
+  LazyGoalProgress as GoalProgress
+} from '@shared/components/lazy-features';
 import { AnalyticsFilters } from './AnalyticsFilters';
 import { ExportMenu } from './ExportMenu';
 import { useAnalytics } from '../contexts/AnalyticsContext';
@@ -61,7 +64,7 @@ const StatCard: React.FC<{
   </Card>
 );
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
+const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   userId,
   hiveId,
   initialFilter,
@@ -335,3 +338,5 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     </Box>
   );
 };
+
+export default AnalyticsDashboard;

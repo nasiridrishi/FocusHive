@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AnalyticsDashboard } from './AnalyticsDashboard';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import { AnalyticsDashboardProps } from '../types';
 
 // Mock all the child components
@@ -80,8 +80,8 @@ const defaultAnalyticsData = {
       completedSessions: 12,
       totalSessions: 15,
       completionRate: 0.8,
-      streak: { current: 5, best: 7, type: 'daily' },
-      productivity: { average: 4.2, trend: 'increasing' }
+      streak: { current: 5, best: 7, type: 'daily' as const },
+      productivity: { average: 4.2, trend: 'increasing' as const }
     },
     taskCompletion: {
       completed: 23,
@@ -101,12 +101,24 @@ const defaultAnalyticsData = {
     ],
     memberEngagement: [
       {
-        user: { id: '1', name: 'Alice Johnson' },
+        user: { 
+          id: '1', 
+          name: 'Alice Johnson', 
+          email: 'alice@example.com',
+          username: 'alice_johnson',
+          firstName: 'Alice',
+          lastName: 'Johnson',
+          avatar: null,
+          isOnline: true,
+          isEmailVerified: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
         focusTime: 480,
         sessions: 12,
         lastActive: new Date(),
         rank: 1,
-        engagement: 'high',
+        engagement: 'high' as const,
         contribution: 35.2
       }
     ],
@@ -135,12 +147,12 @@ const defaultAnalyticsData = {
     timeRange: {
       start: new Date('2024-01-01'),
       end: new Date('2024-01-31'),
-      period: 'month'
+      period: 'month' as const
     },
-    viewType: 'individual',
+    viewType: 'individual' as const,
     selectedHives: [],
     selectedMembers: [],
-    metrics: ['focus-time', 'sessions']
+    metrics: ['focus-time', 'sessions'] as ('focus-time' | 'sessions')[]
   },
   loading: false,
   error: null,
@@ -311,8 +323,8 @@ describe('AnalyticsDashboard', () => {
           completedSessions: 0,
           totalSessions: 0,
           completionRate: 0,
-          streak: { current: 0, best: 0, type: 'daily' },
-          productivity: { average: 0, trend: 'stable' }
+          streak: { current: 0, best: 0, type: 'daily' as const },
+          productivity: { average: 0, trend: 'stable' as const }
         },
         taskCompletion: {
           completed: 0,
@@ -355,7 +367,7 @@ describe('AnalyticsDashboard', () => {
       ...defaultAnalyticsData,
       filter: {
         ...defaultAnalyticsData.filter,
-        viewType: 'hive',
+        viewType: 'hive' as const,
         selectedHives: ['hive-1']
       }
     });

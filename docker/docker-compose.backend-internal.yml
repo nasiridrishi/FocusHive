@@ -1,0 +1,171 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: focushive-db
+    environment:
+      POSTGRES_DB: focushive
+      POSTGRES_USER: focushive_user
+      POSTGRES_PASSWORD: focushive_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - focushive-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U focushive_user -d focushive"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis for presence pub/sub
+  redis:
+    image: redis:7-alpine
+    container_name: focushive-redis
+    command: redis-server --requirepass focushive_pass
+    volumes:
+      - redis_data:/data
+    networks:
+      - focushive-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "focushive_pass", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # Identity Service Database
+  identity-db:
+    image: postgres:16-alpine
+    container_name: identity-db
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: identity_user
+      POSTGRES_PASSWORD: identity_pass
+    volumes:
+      - identity_db_data:/var/lib/postgresql/data
+    networks:
+      - focushive-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity_user -d identity_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Identity Service Redis
+  identity-redis:
+    image: redis:7-alpine
+    container_name: identity-redis
+    command: redis-server --requirepass identity_redis_pass
+    volumes:
+      - identity_redis_data:/data
+    networks:
+      - focushive-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "identity_redis_pass", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # Identity Service (Spring Boot)
+  identity-service:
+    build:
+      context: ../services/identity-service
+      dockerfile: Dockerfile
+    container_name: identity-service
+    environment:
+      # Database
+      DB_HOST: identity-db
+      DB_PORT: 5432
+      DB_NAME: identity_db
+      DB_USER: identity_user
+      DB_PASSWORD: identity_pass
+      # Redis
+      REDIS_HOST: identity-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: identity_redis_pass
+      # Security
+      KEY_STORE_PASSWORD: changeme
+      PRIVATE_KEY_PASSWORD: changeme
+      FOCUSHIVE_CLIENT_SECRET: secret
+      # CORS - Internal network only
+      CORS_ORIGINS: http://backend:8080
+      # Application
+      SERVER_PORT: 8081
+      LOG_LEVEL: INFO
+      SHOW_SQL: "false"
+    networks:
+      - focushive-network
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      identity-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Spring Boot Backend - Named "backend" for Cloudflare routing
+  backend:
+    build:
+      context: ../services/focushive-backend
+      dockerfile: Dockerfile
+    container_name: backend
+    environment:
+      # Database
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: focushive
+      DB_USER: focushive_user
+      DB_PASSWORD: focushive_pass
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: focushive_pass
+      # Identity Service - Internal network URL
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      # Application - Listen on port 8080 internally
+      SERVER_PORT: 8080
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRATION: 86400000
+      LOG_LEVEL: INFO
+      SHOW_SQL: "false"
+      # CORS - Allow Cloudflare tunnel access
+      CORS_ORIGINS: "*"
+    networks:
+      - focushive-network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+volumes:
+  postgres_data:
+    name: focushive-postgres-data
+  redis_data:
+    name: focushive-redis-data
+  identity_db_data:
+    name: identity-db-data
+  identity_redis_data:
+    name: identity-redis-data
+
+networks:
+  focushive-network:
+    name: focushive-network
+    driver: bridge

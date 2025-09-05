@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'FocusHive Dashboards'
+    orgId: 1
+    folder: 'FocusHive'
+    folderUid: 'focushive'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

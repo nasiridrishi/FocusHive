@@ -1,0 +1,191 @@
+spring:
+  data:
+    redis:
+      # Redis connection settings - Use environment variables in production
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+      
+      # Connection timeout settings
+      timeout: 60s
+      connect-timeout: 10s
+      
+      # Lettuce client configuration (async, thread-safe client)
+      lettuce:
+        pool:
+          # Connection pooling settings for high concurrency
+          enabled: true
+          min-idle: 8      # Minimum idle connections in pool
+          max-idle: 16     # Maximum idle connections in pool
+          max-active: 24   # Maximum active connections (should be > max concurrent users/operations)
+          max-wait: 1s     # Maximum time to wait for connection from pool
+          time-between-eviction-runs: 30s
+        
+        # Shutdown timeout for graceful connection closure
+        shutdown-timeout: 100ms
+        
+        # Client options for production resilience
+        cluster:
+          refresh:
+            adaptive: true
+            period: 30s
+
+      # Redis Sentinel configuration (for high availability)
+      sentinel:
+        master: ${REDIS_SENTINEL_MASTER:focushive-redis}
+        nodes: ${REDIS_SENTINEL_NODES:}
+        username: ${REDIS_SENTINEL_USERNAME:}
+        password: ${REDIS_SENTINEL_PASSWORD:}
+
+  # Cache configuration
+  cache:
+    type: redis
+    redis:
+      # Global cache settings
+      time-to-live: 10m
+      enable-statistics: true
+      cache-null-values: false
+      key-prefix: "focushive:cache:"
+      use-key-prefix: true
+
+# Redis-specific cache configurations
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,cache
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      redis:
+        enabled: true
+
+# Logging configuration for Redis operations
+logging:
+  level:
+    org.springframework.data.redis: ${REDIS_LOG_LEVEL:WARN}
+    io.lettuce.core: ${REDIS_LOG_LEVEL:WARN}
+    org.springframework.cache: ${CACHE_LOG_LEVEL:INFO}
+
+# FocusHive-specific Redis configuration
+focushive:
+  redis:
+    # Cache configurations with specific TTLs
+    cache:
+      user:
+        ttl: 1h
+        name: "user-cache"
+      session:
+        ttl: 30m
+        name: "session-cache"
+      hive:
+        ttl: 2h
+        name: "hive-cache"
+      presence:
+        ttl: 5m
+        name: "presence-cache"
+      default:
+        ttl: 10m
+        name: "default-cache"
+    
+    # Presence system configuration
+    presence:
+      # Heartbeat and cleanup settings
+      heartbeat-timeout: 5m
+      cleanup-interval: 1m
+      session-timeout: 30m
+      
+      # Redis key patterns
+      key-patterns:
+        user-presence: "presence:user:{userId}"
+        hive-presence: "hive:presence:{hiveId}"
+        heartbeat: "heartbeat:{userId}"
+        focus-session: "focus:session:{sessionId}"
+        user-session: "user:session:{userId}"
+    
+    # Pub/Sub configuration
+    pubsub:
+      # Channel patterns for different event types
+      channels:
+        presence-updates: "presence:updates:{hiveId}"
+        focus-sessions: "sessions:{hiveId}"
+        notifications: "notifications:{userId}"
+        system-events: "system:events"
+    
+    # Performance settings
+    performance:
+      # Pipelining for batch operations
+      pipeline-enabled: true
+      pipeline-buffer-size: 100
+      
+      # Connection validation
+      validate-connection: true
+      
+      # Command timeout for long-running operations
+      command-timeout: 30s
+    
+    # Security settings
+    security:
+      # Enable Redis AUTH
+      auth-enabled: ${REDIS_AUTH_ENABLED:false}
+      # Use Redis ACL if available (Redis 6+)
+      acl-enabled: ${REDIS_ACL_ENABLED:false}
+      # SSL/TLS settings
+      ssl:
+        verify-peer: ${REDIS_SSL_VERIFY_PEER:true}
+        protocols: ${REDIS_SSL_PROTOCOLS:TLSv1.2,TLSv1.3}
+    
+    # Monitoring and health check settings
+    health:
+      check-interval: 30s
+      timeout: 5s
+      failure-threshold: 3
+    
+    # Memory optimization settings  
+    memory:
+      # Key eviction policy (should match Redis server config)
+      eviction-policy: "allkeys-lru"
+      # Compression settings
+      compress-values: ${REDIS_COMPRESS:false}
+      compression-threshold: 1024  # bytes
+    
+    # Cluster configuration (if using Redis Cluster)
+    cluster:
+      enabled: ${REDIS_CLUSTER_ENABLED:false}
+      nodes: ${REDIS_CLUSTER_NODES:}
+      max-redirects: 5
+      topology-refresh:
+        adaptive: true
+        period: 30s
+        timeout: 10s
+
+# Profile-specific overrides for production environment
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+      
+focushive:
+  redis:
+    # Production-optimized settings
+    performance:
+      pipeline-buffer-size: 200
+      command-timeout: 60s
+    
+    # Stricter health checks in production
+    health:
+      check-interval: 15s
+      timeout: 3s
+      failure-threshold: 2
+    
+    # Enhanced monitoring
+    monitoring:
+      detailed-metrics: true
+      slow-query-threshold: 100ms
+      connection-events: true

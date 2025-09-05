@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Track } from '../types'
+import { Track, WebSocketMessage, UserJoinedPayload, TrackVotedPayload } from '../types'
 import { useMusic } from '../context'
 import { useMusicWebSocket } from './useMusicWebSocket'
 
@@ -71,19 +71,21 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     leaveHive 
   } = useMusicWebSocket({
     hiveId,
-    onMessage: (message) => {
+    onMessage: (message: WebSocketMessage<unknown>) => {
       switch (message.type) {
-        case 'user_joined':
+        case 'user_joined': {
+          const payload = message.payload as UserJoinedPayload
           setCollaborativeState(prev => ({
             ...prev,
             activeUsers: [...prev.activeUsers.filter(u => u.id !== message.userId), {
               id: message.userId,
-              name: message.payload.name,
-              avatar: message.payload.avatar,
+              name: payload.name,
+              avatar: payload.avatar,
               lastSeen: new Date(),
             }]
           }))
           break
+        }
           
         case 'user_left':
           setCollaborativeState(prev => ({
@@ -92,12 +94,14 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
           }))
           break
           
-        case 'track_voted':
+        case 'track_voted': {
+          const payload = message.payload as TrackVotedPayload
           // Handle vote updates
-          if (message.payload.type === 'skip') {
+          if (payload.type === 'skip') {
             setSkipVotes(prev => new Set([...prev, message.userId]))
           }
           break
+        }
           
         default:
           break

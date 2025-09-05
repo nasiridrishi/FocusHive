@@ -1,5 +1,40 @@
 /// <reference types="vite/client" />
 
+// Environment Variables Type Definitions
+interface ImportMetaEnv {
+  // Core API Configuration
+  readonly VITE_API_BASE_URL: string;
+  readonly VITE_WEBSOCKET_URL: string;
+
+  // WebSocket Configuration  
+  readonly VITE_WEBSOCKET_RECONNECT_ATTEMPTS: string;
+  readonly VITE_WEBSOCKET_RECONNECT_DELAY: string;
+  readonly VITE_WEBSOCKET_HEARTBEAT_INTERVAL: string;
+
+  // Music Service Configuration
+  readonly VITE_MUSIC_API_BASE_URL?: string;
+  readonly VITE_MUSIC_SERVICE_URL?: string;
+  
+  // Spotify Integration
+  readonly VITE_SPOTIFY_CLIENT_ID?: string;
+  readonly VITE_SPOTIFY_REDIRECT_URI?: string;
+
+  // Error Logging
+  readonly VITE_ERROR_LOGGING_ENDPOINT?: string;
+  readonly VITE_ERROR_LOGGING_API_KEY?: string;
+
+  // Built-in Vite variables (already defined by Vite, but added for completeness)
+  readonly MODE: string;
+  readonly DEV: boolean;
+  readonly PROD: boolean;
+  readonly SSR: boolean;
+  readonly BASE_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 // PWA Virtual Modules from vite-plugin-pwa
 declare module 'virtual:pwa-register' {
   export interface RegisterSWOptions {

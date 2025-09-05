@@ -12,6 +12,9 @@ export interface Hive {
   tags: string[]
   settings: HiveSettings
   currentMembers: number
+  memberCount: number // Alias for currentMembers
+  isOwner: boolean
+  isMember: boolean
   createdAt: string
   updatedAt: string
 }
@@ -42,6 +45,9 @@ export interface HiveMemberPermissions {
   canManageSettings: boolean
   canStartTimers: boolean
 }
+
+// Response type for API operations
+export type HiveResponse = Hive
 
 export interface CreateHiveRequest {
   name: string
@@ -90,4 +96,16 @@ export interface HiveStats {
     hour: number
     count: number
   }>
+}
+
+export interface HiveSearchFilters {
+  query?: string
+  tags?: string[]
+  isPublic?: boolean
+  maxMembers?: number
+  hasSpots?: boolean
+  sortBy?: 'name' | 'members' | 'activity' | 'created'
+  sortOrder?: 'asc' | 'desc'
+  page?: number
+  size?: number
 }

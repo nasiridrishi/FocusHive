@@ -10,6 +10,56 @@ export default defineConfig({
     setupFiles: './src/test-setup.ts',
     testTimeout: 10000, // Increase timeout to 10 seconds
     hookTimeout: 10000, // Increase hook timeout
+    // Add worker limits to prevent runaway processes
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        maxThreads: 4, // Limit to 4 worker threads max
+        minThreads: 1  // Start with 1 thread
+      }
+    },
+    // Coverage configuration
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'json', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/**',
+        'src/test-utils/**',
+        'src/test-setup.ts',
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.spec.{ts,tsx}',
+        'src/**/*.d.ts',
+        'src/vite-env.d.ts',
+        'src/types/**',
+        'src/examples/**',
+        'src/components/demo/**',
+        '**/index.{ts,tsx}',
+        '**/*.config.{ts,js}',
+        'src/main.tsx',
+        'vite.config.ts',
+        'vitest.config.ts'
+      ],
+      thresholds: {
+        global: {
+          statements: 70,
+          branches: 65,
+          functions: 65,
+          lines: 70
+        }
+      },
+      include: ['src/**/*.{ts,tsx}'],
+      all: true
+    },
+    // Test file patterns
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}'
+    ],
+    exclude: [
+      'node_modules/**',
+      'src/examples/**',
+      'src/components/demo/**'
+    ]
   },
   esbuild: {
     // Fix for MUI X DatePickers ESM import issue

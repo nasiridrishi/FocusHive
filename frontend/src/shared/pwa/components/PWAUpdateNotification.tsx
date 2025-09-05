@@ -16,7 +16,7 @@ import {
   CloudDownload as DownloadIcon,
   CheckCircle as ReadyIcon,
 } from '@mui/icons-material';
-import { useServiceWorkerRegistration } from '../hooks/useServiceWorkerRegistration';
+import { usePWA } from './PWAProvider';
 import { TransitionProps } from '@mui/material/transitions';
 
 export interface PWAUpdateNotificationProps {
@@ -50,7 +50,7 @@ const SlideTransition = React.forwardRef<unknown, TransitionProps & { children: 
  * PWA Update Notification Component
  * 
  * Displays Material UI snackbar notifications for PWA updates and offline readiness.
- * Integrates with the useServiceWorkerRegistration hook to handle update logic.
+ * Uses the PWA context to access service worker state and avoid duplicate registrations.
  * 
  * Features:
  * - Shows update available notifications
@@ -71,13 +71,13 @@ export const PWAUpdateNotification: React.FC<PWAUpdateNotificationProps> = ({
     offlineReady: false,
   });
 
+  // Use PWA context instead of creating a duplicate service worker registration
+  const { serviceWorker } = usePWA();
   const {
     needsRefresh,
     offlineReady,
     updateServiceWorker,
-  } = useServiceWorkerRegistration({
-    immediate: true,
-  });
+  } = serviceWorker;
 
   const defaultMessages = {
     updateAvailable: 'A new version of FocusHive is available!',

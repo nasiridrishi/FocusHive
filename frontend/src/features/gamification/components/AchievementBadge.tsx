@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Card,
@@ -30,10 +30,11 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
   onClick,
 }) => {
   const theme = useTheme();
+  const [imageError, setImageError] = useState(false);
   const isUnlocked = isAchievementUnlocked(achievement);
   const progress = getAchievementProgress(achievement);
   const rarityColor = getRarityColor(achievement.rarity);
-  const categoryIcon = getCategoryIcon(achievement.category);
+  const CategoryIconComponent = getCategoryIcon(achievement.category);
   const isClickable = Boolean(onClick);
   
   // Check if recently unlocked (within last 24 hours)
@@ -270,25 +271,27 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
             fontSize: sizeStyles.iconSize * 0.6,
           }}
         >
-          <img
-            src={`/icons/achievements/${achievement.icon}.svg`}
-            alt={achievement.title}
-            data-icon={achievement.icon}
-            style={{ 
-              width: '70%', 
-              height: '70%',
-              filter: isUnlocked ? 'none' : 'grayscale(100%)',
-            }}
-            onError={(e) => {
-              // Fallback to emoji if SVG fails to load
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              const parent = target.parentElement;
-              if (parent) {
-                parent.textContent = categoryIcon;
-              }
-            }}
-          />
+          {imageError ? (
+            <CategoryIconComponent 
+              sx={{ 
+                fontSize: sizeStyles.iconSize * 0.4,
+                filter: isUnlocked ? 'none' : 'grayscale(100%)',
+                opacity: isUnlocked ? 1 : 0.5,
+              }} 
+            />
+          ) : (
+            <img
+              src={`/icons/achievements/${achievement.icon}.svg`}
+              alt={achievement.title}
+              data-icon={achievement.icon}
+              style={{ 
+                width: '70%', 
+                height: '70%',
+                filter: isUnlocked ? 'none' : 'grayscale(100%)',
+              }}
+              onError={() => setImageError(true)}
+            />
+          )}
         </Box>
 
         {/* Category Badge */}
