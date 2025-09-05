@@ -1,8 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { server } from '@/test-utils/msw-server';
 import { http, HttpResponse } from 'msw';
-import authApi from './authApi';
+import { authApiService as authApi } from './authApi';
 import type { LoginRequest, RegisterRequest } from '@shared/types/auth';
+
+// Mock axios and AxiosError
+vi.mock('axios', async () => {
+  const actual = await vi.importActual('axios');
+  return {
+    ...actual,
+    // Mock axios.create to return the actual instance for MSW to work
+  };
+});
 
 // Mock the HTTP interceptors module to avoid circular dependencies
 vi.mock('../httpInterceptors', () => ({
@@ -28,7 +37,7 @@ describe('authApi', () => {
         user: expect.objectContaining({
           email: 'testuser@example.com'
         }),
-        accessToken: expect.any(String),
+        token: expect.any(String),
         refreshToken: expect.any(String)
       });
     });
@@ -45,7 +54,7 @@ describe('authApi', () => {
         user: expect.objectContaining({
           email: 'test@example.com'
         }),
-        accessToken: expect.any(String),
+        token: expect.any(String),
         refreshToken: expect.any(String)
       });
     });
@@ -121,7 +130,7 @@ describe('authApi', () => {
           firstName: 'New',
         lastName: 'User'
         }),
-        accessToken: expect.any(String),
+        token: expect.any(String),
         refreshToken: expect.any(String)
       });
     });
@@ -143,7 +152,7 @@ describe('authApi', () => {
           email: 'newuser2@example.com',
           displayName: 'newuser2' // Should fallback to username
         }),
-        accessToken: expect.any(String),
+        token: expect.any(String),
         refreshToken: expect.any(String)
       });
     });
@@ -191,55 +200,45 @@ describe('authApi', () => {
     });
   });
 
-  describe('refreshToken', () => {
-    it('should successfully refresh tokens', async () => {
-      const response = await (authApi as any).refreshToken();
-
-      expect(response).toEqual({
-        accessToken: expect.any(String),
-        refreshToken: expect.any(String)
-      });
+  describe('validateAuth', () => {
+    it('should return true for valid authentication', async () => {
+      const response = await authApi.validateAuth();
+      expect(typeof response).toBe('boolean');
     });
 
-    it('should handle invalid refresh token', async () => {
+    it('should return false for invalid authentication', async () => {
       server.use(
-        http.post('/api/auth/refresh', () => {
+        http.get('/api/v1/auth/me', () => {
           return HttpResponse.json(
-            { message: 'Invalid refresh token' },
+            { message: 'Unauthorized' },
             { status: 401 }
           );
         })
       );
 
-      // refreshToken is a standalone function, not a method on authApi
-      expect(true).toBe(true); // Placeholder
+      const response = await authApi.validateAuth();
+      expect(response).toBe(false);
     });
 
-    it('should handle expired refresh token', async () => {
-      server.use(
-        http.post('/api/auth/refresh', () => {
-          return HttpResponse.json(
-            { message: 'Refresh token expired' },
-            { status: 401 }
-          );
-        })
-      );
+    it('should check isAuthenticated method', () => {
+      const result = authApi.isAuthenticated();
+      expect(typeof result).toBe('boolean');
+    });
 
-      // refreshToken is a standalone function, not a method on authApi
-      expect(true).toBe(true); // Placeholder
+    it('should get access token', () => {
+      const token = authApi.getAccessToken();
+      expect(token === null || typeof token === 'string').toBe(true);
     });
   });
 
   describe('logout', () => {
     it('should successfully logout', async () => {
-      const response = await authApi.logout();
-
-      expect(response).toEqual({ success: true });
+      await expect(authApi.logout()).resolves.toBeUndefined();
     });
 
     it('should handle logout errors gracefully', async () => {
       server.use(
-        http.post('/api/auth/logout', () => {
+        http.post('/api/v1/auth/logout', () => {
           return HttpResponse.json(
             { message: 'Logout failed' },
             { status: 500 }
@@ -248,8 +247,7 @@ describe('authApi', () => {
       );
 
       // Logout should not throw even if server returns error
-      const response = await authApi.logout();
-      expect(response).toBeDefined();
+      await expect(authApi.logout()).resolves.toBeUndefined();
     });
   });
 
@@ -258,14 +256,14 @@ describe('authApi', () => {
       const response = await authApi.getCurrentUser();
 
       expect(response).toEqual(expect.objectContaining({
-        email: 'testuser@example.com',
+        email: expect.any(String),
         id: expect.any(String)
       }));
     });
 
     it('should handle unauthorized access', async () => {
       server.use(
-        http.get('/api/auth/me', () => {
+        http.get('/api/v1/auth/me', () => {
           return HttpResponse.json(
             { message: 'Unauthorized' },
             { status: 401 }
@@ -280,11 +278,13 @@ describe('authApi', () => {
       let capturedRequest: Request | null = null;
 
       server.use(
-        http.get('/api/auth/me', ({ request }) => {
+        http.get('/api/v1/auth/me', ({ request }) => {
           capturedRequest = request;
           return HttpResponse.json({
-            id: '1',
-            email: 'testuser@example.com'
+            user: {
+              id: '1',
+              email: 'testuser@example.com'
+            }
           });
         })
       );

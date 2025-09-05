@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { transformPresenceDTO, transformHiveDTO, transformUserDTO } from '../transformers';
 import type { PresenceStatus } from '../../../shared/types/presence';
-import type { UserPresence, Hive, User } from '../types';
+import type { UserPresence as _UserPresence, Hive as _Hive, User as _User } from '../types';
 
 // Mock types representing what backend returns (DTOs)
 interface PresenceDTO {

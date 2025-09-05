@@ -1,4 +1,5 @@
 import React from 'react';
+import type { SvgIconProps } from '@mui/material/SvgIcon';
 import {
   Adjust as TargetIcon,
   Handshake as HandshakeIcon,
@@ -18,11 +19,11 @@ import type {
 } from '../types/gamification';
 
 /**
- * Formats points with proper comma separators
+ * Formats points with proper comma separators (US format)
  */
 export const formatPoints = (points: number | null | undefined): string => {
   if (typeof points !== 'number' || isNaN(points)) return '0';
-  return Math.round(points).toLocaleString();
+  return Math.round(points).toLocaleString('en-US');
 };
 
 /**
@@ -79,8 +80,8 @@ export const getRarityColor = (rarity: AchievementRarity): string => {
 /**
  * Returns Material UI icon for achievement category
  */
-export const getCategoryIcon = (category: AchievementCategory): React.ComponentType<any> => {
-  const iconMap: Record<AchievementCategory, React.ComponentType<any>> = {
+export const getCategoryIcon = (category: AchievementCategory): React.ComponentType<SvgIconProps> => {
+  const iconMap: Record<AchievementCategory, React.ComponentType<SvgIconProps>> = {
     focus: TargetIcon,
     collaboration: HandshakeIcon,
     consistency: CalendarIcon,

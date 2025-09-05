@@ -41,7 +41,7 @@ const mockStats: GamificationStats = {
   totalUsers: 1500,
 };
 
-const ___TestComponent = () => {
+const TestComponent = () => {
   const {
     stats,
     loading,
@@ -103,7 +103,7 @@ describe('GamificationContext', () => {
 
   describe('Provider Initialization', () => {
     it('loads stats on mount', async () => {
-      renderWithProvider(<___TestComponent />);
+      renderWithProvider(<TestComponent />);
       
       expect(screen.getByText('Loading...')).toBeInTheDocument();
       
@@ -123,7 +123,7 @@ describe('GamificationContext', () => {
 
   describe('Stats Display', () => {
     it('displays all stats correctly', async () => {
-      renderWithProvider(<___TestComponent />);
+      renderWithProvider(<TestComponent />);
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
@@ -135,7 +135,7 @@ describe('GamificationContext', () => {
 
   describe('Points Management', () => {
     it('adds points successfully', async () => {
-      renderWithProvider(<___TestComponent />);
+      renderWithProvider(<TestComponent />);
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
@@ -155,7 +155,7 @@ describe('GamificationContext', () => {
 
   describe('Achievement Management', () => {
     it('unlocks achievement successfully', async () => {
-      renderWithProvider(<___TestComponent />);
+      renderWithProvider(<TestComponent />);
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
@@ -175,7 +175,7 @@ describe('GamificationContext', () => {
 
   describe('Streak Management', () => {
     it('updates streak successfully', async () => {
-      renderWithProvider(<___TestComponent />);
+      renderWithProvider(<TestComponent />);
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');
@@ -195,7 +195,7 @@ describe('GamificationContext', () => {
 
   describe('Data Refresh', () => {
     it('refreshes stats successfully', async () => {
-      renderWithProvider(<___TestComponent />);
+      renderWithProvider(<TestComponent />);
       
       await waitFor(() => {
         expect(screen.getByTestId('points')).toHaveTextContent('1250');

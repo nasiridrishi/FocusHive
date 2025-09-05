@@ -9,13 +9,13 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { presenceApiService, FocusSession as ApiFocusSession, PresenceUpdate as ApiPresenceUpdate } from '@services/api/presenceApi';
+import { presenceApiService, FocusSession as ApiFocusSession, PresenceUpdate as _ApiPresenceUpdate } from '@services/api/presenceApi';
 import { queryKeys, STALE_TIMES, CACHE_TIMES } from '@lib/queryClient';
-import { transformPresenceDTO, transformHiveDTO, type PresenceDTO, type HiveDTO } from './transformers';
+import { transformPresenceDTO, transformHiveDTO as _transformHiveDTO, type PresenceDTO as _PresenceDTO, type HiveDTO as _HiveDTO } from './transformers';
 import { useAuth } from './useAuthQueries';
 import type { 
   UserPresence,
-  PresenceStatus
+  PresenceStatus as _PresenceStatus
 } from './types';
 import type { 
   FocusSession,
@@ -497,7 +497,7 @@ export const useUpdateFocusSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ sessionId, updates }: { 
+    mutationFn: ({ sessionId: _sessionId, updates: _updates }: { 
       sessionId: string; 
       updates: { activity?: string; isPublic?: boolean } 
     }) => {

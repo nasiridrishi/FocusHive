@@ -39,7 +39,7 @@ interface ForumCategoryListProps {
 
 const ForumCategoryList: React.FC<ForumCategoryListProps> = ({
   categories,
-  showAll = true,
+  showAll: _showAll = true,
   compact = false
 }) => {
   const navigate = useNavigate()

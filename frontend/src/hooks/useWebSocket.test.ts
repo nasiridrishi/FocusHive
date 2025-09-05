@@ -118,7 +118,7 @@ describe('useWebSocket', () => {
 
   it('should handle incoming messages', async () => {
     const onMessage = vi.fn();
-    const { result } = renderHook(() => 
+    renderHook(() => 
       useWebSocket({
         onMessage,
         autoConnect: false
@@ -271,7 +271,7 @@ describe('useWebSocket', () => {
   });
 
   it('should respect reconnect attempts limit', async () => {
-    const shouldReconnect = vi.fn(() => true);
+    const _shouldReconnect = vi.fn(() => true);
     const reconnectAttempts = 2;
     
     renderHook(() => 
@@ -302,7 +302,7 @@ describe('useWebSocket', () => {
 
   it('should handle JSON parsing errors gracefully', async () => {
     const onMessage = vi.fn();
-    const { result } = renderHook(() => 
+    renderHook(() => 
       useWebSocket({
         onMessage,
         autoConnect: false
