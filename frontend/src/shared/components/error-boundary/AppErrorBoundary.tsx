@@ -1,5 +1,5 @@
 import React from 'react'
-import { ErrorBoundary } from 'react-error-boundary'
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
 import { ErrorFallback } from './ErrorFallback'
 import { logErrorBoundaryError, errorLogger } from '@shared/services/errorLogging'
 
@@ -8,7 +8,7 @@ export { ErrorFallback }
 
 export interface AppErrorBoundaryProps {
   children: React.ReactNode
-  fallbackComponent?: React.ComponentType<unknown>
+  fallbackComponent?: React.ComponentType<FallbackProps>
   onError?: (error: Error, errorInfo: { componentStack?: string }) => void
   onReset?: () => void
   resetKeys?: Array<string | number | boolean | null | undefined>
@@ -27,7 +27,7 @@ export const AppErrorBoundary: React.FC<AppErrorBoundaryProps> = ({
   onError,
   onReset,
   resetKeys,
-  resetOnPropsChange = true,
+  resetOnPropsChange: _resetOnPropsChange = true,
   isolate = false,
   level = 'component',
   name,
@@ -147,9 +147,7 @@ export const AppErrorBoundary: React.FC<AppErrorBoundaryProps> = ({
       onError={handleError}
       onReset={handleReset}
       resetKeys={resetKeys}
-      resetOnPropsChange={resetOnPropsChange}
-      isolate={isolate}
-      {...props as any}
+      {...props}
     >
       {children}
     </ErrorBoundary>

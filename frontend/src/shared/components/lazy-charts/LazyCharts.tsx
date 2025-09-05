@@ -101,7 +101,8 @@ export const LineChartWrapper = ({
     ) : null
   }>
     <LazyLineChart 
-      {...props as any}
+      {...(props as LazyChartWrapperProps)}
+      series={[]} 
       width={typeof width === 'string' ? parseInt(width, 10) : width} 
       height={height}
     >
@@ -129,7 +130,8 @@ export const BarChartWrapper = ({
     ) : null
   }>
     <LazyBarChart 
-      {...props as any}
+      {...(props as LazyChartWrapperProps)}
+      series={[]} 
       width={typeof width === 'string' ? parseInt(width, 10) : width} 
       height={height}
     >
@@ -157,7 +159,8 @@ export const PieChartWrapper = ({
     ) : null
   }>
     <LazyPieChart 
-      {...props as any}
+      {...(props as LazyChartWrapperProps)}
+      series={[]} 
       width={typeof width === 'string' ? parseInt(width, 10) : width} 
       height={height}
     >
@@ -185,7 +188,8 @@ export const ScatterChartWrapper = ({
     ) : null
   }>
     <LazyScatterChart 
-      {...props as any}
+      {...(props as LazyChartWrapperProps)}
+      series={[]} 
       width={typeof width === 'string' ? parseInt(width, 10) : width} 
       height={height}
     >
@@ -233,7 +237,8 @@ export const SparkLineChartWrapper = ({
     ) : null
   }>
     <LazySparkLineChart 
-      {...props as any}
+      {...(props as LazyChartWrapperProps)}
+      data={[]} 
       width={typeof width === 'string' ? parseInt(width, 10) : width} 
       height={height}
     />

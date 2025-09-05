@@ -26,7 +26,7 @@ vi.mock('axios', () => {
 })
 
 // FIXED: Import after mocking is properly set up
-import axios from 'axios'
+import axios, { type AxiosInstance } from 'axios'
 
 // FIXED: Import the class and create instance manually to avoid singleton issues
 import { default as musicApiModule } from './musicApi'
@@ -35,7 +35,27 @@ import type { CreatePlaylistRequest, SearchTracksRequest } from '../types/music'
 
 // Get the mocked axios instance
 const mockedAxios = vi.mocked(axios, true)
-const mockAxiosInstance = (mockedAxios.create as any)()
+const mockAxiosInstance = {
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+  patch: vi.fn(),
+  interceptors: {
+    request: { use: vi.fn() },
+    response: { use: vi.fn() }
+  },
+  defaults: {},
+  getUri: vi.fn(),
+  request: vi.fn(),
+  head: vi.fn(),
+  options: vi.fn(),
+  postForm: vi.fn(),
+  putForm: vi.fn(),
+  patchForm: vi.fn(),
+  create: vi.fn()
+} as unknown as AxiosInstance
+mockedAxios.create.mockReturnValue(mockAxiosInstance)
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -78,7 +98,7 @@ describe('MusicApiService', () => {
         },
       ]
 
-      mockAxiosInstance.get.mockResolvedValue({
+      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockPlaylists, success: true },
         status: 200,
       })
@@ -89,7 +109,8 @@ describe('MusicApiService', () => {
     })
 
     it('should handle pagination in get user playlists', async () => {
-      mockAxiosInstance.get.mockResolvedValue({
+      // eslint-disable-next-line no-extra-semi
+      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: {
           data: [],
           success: true,
@@ -122,7 +143,7 @@ describe('MusicApiService', () => {
         updatedAt: new Date(),
       }
 
-      mockAxiosInstance.post.mockResolvedValue({
+      ;(mockAxiosInstance.post as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockPlaylist, success: true },
         status: 201,
       })
@@ -156,7 +177,7 @@ describe('MusicApiService', () => {
         limit: 20,
       }
 
-      mockAxiosInstance.get.mockResolvedValue({
+      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockResolvedValue({
         data: { data: mockResponse, success: true },
         status: 200,
       })
@@ -178,13 +199,14 @@ describe('MusicApiService', () => {
         },
       }
 
-      mockAxiosInstance.get.mockRejectedValue(errorResponse)
+      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockRejectedValue(errorResponse)
 
       await expect(musicApi.getUserPlaylists()).rejects.toThrow()
     })
 
     it('should handle network errors', async () => {
-      mockAxiosInstance.get.mockRejectedValue(new Error('Network Error'))
+      // eslint-disable-next-line no-extra-semi
+      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Error'))
 
       await expect(musicApi.getUserPlaylists()).rejects.toThrow('Network Error')
     })

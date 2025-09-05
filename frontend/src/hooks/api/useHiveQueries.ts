@@ -11,11 +11,21 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { hiveApiService } from '@services/api';
 import { queryKeys, STALE_TIMES, CACHE_TIMES, invalidateQueries } from '@lib/queryClient';
-import { transformHiveDTO, type HiveDTO as _HiveDTO } from './transformers';
+import { transformHiveDTO, type HiveDTO } from './transformers';
 import { useAuth } from './useAuthQueries';
 import type { 
   Hive 
 } from './types';
+
+// Type for paginated responses
+interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+}
 import type { 
   CreateHiveRequest, 
   UpdateHiveRequest,
@@ -40,7 +50,7 @@ export const useHives = (filters?: HiveSearchFilters) => {
       // Transform the paginated response
       return {
         ...response,
-        content: (response as any).content?.map((dto: any) => transformHiveDTO(dto, currentUserId)) || []
+        content: (response as unknown as PaginatedResponse<HiveDTO>).content?.map((dto: HiveDTO) => transformHiveDTO(dto, currentUserId)) || []
       };
     },
     staleTime: STALE_TIMES.SESSION_DATA,
@@ -67,7 +77,7 @@ export const useInfiniteHives = (filters?: HiveSearchFilters) => {
       // Transform the paginated response
       return {
         ...response,
-        content: (response as any).content?.map((dto: any) => transformHiveDTO(dto, currentUserId)) || []
+        content: (response as unknown as PaginatedResponse<HiveDTO>).content?.map((dto: HiveDTO) => transformHiveDTO(dto, currentUserId)) || []
       };
     },
     initialPageParam: 0,
@@ -95,14 +105,14 @@ export const useHive = (hiveId: string, enabled = true) => {
     queryKey: queryKeys.hives.detail(hiveId),
     queryFn: async () => {
       const dto = await hiveApiService.getHiveById(parseInt(hiveId, 10));
-      return transformHiveDTO(dto as any, currentUserId);
+      return transformHiveDTO(dto as unknown as HiveDTO, currentUserId);
     },
     enabled: enabled && !!hiveId,
     staleTime: STALE_TIMES.STATIC_CONTENT,
     gcTime: CACHE_TIMES.LONG,
     retry: (failureCount, error: unknown) => {
       // Don't retry on 404 errors - need proper type checking
-      const axiosError = error as any;
+      const axiosError = error as { response?: { status?: number } };
       if (axiosError?.response?.status === 404) return false;
       return failureCount < 2;
     },
@@ -148,7 +158,7 @@ export const useSearchHives = (searchQuery: string, enabled = true) => {
     queryFn: async () => {
       const results = await hiveApiService.searchHives({ query: searchQuery });
       // Transform the search results if they contain hive DTOs
-      return Array.isArray(results) ? results.map((dto: any) => transformHiveDTO(dto, currentUserId)) : [];
+      return Array.isArray(results) ? results.map((dto: unknown) => transformHiveDTO(dto as unknown as HiveDTO, currentUserId)) : [];
     },
     enabled: enabled && searchQuery.length >= 2, // Only search with 2+ characters
     staleTime: STALE_TIMES.SESSION_DATA,
@@ -172,7 +182,7 @@ export const useRecommendedHives = (enabled = true) => {
     queryFn: async () => {
       const results = await hiveApiService.searchHives({ query: '' }); // Use search with empty query as recommendation
       // Transform the recommended hives
-      return Array.isArray(results) ? results.map((dto: any) => transformHiveDTO(dto, currentUserId)) : [];
+      return Array.isArray(results) ? results.map((dto: unknown) => transformHiveDTO(dto as unknown as HiveDTO, currentUserId)) : [];
     },
     enabled,
     staleTime: STALE_TIMES.STATIC_CONTENT,
@@ -199,7 +209,7 @@ export const useCreateHive = () => {
   return useMutation({
     mutationFn: async (hiveData: CreateHiveRequest) => {
       const dto = await hiveApiService.createHive(hiveData);
-      return transformHiveDTO(dto as any, currentUserId);
+      return transformHiveDTO(dto as unknown as HiveDTO, currentUserId);
     },
     mutationKey: ['hives', 'create'],
 
@@ -250,7 +260,7 @@ export const useCreateHive = () => {
       if (typeof window !== 'undefined' && 'gtag' in window) {
         // @ts-expect-error - gtag is loaded by Google Analytics script
         window.gtag('event', 'create_hive', {
-          hive_type: !(newHive as any).isPrivate ? 'public' : 'private',
+          hive_type: !(newHive as { isPrivate?: boolean }).isPrivate ? 'public' : 'private',
         });
       }
     },
@@ -287,7 +297,7 @@ export const useUpdateHive = () => {
   return useMutation({
     mutationFn: async ({ hiveId, updates }: { hiveId: string; updates: UpdateHiveRequest }) => {
       const dto = await hiveApiService.updateHive(parseInt(hiveId, 10), updates);
-      return transformHiveDTO(dto as any, currentUserId);
+      return transformHiveDTO(dto as unknown as HiveDTO, currentUserId);
     },
     mutationKey: ['hives', 'update'],
 
@@ -426,7 +436,7 @@ export const useJoinHive = () => {
   return useMutation({
     mutationFn: async (hiveId: string) => {
       const dto = await hiveApiService.joinHive(parseInt(hiveId, 10));
-      return transformHiveDTO(dto as any, currentUserId);
+      return transformHiveDTO(dto as unknown as HiveDTO, currentUserId);
     },
     mutationKey: ['hives', 'join'],
 
@@ -592,7 +602,7 @@ export const useHiveDetails = (hiveId: string, enabled = true) => {
     // Note: isOwner/isMember should be computed on frontend based on current user
     isOwner: false, // TODO: Compare hiveQuery.data?.ownerId with current user ID
     isMember: false, // TODO: Check if current user is in members list
-    isPublic: !(hiveQuery.data as any)?.isPrivate,
+    isPublic: !(hiveQuery.data as { isPrivate?: boolean })?.isPrivate,
     
     // Utilities
     refetchHive: hiveQuery.refetch,

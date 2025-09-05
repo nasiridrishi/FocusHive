@@ -32,11 +32,29 @@ import {
   Group as GroupIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material'
-import { useForm, Controller, SubmitHandler } from 'react-hook-form'
+import { useForm, Controller, SubmitHandler, Resolver } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { CreateHiveRequest } from '@shared/types'
 import { LoadingButton } from '@shared/components/loading'
 import { createHiveSchema } from '@shared/validation/schemas'
+
+// Form data type that matches what the form actually provides
+// We need to match the yup schema structure exactly
+type CreateHiveFormData = {
+  name: string
+  description: string
+  maxMembers: number
+  isPublic: boolean
+  tags: string[]
+  settings: {
+    allowChat: boolean
+    allowVoice: boolean
+    requireApproval: boolean
+    focusMode: 'pomodoro' | 'continuous' | 'flexible'
+    defaultSessionLength: number
+    maxSessionLength: number
+  }
+}
 
 interface CreateHiveFormProps {
   open: boolean
@@ -76,8 +94,8 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     trigger,
     formState: { isValid },
     reset
-  } = useForm<CreateHiveRequest>({
-    resolver: yupResolver(createHiveSchema),
+  } = useForm<CreateHiveFormData>({
+    resolver: yupResolver(createHiveSchema) as Resolver<CreateHiveFormData>,
     mode: 'onBlur',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -101,7 +119,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
 
   const handleNext = async () => {
     // Validate current step before proceeding
-    let fieldsToValidate: (keyof CreateHiveRequest)[] = []
+    let fieldsToValidate: (keyof CreateHiveFormData)[] = []
     
     switch (activeStep) {
       case 0:
@@ -122,8 +140,24 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     setActiveStep((prevActiveStep) => prevActiveStep - 1)
   }
 
-  const onFormSubmit: SubmitHandler<CreateHiveRequest> = (data: CreateHiveRequest) => {
-    onSubmit(data)
+  const onFormSubmit: SubmitHandler<CreateHiveFormData> = (data: CreateHiveFormData) => {
+    // Convert form data to API request format
+    const apiData: CreateHiveRequest = {
+      name: data.name,
+      description: data.description,
+      maxMembers: data.maxMembers,
+      isPublic: data.isPublic,
+      tags: data.tags || [],
+      settings: {
+        allowChat: data.settings.allowChat,
+        allowVoice: data.settings.allowVoice,
+        requireApproval: data.settings.requireApproval,
+        focusMode: data.settings.focusMode,
+        defaultSessionLength: data.settings.defaultSessionLength,
+        maxSessionLength: data.settings.maxSessionLength,
+      },
+    }
+    onSubmit(apiData)
   }
 
   const handleClose = () => {

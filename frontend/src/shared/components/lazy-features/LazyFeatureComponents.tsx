@@ -37,7 +37,8 @@ const FeatureLoadingFallback = ({
 )
 
 // Utility to create lazy feature components with optimized loading
-function createLazyFeature<T = Record<string, unknown>>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createLazyFeature<T = any>(
   importFn: () => Promise<{ default: ComponentType<T> }>,
   displayName?: string,
   fallbackHeight?: number,
@@ -55,6 +56,7 @@ function createLazyFeature<T = Record<string, unknown>>(
         />
       }
     >
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <LazyFeature {...(props as any)} />
     </Suspense>
   )
@@ -196,7 +198,7 @@ export const featurePreloaders = {
 export const preloadHeavyFeatures = () => {
   // Only preload on good connections
   if ('connection' in navigator) {
-    const connection = (navigator as any).connection
+    const connection = (navigator as { connection?: { effectiveType?: string; saveData?: boolean } }).connection
     if (connection?.effectiveType === '4g' && !connection.saveData) {
       setTimeout(() => {
         // Preload most commonly used heavy features

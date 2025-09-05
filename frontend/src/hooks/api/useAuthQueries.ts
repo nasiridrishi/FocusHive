@@ -37,7 +37,7 @@ export const useCurrentUser = () => {
     retry: (failureCount, _error: unknown) => {
       // Don't retry on 401/403 _errors (user not authenticated)
       const hasResponse = _error && typeof _error === 'object' && 'response' in _error;
-      const status = hasResponse ? (_error as any).response?.status : undefined;
+      const status = hasResponse ? (_error as { response: { status?: number } }).response?.status : undefined;
       if (status === 401 || status === 403) {
         return false;
       }

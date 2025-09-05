@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosRequestHeaders } from 'axios';
 import {
   LoginRequest,
   LoginResponse,
@@ -120,15 +120,15 @@ const createAuthApiInstance = (): AxiosInstance => {
       const originalRequest = error.config;
       
       // Check if error is due to expired token
-      if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
-        (originalRequest as any)._retry = true;
+      if (error.response?.status === 401 && originalRequest && !(originalRequest as { _retry?: boolean })._retry) {
+        (originalRequest as { _retry?: boolean })._retry = true;
         
         try {
           const newTokens = await refreshToken();
           if (newTokens) {
             // Update the authorization header with new token
             if (!originalRequest.headers) {
-              originalRequest.headers = {} as any;
+              originalRequest.headers = {} as AxiosRequestHeaders;
             }
             originalRequest.headers.Authorization = `Bearer ${newTokens.token}`;
             

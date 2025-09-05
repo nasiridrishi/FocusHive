@@ -122,7 +122,7 @@ function generateInitials(name: string): string {
 }
 
 // Helper function to validate required fields
-function validateRequiredFields(dto: any, requiredFields: string[], dtoName: string): void {
+function validateRequiredFields(dto: unknown, requiredFields: string[], dtoName: string): void {
   if (dto === null || dto === undefined) {
     throw new Error(`${dtoName} cannot be null or undefined`);
   }
