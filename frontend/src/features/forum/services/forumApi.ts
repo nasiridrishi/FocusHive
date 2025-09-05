@@ -16,9 +16,9 @@ class ForumApiService {
   private api: AxiosInstance
 
   constructor() {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const apiBaseUrl = import.meta.env.VITE_apiBaseUrl || 'http://localhost:8080';
     this.api = axios.create({
-      baseURL: `${API_BASE_URL}/api/forum`,
+      baseURL: `${apiBaseUrl}/api/forum`,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import { AxiosInstance, AxiosError } from 'axios';
 import { apiClient } from './httpInterceptors';
 import { API_ENDPOINTS, buildEndpoint } from './index';
 
@@ -18,7 +18,7 @@ export interface SessionRequest {
   expectedDuration?: number;
   task?: string;
   hiveId?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SessionResponse {
@@ -31,7 +31,7 @@ export interface SessionResponse {
   task?: string;
   hiveId?: number;
   completionRate?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -268,7 +268,7 @@ class AnalyticsApiService {
     summary: { totalTime: number; averageDaily: number; bestDay: string; };
   }> {
     try {
-      const params: any = { granularity };
+      const params: unknown = { granularity };
       if (userId) params.userId = userId;
       if (dateRange) {
         params.startDate = dateRange.start;
@@ -302,7 +302,7 @@ class AnalyticsApiService {
     peakHours: { hour: number; sessions: number; }[];
   }> {
     try {
-      const params: any = {};
+      const params: unknown = {};
       if (dateRange) {
         params.startDate = dateRange.start;
         params.endDate = dateRange.end;

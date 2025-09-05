@@ -13,7 +13,7 @@ import { ResponsiveGrid, GridItem } from './ResponsiveGrid';
 vi.mock('../hooks', () => ({
   useContainerQuery: () => ({
     containerRef: { current: null },
-    responsiveValue: (_values: any, defaultValue: any) => defaultValue,
+    responsiveValue: (_values: unknown, defaultValue: unknown) => defaultValue,
   }),
   useResponsive: () => ({
     currentBreakpoint: 'desktop' as const,

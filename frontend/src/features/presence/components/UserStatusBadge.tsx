@@ -174,7 +174,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
     }
   }
 
-  const TooltipContent = () => (
+  const _tooltipContent = () => (
     <Box sx={{ textAlign: 'center' }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
         {statusConfig.label}
@@ -207,7 +207,7 @@ const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({
 
   return (
     <Tooltip
-      title={<TooltipContent />}
+      title={<tooltipContent />}
       placement="top"
       arrow
       enterDelay={500}

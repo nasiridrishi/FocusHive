@@ -101,7 +101,7 @@ describe('useWebSocket', () => {
 
   it('should handle connection error event', async () => {
     const onError = vi.fn();
-    const { result } = renderHook(() => 
+    const { result: _result } = renderHook(() => 
       useWebSocket('ws://localhost:8080', {
         onError,
         shouldReconnect: () => false

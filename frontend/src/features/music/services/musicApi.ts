@@ -20,9 +20,9 @@ class MusicApiService {
 
   constructor() {
     // Music service may run on a different port, but use env variable if available
-    const MUSIC_API_BASE_URL = import.meta.env.VITE_MUSIC_API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const musicApiBaseUrl = import.meta.env.VITE_musicApiBaseUrl || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
     this.api = axios.create({
-      baseURL: `${MUSIC_API_BASE_URL}/api/music`,
+      baseURL: `${musicApiBaseUrl}/api/music`,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

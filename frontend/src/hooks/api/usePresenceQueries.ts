@@ -15,7 +15,7 @@ import type {
   UserPresence,
   FocusSession,
   PresenceUpdate,
-  HivePresenceInfo 
+  HivePresenceInfo as _HivePresenceInfo 
 } from '@shared/types/presence';
 
 // ============================================================================
@@ -35,7 +35,7 @@ export const useMyPresence = () => {
     refetchIntervalInBackground: true, // Continue polling in background
     refetchOnWindowFocus: true,
     refetchOnReconnect: 'always',
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: unknown) => {
       // Don't retry too aggressively for presence data
       if (error?.response?.status >= 400 && error?.response?.status < 500) {
         return false;
@@ -323,7 +323,7 @@ export const useStartFocusSession = () => {
       });
     },
 
-    onError: (error, sessionData, context) => {
+    onError: (_error, _sessionData, _context) => {
       // Error handled by error boundary and toast notifications
       
       // Remove optimistic update
@@ -475,7 +475,7 @@ export const useUpdateFocusSession = () => {
       }
     },
 
-    onError: (error, { sessionId }, context) => {
+    onError: (error, { sessionId: _sessionId }, context) => {
       // Error handled by error boundary and toast notifications
       
       // Rollback optimistic update

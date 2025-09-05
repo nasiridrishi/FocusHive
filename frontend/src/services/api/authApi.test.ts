@@ -362,7 +362,7 @@ describe('authApi', () => {
     });
 
     it('should send correct request body', async () => {
-      let capturedBody: any = null;
+      let capturedBody: unknown = null;
 
       server.use(
         http.post('/api/auth/login', async ({ request }) => {

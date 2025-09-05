@@ -5,20 +5,20 @@ import { ProductivityChartProps, ChartDataPoint, AnalyticsTimeRange } from '../t
 
 // Mock MUI X Charts
 vi.mock('@mui/x-charts', () => ({
-  LineChart: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
+  lineChart: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
     <div data-testid="line-chart" data-props={JSON.stringify(props)}>
       {children}
     </div>
   ),
-  ResponsiveChartContainer: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
+  responsiveChartContainer: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
     <div data-testid="chart-container" data-props={JSON.stringify(props)}>
       {children}
     </div>
   ),
-  ChartsTooltip: () => <div data-testid="chart-tooltip" />,
-  ChartsAxisHighlight: () => <div data-testid="chart-axis-highlight" />,
-  ChartsXAxis: () => <div data-testid="chart-x-axis" />,
-  ChartsYAxis: () => <div data-testid="chart-y-axis" />
+  chartsTooltip: () => <div data-testid="chart-tooltip" />,
+  chartsAxisHighlight: () => <div data-testid="chart-axis-highlight" />,
+  chartsXAxis: () => <div data-testid="chart-x-axis" />,
+  chartsYAxis: () => <div data-testid="chart-y-axis" />
 }));
 
 const mockTimeRange: AnalyticsTimeRange = {

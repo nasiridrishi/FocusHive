@@ -323,7 +323,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
       </Menu>
 
       {/* Reply Dialog */}
-      <Dialog open={replyDialogOpen} onClose={() => setReplyDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={replyDialogOpen} onClose={() => setReplyDialogOpen(false)} fullWidth>
         <DialogTitle>Reply to {reply.author.username}</DialogTitle>
         <DialogContent>
           <Box sx={{ mb: 2, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>
@@ -363,7 +363,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} fullWidth>
         <DialogTitle>Edit Reply</DialogTitle>
         <DialogContent>
           <TextField

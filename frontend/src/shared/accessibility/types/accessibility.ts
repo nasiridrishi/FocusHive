@@ -367,6 +367,6 @@ export interface UseAccessibilityReturn {
 export interface AccessibilityEventMap {
   'accessibility:announce': CustomEvent<{ message: string; level: AnnounceLevel }>;
   'accessibility:focus-change': CustomEvent<{ previous: HTMLElement | null; current: HTMLElement | null }>;
-  'accessibility:preference-change': CustomEvent<{ preference: keyof UserPreferences; value: any }>;
+  'accessibility:preference-change': CustomEvent<{ preference: keyof UserPreferences; value: unknown }>;
   'accessibility:violation': CustomEvent<{ test: string; element: HTMLElement; severity: 'error' | 'warning' }>;
 }

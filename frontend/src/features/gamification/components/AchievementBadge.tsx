@@ -34,7 +34,7 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
   const isUnlocked = isAchievementUnlocked(achievement);
   const progress = getAchievementProgress(achievement);
   const rarityColor = getRarityColor(achievement.rarity);
-  const CategoryIconComponent = getCategoryIcon(achievement.category);
+  const ___CategoryIconComponent = getCategoryIcon(achievement.category);
   const isClickable = Boolean(onClick);
   
   // Check if recently unlocked (within last 24 hours)
@@ -272,7 +272,7 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
           }}
         >
           {imageError ? (
-            <CategoryIconComponent 
+            <__CategoryIconComponent 
               sx={{ 
                 fontSize: sizeStyles.iconSize * 0.4,
                 filter: isUnlocked ? 'none' : 'grayscale(100%)',

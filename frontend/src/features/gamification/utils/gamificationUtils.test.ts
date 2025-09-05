@@ -1,11 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-  Target as TargetIcon,
-  Handshake as HandshakeIcon,
-  CalendarMonth as CalendarIcon,
-  EmojiEvents as TrophyIcon,
-  Star as StarIcon,
-  MilitaryTech as MedalIcon,
 } from '@mui/icons-material';
 import {
   formatPoints,

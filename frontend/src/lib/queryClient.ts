@@ -53,7 +53,7 @@ export const STALE_TIMES = {
 const RETRY_CONFIG = {
   // Default retry for most queries
   DEFAULT: {
-    retry: (failureCount: number, error: any) => {
+    retry: (failureCount: number, error: unknown) => {
       // Don't retry on 4xx errors (client errors)
       if (error?.response?.status >= 400 && error?.response?.status < 500) {
         return false;
@@ -66,7 +66,7 @@ const RETRY_CONFIG = {
   
   // More aggressive retry for critical operations
   CRITICAL: {
-    retry: (failureCount: number, error: any) => {
+    retry: (failureCount: number, error: unknown) => {
       if (error?.response?.status >= 400 && error?.response?.status < 500) {
         return false;
       }
@@ -86,31 +86,31 @@ const queryCache = new QueryCache({
   onError: (error, query) => {
     // Track error for analytics
     if (typeof window !== 'undefined' && 'gtag' in window) {
-      // @ts-ignore
+      // @ts-expect-error - gtag is loaded by Google Analytics script
       window.gtag('event', 'query_error', {
         query_key: query.queryKey.join('_'),
         error_message: error.message,
       });
     }
   },
-  onSuccess: (data, query) => {
+  onSuccess: (_data, _query) => {
     // Query success tracked via analytics only
   },
 });
 
 // Create mutation cache with logging
 const mutationCache = new MutationCache({
-  onError: (error, variables, context, mutation) => {
+  onError: (error, _variables, _context, _mutation) => {
     // Track mutation errors
     if (typeof window !== 'undefined' && 'gtag' in window) {
-      // @ts-ignore
+      // @ts-expect-error - gtag is loaded by Google Analytics script
       window.gtag('event', 'mutation_error', {
         mutation_key: mutation.options.mutationKey?.join('_') || 'unknown',
         error_message: error.message,
       });
     }
   },
-  onSuccess: (data, variables, context, mutation) => {
+  onSuccess: (_data, _variables, _context, _mutation) => {
     // Mutation success tracked via analytics only
   },
 });
@@ -238,7 +238,7 @@ export const queryKeys = {
   // Hive queries
   hives: {
     all: ['hives'] as const,
-    list: (filters?: any) => [...queryKeys.hives.all, 'list', filters] as const,
+    list: (filters?: unknown) => [...queryKeys.hives.all, 'list', filters] as const,
     detail: (id: string) => [...queryKeys.hives.all, 'detail', id] as const,
     members: (id: string) => [...queryKeys.hives.all, 'members', id] as const,
     search: (query: string) => [...queryKeys.hives.all, 'search', query] as const,
@@ -256,7 +256,7 @@ export const queryKeys = {
   timer: {
     all: ['timer'] as const,
     current: () => [...queryKeys.timer.all, 'current'] as const,
-    history: (filters?: any) => [...queryKeys.timer.all, 'history', filters] as const,
+    history: (filters?: unknown) => [...queryKeys.timer.all, 'history', filters] as const,
     stats: (period: 'daily' | 'weekly' | 'monthly') => [...queryKeys.timer.all, 'stats', period] as const,
     settings: () => [...queryKeys.timer.all, 'settings'] as const,
   },
@@ -272,14 +272,14 @@ export const queryKeys = {
   // Chat queries
   chat: {
     all: ['chat'] as const,
-    messages: (hiveId: string, params?: any) => [...queryKeys.chat.all, 'messages', hiveId, params] as const,
+    messages: (hiveId: string, params?: unknown) => [...queryKeys.chat.all, 'messages', hiveId, params] as const,
     recent: (hiveId: string) => [...queryKeys.chat.all, 'recent', hiveId] as const,
   },
   
   // Notifications queries
   notifications: {
     all: ['notifications'] as const,
-    list: (filters?: any) => [...queryKeys.notifications.all, 'list', filters] as const,
+    list: (filters?: unknown) => [...queryKeys.notifications.all, 'list', filters] as const,
     unread: () => [...queryKeys.notifications.all, 'unread'] as const,
     count: () => [...queryKeys.notifications.all, 'count'] as const,
   },
@@ -297,7 +297,7 @@ export const queryKeys = {
   // Music queries
   music: {
     all: ['music'] as const,
-    recommendations: (filters?: any) => [...queryKeys.music.all, 'recommendations', filters] as const,
+    recommendations: (filters?: unknown) => [...queryKeys.music.all, 'recommendations', filters] as const,
     playlists: () => [...queryKeys.music.all, 'playlists'] as const,
     current: () => [...queryKeys.music.all, 'current'] as const,
   },
@@ -305,7 +305,7 @@ export const queryKeys = {
   // Forum queries
   forum: {
     all: ['forum'] as const,
-    posts: (filters?: any) => [...queryKeys.forum.all, 'posts', filters] as const,
+    posts: (filters?: unknown) => [...queryKeys.forum.all, 'posts', filters] as const,
     categories: () => [...queryKeys.forum.all, 'categories'] as const,
     post: (id: string) => [...queryKeys.forum.all, 'post', id] as const,
   },

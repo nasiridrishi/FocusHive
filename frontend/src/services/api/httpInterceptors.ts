@@ -19,8 +19,8 @@ const REQUEST_TIMEOUT = 10000; // 10 seconds
 // Create a flag to prevent multiple refresh attempts
 let isRefreshing = false;
 let failedRequestQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (error?: any) => void;
+  resolve: (value?: unknown) => void;
+  reject: (error?: unknown) => void;
 }> = [];
 
 /**
@@ -76,7 +76,7 @@ export function createAuthenticatedAxiosInstance(baseURL: string = API_BASE_URL)
     },
     async (error: AxiosError) => {
       const originalRequest = error.config;
-      const correlationId = originalRequest?.headers?.['X-Correlation-ID'];
+      const _correlationId = originalRequest?.headers?.['X-Correlation-ID'];
 
       // Development logging
       if (import.meta.env.DEV) {
@@ -158,22 +158,17 @@ async function refreshTokenRequest(): Promise<{ token: string; refreshToken: str
     throw new Error('No refresh token available');
   }
 
-  try {
-    const response = await axios.post<{ token: string; refreshToken: string }>(
-      `${API_BASE_URL}/api/auth/refresh`,
-      { refreshToken },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: REQUEST_TIMEOUT,
-        withCredentials: true
-      }
-    );
+  const response = await axios.post<{ token: string; refreshToken: string }>(
+    `${API_BASE_URL}/api/auth/refresh`,
+    { refreshToken },
+    {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: REQUEST_TIMEOUT,
+      withCredentials: true
+    }
+  );
 
-    return response.data;
-  } catch (error) {
-    // Token refresh failure logged by authentication service
-    throw error;
-  }
+  return response.data;
 }
 
 /**
@@ -210,7 +205,7 @@ function standardizeError(error: AxiosError): StandardizedError {
 /**
  * Extract error message from response data
  */
-function getErrorMessage(data: any): string {
+function getErrorMessage(data: unknown): string {
   if (typeof data === 'string') return data;
   if (data?.message) return data.message;
   if (data?.error) return data.error;
@@ -221,7 +216,7 @@ function getErrorMessage(data: any): string {
 /**
  * Get standardized error code based on status and response
  */
-function getErrorCode(status: number, data: any): string {
+function getErrorCode(status: number, data: unknown): string {
   // Check if response includes specific error code
   if (data?.code) return data.code;
   

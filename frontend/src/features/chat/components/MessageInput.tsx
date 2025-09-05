@@ -115,7 +115,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [isTyping, setIsTyping] = useState(false)
   
   const inputRef = useRef<HTMLInputElement>(null)
-  const typingTimeoutRef = useRef<number | null>(null)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Handle typing indicators

@@ -6,14 +6,14 @@
  * the validation logic rather than import.meta.env mocking.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Mock environment variables for testing
-const createMockValidateFunction = (mockEnv: Record<string, any>) => {
+const createMockValidateFunction = (mockEnv: Record<string, unknown>) => {
   return () => {
     // Simulate the validation logic with mock environment
     const errors: Array<{ variable: string; message: string; severity: 'error' | 'warning' }> = [];
-    const validatedEnv: any = {
+    const validatedEnv: unknown = {
       ...mockEnv,
       MODE: mockEnv.MODE || 'test',
       DEV: mockEnv.DEV || false,

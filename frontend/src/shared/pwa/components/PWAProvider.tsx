@@ -36,7 +36,7 @@ export interface PWAProviderProps {
     onRegisteredSW?: (swUrl: string, registration?: ServiceWorkerRegistration) => void;
     onNeedRefresh?: () => void;
     onOfflineReady?: () => void;
-    onRegisterError?: (error: any) => void;
+    onRegisterError?: (error: unknown) => void;
   };
   /**
    * Whether to enable automatic install prompts

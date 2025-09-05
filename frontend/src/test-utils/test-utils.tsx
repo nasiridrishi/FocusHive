@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, RenderOptions, RenderResult, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { BrowserRouter as _BrowserRouter, MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { I18nextProvider } from 'react-i18next';
@@ -57,7 +57,7 @@ const MockAuthProvider: React.FC<{
   children: React.ReactNode; 
   user?: User | null 
 }> = ({ children, user = null }) => {
-  const mockAuthValue = {
+  const _mockAuthValue = {
     user,
     isAuthenticated: !!user,
     loading: false,

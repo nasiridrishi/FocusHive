@@ -141,7 +141,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     }
   }, [timerSettings])
 
-  const getNextPhase = useCallback((state: TimerState): TimerState['currentPhase'] => {
+  const _getNextPhase = useCallback((state: TimerState): TimerState['currentPhase'] => {
     if (state.currentPhase === 'focus') {
       const shouldTakeLongBreak = (state.currentCycle + 1) % timerSettings.longBreakInterval === 0
       return shouldTakeLongBreak ? 'long-break' : 'short-break'
@@ -268,7 +268,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       // Update presence to idle
       updatePresence('online', 'Timer phase completed')
     }
-  }, [currentSession, emit, userId, updatePresence, getPhaseLength, shouldAutoStartNextPhase, getNextPhase, playNotificationSound, showNotification])
+  }, [currentSession, emit, userId, updatePresence, getPhaseLength, shouldAutoStartNextPhase, playNotificationSound, showNotification])
 
   const startTimer = useCallback((phase?: TimerState['currentPhase'], hiveId?: string) => {
     const targetPhase = phase || 'focus'

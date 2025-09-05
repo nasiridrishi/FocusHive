@@ -208,7 +208,7 @@ export function validateAriaAttributes(element: HTMLElement): AriaValidationResu
   }
   
   // Check for valid role
-  if (role && !Object.values(ARIA_ROLES).includes(role as any)) {
+  if (role && !Object.values(ARIA_ROLES).includes(role as unknown)) {
     warnings.push(`Unknown ARIA role: "${role}"`);
   }
   

@@ -4,8 +4,8 @@
  */
 
 import React, { lazy, Suspense, ComponentType } from 'react'
-import { Box, Typography, CircularProgress, Skeleton } from '@mui/material'
-import { Dashboard, EmojiEvents, Analytics } from '@mui/icons-material'
+import { Box, Typography, CircularProgress, Skeleton as _Skeleton } from '@mui/material'
+import { Dashboard as _Dashboard, EmojiEvents, Analytics } from '@mui/icons-material'
 
 // Feature loading fallback component
 const FeatureLoadingFallback = ({ 
@@ -37,7 +37,7 @@ const FeatureLoadingFallback = ({
 )
 
 // Utility to create lazy feature components with optimized loading
-function createLazyFeature<T = {}>(
+function createLazyFeature<T = Record<string, unknown>>(
   importFn: () => Promise<{ default: ComponentType<T> }>,
   displayName?: string,
   fallbackHeight?: number,
@@ -196,7 +196,7 @@ export const featurePreloaders = {
 export const preloadHeavyFeatures = () => {
   // Only preload on good connections
   if ('connection' in navigator) {
-    const connection = (navigator as any).connection
+    const connection = (navigator as unknown).connection
     if (connection?.effectiveType === '4g' && !connection.saveData) {
       setTimeout(() => {
         // Preload most commonly used heavy features

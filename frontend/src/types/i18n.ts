@@ -39,8 +39,8 @@ export type TranslationKey =
   | `validation:${ValidationKeys}`
 
 // Nested key types for type-safe translation access
-export type NestedKeyOf<ObjectType extends Record<string, any>> = {
-  [Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends Record<string, any>
+export type NestedKeyOf<ObjectType extends Record<string, unknown>> = {
+  [Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends Record<string, unknown>
     ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
     : `${Key}`
 }[keyof ObjectType & (string | number)]

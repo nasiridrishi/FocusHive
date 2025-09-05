@@ -65,7 +65,7 @@ export interface ScreenReaderOnlyProps {
   /**
    * Additional props to pass to the underlying element
    */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -218,7 +218,7 @@ export function useScreenReaderOnly(initialContent: string = '') {
     isVisible,
     showTemporarily,
     Component: React.useCallback(
-      ({ children, ...props }: { children?: React.ReactNode; [key: string]: any }) => (
+      ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => (
         <ScreenReaderOnly {...props}>
           {children || content}
         </ScreenReaderOnly>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { SelectChangeEvent } from "@mui/material/Select";
 import {
   Box,
   Container,
@@ -95,7 +96,7 @@ const ForumPostList: React.FC = () => {
     window.scrollTo(0, 0)
   }
 
-  const handleSortChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleSortChange = (event: SelectChangeEvent<"popular" | "recent" | "oldest">) => {
     setSortBy(event.target.value as 'recent' | 'popular' | 'oldest')
     setCurrentPage(1) // Reset to first page when changing sort
   }
@@ -156,7 +157,7 @@ const ForumPostList: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container sx={{ py: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
@@ -166,7 +167,7 @@ const ForumPostList: React.FC = () => {
 
   if (error || !category) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container sx={{ py: 4 }}>
         <Alert severity="error">
           {error || 'Category not found'}
         </Alert>
@@ -175,7 +176,7 @@ const ForumPostList: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container sx={{ py: 4 }}>
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link component={RouterLink} to="/forum" color="inherit">

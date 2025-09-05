@@ -53,6 +53,9 @@ const mockHives: Hive[] = [
     currentMembers: 12,
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-20T15:30:00Z',
+    memberCount: 15,
+    isOwner: true,
+    isMember: true,
   },
   {
     id: '2',
@@ -86,6 +89,9 @@ const mockHives: Hive[] = [
     currentMembers: 8,
     createdAt: '2024-01-10T14:00:00Z',
     updatedAt: '2024-01-22T09:15:00Z',
+    memberCount: 25,
+    isOwner: false,
+    isMember: true,
   },
   {
     id: '3',
@@ -119,6 +125,9 @@ const mockHives: Hive[] = [
     currentMembers: 25,
     createdAt: '2024-01-05T16:00:00Z',
     updatedAt: '2024-01-21T11:45:00Z',
+    memberCount: 8,
+    isOwner: false,
+    isMember: true,
   },
 ]
 

@@ -66,8 +66,8 @@ const ForumPostView: React.FC = () => {
           const postData = await forumApi.getPostBySlug(postSlug)
           setPost(postData)
           
-          const repliesData = await forumApi.getPostReplies(postSlug, repliesPage)
-          setReplies(repliesData)
+          const repliesData = await forumApi.getReplies(postData.id, repliesPage)
+          setReplies(repliesData.replies)
         } catch (err) {
           const error = err as Error & { response?: { data?: { message?: string } } }
           setError(error.response?.data?.message || 'Failed to load post')
@@ -171,7 +171,7 @@ const ForumPostView: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container sx={{ py: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
@@ -181,7 +181,7 @@ const ForumPostView: React.FC = () => {
 
   if (error || !post) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container sx={{ py: 4 }}>
         <Alert severity="error">
           {error || 'Post not found'}
         </Alert>
@@ -190,7 +190,7 @@ const ForumPostView: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container sx={{ py: 4 }}>
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link component={RouterLink} to="/forum" color="inherit">
@@ -383,13 +383,18 @@ const ForumPostView: React.FC = () => {
           <ForumReplyThread 
             replies={replies}
             postId={post.id}
-            onReplyUpdate={loadReplies}
+            onReplyUpdate={() => {
+              // Reload replies when a new reply is added
+              if (post?.id) {
+                forumApi.getReplies(post.id, repliesPage).then((data) => setReplies(data.replies)).catch(() => {})
+              }
+            }}
           />
         )}
       </Paper>
 
       {/* Reply Dialog */}
-      <Dialog open={replyDialogOpen} onClose={() => setReplyDialogOpen(false)} maxWidth="md" fullWidth>
+      <Dialog open={replyDialogOpen} onClose={() => setReplyDialogOpen(false)} fullWidth>
         <DialogTitle>Reply to Post</DialogTitle>
         <DialogContent>
           <TextField

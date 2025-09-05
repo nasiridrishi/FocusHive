@@ -11,4 +11,4 @@ export * from './pages';
 export * from './types';
 
 // Utils
-export * from './utils';
+export * from './utils/gamificationUtils';

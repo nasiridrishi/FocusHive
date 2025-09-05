@@ -5,8 +5,7 @@
  * for complex components like data grids, tree views, and carousels.
  */
 
-import React, { forwardRef } from 'react';
-import { Box, Typography, Card, CardContent, IconButton, Button } from '@mui/material';
+import React, { forwardRef as _forwardRef } from 'react';
 import { 
   KeyboardArrowLeft, 
   KeyboardArrowRight, 
@@ -19,7 +18,6 @@ import {
   Description,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useAnnouncement } from '../hooks/useAnnouncement';
 import { ScreenReaderOnly } from '../components/ScreenReaderOnly';
 
@@ -50,7 +48,7 @@ export interface DataGridProps {
   /**
    * Grid data
    */
-  data: Array<Record<string, any>>;
+  data: Array<Record<string, unknown>>;
   
   /**
    * Column definitions
@@ -159,7 +157,7 @@ export const AccessibleDataGrid: React.FC<DataGridProps> = ({
     }
   };
 
-  const handleRowSelection = (rowIndex: number, extend: boolean = false) => {
+  const handleRowSelection = (rowIndex: number, _extend: boolean = false) => {
     if (selectionMode === 'none') return;
 
     const newSelection = new Set(selectedRows);
@@ -330,7 +328,7 @@ export interface AccessibleTreeViewProps {
 export const AccessibleTreeView: React.FC<AccessibleTreeViewProps> = ({
   data,
   label = 'Tree view',
-  selectionMode = 'single',
+  selectionMode: _selectionMode = 'single',
   onNodeSelect,
   onNodeToggle,
 }) => {

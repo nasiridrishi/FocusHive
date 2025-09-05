@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test-utils/test-utils';
-import { testA11y, testKeyboardNavigation, createA11yTestSuite } from '@/test-utils/accessibility-utils';
+import { createA11yTestSuite } from '@/test-utils/accessibility-utils';
 import AccessibleButton from '../AccessibleButton';
 
 const renderAccessibleButton = (props = {}) => {

@@ -3,13 +3,13 @@ import { RouteLoadingFallback, FeatureLoadingFallback } from '@shared/components
 
 // Utility function to create lazy components with error boundaries and loading states
 function createLazyComponent(
-  importFn: () => Promise<{ default: ComponentType<any> }>,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
   fallbackElement?: ReactElement,
   displayName?: string
 ) {
   const LazyComponent = lazy(importFn)
   
-  const WrappedComponent = (props: any) => {
+  const wrappedComponent = (props: Record<string, unknown>) => {
     const fallback = fallbackElement || <RouteLoadingFallback />
     
     return (
@@ -19,8 +19,8 @@ function createLazyComponent(
     )
   }
   
-  WrappedComponent.displayName = displayName || 'LazyComponent'
-  return WrappedComponent
+  wrappedComponent.displayName = displayName || 'lazyComponent'
+  return wrappedComponent
 }
 
 // Route-level lazy components
@@ -121,10 +121,10 @@ export const LazyForumPostView = createLazyComponent(
 )
 
 // Helper function for dynamic imports based on feature flags
-export function createConditionalLazyComponent(
+export function createConditionallazyComponent(
   condition: boolean,
-  importFn: () => Promise<{ default: ComponentType<any> }>,
-  fallbackComponent?: ComponentType<any>,
+  importFn: () => Promise<{ default: ComponentType<unknown> }>,
+  fallbackComponent?: ComponentType<unknown>,
   loadingElement?: ReactElement
 ) {
   if (!condition && fallbackComponent) {
@@ -137,7 +137,7 @@ export function createConditionalLazyComponent(
 // Route configuration with lazy loading
 export interface LazyRouteConfig {
   path: string
-  component: ComponentType<any>
+  component: ComponentType<unknown>
   preload?: boolean
   chunkName?: string
 }

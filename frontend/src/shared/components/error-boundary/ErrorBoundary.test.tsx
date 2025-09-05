@@ -3,8 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { ThemeProvider } from '@mui/material/styles'
 import { createLightTheme } from '@shared/theme'
 import { AppErrorBoundary, ErrorFallback } from './AppErrorBoundary'
-import { errorLogger } from '@shared/services/errorLogging'
-import { vi, beforeEach, afterEach, beforeAll, afterAll, describe, it, expect } from 'vitest'
+import { errorLogger as _errorLogger } from '@shared/services/errorLogging'
+import { vi, beforeEach, afterEach as _afterEach, beforeAll, afterAll, describe, it, expect } from 'vitest'
 
 // Mock the error logger
 vi.mock('@shared/services/errorLogging', () => ({
@@ -27,7 +27,7 @@ const ThrowError: React.FC<{ shouldThrow?: boolean; errorMessage?: string }> = (
 }
 
 // Async error component for testing useAsyncError
-const AsyncErrorComponent: React.FC<{ shouldThrow?: boolean }> = ({
+const _AsyncErrorComponent: React.FC<{ shouldThrow?: boolean }> = ({
   shouldThrow = false,
 }) => {
   const handleClick = () => {
@@ -103,7 +103,7 @@ describe('ErrorBoundary Components', () => {
 
     it('logs error when component crashes', async () => {
       const mockLogError = vi.fn()
-      const originalLogErrorBoundaryError = await import('@shared/services/errorLogging').then(m => m.logErrorBoundaryError)
+      const _originalLogErrorBoundaryError = await import('@shared/services/errorLogging').then(m => m.logErrorBoundaryError)
       
       vi.doMock('@shared/services/errorLogging', () => ({
         logErrorBoundaryError: mockLogError,

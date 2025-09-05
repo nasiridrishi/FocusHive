@@ -14,7 +14,7 @@ export default function RegisterPage() {
     if (authState.error) {
       clearError()
     }
-  }, [])
+  }, [authState.error, clearError])
 
   const handleRegister = async (userData: RegisterRequest) => {
     try {

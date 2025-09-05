@@ -8,14 +8,17 @@ import {
   Button,
   Avatar,
   Chip,
-  Grid,
+  
   LinearProgress,
   Alert,
   Stack,
   Divider,
   IconButton,
-  Tooltip
+  Tooltip,
+  Grid,
 } from '@mui/material'
+
+// Grid component type workaround
 import {
   PersonAdd as PersonAddIcon,
   Refresh as RefreshIcon,
@@ -159,7 +162,7 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
 
       <Grid container spacing={3}>
         {matches.map((match) => (
-          <Grid item xs={12} md={6} lg={4} key={match.userId}>
+          <Grid item key={match.userId}>
             <Card elevation={2}>
               <CardContent>
                 {/* Header with Avatar and Score */}

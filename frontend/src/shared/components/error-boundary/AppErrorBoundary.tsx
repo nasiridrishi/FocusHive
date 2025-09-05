@@ -8,7 +8,7 @@ export { ErrorFallback }
 
 export interface AppErrorBoundaryProps {
   children: React.ReactNode
-  fallbackComponent?: React.ComponentType<any>
+  fallbackComponent?: React.ComponentType<unknown>
   onError?: (error: Error, errorInfo: { componentStack?: string }) => void
   onReset?: () => void
   resetKeys?: Array<string | number | boolean | null | undefined>
@@ -122,7 +122,7 @@ export const AppErrorBoundary: React.FC<AppErrorBoundaryProps> = ({
   }, [level, boundaryName, isolate])
 
   const defaultFallback = React.useCallback(
-    (fallbackProps: any) => (
+    (fallbackProps: unknown) => (
       <ErrorFallback
         {...fallbackProps}
         title={getErrorTitle(level)}

@@ -153,7 +153,6 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
 }, ref) => {
   const { announceStatus, announcePolite } = useAnnouncement();
   const [isConfirming, setIsConfirming] = React.useState(false);
-  const [hasInteracted, setHasInteracted] = React.useState(false);
 
   // Generate unique IDs for ARIA relationships
   const descriptionId = React.useId();
@@ -197,7 +196,7 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
 
     if (event.key === 'Enter' && isConfirming) {
       setIsConfirming(false);
-      handleClick(event as any);
+      handleClick(event as unknown);
       event.preventDefault();
       return;
     }

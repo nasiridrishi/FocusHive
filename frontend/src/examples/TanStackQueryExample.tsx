@@ -26,7 +26,6 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryClient, queryKeys, CACHE_TIMES, STALE_TIMES } from '../lib/queryClient';
 
 // Mock API functions for demonstration
 const mockApi = {
@@ -92,7 +91,7 @@ const useUpdateUser = () => {
       const previousUser = queryClient.getQueryData(['user']);
       
       // Optimistically update
-      queryClient.setQueryData(['user'], (old: any) => ({
+      queryClient.setQueryData(['user'], (old: unknown) => ({
         ...old,
         name: newUserData.name,
       }));
@@ -111,7 +110,7 @@ const useUpdateUser = () => {
 };
 
 export const TanStackQueryExample: React.FC = () => {
-  const [enableBackgroundRefetch, setEnableBackgroundRefetch] = useState(true);
+  const [enableBackgroundRefetch, _setEnableBackgroundRefetch] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
   
   // Use our custom hooks
@@ -137,7 +136,7 @@ export const TanStackQueryExample: React.FC = () => {
       setCacheStats(getCacheStats());
     }, 1000);
     return () => clearInterval(interval);
-  }, [client]);
+  }, [client, getCacheStats]);
   
   const handleUpdateUser = () => {
     updateUserMutation.mutate({ name: 'Jane Smith' });
@@ -169,21 +168,21 @@ export const TanStackQueryExample: React.FC = () => {
             Cache Statistics
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={4}>
+            <Grid item>
               <Chip 
                 label={`Queries: ${cacheStats.totalQueries}`} 
                 color="primary" 
                 variant="outlined" 
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid item>
               <Chip 
                 label={`Stale: ${cacheStats.staleQueries}`} 
                 color="warning" 
                 variant="outlined" 
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid item>
               <Chip 
                 label={`Fetching: ${cacheStats.fetchingQueries}`} 
                 color="info" 
@@ -221,7 +220,7 @@ export const TanStackQueryExample: React.FC = () => {
       
       <Grid container spacing={3}>
         {/* User Data */}
-        <Grid item xs={12} md={6}>
+        <Grid item>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -296,7 +295,7 @@ export const TanStackQueryExample: React.FC = () => {
         </Grid>
         
         {/* Hives Data */}
-        <Grid item xs={12} md={6}>
+        <Grid item>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -363,7 +362,7 @@ export const TanStackQueryExample: React.FC = () => {
             </Typography>
             
             <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
+              <Grid item>
                 <Typography variant="subtitle2" gutterBottom>
                   Cache Strategies
                 </Typography>
@@ -389,7 +388,7 @@ export const TanStackQueryExample: React.FC = () => {
                 </List>
               </Grid>
               
-              <Grid item xs={12} md={4}>
+              <Grid item>
                 <Typography variant="subtitle2" gutterBottom>
                   Optimizations
                 </Typography>
@@ -415,7 +414,7 @@ export const TanStackQueryExample: React.FC = () => {
                 </List>
               </Grid>
               
-              <Grid item xs={12} md={4}>
+              <Grid item>
                 <Typography variant="subtitle2" gutterBottom>
                   Offline Support
                 </Typography>

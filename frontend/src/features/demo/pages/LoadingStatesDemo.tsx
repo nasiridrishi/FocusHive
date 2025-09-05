@@ -4,10 +4,7 @@ import {
   Typography,
   Paper,
   Button,
-  Card,
-  CardContent,
-  Grid,
-  Divider,
+  
   Stack,
   Alert,
   TextField,
@@ -16,16 +13,17 @@ import {
   Select,
   MenuItem,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Grid,
 } from '@mui/material'
+
+// Grid component type workaround
 import {
   PlayArrow,
-  Stop,
   Refresh,
   Save,
   Download,
   Upload,
-  Search,
   Add
 } from '@mui/icons-material'
 import {
@@ -61,7 +59,7 @@ const LoadingStatesDemo: React.FC = () => {
   )
 
   const formSubmit = useAsyncSubmit(
-    async (formData: any) => {
+    async (formData: unknown) => {
       await new Promise(resolve => setTimeout(resolve, 3000))
       console.log('Form submitted:', formData)
     }
@@ -110,7 +108,7 @@ const LoadingStatesDemo: React.FC = () => {
 
       <Grid container spacing={4}>
         {/* Loading Spinners */}
-        <Grid item xs={12} md={6}>
+        <Grid item>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h5" gutterBottom>
               Loading Spinners
@@ -162,7 +160,7 @@ const LoadingStatesDemo: React.FC = () => {
         </Grid>
 
         {/* Loading Buttons */}
-        <Grid item xs={12} md={6}>
+        <Grid item>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h5" gutterBottom>
               Loading Buttons
@@ -220,7 +218,7 @@ const LoadingStatesDemo: React.FC = () => {
         </Grid>
 
         {/* Backdrop Loading */}
-        <Grid item xs={12}>
+        <Grid item>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>
               Backdrop Loading
@@ -230,20 +228,20 @@ const LoadingStatesDemo: React.FC = () => {
             </Typography>
 
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item>
                 <FormControl fullWidth size="small">
                   <InputLabel>Variant</InputLabel>
                   <Select
                     value={backdropVariant}
                     label="Variant"
-                    onChange={(e) => setBackdropVariant(e.target.value as any)}
+                    onChange={(e) => setBackdropVariant(e.target.value as 'simple' | 'detailed')}
                   >
                     <MenuItem value="simple">Simple</MenuItem>
                     <MenuItem value="detailed">Detailed</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item>
                 <Button
                   variant="contained"
                   onClick={handleBackdropDemo}
@@ -253,7 +251,7 @@ const LoadingStatesDemo: React.FC = () => {
                   Show Backdrop
                 </Button>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item>
                 <Button
                   variant="outlined"
                   onClick={handleProgressDemo}
@@ -268,7 +266,7 @@ const LoadingStatesDemo: React.FC = () => {
         </Grid>
 
         {/* Skeleton Loading */}
-        <Grid item xs={12} md={6}>
+        <Grid item>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h5" gutterBottom>
               Skeleton Components
@@ -316,7 +314,7 @@ const LoadingStatesDemo: React.FC = () => {
         </Grid>
 
         {/* Content Skeletons */}
-        <Grid item xs={12} md={6}>
+        <Grid item>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h5" gutterBottom>
               Content Skeletons
@@ -331,7 +329,7 @@ const LoadingStatesDemo: React.FC = () => {
                 <Select
                   value={contentType}
                   label="Content Type"
-                  onChange={(e) => setContentType(e.target.value as any)}
+                  onChange={(e) => setContentType(e.target.value as 'hive' | 'chat' | 'form' | 'table' | 'list' | 'card')}
                 >
                   <MenuItem value="card">Card</MenuItem>
                   <MenuItem value="list">List</MenuItem>
@@ -362,7 +360,7 @@ const LoadingStatesDemo: React.FC = () => {
         </Grid>
 
         {/* Table Skeleton */}
-        <Grid item xs={12}>
+        <Grid item>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>
               Table Skeleton
@@ -383,7 +381,7 @@ const LoadingStatesDemo: React.FC = () => {
         </Grid>
 
         {/* API Integration Example */}
-        <Grid item xs={12}>
+        <Grid item>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h5" gutterBottom>
               Real API Integration Example

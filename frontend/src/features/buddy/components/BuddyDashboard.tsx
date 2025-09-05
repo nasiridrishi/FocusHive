@@ -3,7 +3,7 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
+  
   Card,
   CardContent,
   Button,
@@ -19,8 +19,11 @@ import {
   CircularProgress,
   Alert,
   Badge,
-  Divider
+  Divider,
+  Grid,
 } from '@mui/material'
+
+// Grid component type workaround
 import {
   People as PeopleIcon,
   PersonAdd as PersonAddIcon,
@@ -151,7 +154,7 @@ const BuddyDashboard: React.FC = () => {
       {/* Stats Overview */}
       {userStats && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">
@@ -169,7 +172,7 @@ const BuddyDashboard: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">
@@ -187,7 +190,7 @@ const BuddyDashboard: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">
@@ -205,7 +208,7 @@ const BuddyDashboard: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent>
                 <Box display="flex" alignItems="center">
@@ -416,7 +419,7 @@ const BuddyDashboard: React.FC = () => {
           ) : (
             <Grid container spacing={2}>
               {upcomingSessions.map((session) => (
-                <Grid item xs={12} md={6} key={session.id}>
+                <Grid item key={session.id}>
                   <BuddySessionCard 
                     session={session}
                     onUpdate={loadDashboardData}

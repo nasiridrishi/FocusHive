@@ -133,7 +133,7 @@ class WebSocketService {
       connectHeaders: {
         Authorization: `Bearer ${getToken()}`
       },
-      debug: (str) => {
+      debug: (_str) => {
         // Debug logging only in development
         if (import.meta.env.DEV) {
           // STOMP debug messages in development only
@@ -143,7 +143,7 @@ class WebSocketService {
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
       
-      onConnect: (frame) => {
+      onConnect: (_frame) => {
         // WebSocket connected - handled by connection handlers
         this.isConnected = true;
         this.reconnectAttempts = 0;
@@ -152,24 +152,24 @@ class WebSocketService {
         this.notifyConnectionHandlers(true);
       },
       
-      onDisconnect: (frame) => {
+      onDisconnect: (_frame) => {
         // WebSocket disconnected - handled by connection handlers
         this.isConnected = false;
         this.stopHeartbeat();
         this.notifyConnectionHandlers(false);
       },
       
-      onStompError: (frame) => {
+      onStompError: (_frame) => {
         // WebSocket STOMP error handled by reconnection logic
         this.handleReconnection();
       },
 
-      onWebSocketClose: (event) => {
+      onWebSocketClose: (_event) => {
         // WebSocket closed - handled by reconnection logic
         this.handleReconnection();
       },
 
-      onWebSocketError: (event) => {
+      onWebSocketError: (_event) => {
         // WebSocket error handled by reconnection logic
         this.handleReconnection();
       }

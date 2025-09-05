@@ -6,10 +6,9 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { liveRegionManager, screenReaderUtils } from '../utils/ariaUtils';
+import { liveRegionManager } from '../utils/ariaUtils';
 import { SCREEN_READER_DELAYS } from '../constants/wcag';
 import type { 
-  AnnounceLevel, 
   AnnouncementOptions, 
   UseAnnouncementReturn 
 } from '../types/accessibility';

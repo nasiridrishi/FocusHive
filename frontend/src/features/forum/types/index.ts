@@ -1,5 +1,5 @@
 // Re-export forum types from buddy types (since they're in the same file for now)
-export {
+export type {
   ForumUser,
   ForumCategory,
   ForumPost,

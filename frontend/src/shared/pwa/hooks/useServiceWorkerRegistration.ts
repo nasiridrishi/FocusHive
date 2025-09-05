@@ -9,11 +9,11 @@ interface RegisterSWOptions {
   onNeedRefresh?: () => void;
   onOfflineReady?: () => void;
   onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
-  onRegisterError?: (error: any) => void;
+  onRegisterError?: (error: unknown) => void;
 }
 
 // Stub registerSW function
-const registerSW = (options?: RegisterSWOptions) => {
+const registerSW = (_options?: RegisterSWOptions) => {
   console.warn('PWA registration is currently disabled');
   return () => Promise.resolve();
 }
@@ -83,8 +83,8 @@ export const useServiceWorkerRegistration = (
       registration: registration || null,
       error: null,
     }));
-    options.onRegisteredSW?.(swUrl, registration);
-  }, [options.onRegisteredSW]);
+    options.onRegistered?.(registration);
+  }, [options.onRegistered]);
 
   const onNeedRefreshCallback = useCallback(() => {
     setState(prev => ({
@@ -102,7 +102,7 @@ export const useServiceWorkerRegistration = (
     options.onOfflineReady?.();
   }, [options.onOfflineReady]);
 
-  const onRegisterErrorCallback = useCallback((error: any) => {
+  const onRegisterErrorCallback = useCallback((error: unknown) => {
     setState(prev => ({
       ...prev,
       isRegistered: false,

@@ -6,7 +6,7 @@ Digital co-working and co-studying platform that creates virtual "hives" - dedic
 
 This project is currently in the development phase for the University of London BSc Computer Science final project (CM3070).
 
-- **Project Timeline**: May 22, 2025 - September 15, 2025
+- **Project Timeline**: May 22, 2025 - September 22, 2025
 - **Current Phase**: Phase 1 - Foundation Setup
 - **Architecture Update**: Migrated to Java/Spring Boot backend (July 8, 2025)
 

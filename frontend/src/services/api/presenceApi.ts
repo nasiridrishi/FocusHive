@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import { AxiosInstance, AxiosError } from 'axios';
 import { apiClient } from './httpInterceptors';
 import { API_ENDPOINTS, buildEndpoint } from './index';
 
@@ -32,7 +32,7 @@ export interface FocusSession {
   actualDuration?: number; // in minutes
   task?: string;
   isActive: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface HivePresenceInfo {
@@ -48,7 +48,7 @@ export interface PresenceUpdate {
   status: PresenceStatus;
   activity?: string;
   hiveId?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SessionBroadcast {
@@ -275,7 +275,7 @@ class PresenceApiService {
   /**
    * Leave a hive's presence tracking
    */
-  async leaveHivePresence(hiveId: number): Promise<UserPresence> {
+  async leaveHivePresence(_hiveId: number): Promise<UserPresence> {
     try {
       const update: PresenceUpdate = { 
         status: PresenceStatus.ONLINE,
@@ -291,7 +291,7 @@ class PresenceApiService {
   /**
    * Get presence statistics for analytics
    */
-  async getPresenceStats(hiveId?: number, dateRange?: { start: string; end: string }): Promise<any> {
+  async getPresenceStats(hiveId?: number, dateRange?: { start: string; end: string }): Promise<unknown> {
     try {
       const params = hiveId ? { hiveId, ...dateRange } : dateRange;
       const response = await this.api.get('/api/v1/analytics/presence/stats', { params });

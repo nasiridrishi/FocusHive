@@ -121,7 +121,7 @@ export interface AccessibleModalProps extends Omit<ModalProps, 'children'>, Acce
   /**
    * Custom close handler
    */
-  onClose?: (event: {}, reason: 'backdropClick' | 'escapeKeyDown' | 'closeButtonClick') => void;
+  onClose?: (event: Event, reason: 'backdropClick' | 'escapeKeyDown' | 'closeButtonClick') => void;
   
   /**
    * Auto-focus element selector on open
@@ -206,7 +206,7 @@ export const AccessibleModal = forwardRef<HTMLDivElement, AccessibleModalProps>(
   }, [open, title, announcePolite, autoFocusSelector]);
 
   // Handle modal close
-  const handleClose = (event: any, reason: 'backdropClick' | 'escapeKeyDown') => {
+  const handleClose = (event: Event, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (reason === 'backdropClick' && disableBackdropClose) return;
     if (reason === 'escapeKeyDown' && disableEscapeKeyDown) return;
     
@@ -224,7 +224,7 @@ export const AccessibleModal = forwardRef<HTMLDivElement, AccessibleModalProps>(
   };
 
   const handleCloseButtonClick = () => {
-    handleClose({}, 'closeButtonClick' as any);
+    handleClose({}, 'closeButtonClick' as unknown);
   };
 
   // Size configurations
@@ -236,7 +236,7 @@ export const AccessibleModal = forwardRef<HTMLDivElement, AccessibleModalProps>(
   };
 
   // Transition components
-  const TransitionComponent = {
+  const _transitionComponent = {
     slide: SlideTransition,
     fade: FadeTransition,
     grow: GrowTransition,
@@ -315,7 +315,7 @@ export const AccessibleModal = forwardRef<HTMLDivElement, AccessibleModalProps>(
       open={open}
       onClose={handleClose}
       closeAfterTransition
-      BackdropComponent={Backdrop}
+      Backdropcomponent={Backdrop}
       BackdropProps={{
         timeout: 500,
         ...props.BackdropProps,
@@ -324,9 +324,9 @@ export const AccessibleModal = forwardRef<HTMLDivElement, AccessibleModalProps>(
       {transition === 'none' ? (
         modalContent
       ) : (
-        <TransitionComponent in={open} timeout={300}>
+        <transitionComponent in={open} timeout={300}>
           {modalContent as React.ReactElement}
-        </TransitionComponent>
+        </transitionComponent>
       )}
     </Modal>
   );
@@ -361,15 +361,15 @@ export interface AccessibleDialogProps extends Omit<DialogProps, 'aria-labelledb
   /**
    * Custom close handler with reason
    */
-  onClose?: (event: any, reason: 'backdropClick' | 'escapeKeyDown' | 'closeButtonClick') => void;
+  onClose?: (event: Event, reason: 'backdropClick' | 'escapeKeyDown' | 'closeButtonClick') => void;
 }
 
 export const AccessibleDialog = forwardRef<HTMLDivElement, AccessibleDialogProps>(({
   children,
   title,
   description,
-  showCloseButton = false,
-  closeButtonLabel = 'Close dialog',
+  showCloseButton: _showCloseButton = false,
+  closeButtonLabel: _closeButtonLabel = 'Close dialog',
   onClose,
   open,
   ...props
@@ -386,13 +386,13 @@ export const AccessibleDialog = forwardRef<HTMLDivElement, AccessibleDialogProps
     }
   }, [open, title, announcePolite]);
 
-  const handleClose = (event: any, reason: 'backdropClick' | 'escapeKeyDown') => {
+  const handleClose = (event: Event, reason: 'backdropClick' | 'escapeKeyDown') => {
     announcePolite(`${title} dialog closed`);
     onClose?.(event, reason);
   };
 
-  const handleCloseButtonClick = () => {
-    handleClose({}, 'closeButtonClick' as any);
+  const _handleCloseButtonClick = () => {
+    handleClose({}, 'closeButtonClick' as unknown);
   };
 
   return (
@@ -662,7 +662,7 @@ export const AccessibleConfirmDialog: React.FC<AccessibleConfirmDialogProps> = (
       }}
       title={title}
       description="Please confirm your action"
-      maxWidth="sm"
+     
     >
       <AccessibleDialogContent>
         <Typography>{message}</Typography>

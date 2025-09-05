@@ -5,13 +5,13 @@ import { ThemeProvider, createTheme } from '@mui/material'
 import type { Track } from '../../types'
 
 // Create mock state reference  
-let mockCurrentTrack: Track | null = null;
+const _mockCurrentTrack: Track | null = null;
 let mockIsPlaying = false;
 let mockIsConnected = false;
 
 // Create a comprehensive mock state
 let mockMode = 'mini';
-let mockExpanded = false;
+const _mockExpanded = false;
 
 // Mock the MusicPlayer component to make tests pass
 const MockMusicPlayer = ({ mode, onSeek, onVolumeChange }: { mode?: string; onSeek?: (position: number) => void; onVolumeChange?: (volume: number) => void }) => {
@@ -300,7 +300,7 @@ const mockMusicContext = {
 // Mock the hooks
 vi.mock('../../context', () => ({
   useMusic: () => mockMusicContext,
-  MusicProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  musicProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
 vi.mock('../../hooks', () => ({
@@ -372,7 +372,7 @@ const mockSpotifyContext = {
 
 vi.mock('../../context/SpotifyContext', () => ({
   useSpotify: () => mockSpotifyContext,
-  SpotifyProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  spotifyProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
 // Create theme for testing

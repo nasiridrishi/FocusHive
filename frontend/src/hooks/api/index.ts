@@ -198,10 +198,10 @@ export const cacheUtils = {
   },
 };
 
-// Performance monitoring
+// Performance monitoring  
 export const queryPerformanceUtils = {
   // Monitor query performance
-  getSlowQueries: (threshold = 1000) => {
+  useSlowQueries: (threshold = 1000) => {
     const queryClient = useQueryClient();
     return queryClient
       .getQueryCache()
@@ -218,14 +218,14 @@ export const queryPerformanceUtils = {
   },
   
   // Get cache memory usage estimate
-  getCacheSize: () => {
+  useCacheSize: () => {
     const queryClient = useQueryClient();
     const allData = queryClient.getQueryCache().getAll().map(q => q.state.data);
     return JSON.stringify(allData).length;
   },
   
   // Optimize cache by removing stale queries
-  optimizeCache: () => {
+  useOptimizeCache: () => {
     const queryClient = useQueryClient();
     queryClient.getQueryCache().clear();
   },

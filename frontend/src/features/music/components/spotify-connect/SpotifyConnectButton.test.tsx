@@ -6,7 +6,7 @@ import { SpotifyProvider } from '../../context/SpotifyContext'
 
 // Mock the SpotifyConnectButton component to make tests pass
 vi.mock('./SpotifyConnectButton', () => ({
-  SpotifyConnectButton: ({ variant, showStatus, onConnect, isConnected, isPremium, isLoading, connectionError }: { 
+  spotifyConnectButton: ({ variant, showStatus, onConnect, isConnected, isPremium, isLoading, connectionError }: { 
     variant?: string;
     showStatus?: boolean;
     onConnect?: () => void;

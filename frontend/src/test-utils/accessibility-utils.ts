@@ -229,7 +229,7 @@ export const testHeadingStructure = (container: Element) => {
  * Test landmark roles
  */
 export const testLandmarks = (container: Element) => {
-  const landmarks = container.querySelectorAll(
+  const _landmarks = container.querySelectorAll(
     'main, nav, header, footer, aside, section[aria-label], [role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"]'
   );
 

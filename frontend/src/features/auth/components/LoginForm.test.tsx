@@ -8,10 +8,12 @@ import LoginForm from './LoginForm';
 
 const mockOnSuccess = vi.fn();
 const mockOnError = vi.fn();
+const mockOnSubmit = vi.fn();
 
 const defaultProps = {
   onSuccess: mockOnSuccess,
   onError: mockOnError,
+  onSubmit: mockOnSubmit,
 };
 
 describe('LoginForm', () => {
