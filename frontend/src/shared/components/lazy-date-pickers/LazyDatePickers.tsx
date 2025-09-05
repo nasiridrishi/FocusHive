@@ -86,7 +86,7 @@ export const DatePickerWrapper = ({
   showFallback = true,
   fallbackComponent,
   ...props 
-}: LazyDatePickerWrapperProps & any) => (
+}: LazyDatePickerWrapperProps & unknown) => (
   <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Suspense fallback={
       showFallback ? (
@@ -122,7 +122,7 @@ export const DateTimePickerWrapper = ({
   showFallback = true,
   fallbackComponent,
   ...props 
-}: LazyDatePickerWrapperProps & any) => (
+}: LazyDatePickerWrapperProps & unknown) => (
   <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Suspense fallback={
       showFallback ? (
@@ -158,7 +158,7 @@ export const TimePickerWrapper = ({
   showFallback = true,
   fallbackComponent,
   ...props 
-}: LazyDatePickerWrapperProps & any) => (
+}: LazyDatePickerWrapperProps & unknown) => (
   <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Suspense fallback={
       showFallback ? (
@@ -194,7 +194,7 @@ export const MobileDatePickerWrapper = ({
   showFallback = true,
   fallbackComponent,
   ...props 
-}: LazyDatePickerWrapperProps & any) => (
+}: LazyDatePickerWrapperProps & unknown) => (
   <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Suspense fallback={
       showFallback ? (
@@ -230,7 +230,7 @@ export const DesktopDatePickerWrapper = ({
   showFallback = true,
   fallbackComponent,
   ...props 
-}: LazyDatePickerWrapperProps & any) => (
+}: LazyDatePickerWrapperProps & unknown) => (
   <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Suspense fallback={
       showFallback ? (
@@ -263,7 +263,7 @@ export const StaticDatePickerWrapper = ({
   showFallback = true,
   fallbackComponent,
   ...props 
-}: Omit<LazyDatePickerWrapperProps, 'label' | 'fullWidth' | 'variant'> & any) => (
+}: Omit<LazyDatePickerWrapperProps, 'label' | 'fullWidth' | 'variant'> & unknown) => (
   <LocalizationProvider dateAdapter={AdapterDateFns}>
     <Suspense fallback={
       showFallback ? (

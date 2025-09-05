@@ -1,5 +1,4 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { CreatePlaylistRequest, SessionRecommendationRequest, SearchTracksRequest } from '../types'
 
 // FIXED: Mock axios before any imports
 vi.mock('axios', () => {
@@ -34,7 +33,7 @@ import { default as musicApiModule } from './musicApi'
 
 // Get the mocked axios instance
 const mockedAxios = vi.mocked(axios, true)
-const mockAxiosInstance = (mockedAxios.create as any)()
+const mockAxiosInstance = (mockedAxios.create as unknown)()
 
 // Mock localStorage
 const mockLocalStorage = {

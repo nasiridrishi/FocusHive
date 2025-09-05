@@ -104,7 +104,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced button accessibility
   MuiButton: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Ensure minimum touch target size
         minHeight: touchTargetConfig.recommendedSize,
         minWidth: touchTargetConfig.recommendedSize,
@@ -158,7 +158,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced form field accessibility
   MuiTextField: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Ensure proper spacing for touch targets
         marginBottom: touchTargetConfig.recommendedSpacing,
         
@@ -195,7 +195,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced link accessibility
   MuiLink: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Ensure sufficient color contrast
         color: theme.palette.primary.main,
         textDecorationColor: 'currentColor',
@@ -229,7 +229,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced card accessibility
   MuiCard: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Focus styles for interactive cards
         '&[tabindex]:focus-visible': {
           ...focusRingConfig.variants.default,
@@ -250,7 +250,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced chip accessibility
   MuiChip: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Ensure minimum touch target
         minHeight: touchTargetConfig.minSize,
         
@@ -287,7 +287,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced fab accessibility
   MuiFab: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Ensure minimum size
         minWidth: touchTargetConfig.recommendedSize,
         minHeight: touchTargetConfig.recommendedSize,
@@ -327,7 +327,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced tab accessibility
   MuiTab: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         minHeight: touchTargetConfig.recommendedSize,
         minWidth: touchTargetConfig.recommendedSize,
         
@@ -356,7 +356,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced checkbox accessibility
   MuiCheckbox: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Focus styles
         '&:focus-visible': {
           '& .MuiSvgIcon-root': {
@@ -382,7 +382,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced radio accessibility
   MuiRadio: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Focus styles
         '&:focus-visible': {
           '& .MuiSvgIcon-root': {
@@ -408,7 +408,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced switch accessibility
   MuiSwitch: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         // Focus styles
         '&:focus-within': {
           '& .MuiSwitch-thumb': {
@@ -433,7 +433,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced menu accessibility
   MuiMenu: {
     styleOverrides: {
-      paper: ({ theme }) => ({
+      paper: ({ theme: _theme }) => ({
         // High contrast support
         '@media (prefers-contrast: high)': {
           border: '1px solid currentColor',
@@ -444,7 +444,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   
   MuiMenuItem: {
     styleOverrides: {
-      root: ({ theme }) => ({
+      root: ({ theme: _theme }) => ({
         minHeight: touchTargetConfig.recommendedSize,
         
         // Focus styles
@@ -593,7 +593,7 @@ export function createAccessibleDarkTheme() {
 /**
  * Validate theme accessibility
  */
-export function validateThemeAccessibility(theme: any) {
+export function validateThemeAccessibility(theme: unknown) {
   const issues: string[] = [];
   
   // Check text contrast ratios

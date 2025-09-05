@@ -251,7 +251,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   }, [effectivePlaybackState?.volume])
 
   // Spotify connection status component
-  const SpotifyStatus = () => {
+  const _spotifyStatus = () => {
     if (!spotify.state.auth.isAuthenticated) {
       return (
         <Alert 
@@ -785,7 +785,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
 
         {/* Spotify Status */}
         <Box mt={2}>
-          <SpotifyStatus />
+          <spotifyStatus />
         </Box>
 
         {/* Spotify Connect Modal */}

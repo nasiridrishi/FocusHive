@@ -15,7 +15,7 @@ export default function LoginPage() {
     if (authState.error) {
       clearError()
     }
-  }, [])
+  }, [authState.error, clearError])
 
   const handleLogin = async (credentials: LoginRequest) => {
     try {

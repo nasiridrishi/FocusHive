@@ -9,12 +9,12 @@ import {
   IconButton,
   TextField,
   Button,
-  Grid,
   Fade,
   Collapse,
   Tooltip,
   useTheme,
   alpha,
+  Grid,
 } from '@mui/material'
 import {
   // Activity icons
@@ -39,15 +39,15 @@ import {
   Tune,
   SentimentSatisfied,
   LocalFireDepartment,
-  Target,
+  EmojiObjects as Target,
   Palette,
   SentimentDissatisfied,
   Star,
 } from '@mui/icons-material'
-import { MoodSelectorProps, MoodState, TaskType, MoodOption } from '../../types'
+import { MoodSelectorProps, MoodState, TaskType, MoodOption } from '../../types/music'
 
 // Icon mapping helper
-const getIconComponent = (iconName: string) => {
+const geticonComponent = (iconName: string) => {
   const iconMap = {
     'SentimentSatisfied': SentimentSatisfied,
     'LocalFireDepartment': LocalFireDepartment,
@@ -56,8 +56,8 @@ const getIconComponent = (iconName: string) => {
     'SentimentDissatisfied': SentimentDissatisfied,
     'Star': Star,
   };
-  const IconComponent = iconMap[iconName as keyof typeof iconMap];
-  return IconComponent || SentimentSatisfied;
+  const iconComponent = iconMap[iconName as keyof typeof iconMap];
+  return iconComponent || SentimentSatisfied;
 };
 
 // Predefined mood options
@@ -412,7 +412,7 @@ const MoodSelector: React.FC<MoodSelectorProps> = ({
                 <Chip
                   key={`rec-${mood.id}`}
                   label={mood.name}
-                  icon={React.createElement(getIconComponent(mood.icon), { sx: { fontSize: '1rem' } })}
+                  icon={React.createElement(geticonComponent(mood.icon), { sx: { fontSize: '1rem' } })}
                   onClick={() => handleMoodSelect(mood.id)}
                   variant={selectedMoodId === mood.id ? 'filled' : 'outlined'}
                   color={selectedMoodId === mood.id ? 'primary' : 'default'}
@@ -436,7 +436,7 @@ const MoodSelector: React.FC<MoodSelectorProps> = ({
           </Typography>
           <Grid container spacing={1}>
             {moodOptions.map((mood) => (
-              <Grid item xs={6} sm={4} md={3} key={mood.id}>
+              <Grid size={{ xs: 6, sm: 4, md: 3 }} key={mood.id}>
                 <Card
                   sx={{
                     cursor: 'pointer',
@@ -466,7 +466,7 @@ const MoodSelector: React.FC<MoodSelectorProps> = ({
                         transition: 'transform 0.2s',
                       }}
                     >
-                      {React.createElement(getIconComponent(mood.icon), { sx: { fontSize: '1.5rem' } })}
+                      {React.createElement(geticonComponent(mood.icon), { sx: { fontSize: '1.5rem' } })}
                     </Box>
                     <Typography variant="body2" fontWeight="medium">
                       {mood.name}

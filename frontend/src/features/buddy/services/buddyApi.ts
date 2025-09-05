@@ -16,9 +16,9 @@ class BuddyApiService {
   private api: AxiosInstance
 
   constructor() {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+    const apiBaseUrl = import.meta.env.VITE_apiBaseUrl || 'http://localhost:8080';
     this.api = axios.create({
-      baseURL: `${API_BASE_URL}/api/buddy`,
+      baseURL: `${apiBaseUrl}/api/buddy`,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

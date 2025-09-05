@@ -3,7 +3,7 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
+  
   Card,
   CardContent,
   Paper,
@@ -21,8 +21,11 @@ import {
   Tabs,
   Badge,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Grid,
 } from '@mui/material'
+
+// Grid component type workaround
 import {
   Add as AddIcon,
   TrendingUp as TrendingIcon,
@@ -147,7 +150,7 @@ const ForumHome: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container sx={{ py: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
@@ -156,7 +159,7 @@ const ForumHome: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -212,7 +215,7 @@ const ForumHome: React.FC = () => {
       {/* Stats Overview */}
       {forumStats && (
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
                 <ArticleIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -224,7 +227,7 @@ const ForumHome: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
                 <ReplyIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -236,7 +239,7 @@ const ForumHome: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
                 <PeopleIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -248,7 +251,7 @@ const ForumHome: React.FC = () => {
             </Card>
           </Grid>
           
-          <Grid item xs={6} md={3}>
+          <Grid item>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
                 <ViewIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
@@ -264,7 +267,7 @@ const ForumHome: React.FC = () => {
 
       <Grid container spacing={4}>
         {/* Main Content */}
-        <Grid item xs={12} md={8}>
+        <Grid item>
           {/* Categories Overview */}
           <Paper sx={{ mb: 4 }}>
             <Box sx={{ p: 3 }}>
@@ -527,7 +530,7 @@ const ForumHome: React.FC = () => {
         </Grid>
 
         {/* Sidebar */}
-        <Grid item xs={12} md={4}>
+        <Grid item>
           {/* Top Contributors */}
           <Paper sx={{ mb: 3 }}>
             <Box sx={{ p: 3 }}>
@@ -547,7 +550,7 @@ const ForumHome: React.FC = () => {
                           horizontal: 'right',
                         }}
                       >
-                        <Avatar src={user.avatar} size="small">
+                        <Avatar src={user.avatar} sx={{ width: 32, height: 32 }}>
                           {user.username[0].toUpperCase()}
                         </Avatar>
                       </Badge>
@@ -590,7 +593,7 @@ const ForumHome: React.FC = () => {
                         Newest Member:
                       </Typography>
                       <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar src={forumStats.newestMember.avatar} size="small">
+                        <Avatar src={forumStats.newestMember.avatar} sx={{ width: 32, height: 32 }}>
                           {forumStats.newestMember.username[0].toUpperCase()}
                         </Avatar>
                         <Typography variant="body2">

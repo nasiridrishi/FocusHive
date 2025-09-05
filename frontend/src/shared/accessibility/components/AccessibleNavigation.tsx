@@ -10,16 +10,12 @@ import {
   AppBar,
   AppBarProps,
   Toolbar,
-  ToolbarProps,
   Breadcrumbs,
   BreadcrumbsProps,
   Link,
-  LinkProps,
   Menu,
   MenuProps,
   MenuItem,
-  MenuItemProps,
-  MenuList,
   ListItemIcon,
   ListItemText,
   Divider,
@@ -29,7 +25,6 @@ import {
   List,
   ListItem,
   ListItemButton,
-  IconButton,
   Chip,
   Badge,
 } from '@mui/material';
@@ -38,13 +33,11 @@ import {
   ExpandMore,
   ArrowForward as ArrowForwardIcon,
   Home as HomeIcon,
-  KeyboardArrowDown,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useAnnouncement } from '../hooks/useAnnouncement';
 import { ScreenReaderOnly } from './ScreenReaderOnly';
-import type { AccessibleProps, AriaRole } from '../types/accessibility';
 
 // Enhanced AppBar with accessibility features
 const StyledAccessibleAppBar = styled(AppBar)(({ theme }) => ({
@@ -750,7 +743,7 @@ export const AccessibleTabs: React.FC<AccessibleTabsProps> = ({
           minWidth: orientation === 'vertical' ? 200 : 'auto',
         }}
       >
-        {tabs.map((tab, index) => (
+        {tabs.map((tab, _index) => (
           <Box
             key={tab.id}
             component="button"

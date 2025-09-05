@@ -7,7 +7,7 @@ import {
   Box,
   CircularProgress,
   Alert,
-  Chip
+  Chip,
 } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { TrendingUp, TrendingDown, Timer } from '@mui/icons-material';

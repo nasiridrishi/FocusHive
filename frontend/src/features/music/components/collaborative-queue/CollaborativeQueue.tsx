@@ -48,7 +48,7 @@ import {
 } from '@mui/icons-material'
 import { useMusic } from '../../context'
 import { useCollaborativePlaylist } from '../../hooks'
-import { CollaborativeQueueProps, QueueItem, Track } from '../../types'
+import { CollaborativeQueueProps, QueueItem, Track } from '../../types/music'
 
 const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
   hiveId,
@@ -194,7 +194,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
   // Menu handlers
   const handleMenuOpen = useCallback((event: React.MouseEvent, item: QueueItem) => {
     event.stopPropagation()
-    setMenuAnchorEl(event.currentTarget)
+    setMenuAnchorEl(event.currentTarget as HTMLElement)
     setSelectedItem(item)
   }, [])
 
@@ -628,7 +628,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
       <Dialog
         open={searchDialogOpen}
         onClose={handleSearchClose}
-        maxWidth="md"
+       
         fullWidth
       >
         <DialogTitle>Add Track to Queue</DialogTitle>

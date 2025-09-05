@@ -165,7 +165,7 @@ export const SkipNavigation: React.FC<SkipLinkProps> = ({
   const handleKeyDown = (event: React.KeyboardEvent<HTMLAnchorElement>, target: SkipLinkTarget) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      handleSkipClick(event as any, target);
+      handleSkipClick(event as unknown, target);
     }
   };
 

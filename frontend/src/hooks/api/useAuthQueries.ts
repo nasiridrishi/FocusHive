@@ -10,7 +10,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApiService } from '@services/api';
-import { queryKeys, STALE_TIMES, CACHE_TIMES, invalidateQueries } from '@lib/queryClient';
+import { queryKeys, STALE_TIMES, CACHE_TIMES, invalidateQueries as _invalidateQueries } from '@lib/queryClient';
 import type { 
   LoginRequest, 
   LoginResponse, 
@@ -19,7 +19,6 @@ import type {
   User,
   ChangePasswordRequest,
   PasswordResetRequest,
-  PasswordResetResponse 
 } from '@shared/types/auth';
 
 // ============================================================================
@@ -35,9 +34,9 @@ export const useCurrentUser = () => {
     queryFn: () => authApiService.getCurrentUser(),
     staleTime: STALE_TIMES.USER_DATA,
     gcTime: CACHE_TIMES.SHORT,
-    retry: (failureCount, error: any) => {
-      // Don't retry on 401/403 errors (user not authenticated)
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
+    retry: (failureCount, _error: unknown) => {
+      // Don't retry on 401/403 _errors (user not authenticated)
+      if (_error?.response?.status === 401 || _error?.response?.status === 403) {
         return false;
       }
       return failureCount < 2;
@@ -111,7 +110,7 @@ export const useLogin = () => {
       return { credentials };
     },
 
-    onSuccess: (data: LoginResponse, variables, context) => {
+    onSuccess: (data: LoginResponse, _variables, _context) => {
       // Update user data in cache
       queryClient.setQueryData(queryKeys.auth.user(), data.user);
       
@@ -126,15 +125,15 @@ export const useLogin = () => {
 
       // Track successful login
       if (typeof window !== 'undefined' && 'gtag' in window) {
-        // @ts-ignore
+        // @ts-expect-error - gtag is loaded by Google Analytics script
         window.gtag('event', 'login', {
           method: 'email',
         });
       }
     },
 
-    onError: (error, variables, context) => {
-      // Error handled by error boundary and toast notifications
+    onError: (_error, _variables, _context) => {
+      // Error handled by _error boundary and toast notifications
       
       // Clear any optimistic updates
       queryClient.removeQueries({ queryKey: [...queryKeys.auth.all, 'loginStatus'] });
@@ -169,15 +168,15 @@ export const useRegister = () => {
 
       // Track successful registration
       if (typeof window !== 'undefined' && 'gtag' in window) {
-        // @ts-ignore
+        // @ts-expect-error - gtag is loaded by Google Analytics script
         window.gtag('event', 'sign_up', {
           method: 'email',
         });
       }
     },
 
-    onError: (error) => {
-      // Error handled by error boundary and toast notifications
+    onError: (_error) => {
+      // Error handled by _error boundary and toast notifications
       queryClient.setQueryData([...queryKeys.auth.all, 'status'], false);
     },
 
@@ -210,8 +209,8 @@ export const useLogout = () => {
       queryClient.setQueryData([...queryKeys.auth.all, 'status'], false);
     },
 
-    onError: (error) => {
-      // Error handled by error boundary and toast notifications
+    onError: (_error) => {
+      // Error handled by _error boundary and toast notifications
       // Even if logout fails, clear local cache
       queryClient.clear();
       queryClient.setQueryData([...queryKeys.auth.all, 'status'], false);
@@ -256,8 +255,8 @@ export const useUpdateProfile = () => {
       queryClient.setQueryData(queryKeys.auth.user(), updatedUser);
     },
 
-    onError: (error, newUserData, context) => {
-      // Error handled by error boundary and toast notifications
+    onError: (_error, newUserData, context) => {
+      // Error handled by _error boundary and toast notifications
       
       // Rollback optimistic update
       if (context?.previousUser) {
@@ -292,8 +291,8 @@ export const useChangePassword = () => {
       queryClient.invalidateQueries({ queryKey: [...queryKeys.auth.all, 'status'] });
     },
 
-    onError: (error) => {
-      // Error handled by error boundary and toast notifications
+    onError: (_error) => {
+      // Error handled by _error boundary and toast notifications
     },
 
     meta: {
@@ -311,8 +310,8 @@ export const useRequestPasswordReset = () => {
     mutationFn: (resetData: PasswordResetRequest) => authApiService.requestPasswordReset(resetData),
     mutationKey: ['auth', 'requestPasswordReset'],
 
-    onError: (error) => {
-      // Error handled by error boundary and toast notifications
+    onError: (_error) => {
+      // Error handled by _error boundary and toast notifications
     },
 
     meta: {
@@ -347,9 +346,9 @@ export const useAuth = () => {
     isAuthStatusLoading: authStatusQuery.isLoading,
     
     // Error states
-    error: userQuery.error || authStatusQuery.error,
-    userError: userQuery.error,
-    authStatusError: authStatusQuery.error,
+    _error: userQuery._error || authStatusQuery._error,
+    userError: userQuery._error,
+    authStatusError: authStatusQuery._error,
     
     // Mutations
     login: loginMutation.mutate,
@@ -361,9 +360,9 @@ export const useAuth = () => {
     isLoggingOut: logoutMutation.isPending,
     isRegistering: registerMutation.isPending,
     
-    loginError: loginMutation.error,
-    logoutError: logoutMutation.error,
-    registerError: registerMutation.error,
+    loginError: loginMutation._error,
+    logoutError: logoutMutation._error,
+    registerError: registerMutation._error,
     
     // Utilities
     refetchUser: userQuery.refetch,
@@ -392,7 +391,7 @@ export const usePermissions = () => {
   return {
     permissions: permissionsQuery.data ?? [],
     isLoading: permissionsQuery.isLoading,
-    error: permissionsQuery.error,
+    _error: permissionsQuery._error,
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,

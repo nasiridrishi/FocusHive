@@ -89,7 +89,7 @@ export const useAsyncError = () => {
    * Wrap an async function to automatically catch and handle errors
    */
   const wrapAsyncFunction = useCallback(
-    <T extends (...args: any[]) => Promise<any>>(
+    <T extends (...args: any[]) => Promise<unknown>>(
       asyncFn: T,
       options: AsyncErrorOptions = {}
     ): T => {
@@ -107,7 +107,7 @@ export const useAsyncError = () => {
    * Wrap an event handler to catch and handle errors
    */
   const wrapEventHandler = useCallback(
-    <T extends (...args: any[]) => any>(
+    <T extends (...args: any[]) => unknown>(
       handler: T,
       options: AsyncErrorOptions = {}
     ): T => {

@@ -9,17 +9,15 @@
  */
 
 // Core API utilities
-import { apiClient, createAuthenticatedAxiosInstance, createServiceAxiosInstance } from './httpInterceptors';
+import { apiClient } from './httpInterceptors';
 export { 
-  apiClient, 
-  createAuthenticatedAxiosInstance, 
-  createServiceAxiosInstance,
+  apiClient,
   type StandardizedError 
 } from './httpInterceptors';
 
 // Authentication API
-import authApiService, { tokenStorage } from './authApi';
-export { default as authApiService, tokenStorage } from './authApi';
+import authApiService from './authApi';
+export { default as authApiService } from './authApi';
 
 // Hive API
 import hiveApiService from './hiveApi';
@@ -37,11 +35,13 @@ export { default as timerApiService } from './timerApi';
 import analyticsApiService from './analyticsApi';
 export { default as analyticsApiService } from './analyticsApi';
 
+// Environment configuration
+import { getApiConfig } from '../config/environmentConfig';
+
 // API base configuration - uses validated environment variables
 export const API_CONFIG = {
   get baseURL() {
     try {
-      const { getApiConfig } = require('../config/environmentConfig');
       return getApiConfig().baseUrl;
     } catch {
       // Fallback for cases where validation hasn't run yet

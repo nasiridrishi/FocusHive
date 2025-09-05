@@ -158,7 +158,7 @@ export const authApiService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
       const response = await authApi.post<LoginResponse>('/demo/login', credentials);
-      const { user, token, refreshToken } = response.data;
+      const { user: _user, token, refreshToken } = response.data;
       
       // Store tokens securely
       tokenStorage.setAccessToken(token);
@@ -180,7 +180,7 @@ export const authApiService = {
   async register(userData: RegisterRequest): Promise<RegisterResponse> {
     try {
       const response = await authApi.post<RegisterResponse>('/v1/auth/register', userData);
-      const { user, token, refreshToken } = response.data;
+      const { user: _user, token, refreshToken } = response.data;
       
       // Store tokens securely
       tokenStorage.setAccessToken(token);

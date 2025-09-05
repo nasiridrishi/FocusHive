@@ -80,7 +80,7 @@ export function DynamicIcon({
     if (!iconCache.has(iconName)) {
       const iconPromise = import('@mui/icons-material')
         .then(iconModule => {
-          const IconComponent = (iconModule as any)[iconName]
+          const IconComponent = (iconModule as unknown)[iconName]
           if (IconComponent) {
             return { default: IconComponent }
           }
@@ -94,7 +94,7 @@ export function DynamicIcon({
       iconCache.set(iconName, iconPromise)
     }
     
-    return iconCache.get(iconName) as Promise<{ default: React.ComponentType<any> }>
+    return iconCache.get(iconName) as Promise<{ default: React.ComponentType<unknown> }>
   })
 
   return (
@@ -123,7 +123,7 @@ export const preloadCommonIcons = () => {
   setTimeout(() => {
     commonIconNames.forEach(iconName => {
       import('@mui/icons-material').then(iconModule => {
-        const IconComponent = (iconModule as any)[`${iconName}Icon`]
+        const IconComponent = (iconModule as unknown)[`${iconName}Icon`]
         if (IconComponent) {
           iconCache.set(`${iconName}Icon`, Promise.resolve(IconComponent))
         }

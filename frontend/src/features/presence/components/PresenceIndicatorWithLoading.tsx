@@ -1,7 +1,6 @@
 import React from 'react'
-import { Badge, Avatar, Skeleton } from '@mui/material'
+import { Badge, Skeleton } from '@mui/material'
 import { PresenceStatus } from '@shared/types/presence'
-import { LoadingSkeleton } from '@shared/components/loading'
 import PresenceIndicator from './PresenceIndicator'
 
 interface PresenceIndicatorWithLoadingProps {

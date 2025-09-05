@@ -292,11 +292,11 @@ export class SpotifyService {
 
   private setupPlayerListeners(player: Spotify.Player): void {
     // Ready
-    player.addListener('ready', ({ device_id }: { device_id: string }) => {
+    player.addListener('ready', ({ device_id: deviceId }: { device_id: string }) => {
       this.updatePlayerState({
         isReady: true,
         isConnected: true,
-        deviceId: device_id
+        deviceId: deviceId
       })
     })
 

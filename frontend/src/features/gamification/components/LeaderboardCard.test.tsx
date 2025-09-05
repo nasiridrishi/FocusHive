@@ -12,7 +12,7 @@ vi.mock('framer-motion', () => ({
     div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
     li: ({ children, ...props }: React.ComponentProps<'li'>) => <li {...props}>{children}</li>,
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  animatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();
@@ -461,17 +461,17 @@ describe('LeaderboardCard', () => {
     it('renders efficiently with same props', () => {
       const renderSpy = vi.fn();
       
-      const TestLeaderboardCard = ({ leaderboard }: { leaderboard: Leaderboard }) => {
+      const ___TestLeaderboardCard = ({ leaderboard }: { leaderboard: Leaderboard }) => {
         renderSpy();
         return <LeaderboardCard leaderboard={leaderboard} />;
       };
       
-      const { rerender } = renderWithTheme(<TestLeaderboardCard leaderboard={mockLeaderboard} />);
+      const { rerender } = renderWithTheme(<__TestLeaderboardCard leaderboard={mockLeaderboard} />);
       
       expect(renderSpy).toHaveBeenCalledTimes(1);
       
       // Re-render with same data
-      rerender(<TestLeaderboardCard leaderboard={mockLeaderboard} />);
+      rerender(<__TestLeaderboardCard leaderboard={mockLeaderboard} />);
       
       // React will re-render components, this is expected behavior
       expect(renderSpy).toHaveBeenCalledTimes(2);

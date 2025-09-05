@@ -3,27 +3,34 @@
  * Reduces main bundle size by loading libraries on demand
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TypeScript has limitations with dynamic imports and can't properly infer named exports
+// We use 'any' here to work around this limitation while still achieving code splitting
+
 // Chart library dynamic imports
 export const chartLibraries = {
   async recharts() {
     try {
-      const recharts = await import('recharts');
+      // Import recharts module - TypeScript can't infer dynamic import types properly
+      const rechartsModule = await import('recharts') as any;
+      
+      // Return the specific components we need
       return {
-        LineChart: recharts.LineChart,
-        Line: recharts.Line,
-        XAxis: recharts.XAxis,
-        YAxis: recharts.YAxis,
-        CartesianGrid: recharts.CartesianGrid,
-        Tooltip: recharts.Tooltip,
-        Legend: recharts.Legend,
-        ResponsiveContainer: recharts.ResponsiveContainer,
-        BarChart: recharts.BarChart,
-        Bar: recharts.Bar,
-        PieChart: recharts.PieChart,
-        Pie: recharts.Pie,
-        Cell: recharts.Cell,
-        AreaChart: recharts.AreaChart,
-        Area: recharts.Area
+        LineChart: rechartsModule.LineChart,
+        Line: rechartsModule.Line,
+        XAxis: rechartsModule.XAxis,
+        YAxis: rechartsModule.YAxis,
+        CartesianGrid: rechartsModule.CartesianGrid,
+        Tooltip: rechartsModule.Tooltip,
+        Legend: rechartsModule.Legend,
+        ResponsiveContainer: rechartsModule.ResponsiveContainer,
+        BarChart: rechartsModule.BarChart,
+        Bar: rechartsModule.Bar,
+        PieChart: rechartsModule.PieChart,
+        Pie: rechartsModule.Pie,
+        Cell: rechartsModule.Cell,
+        AreaChart: rechartsModule.AreaChart,
+        Area: rechartsModule.Area
       };
     } catch (error) {
       console.warn('Recharts not available:', error);
@@ -147,8 +154,8 @@ export const stateLibraries = {
   
   async zustand() {
     try {
-      const zustand = await import('zustand');
-      return { create: zustand.create };
+      const zustandModule = await import('zustand') as any;
+      return { create: zustandModule.create };
     } catch (error) {
       console.warn('Zustand not available:', error);
       return {};
@@ -160,17 +167,17 @@ export const stateLibraries = {
 export const utilityLibraries = {
   async lodash() {
     try {
-      const lodash = await import('lodash-es');
+      const lodashModule = await import('lodash-es') as any;
       return {
-        debounce: lodash.debounce,
-        throttle: lodash.throttle,
-        groupBy: lodash.groupBy,
-        sortBy: lodash.sortBy,
-        uniqBy: lodash.uniqBy,
-        cloneDeep: lodash.cloneDeep,
-        merge: lodash.merge,
-        pick: lodash.pick,
-        omit: lodash.omit
+        debounce: lodashModule.debounce,
+        throttle: lodashModule.throttle,
+        groupBy: lodashModule.groupBy,
+        sortBy: lodashModule.sortBy,
+        uniqBy: lodashModule.uniqBy,
+        cloneDeep: lodashModule.cloneDeep,
+        merge: lodashModule.merge,
+        pick: lodashModule.pick,
+        omit: lodashModule.omit
       };
     } catch (error) {
       console.warn('Lodash not available:', error);
@@ -180,8 +187,8 @@ export const utilityLibraries = {
   
   async uuid() {
     try {
-      const uuid = await import('uuid');
-      return { uuidv4: uuid.v4, uuidv1: uuid.v1 };
+      const uuidModule = await import('uuid') as any;
+      return { uuidv4: uuidModule.v4, uuidv1: uuidModule.v1 };
     } catch (error) {
       console.warn('UUID not available:', error);
       return {};
@@ -203,8 +210,9 @@ export const utilityLibraries = {
 export const musicLibraries = {
   async spotify() {
     try {
-      const { SpotifyApi } = await import('spotify-web-api-sdk');
-      return { SpotifyApi };
+      // Note: The package in package.json is '@spotify/web-api-ts-sdk'
+      const spotifyModule = await import('@spotify/web-api-ts-sdk') as any;
+      return { SpotifyApi: spotifyModule.SpotifyApi };
     } catch (error) {
       console.warn('Spotify SDK not available:', error);
       return { SpotifyApi: null };

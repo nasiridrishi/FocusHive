@@ -16,7 +16,7 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid: GridComponent,
+  Grid,
   Chip,
   Switch,
   FormControlLabel,
@@ -31,8 +31,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-// Type assertion for Grid component to work around TypeScript issues
-const GridComponent = Grid as any;
+const Grid = Grid as unknown;
 import {
   Refresh,
   ClearAll,
@@ -135,32 +134,32 @@ export const QueryCacheDemo: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Cache Statistics
           </Typography>
-          <GridComponent container spacing={2}>
-            <GridComponentComponent item xs={12} sm={3}>
+          <Grid container spacing={2}>
+            <Grid item>
               <Box display="flex" alignItems="center" gap={1}>
                 <Storage color="primary" />
                 <Typography variant="body2">
                   Queries: {cacheInfo.queryCount || 0}
                 </Typography>
               </Box>
-            </GridComponent>
-            <GridComponentComponent item xs={12} sm={3}>
+            </Grid>
+            <Grid item>
               <Box display="flex" alignItems="center" gap={1}>
                 <Speed color="secondary" />
                 <Typography variant="body2">
                   Mutations: {cacheInfo.mutationCount || 0}
                 </Typography>
               </Box>
-            </GridComponent>
-            <GridComponentComponent item xs={12} sm={3}>
+            </Grid>
+            <Grid item>
               <Box display="flex" alignItems="center" gap={1}>
                 <NetworkCheck color="success" />
                 <Typography variant="body2">
                   Cache Size: ~{Math.round((cacheInfo.cacheSize || 0) / 1024)} KB
                 </Typography>
               </Box>
-            </GridComponent>
-            <GridComponentComponent item xs={12} sm={3}>
+            </Grid>
+            <Grid item>
               <FormControlLabel
                 control={
                   <Switch
@@ -170,8 +169,8 @@ export const QueryCacheDemo: React.FC = () => {
                 }
                 label="Real-time Polling"
               />
-            </GridComponent>
-          </GridComponent>
+            </Grid>
+          </Grid>
           
           <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Button
@@ -223,8 +222,8 @@ export const QueryCacheDemo: React.FC = () => {
               Demonstrates optimistic updates and automatic token refresh.
             </Typography>
             
-            <GridComponentComponent container spacing={2}>
-              <GridComponentComponentComponent item xs={12} md={6}>
+            <Grid container spacing={2}>
+              <Grid item>
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
                     Current State
@@ -261,8 +260,8 @@ export const QueryCacheDemo: React.FC = () => {
                     </ListItem>
                   </List>
                 </Box>
-              </GridComponent>
-              <GridComponentComponentComponent item xs={12} md={6}>
+              </Grid>
+              <Grid item>
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
                     Actions
@@ -293,8 +292,8 @@ export const QueryCacheDemo: React.FC = () => {
                     )}
                   </Box>
                 </Box>
-              </GridComponent>
-            </GridComponent>
+              </Grid>
+            </Grid>
           </CardContent>
         </Card>
       </TabPanel>
@@ -310,8 +309,8 @@ export const QueryCacheDemo: React.FC = () => {
               Shows background refetching and infinite scroll caching.
             </Typography>
             
-            <GridComponentComponent container spacing={2}>
-              <GridComponentComponentComponent item xs={12} md={6}>
+            <Grid container spacing={2}>
+              <Grid item>
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
                     Cache Status
@@ -346,8 +345,8 @@ export const QueryCacheDemo: React.FC = () => {
                     </ListItem>
                   </List>
                 </Box>
-              </GridComponent>
-              <GridComponentComponentComponent item xs={12} md={6}>
+              </Grid>
+              <Grid item>
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
                     Actions
@@ -376,8 +375,8 @@ export const QueryCacheDemo: React.FC = () => {
                     </Button>
                   </Box>
                 </Box>
-              </GridComponent>
-            </GridComponent>
+              </Grid>
+            </Grid>
           </CardContent>
         </Card>
       </TabPanel>
@@ -393,8 +392,8 @@ export const QueryCacheDemo: React.FC = () => {
               Demonstrates high-frequency updates and background synchronization.
             </Typography>
             
-            <GridComponentComponent container spacing={2}>
-              <GridComponentComponentComponent item xs={12} md={6}>
+            <Grid container spacing={2}>
+              <Grid item>
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
                     Presence Status
@@ -438,8 +437,8 @@ export const QueryCacheDemo: React.FC = () => {
                     </ListItem>
                   </List>
                 </Box>
-              </GridComponent>
-              <GridComponentComponentComponent item xs={12} md={6}>
+              </Grid>
+              <Grid item>
                 <Box>
                   <Typography variant="subtitle1" gutterBottom>
                     Real-time Controls
@@ -470,8 +469,8 @@ export const QueryCacheDemo: React.FC = () => {
                     />
                   </Box>
                 </Box>
-              </GridComponent>
-            </GridComponent>
+              </Grid>
+            </Grid>
             
             {presence.isFetching && (
               <Box sx={{ mt: 2 }}>
@@ -499,8 +498,8 @@ export const QueryCacheDemo: React.FC = () => {
               Performance metrics are collected in development mode for debugging purposes.
             </Alert>
             
-            <GridComponentComponent container spacing={2}>
-              <GridComponentComponentComponent item xs={12} md={6}>
+            <Grid container spacing={2}>
+              <Grid item>
                 <Typography variant="subtitle1" gutterBottom>
                   Cache Metrics
                 </Typography>
@@ -533,8 +532,8 @@ export const QueryCacheDemo: React.FC = () => {
                     </ListItemSecondaryAction>
                   </ListItem>
                 </List>
-              </GridComponent>
-              <GridComponentComponentComponent item xs={12} md={6}>
+              </Grid>
+              <Grid item>
                 <Typography variant="subtitle1" gutterBottom>
                   Optimization Tools
                 </Typography>
@@ -561,8 +560,8 @@ export const QueryCacheDemo: React.FC = () => {
                     Sync Offline Data
                   </Button>
                 </Box>
-              </GridComponent>
-            </GridComponent>
+              </Grid>
+            </Grid>
           </CardContent>
         </Card>
       </TabPanel>

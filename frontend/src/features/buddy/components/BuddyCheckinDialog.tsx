@@ -19,11 +19,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  
   Grid,
 } from '@mui/material'
 
-// @ts-expect-error - Grid type definitions issue in MUI v5
-const GridComponent = Grid as unknown
 import {
   Send as SendIcon,
   Close as CloseIcon,
@@ -205,9 +204,9 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
             </Alert>
           )}
 
-          <GridComponent container spacing={3}>
+          <Grid container spacing={3}>
             {/* Partner Info Card */}
-            <GridComponent item xs={12}>
+            <Grid item>
               <Card variant="outlined" sx={{ mb: 2 }}>
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2}>
@@ -229,10 +228,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   </Box>
                 </CardContent>
               </Card>
-            </GridComponent>
+            </Grid>
 
             {/* Mood Rating */}
-            <GridComponent item xs={12} md={6}>
+            <Grid item>
               <Box>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
                   <MoodIcon color="primary" />
@@ -251,10 +250,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   {getMoodLabel(formData.moodRating)}
                 </Typography>
               </Box>
-            </GridComponent>
+            </Grid>
 
             {/* Progress Rating */}
-            <GridComponent item xs={12} md={6}>
+            <Grid item>
               <Box>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
                   <ProgressIcon color="primary" />
@@ -270,10 +269,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   {getProgressLabel(formData.progressRating)}
                 </Typography>
               </Box>
-            </GridComponent>
+            </Grid>
 
             {/* Main Check-in Message */}
-            <GridComponent item xs={12}>
+            <Grid item>
               <TextField
                 label="Check-in Message"
                 multiline
@@ -285,10 +284,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                 fullWidth
                 helperText="Let your buddy know how you're doing and what's on your mind"
               />
-            </GridComponent>
+            </Grid>
 
             {/* Current Focus */}
-            <GridComponent item xs={12} md={6}>
+            <Grid item>
               <FormControl fullWidth>
                 <InputLabel>Current Focus Area</InputLabel>
                 <Select
@@ -306,10 +305,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   ))}
                 </Select>
               </FormControl>
-            </GridComponent>
+            </Grid>
 
             {/* Wins Section */}
-            <GridComponent item xs={12} md={6}>
+            <Grid item>
               <TextField
                 label="Recent Wins"
                 multiline
@@ -323,10 +322,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                 }}
                 helperText="Celebrate your progress, no matter how small!"
               />
-            </GridComponent>
+            </Grid>
 
             {/* Challenges Section */}
-            <GridComponent item xs={12}>
+            <Grid item>
               <TextField
                 label="Current Challenges"
                 multiline
@@ -340,8 +339,8 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                 }}
                 helperText="Share any obstacles or areas where you're struggling"
               />
-            </GridComponent>
-          </GridComponent>
+            </Grid>
+          </Grid>
         </DialogContent>
 
         <DialogActions sx={{ p: 3, gap: 1 }}>

@@ -308,7 +308,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
   // Performance monitoring and cleanup
   useEffect(() => {
     const interval = setInterval(() => {
-      const metrics = performanceMetricsRef.current
+      const _metrics = performanceMetricsRef.current
       if (process.env.NODE_ENV === 'development') {
         // WebSocket performance metrics tracked internally
       }

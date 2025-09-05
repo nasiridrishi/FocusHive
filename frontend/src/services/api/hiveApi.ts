@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import { AxiosInstance, AxiosError } from 'axios';
 import { apiClient } from './httpInterceptors';
 import { API_ENDPOINTS, buildEndpoint } from './index';
 

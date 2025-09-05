@@ -19,6 +19,8 @@ import {
   CardActions,
   Grid
 } from '@mui/material'
+
+// Grid component type workaround
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -260,7 +262,7 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
       ) : (
         <Grid container spacing={2}>
           {goals.map((goal) => (
-            <Grid item xs={12} md={6} key={goal.id}>
+            <Grid item key={goal.id}>
               <Card
                 sx={{
                   border: isOverdue(goal) ? '1px solid' : 'none',
@@ -340,7 +342,7 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
       )}
 
       {/* Goal Form Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth>
         <DialogTitle>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">

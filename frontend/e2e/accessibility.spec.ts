@@ -192,7 +192,7 @@ test.describe('Accessibility Tests', () => {
     await page.goto('/');
 
     // Navigate the entire page using only keyboard
-    let previousUrl = page.url();
+    const previousUrl = page.url();
     
     // Tab through the page and try to interact with elements
     for (let i = 0; i < 20; i++) {

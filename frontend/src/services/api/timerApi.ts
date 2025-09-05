@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import { AxiosInstance, AxiosError } from 'axios';
 import { apiClient } from './httpInterceptors';
 import { API_ENDPOINTS, buildEndpoint } from './index';
 
@@ -156,7 +156,7 @@ class TimerApiService {
     totalPages: number;
   }> {
     try {
-      const params: any = { page, size };
+      const params: unknown = { page, size };
       if (dateRange) {
         params.startDate = dateRange.start;
         params.endDate = dateRange.end;

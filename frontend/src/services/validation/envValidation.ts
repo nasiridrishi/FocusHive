@@ -54,7 +54,7 @@ interface EnvValidationConfig {
   required: boolean;
   type: 'string' | 'number' | 'boolean' | 'url';
   defaultValue?: string | number | boolean;
-  validator?: (value: any) => boolean;
+  validator?: (value: unknown) => boolean;
   description: string;
 }
 
@@ -194,7 +194,7 @@ const ENV_VALIDATION_RULES: EnvValidationConfig[] = [
 function validateEnvironmentVariable(
   config: EnvValidationConfig,
   rawValue: string | undefined
-): { value: any; error?: EnvValidationError } {
+): { value: unknown; error?: EnvValidationError } {
   const { variable, required, type, defaultValue, validator, description } = config;
 
   // Check if required variable is missing
@@ -219,7 +219,7 @@ function validateEnvironmentVariable(
     return { value: undefined };
   }
 
-  let convertedValue: any = rawValue;
+  let convertedValue: unknown = rawValue;
 
   // Type conversion
   try {
@@ -292,7 +292,7 @@ export function validateEnvironment(): {
     }
 
     if (result.value !== undefined) {
-      (validatedEnv as any)[config.variable] = result.value;
+      (validatedEnv as unknown)[config.variable] = result.value;
     }
   }
 

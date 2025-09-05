@@ -189,7 +189,7 @@ export const AuthIntegrationSteps = {
    * Step 1: Wrap your app with AuthProvider
    * Place this at the root level, after ThemeProvider but before Router
    */
-  step1_WrapWithAuthProvider: `
+  step1WrapWithAuthProvider: `
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
@@ -203,7 +203,7 @@ export const AuthIntegrationSteps = {
   /**
    * Step 2: Use authentication hooks in components
    */
-  step2_UseAuthHooks: `
+  step2UseAuthHooks: `
     import { useAuth } from '@features/auth';
     
     function MyComponent() {
@@ -224,7 +224,7 @@ export const AuthIntegrationSteps = {
   /**
    * Step 3: Protect routes with ProtectedRoute
    */
-  step3_ProtectRoutes: `
+  step3ProtectRoutes: `
     import { ProtectedRoute } from '@features/auth';
     
     <Routes>
@@ -250,7 +250,7 @@ export const AuthIntegrationSteps = {
    * - Request/response interceptors
    * - Error handling
    */
-  step4_ApiConfiguration: `
+  step4ApiConfiguration: `
     // Already configured in authApi.ts and httpInterceptors.ts
     // No additional setup required
     

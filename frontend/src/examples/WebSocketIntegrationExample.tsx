@@ -38,7 +38,7 @@ export const WebSocketIntegrationExample: React.FC<WebSocketIntegrationExamplePr
       console.log('WebSocket connected!');
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
-        type: 'INFO' as any,
+        type: 'INFO',
         event: 'connection',
         payload: 'Connected to server',
         timestamp: new Date().toISOString()
@@ -48,7 +48,7 @@ export const WebSocketIntegrationExample: React.FC<WebSocketIntegrationExamplePr
       console.log('WebSocket disconnected!');
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
-        type: 'WARNING' as any,
+        type: 'WARNING',
         event: 'disconnection', 
         payload: 'Disconnected from server',
         timestamp: new Date().toISOString()
@@ -83,7 +83,7 @@ export const WebSocketIntegrationExample: React.FC<WebSocketIntegrationExamplePr
 
   const updatePresence = () => {
     if (webSocket.isConnected) {
-      webSocket.updatePresence('ONLINE' as any);
+      webSocket.updatePresence('ONLINE');
     }
   };
 

@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react'
 import { Box, Skeleton, Typography } from '@mui/material'
-import { ComponentLoadingFallback } from '@shared/components/loading'
+import { ComponentLoadingFallback as _ComponentLoadingFallback } from '@shared/components/loading'
 
 // Chart loading fallback component
 const ChartLoadingFallback = ({ 
@@ -86,7 +86,7 @@ export const LineChartWrapper = ({
   fallbackComponent,
   children,
   ...props 
-}: LazyChartWrapperProps & any) => (
+}: LazyChartWrapperProps & unknown) => (
   <Suspense fallback={
     showFallback ? (
       fallbackComponent ? (
@@ -110,7 +110,7 @@ export const BarChartWrapper = ({
   fallbackComponent,
   children,
   ...props 
-}: LazyChartWrapperProps & any) => (
+}: LazyChartWrapperProps & unknown) => (
   <Suspense fallback={
     showFallback ? (
       fallbackComponent ? (
@@ -134,7 +134,7 @@ export const PieChartWrapper = ({
   fallbackComponent,
   children,
   ...props 
-}: LazyChartWrapperProps & any) => (
+}: LazyChartWrapperProps & unknown) => (
   <Suspense fallback={
     showFallback ? (
       fallbackComponent ? (
@@ -158,7 +158,7 @@ export const ScatterChartWrapper = ({
   fallbackComponent,
   children,
   ...props 
-}: LazyChartWrapperProps & any) => (
+}: LazyChartWrapperProps & unknown) => (
   <Suspense fallback={
     showFallback ? (
       fallbackComponent ? (
@@ -181,7 +181,7 @@ export const GaugeWrapper = ({
   showFallback = true,
   fallbackComponent,
   ...props 
-}: LazyChartWrapperProps & any) => (
+}: LazyChartWrapperProps & unknown) => (
   <Suspense fallback={
     showFallback ? (
       fallbackComponent ? (
@@ -202,7 +202,7 @@ export const SparkLineChartWrapper = ({
   showFallback = false, // Sparklines are small, less intrusive without loading
   fallbackComponent,
   ...props 
-}: LazyChartWrapperProps & any) => (
+}: LazyChartWrapperProps & unknown) => (
   <Suspense fallback={
     showFallback ? (
       fallbackComponent ? (

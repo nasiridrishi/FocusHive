@@ -16,13 +16,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Grid,
   Skeleton,
   Fab,
   Tooltip,
   Badge,
   alpha,
   useTheme,
+  Grid,
 } from '@mui/material'
 import {
   Search,
@@ -247,7 +247,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
         {/* Grid Skeleton */}
         <Grid container spacing={3}>
           {Array.from({ length: 6 }).map((_, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
               <Card>
                 <Skeleton variant="rectangular" height={140} />
                 <CardContent>
@@ -356,7 +356,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
           {/* Playlists Grid */}
           <Grid container spacing={3}>
             {filteredPlaylists.map((playlist) => (
-              <Grid item xs={12} sm={6} md={4} key={playlist.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={playlist.id}>
                 <Card
                   sx={{
                     cursor: 'pointer',
@@ -604,7 +604,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
       <Dialog
         open={createDialogOpen}
         onClose={handleCreateDialogClose}
-        maxWidth="sm"
+       
         fullWidth
       >
         <DialogTitle>Create New Playlist</DialogTitle>

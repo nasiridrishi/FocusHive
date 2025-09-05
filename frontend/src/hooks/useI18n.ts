@@ -40,7 +40,7 @@ export function useTranslation<T extends Namespace = 'common'>(
   }), [i18n])
 
   return {
-    t: t as any, // Type assertion needed due to i18next's complex typing
+    t: t as unknown, // Type assertion needed due to i18next's complex typing
     i18n: enhancedI18n,
     ready,
   }
@@ -143,15 +143,11 @@ export function useFormatting(): UseFormattingResult {
 export function useLanguageSwitcher() {
   const { i18n } = useI18nextTranslation()
 
-  const currentLanguage = useMemo(() => getCurrentLanguage(), [i18n.language])
+  const currentLanguage = useMemo(() => getCurrentLanguage(), [])
   
   const switchLanguage = useCallback(async (language: SupportedLocale) => {
-    try {
-      await changeLanguage(language)
-    } catch (error) {
-      // Language switch failed - error will be thrown to caller
-      throw error
-    }
+    // Language switch - let errors bubble up to caller
+    await changeLanguage(language)
   }, [])
 
   const isLanguageLoading = useMemo(() => !i18n.isInitialized, [i18n.isInitialized])
@@ -177,7 +173,7 @@ export function useTranslationWithValues<T extends Namespace = 'common'>(
     values?: InterpolationValues,
     options?: { count?: number; context?: string }
   ) => {
-    return t(key, { ...values, ...options } as any)
+    return t(key, { ...values, ...options } as unknown)
   }, [t])
 
   return { t: translate }
@@ -196,7 +192,7 @@ export function usePluralTranslation<T extends Namespace = 'common'>(
     count: number,
     values?: InterpolationValues
   ) => {
-    return t(key, { count, ...values } as any)
+    return t(key, { count, ...values } as unknown)
   }, [t])
 
   return { translatePlural }
@@ -339,7 +335,7 @@ export function useErrorTranslation() {
     errorType: string,
     values?: InterpolationValues
   ): string => {
-    const key = `${errorType}` as any
+    const key = `${errorType}` as unknown
     return tValidation(key, values)
   }, [tValidation])
 

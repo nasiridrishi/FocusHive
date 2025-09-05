@@ -5,7 +5,7 @@
  * and accessibility features in React components.
  */
 
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+// import { screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { calculateContrastRatio } from '../utils/colorContrast';
 import { WCAG_CONTRAST_RATIOS, TOUCH_TARGETS } from '../constants/wcag';
@@ -348,7 +348,7 @@ export class KeyboardTester {
     user: ReturnType<typeof userEvent.setup>,
     expectedHandler?: () => void
   ): Promise<AccessibilityTestResult> {
-    const initialFocus = document.activeElement;
+    const _initialFocus = document.activeElement;
     
     await user.keyboard('{Escape}');
     

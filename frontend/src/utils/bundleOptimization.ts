@@ -9,8 +9,8 @@ import { preloadCriticalRoutes, routePreloaders } from '@app/routes/LazyRoutes'
 import { preloadCommonIcons } from '@shared/components/dynamic-icon'
 import { preloadChartLibrary } from '@shared/components/lazy-charts'
 import { preloadDatePickers } from '@shared/components/lazy-date-pickers'
-import { preloadHeavyFeatures, featurePreloaders } from '@shared/components/lazy-features'
-import { libraryPreloader, smartPreloader } from '@shared/utils/dynamicImports'
+import { preloadHeavyFeatures as _preloadHeavyFeatures, featurePreloaders as _featurePreloaders } from '@shared/components/lazy-features'
+import { libraryPreloader as _libraryPreloader, smartPreloader as _smartPreloader } from '@shared/utils/dynamicImports'
 
 export interface PreloadOptions {
   /**
@@ -134,7 +134,7 @@ const analytics = BundleAnalyticsTracker.getInstance()
 export class FeaturePreloader {
   private preloadedFeatures = new Set<string>()
   private userInteractions: string[] = []
-  private preloadQueue: Array<{ feature: string; priority: number; loader: () => Promise<any> }> = []
+  private preloadQueue: Array<{ feature: string; priority: number; loader: () => Promise<unknown> }> = []
 
   /**
    * Initialize the preloader with user-defined options
@@ -189,7 +189,7 @@ export class FeaturePreloader {
   /**
    * Queue a feature for preloading
    */
-  queuePreload(feature: string, priority: number, loader: () => Promise<any>) {
+  queuePreload(feature: string, priority: number, loader: () => Promise<unknown>) {
     if (this.preloadedFeatures.has(feature)) {
       return
     }
@@ -276,7 +276,7 @@ export class FeaturePreloader {
   private startAdaptivePreloading() {
     // Check connection quality
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as unknown).connection
       if (connection) {
         // Only preload on good connections
         if (connection.effectiveType === '4g' && !connection.saveData) {
@@ -294,7 +294,7 @@ export class FeaturePreloader {
 
     // Check device memory (if available)
     if ('deviceMemory' in navigator) {
-      const memory = (navigator as any).deviceMemory
+      const memory = (navigator as unknown).deviceMemory
       if (memory >= 4) { // 4GB+ devices
         // Preload more aggressively on high-memory devices
         this.queuePreload('heavy-features', 1, () => {
@@ -439,5 +439,5 @@ export const devUtils = {
 
 // Make dev utils available globally in development
 if (import.meta.env.DEV) {
-  (window as any).bundleDevUtils = devUtils
+  (window as unknown).bundleDevUtils = devUtils
 }

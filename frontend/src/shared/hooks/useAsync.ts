@@ -88,7 +88,7 @@ export interface UseAsyncReturn<T> extends AsyncState<T> {
  * }, [])
  * ```
  */
-export function useAsync<T, Args extends any[] = any[]>(
+export function useAsync<T, Args extends unknown[] = unknown[]>(
   asyncFunction: (...args: Args) => Promise<T>,
   options: UseAsyncOptions<T> = {}
 ): UseAsyncReturn<T> {
@@ -322,9 +322,9 @@ export function useAsyncData<T>(
  * )
  * ```
  */
-export function useAsyncSubmit<Args extends any[] = any[]>(
-  submitFunction: (...args: Args) => Promise<any>,
-  options: Omit<UseAsyncOptions<any>, 'immediate' | 'initialData'> = {}
+export function useAsyncSubmit<Args extends unknown[] = unknown[]>(
+  submitFunction: (...args: Args) => Promise<unknown>,
+  options: Omit<UseAsyncOptions<unknown>, 'immediate' | 'initialData'> = {}
 ) {
   const { isLoading, error, execute, reset } = useAsync(submitFunction, {
     immediate: false,

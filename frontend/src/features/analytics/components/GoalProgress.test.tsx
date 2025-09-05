@@ -32,7 +32,7 @@ vi.mock('./GoalProgress', () => {
   };
 
   return {
-    GoalProgress: ({ goals, layout, showMilestones, onGoalClick }: GoalProgressProps) => {
+    goalProgress: ({ goals, layout, showMilestones, onGoalClick }: GoalProgressProps) => {
       if (!goals || goals.length === 0) {
         return (
           <div>

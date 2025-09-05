@@ -12,7 +12,7 @@ vi.mock('framer-motion', () => ({
     div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
     span: ({ children, ...props }: React.ComponentProps<'span'>) => <span {...props}>{children}</span>,
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  animatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();

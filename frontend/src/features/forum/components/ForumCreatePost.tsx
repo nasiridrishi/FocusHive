@@ -17,12 +17,15 @@ import {
   Link,
   Switch,
   FormControlLabel,
-  Grid,
+  
   Card,
   CardContent,
   IconButton,
-  Divider
+  Divider,
+  Grid,
 } from '@mui/material'
+
+// Grid component type workaround
 import {
   Save as SaveIcon,
   Preview as PreviewIcon,
@@ -218,7 +221,7 @@ const ForumCreatePost: React.FC = () => {
 
   if (categoriesLoading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container sx={{ py: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
@@ -227,7 +230,7 @@ const ForumCreatePost: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container sx={{ py: 4 }}>
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link component={RouterLink} to="/forum" color="inherit">
@@ -282,7 +285,7 @@ const ForumCreatePost: React.FC = () => {
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           <Grid container spacing={3}>
             {/* Main Content */}
-            <Grid item xs={12} md={8}>
+            <Grid item>
               {!previewMode ? (
                 <Box display="flex" flexDirection="column" gap={3}>
                   {/* Title */}
@@ -401,7 +404,7 @@ const ForumCreatePost: React.FC = () => {
             </Grid>
 
             {/* Sidebar */}
-            <Grid item xs={12} md={4}>
+            <Grid item>
               <Box display="flex" flexDirection="column" gap={3}>
                 {/* Tags */}
                 <Card>

@@ -289,7 +289,7 @@ i18n
     saveMissing: import.meta.env.DEV,
     saveMissingTo: 'all',
     missingKeyHandler: import.meta.env.DEV 
-      ? (lng: string[], ns: string, key: string) => {
+      ? (_lng: string[], _ns: string, _key: string) => {
           // Missing translation logged only in development
         }
       : undefined,

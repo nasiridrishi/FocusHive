@@ -15,7 +15,6 @@ import type {
   Hive, 
   CreateHiveRequest, 
   UpdateHiveRequest,
-  HiveMember,
   HiveSearchFilters 
 } from '@shared/types/hive';
 
@@ -72,7 +71,7 @@ export const useHive = (hiveId: string, enabled = true) => {
     enabled: enabled && !!hiveId,
     staleTime: STALE_TIMES.STATIC_CONTENT,
     gcTime: CACHE_TIMES.LONG,
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: unknown) => {
       // Don't retry on 404 errors
       if (error?.response?.status === 404) return false;
       return failureCount < 2;
@@ -195,7 +194,7 @@ export const useCreateHive = () => {
 
       // Track hive creation
       if (typeof window !== 'undefined' && 'gtag' in window) {
-        // @ts-ignore
+        // @ts-expect-error - gtag is loaded by Google Analytics script
         window.gtag('event', 'create_hive', {
           hive_type: newHive.isPublic ? 'public' : 'private',
         });

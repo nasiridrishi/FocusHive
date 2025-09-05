@@ -11,7 +11,7 @@ vi.mock('framer-motion', () => ({
     div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
     span: ({ children, ...props }: React.ComponentProps<'span'>) => <span {...props}>{children}</span>,
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  animatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();
@@ -243,18 +243,18 @@ describe('PointsDisplay', () => {
     it('renders efficiently with same props', () => {
       const renderSpy = vi.fn();
       
-      const TestComponent = () => {
+      const ___TestComponent = () => {
         renderSpy();
         return <PointsDisplay points={mockPoints} />;
       };
       
-      const { rerender } = renderWithTheme(<TestComponent />);
+      const { rerender } = renderWithTheme(<__TestComponent />);
       
       // Initial render
       expect(renderSpy).toHaveBeenCalledTimes(1);
       
       // Re-render with same props
-      rerender(<TestComponent />);
+      rerender(<__TestComponent />);
       
       // React will re-render components, this is expected behavior
       expect(renderSpy).toHaveBeenCalledTimes(2);

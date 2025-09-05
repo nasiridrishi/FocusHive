@@ -355,7 +355,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       </Menu>
 
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} fullWidth>
         <DialogTitle>Edit Session</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
@@ -403,7 +403,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       </Dialog>
 
       {/* Cancel Dialog */}
-      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} fullWidth>
         <DialogTitle>Cancel Session</DialogTitle>
         <DialogContent>
           <TextField
@@ -431,7 +431,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       </Dialog>
 
       {/* Rating Dialog */}
-      <Dialog open={ratingDialogOpen} onClose={() => setRatingDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={ratingDialogOpen} onClose={() => setRatingDialogOpen(false)} fullWidth>
         <DialogTitle>Rate This Session</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>

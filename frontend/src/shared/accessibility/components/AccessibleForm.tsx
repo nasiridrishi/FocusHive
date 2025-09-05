@@ -10,11 +10,8 @@ import {
   TextField,
   TextFieldProps,
   FormControl,
-  FormControlProps,
   FormLabel,
-  FormLabelProps,
   FormHelperText,
-  FormHelperTextProps,
   InputLabel,
   Select,
   SelectProps,
@@ -22,21 +19,15 @@ import {
   Checkbox,
   CheckboxProps,
   Radio,
-  RadioProps,
   FormGroup,
   FormControlLabel,
   Switch,
   SwitchProps,
-  Autocomplete,
-  AutocompleteProps,
-  Chip,
   Box,
   Alert,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useFormAnnouncement } from '../hooks/useAnnouncement';
-import { useLiveRegion } from '../hooks/useLiveRegion';
-import type { AccessibleProps } from '../types/accessibility';
 
 // Enhanced TextField with accessibility features
 const StyledAccessibleTextField = styled(TextField)(({ theme }) => ({
@@ -268,7 +259,7 @@ export interface AccessibleSelectProps<T = unknown> extends Omit<SelectProps<T>,
   options: Array<{ value: T; label: string; disabled?: boolean }>;
 }
 
-export const AccessibleSelect = <T extends unknown>({
+export const AccessibleSelect = <T = string>({
   label,
   error = false,
   errorMessage,
@@ -517,7 +508,7 @@ export const AccessibleRadioGroup: React.FC<AccessibleRadioGroupProps> = ({
         row={row}
         sx={{ mt: 1 }}
       >
-        {options.map((option, index) => (
+        {options.map((option, _index) => (
           <FormControlLabel
             key={option.value}
             control={

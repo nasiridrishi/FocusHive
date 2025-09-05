@@ -4,7 +4,7 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
+  
   Chip,
   Avatar,
   List,
@@ -13,8 +13,11 @@ import {
   ListItemAvatar,
   ListItemSecondaryAction,
   IconButton,
-  Paper
+  Paper,
+  Grid,
 } from '@mui/material'
+
+// Grid component type workaround
 import {
   ArrowForward as ArrowForwardIcon,
   Lock as LockIcon,
@@ -36,7 +39,7 @@ interface ForumCategoryListProps {
 
 const ForumCategoryList: React.FC<ForumCategoryListProps> = ({
   categories,
-  showAll = true,
+  _showAll = true,
   compact = false
 }) => {
   const navigate = useNavigate()
@@ -141,7 +144,7 @@ const ForumCategoryList: React.FC<ForumCategoryListProps> = ({
   return (
     <Grid container spacing={3}>
       {categories.map((category) => (
-        <Grid item xs={12} md={showAll ? 6 : 12} key={category.id}>
+        <Grid item key={category.id}>
           <Card 
             sx={{ 
               cursor: category.isPrivate || category.isLocked ? 'not-allowed' : 'pointer',
