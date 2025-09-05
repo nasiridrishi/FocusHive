@@ -19,8 +19,11 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Grid,
 } from '@mui/material'
-import Grid from '@mui/material/Grid'
+
+// @ts-expect-error - Grid type definitions issue in MUI v5
+const GridComponent = Grid as unknown
 import {
   Send as SendIcon,
   Close as CloseIcon,
@@ -177,7 +180,7 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} fullWidth>
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box>
@@ -202,9 +205,9 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
             </Alert>
           )}
 
-          <Grid container spacing={3}>
+          <GridComponent container spacing={3}>
             {/* Partner Info Card */}
-            <Grid item xs={12}>
+            <GridComponent item xs={12}>
               <Card variant="outlined" sx={{ mb: 2 }}>
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={2}>
@@ -226,10 +229,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   </Box>
                 </CardContent>
               </Card>
-            </Grid>
+            </GridComponent>
 
             {/* Mood Rating */}
-            <Grid item xs={12} md={6}>
+            <GridComponent item xs={12} md={6}>
               <Box>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
                   <MoodIcon color="primary" />
@@ -248,10 +251,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   {getMoodLabel(formData.moodRating)}
                 </Typography>
               </Box>
-            </Grid>
+            </GridComponent>
 
             {/* Progress Rating */}
-            <Grid item xs={12} md={6}>
+            <GridComponent item xs={12} md={6}>
               <Box>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
                   <ProgressIcon color="primary" />
@@ -267,10 +270,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   {getProgressLabel(formData.progressRating)}
                 </Typography>
               </Box>
-            </Grid>
+            </GridComponent>
 
             {/* Main Check-in Message */}
-            <Grid item xs={12}>
+            <GridComponent item xs={12}>
               <TextField
                 label="Check-in Message"
                 multiline
@@ -282,10 +285,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                 fullWidth
                 helperText="Let your buddy know how you're doing and what's on your mind"
               />
-            </Grid>
+            </GridComponent>
 
             {/* Current Focus */}
-            <Grid item xs={12} md={6}>
+            <GridComponent item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>Current Focus Area</InputLabel>
                 <Select
@@ -303,10 +306,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                   ))}
                 </Select>
               </FormControl>
-            </Grid>
+            </GridComponent>
 
             {/* Wins Section */}
-            <Grid item xs={12} md={6}>
+            <GridComponent item xs={12} md={6}>
               <TextField
                 label="Recent Wins"
                 multiline
@@ -320,10 +323,10 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                 }}
                 helperText="Celebrate your progress, no matter how small!"
               />
-            </Grid>
+            </GridComponent>
 
             {/* Challenges Section */}
-            <Grid item xs={12}>
+            <GridComponent item xs={12}>
               <TextField
                 label="Current Challenges"
                 multiline
@@ -337,8 +340,8 @@ const BuddyCheckinDialog: React.FC<BuddyCheckinDialogProps> = ({
                 }}
                 helperText="Share any obstacles or areas where you're struggling"
               />
-            </Grid>
-          </Grid>
+            </GridComponent>
+          </GridComponent>
         </DialogContent>
 
         <DialogActions sx={{ p: 3, gap: 1 }}>
