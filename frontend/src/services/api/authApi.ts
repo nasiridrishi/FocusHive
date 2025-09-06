@@ -22,6 +22,7 @@ import {
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const IDENTITY_API_URL = import.meta.env.VITE_IDENTITY_API_URL || 'http://localhost:8081';
 
 // Token storage utility following security best practices
 class TokenStorage {
@@ -90,8 +91,8 @@ class TokenStorage {
 
 const tokenStorage = new TokenStorage();
 
-// Create axios instance for auth API
-const createAuthApiInstance = (): AxiosInstance => {
+// Create axios instance for backend API
+const createBackendApiInstance = (): AxiosInstance => {
   const instance = axios.create({
     baseURL: `${API_BASE_URL}/api`,
     timeout: 10000,
@@ -133,7 +134,7 @@ const createAuthApiInstance = (): AxiosInstance => {
             originalRequest.headers.Authorization = `Bearer ${newTokens.token}`;
             
             // Retry the original request
-            return instance(originalRequest);
+            return backendApi(originalRequest);
           }
         } catch (refreshError) {
           // Refresh failed, clear tokens and reject
@@ -150,7 +151,29 @@ const createAuthApiInstance = (): AxiosInstance => {
   return instance;
 };
 
-const authApi = createAuthApiInstance();
+const backendApi = createBackendApiInstance();
+
+// Create axios instance specifically for Identity Service auth endpoints
+const identityApi = axios.create({
+  baseURL: `${IDENTITY_API_URL}/api`,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
+});
+
+// Add token to Identity Service requests
+identityApi.interceptors.request.use(
+  (config) => {
+    const token = tokenStorage.getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Auth API methods
 export const authApiService = {
@@ -159,7 +182,7 @@ export const authApiService = {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await authApi.post<LoginResponse>('/demo/login', credentials);
+      const response = await identityApi.post<LoginResponse>('/v1/auth/login', credentials);
       const { user: _user, token, refreshToken } = response.data;
       
       // Store tokens securely
@@ -181,7 +204,14 @@ export const authApiService = {
    */
   async register(userData: RegisterRequest): Promise<RegisterResponse> {
     try {
-      const response = await authApi.post<RegisterResponse>('/v1/auth/register', userData);
+      // Add default persona settings to registration data
+      const registrationData = {
+        ...userData,
+        personaType: 'PERSONAL',
+        personaName: 'Personal'
+      };
+      
+      const response = await identityApi.post<RegisterResponse>('/v1/auth/register', registrationData);
       const { user: _user, token, refreshToken } = response.data;
       
       // Store tokens securely
@@ -203,7 +233,7 @@ export const authApiService = {
    */
   async logout(): Promise<void> {
     try {
-      await authApi.post('/v1/auth/logout');
+      await identityApi.post('/v1/auth/logout');
     } catch (error) {
       // Log error but don't throw - we want to clear local tokens regardless
       // Logout request failed - tokens cleared locally anyway
@@ -217,7 +247,7 @@ export const authApiService = {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await authApi.get<{ user: User }>('/v1/auth/me');
+      const response = await identityApi.get<{ user: User }>('/v1/auth/me');
       return response.data.user;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -233,7 +263,7 @@ export const authApiService = {
    */
   async updateProfile(userData: Partial<User>): Promise<User> {
     try {
-      const response = await authApi.put<{ user: User }>('/v1/auth/profile', userData);
+      const response = await identityApi.put<{ user: User }>('/v1/auth/profile', userData);
       return response.data.user;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -249,7 +279,7 @@ export const authApiService = {
    */
   async changePassword(passwordData: ChangePasswordRequest): Promise<void> {
     try {
-      await authApi.put('/v1/auth/change-password', passwordData);
+      await identityApi.put('/v1/auth/change-password', passwordData);
     } catch (error) {
       if (error instanceof AxiosError) {
         const message = error.response?.data?.message || 'Failed to change password';
@@ -264,7 +294,7 @@ export const authApiService = {
    */
   async requestPasswordReset(resetData: PasswordResetRequest): Promise<PasswordResetResponse> {
     try {
-      const response = await authApi.post<PasswordResetResponse>('/v1/auth/forgot-password', resetData);
+      const response = await identityApi.post<PasswordResetResponse>('/v1/auth/forgot-password', resetData);
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -320,7 +350,7 @@ async function refreshToken(): Promise<{ token: string; refreshToken: string } |
 
   try {
     const response = await axios.post<{ token: string; refreshToken: string }>(
-      `${API_BASE_URL}/api/v1/auth/refresh`,
+      `${IDENTITY_API_URL}/api/v1/auth/refresh`,
       { refreshToken: refreshTokenValue },
       {
         headers: { 'Content-Type': 'application/json' },

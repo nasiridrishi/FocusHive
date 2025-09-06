@@ -23,13 +23,17 @@ public class RegisterRequest {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
     
-    @NotBlank(message = "Display name is required")
-    @Size(max = 100, message = "Display name must not exceed 100 characters")
-    private String displayName;
+    @NotBlank(message = "First name is required")
+    @Size(max = 50, message = "First name must not exceed 50 characters")
+    private String firstName;
+    
+    @NotBlank(message = "Last name is required")
+    @Size(max = 50, message = "Last name must not exceed 50 characters")
+    private String lastName;
     
     // Optional: Initial persona type (defaults to PERSONAL if not provided)
     private String personaType = "PERSONAL";
     
-    // Optional: Initial persona name
+    // Optional: Initial persona name (defaults to username if not provided)
     private String personaName;
 }

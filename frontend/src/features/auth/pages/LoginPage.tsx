@@ -3,7 +3,7 @@ import { Box, Container } from '@mui/material'
 import { useNavigate, useLocation } from 'react-router-dom'
 import LoginForm from '../components/LoginForm'
 import { LoginRequest } from '@shared/types'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 export default function LoginPage() {
   const navigate = useNavigate()

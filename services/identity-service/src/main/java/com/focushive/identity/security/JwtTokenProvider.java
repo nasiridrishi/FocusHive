@@ -52,7 +52,7 @@ public class JwtTokenProvider {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId().toString());
         claims.put("email", user.getEmail());
-        claims.put("displayName", user.getDisplayName());
+        claims.put("displayName", user.getUsername()); // Username is the public display name
         claims.put("emailVerified", user.isEmailVerified());
         claims.put("personaId", activePersona.getId().toString());
         claims.put("personaName", activePersona.getName());
