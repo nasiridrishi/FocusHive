@@ -9,7 +9,7 @@ import { I18nProvider } from '@shared/components/i18n'
 import { createLightTheme } from '@shared/theme'
 import { AppLevelErrorBoundary, RouteLevelErrorBoundary } from '@shared/components/error-boundary'
 import EnvironmentProvider from '../providers/EnvironmentProvider'
-import { AuthProvider } from '../features/auth/contexts/AuthContext'
+import { AuthProvider } from '../features/auth/contexts'
 // Import i18n configuration
 import '../lib/i18n'
 import {
@@ -18,9 +18,9 @@ import {
   LazyRegisterPage,
   LazyDashboardPage,
   LazyDiscoverPage,
-  LazyGamificationDemo,
   LazyErrorBoundaryDemo
 } from './routes/LazyRoutes'
+import { LazyGamificationDemo } from '@shared/components/lazy-features'
 import { initializeBundleOptimization, featurePreloader } from '../utils/bundleOptimization'
 import { queryClient } from '../lib/queryClient'
 

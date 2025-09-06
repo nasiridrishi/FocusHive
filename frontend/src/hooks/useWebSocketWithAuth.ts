@@ -56,7 +56,7 @@ export function useWebSocketWithAuth(options: UseWebSocketWithAuthOptions = {}) 
       // Connect if we have a token but aren't connected
       webSocket.connect();
     }
-  }, [token, webSocket.isConnected, webSocket.connect, webSocket.reconnectWithNewToken, autoConnect]);
+  }, [token, webSocket, autoConnect]);
 
   return {
     ...webSocket,

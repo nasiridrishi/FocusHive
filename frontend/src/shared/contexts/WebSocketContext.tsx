@@ -131,7 +131,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       setReconnectCount(prev => prev + 1)
       connect()
     }, delay)
-  }, [reconnectCount, options.reconnectionDelay, options.reconnectionAttempts, clearReconnectTimeout])
+  }, [reconnectCount, options.reconnectionDelay, options.reconnectionAttempts, clearReconnectTimeout, connect])
   
   scheduleReconnectRef.current = scheduleReconnect
 

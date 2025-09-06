@@ -170,7 +170,7 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
       default:
         return getContextualRecommendations()
     }
-  }, [recommendationState.source, getContextualRecommendations, getPersonalizedRecommendations, getSimilarTracks, currentTrack])
+  }, [recommendationState, getContextualRecommendations, getPersonalizedRecommendations, getSimilarTracks, currentTrack])
 
   // Clear recommendations
   const clearRecommendations = useCallback(() => {
@@ -201,7 +201,7 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
       // Note: Genre filtering would require additional track metadata
       return true
     })
-  }, [recommendationState.recommendations])
+  }, [recommendationState])
 
   // Get recommendations for energy boost
   const getEnergyBoostRecommendations = useCallback(async () => {

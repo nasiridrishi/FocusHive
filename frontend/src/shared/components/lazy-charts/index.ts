@@ -10,9 +10,8 @@ export {
   PieChartWrapper,
   ScatterChartWrapper,
   GaugeWrapper,
-  SparkLineChartWrapper,
-  preloadChartLibrary,
-  chartBundleInfo
+  SparkLineChartWrapper
 } from './LazyCharts'
 
-export type { LazyChartWrapperProps } from './LazyCharts'
+export { preloadChartLibrary, chartBundleInfo } from './lazyChartUtils'
+export type { LazyChartWrapperProps } from './lazyChartUtils'

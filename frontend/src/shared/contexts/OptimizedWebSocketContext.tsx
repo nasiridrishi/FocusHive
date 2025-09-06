@@ -176,7 +176,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
     socketRef.current = socket
     socket.connect()
-  }, [url, mergedOptions.timeout, clearReconnectTimeout, startHeartbeat, processMessageQueue])
+  }, [url, mergedOptions.timeout, clearReconnectTimeout, startHeartbeat, processMessageQueue, clearHeartbeat])
 
   const scheduleReconnectRef = useRef<() => void>()
   

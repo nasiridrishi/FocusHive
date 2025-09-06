@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback, useRef, useEffect } from 'react'
+import React, { createContext, useReducer, useCallback, useRef, useEffect } from 'react'
 import { io, Socket } from 'socket.io-client'
 import {
   MusicState,
@@ -200,8 +200,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
           isPlaying: false, 
           isPaused: false 
         } })
-        // Auto-play next track
-        skipNext()
+        // Auto-play next track will be handled by a separate effect
       })
       
       audio.addEventListener('error', () => {
@@ -365,6 +364,13 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       play(previousTrack)
     }
   }, [state.queue, state.currentTrack, play])
+
+  // Auto-play next track when current track ends
+  useEffect(() => {
+    if (!state.playbackState.isPlaying && audioRef.current?.ended) {
+      skipNext()
+    }
+  }, [state.playbackState.isPlaying, skipNext])
 
   // Queue management
   const addToQueue = useCallback(async (track: Track, position?: number) => {
@@ -613,13 +619,9 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
   )
 }
 
-// Hook to use music context
-export const useMusic = (): MusicContextType => {
-  const context = useContext(MusicContext)
-  if (context === undefined) {
-    throw new Error('useMusic must be used within a MusicProvider')
-  }
-  return context
-}
+// Re-export hook from separate file for backward compatibility
+// Hook should be imported directly from '../hooks/useMusicContext' to avoid Fast Refresh warning
 
+// Export context and type for use in hooks file
 export default MusicContext
+export type { MusicContextType }

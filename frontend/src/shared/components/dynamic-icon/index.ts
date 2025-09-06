@@ -1,1 +1,3 @@
-export { default as DynamicIcon, preloadCommonIcons } from './DynamicIcon';
+export { default as DynamicIcon } from './DynamicIcon';
+export { preloadCommonIcons, useDynamicIcon } from './dynamicIconHooks';
+export type { DynamicIconProps } from './dynamicIconUtils';

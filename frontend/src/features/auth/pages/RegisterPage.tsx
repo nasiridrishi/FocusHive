@@ -26,7 +26,6 @@ export default function RegisterPage() {
     } catch (error) {
       // Error is already handled by the auth context
       // The error will be displayed via authState.error
-      console.error('Registration failed:', error)
     }
   }
 

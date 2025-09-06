@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, ComponentType } from 'react'
 import { SvgIcon, CircularProgress } from '@mui/material'
 import { SvgIconProps } from '@mui/material/SvgIcon'
+import type { DynamicIconProps } from './dynamicIconUtils'
 
 // Common icons that should be loaded immediately (frequently used)
 import HomeIcon from '@mui/icons-material/Home'
@@ -38,23 +39,7 @@ const IconLoadingFallback = ({ size = 24 }: { size?: number }) => (
   <CircularProgress size={size * 0.8} thickness={5} />
 )
 
-export interface DynamicIconProps extends SvgIconProps {
-  /**
-   * Name of the Material-UI icon (without the 'Icon' suffix)
-   * e.g., 'Add', 'Delete', 'Star', etc.
-   */
-  name: string
-  
-  /**
-   * Fallback icon to show while loading or if icon fails to load
-   */
-  fallback?: ComponentType<SvgIconProps>
-  
-  /**
-   * Show loading indicator while icon loads
-   */
-  showLoading?: boolean
-}
+// Interface moved to dynamicIconUtils.ts to avoid Fast Refresh warnings
 
 /**
  * Dynamically loads Material-UI icons to reduce bundle size.
@@ -110,33 +95,8 @@ export function DynamicIcon({
   )
 }
 
-// Preload commonly used icons after initial page load
-export const preloadCommonIcons = () => {
-  const commonIconNames = [
-    'Add', 'Delete', 'Edit', 'Save', 'Cancel',
-    'Favorite', 'Share', 'Search', 'FilterList',
-    'MoreVert', 'MoreHoriz', 'ArrowBack', 'ArrowForward',
-    'Send', 'Refresh', 'Download', 'Upload'
-  ]
+// Function moved to dynamicIconHooks.tsx to avoid Fast Refresh warnings
 
-  // Preload after a short delay to not block initial render
-  setTimeout(() => {
-    commonIconNames.forEach(iconName => {
-      import('@mui/icons-material').then(iconModule => {
-        const IconComponent = (iconModule as unknown)[`${iconName}Icon`]
-        if (IconComponent) {
-          iconCache.set(`${iconName}Icon`, Promise.resolve(IconComponent))
-        }
-      })
-    })
-  }, 2000)
-}
-
-// Hook for dynamic icon usage
-export function useDynamicIcon(name: string) {
-  return React.useMemo(() => ({ 
-    Icon: (props: SvgIconProps) => <DynamicIcon name={name} {...props} />
-  }), [name])
-}
+// Hook moved to dynamicIconHooks.tsx to avoid Fast Refresh warnings
 
 export default DynamicIcon

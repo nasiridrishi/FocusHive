@@ -1,6 +1,6 @@
 import { useContext } from 'react';
-import { AuthStateContext, AuthActionsContext } from '../contexts/AuthContext';
-import type { AuthState, AuthContextType } from '../types/auth';
+import { AuthStateContext, AuthActionsContext } from '../contexts/authContexts';
+import type { AuthState, AuthContextType } from '@shared/types/auth';
 
 // Custom hooks for consuming context with error checking
 export function useAuthState(): AuthState {

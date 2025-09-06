@@ -137,51 +137,8 @@ const RTLProvider: React.FC<RTLProviderProps> = ({ children }) => {
   return <>{children}</>
 }
 
-/**
- * Higher-order component for wrapping components with i18n support
- */
-export function withI18n<P extends object>(
-  Component: React.ComponentType<P>
-): React.ComponentType<P> {
-  const WrappedComponent = (props: P) => (
-    <I18nProvider>
-      <Component {...props} />
-    </I18nProvider>
-  )
+// HOC moved to i18nUtils.tsx to avoid Fast Refresh warnings
 
-  WrappedComponent.displayName = `withI18n(${Component.displayName || Component.name})`
-  
-  return WrappedComponent
-}
-
-/**
- * Hook to get i18n readiness status
- */
-export function useI18nReady() {
-  const [isReady, setIsReady] = useState(i18n.isInitialized)
-
-  useEffect(() => {
-    if (i18n.isInitialized) {
-      setIsReady(true)
-      return
-    }
-
-    const checkReady = () => {
-      if (i18n.isInitialized) {
-        setIsReady(true)
-      }
-    }
-
-    i18n.on('initialized', checkReady)
-    i18n.on('loaded', checkReady)
-
-    return () => {
-      i18n.off('initialized', checkReady)
-      i18n.off('loaded', checkReady)
-    }
-  }, [])
-
-  return isReady
-}
+// Hook moved to i18nUtils.tsx to avoid Fast Refresh warnings
 
 export default I18nProvider
