@@ -23,6 +23,7 @@ import { LoginRequest } from '@shared/types'
 import { LoadingButton } from '@shared/components/loading'
 import { loginSchema } from '@shared/validation/schemas'
 import { useTranslation } from '@shared/components/i18n'
+import ValidationSummary from '@shared/components/ValidationSummary'
 
 interface LoginFormProps {
   onSubmit: (credentials: LoginRequest) => Promise<void>
@@ -37,10 +38,11 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
   
   const {
     control,
-    handleSubmit
+    handleSubmit,
+    formState: { errors, isSubmitted }
   } = useForm<LoginRequest>({
     resolver: yupResolver(loginSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
       email: '',
@@ -112,8 +114,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
               id="email"
               label={t('login.email')}
               type="email"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
+              error={isSubmitted && !!fieldState.error}
               disabled={isLoading}
               InputProps={{
                 startAdornment: (
@@ -139,8 +140,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
               id="password"
               label={t('login.password')}
               type={showPassword ? 'text' : 'password'}
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
+              error={isSubmitted && !!fieldState.error}
               disabled={isLoading}
               InputProps={{
                 startAdornment: (
@@ -165,6 +165,10 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
             />
           )}
         />
+
+        {isSubmitted && Object.keys(errors).length > 0 && (
+          <ValidationSummary errors={errors} />
+        )}
 
         <LoadingButton
           type="submit"

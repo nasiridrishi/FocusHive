@@ -3,7 +3,7 @@ import { Box, Container } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import RegisterForm from '../components/RegisterForm'
 import { RegisterRequest } from '@shared/types'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 export default function RegisterPage() {
   const navigate = useNavigate()

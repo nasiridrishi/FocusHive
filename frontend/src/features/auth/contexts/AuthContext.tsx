@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useReducer, useEffect, ReactNode } from 'react';
 import {
   AuthState,
   AuthContextType,
@@ -124,36 +124,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 }
 
 // Create contexts for state and actions (performance optimization)
-const AuthStateContext = createContext<AuthState | null>(null);
-const AuthActionsContext = createContext<Omit<AuthContextType, 'authState'> | null>(null);
+export const AuthStateContext = createContext<AuthState | null>(null);
+export const AuthActionsContext = createContext<Omit<AuthContextType, 'authState'> | null>(null);
 
-// Custom hooks for consuming context with error checking
-export function useAuthState(): AuthState {
-  const context = useContext(AuthStateContext);
-  if (context === null) {
-    throw new Error('useAuthState must be used within an AuthProvider');
-  }
-  return context;
-}
 
-export function useAuthActions(): Omit<AuthContextType, 'authState'> {
-  const context = useContext(AuthActionsContext);
-  if (context === null) {
-    throw new Error('useAuthActions must be used within an AuthProvider');
-  }
-  return context;
-}
 
-// Combined auth hook for convenience
-export function useAuth(): AuthContextType {
-  const authState = useAuthState();
-  const authActions = useAuthActions();
-  
-  return {
-    authState,
-    ...authActions
-  };
-}
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -333,6 +308,4 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   );
 }
 
-// Export context for advanced use cases
-export { AuthStateContext, AuthActionsContext };
 export default AuthProvider;

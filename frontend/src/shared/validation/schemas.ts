@@ -5,7 +5,7 @@ const passwordStrengthRegex = {
   uppercase: /(?=.*[A-Z])/,
   lowercase: /(?=.*[a-z])/,
   number: /(?=.*\d)/,
-  special: /(?=.*[@$!%*?&])/,
+  special: /(?=.*[@$!%*?&#\-_+=<>.,;:'"()[\]{}|\\/~`^])/,
   minLength: /.{8,}/
 }
 
@@ -25,7 +25,7 @@ const passwordSchema = yup
   .matches(passwordStrengthRegex.uppercase, 'Password must contain at least one uppercase letter')
   .matches(passwordStrengthRegex.lowercase, 'Password must contain at least one lowercase letter')
   .matches(passwordStrengthRegex.number, 'Password must contain at least one number')
-  .matches(passwordStrengthRegex.special, 'Password must contain at least one special character (@$!%*?&)')
+  .matches(passwordStrengthRegex.special, 'Password must contain at least one special character')
 
 // Username validation schema
 const usernameSchema = yup
@@ -142,7 +142,7 @@ export const checkPasswordStrength = (password: string): {
   else feedback.push('Add numbers')
 
   if (passwordStrengthRegex.special.test(password)) score += 1
-  else feedback.push('Add special characters (@$!%*?&)')
+  else feedback.push('Add special characters')
 
   // Length bonus
   if (password.length >= 12) score += 1

@@ -312,11 +312,11 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
             .sub(user.getId().toString())
             .email(user.getEmail())
             .emailVerified(user.isEmailVerified())
-            .name(user.getDisplayName())
+            .name(user.getUsername()) // Username is the public display name
             .preferredUsername(user.getUsername())
-            .givenName(user.getDisplayName()) // Using displayName as givenName
-            .familyName("") // No separate family name field
-            .picture("") // No profile image field
+            .givenName(user.getFirstName()) // Private first name (subject to privacy settings)
+            .familyName(user.getLastName()) // Private last name (subject to privacy settings)
+            .picture("") // No profile image field yet
             .locale(user.getPreferredLanguage())
             .zoneinfo(user.getTimezone())
             .build();

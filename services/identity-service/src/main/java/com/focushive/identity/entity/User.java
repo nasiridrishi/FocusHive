@@ -38,8 +38,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
     
-    @Column(name = "display_name", nullable = false, length = 100)
-    private String displayName;
+    @Column(name = "first_name", nullable = false, length = 50)
+    private String firstName;
+    
+    @Column(name = "last_name", nullable = false, length = 50)
+    private String lastName;
     
     @Column(name = "email_verified", nullable = false)
     @Builder.Default

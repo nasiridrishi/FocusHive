@@ -27,6 +27,7 @@ import { RegisterRequest } from '@shared/types'
 import { LoadingButton } from '@shared/components/loading'
 import { registerSchema } from '@shared/validation/schemas'
 import PasswordStrengthIndicator from '@shared/components/PasswordStrengthIndicator'
+import ValidationSummary from '@shared/components/ValidationSummary'
 
 interface RegisterFormProps {
   onSubmit: (userData: RegisterRequest) => Promise<void>
@@ -48,10 +49,10 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
     control,
     handleSubmit,
     watch,
-    formState: { touchedFields }
+    formState: { errors, isSubmitted }
   } = useForm<RegisterFormData>({
     resolver: yupResolver(registerSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
       firstName: '',
@@ -137,8 +138,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
                 fullWidth
                 id="firstName"
                 label="First Name"
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
+                error={isSubmitted && !!fieldState.error}
                 disabled={isLoading}
                 InputProps={{
                   startAdornment: (
@@ -162,8 +162,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
                 fullWidth
                 id="lastName"
                 label="Last Name"
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
+                error={isSubmitted && !!fieldState.error}
                 disabled={isLoading}
                 InputProps={{
                   startAdornment: (
@@ -187,8 +186,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
               fullWidth
               id="username"
               label="Username"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
+              error={isSubmitted && !!fieldState.error}
               disabled={isLoading}
               sx={{ mt: 2 }}
               autoComplete="username"
@@ -206,8 +204,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
               id="email"
               label="Email Address"
               type="email"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
+              error={isSubmitted && !!fieldState.error}
               disabled={isLoading}
               InputProps={{
                 startAdornment: (
@@ -233,8 +230,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
                 id="password"
                 label="Password"
                 type={showPassword ? 'text' : 'password'}
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
+                error={isSubmitted && !!fieldState.error}
                 disabled={isLoading}
                 InputProps={{
                   startAdornment: (
@@ -258,7 +254,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
               />
               <PasswordStrengthIndicator 
                 password={password || ''} 
-                show={touchedFields.password && !!password}
+                show={!!password}
               />
             </Box>
           )}
@@ -274,8 +270,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
               id="confirmPassword"
               label="Confirm Password"
               type={showConfirmPassword ? 'text' : 'password'}
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
+              error={isSubmitted && !!fieldState.error}
               disabled={isLoading}
               InputProps={{
                 startAdornment: (
@@ -312,6 +307,12 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
                     {...field}
                     checked={field.value}
                     disabled={isLoading}
+                    sx={{
+                      color: isSubmitted && fieldState.error ? 'error.main' : undefined,
+                      '&.Mui-checked': {
+                        color: isSubmitted && fieldState.error ? 'error.main' : 'primary.main'
+                      }
+                    }}
                   />
                 }
                 label={
@@ -328,14 +329,13 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
                 }
                 sx={{ mt: 2, mb: 1 }}
               />
-              {fieldState.error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {fieldState.error.message}
-                </Alert>
-              )}
             </Box>
           )}
         />
+
+        {isSubmitted && Object.keys(errors).length > 0 && (
+          <ValidationSummary errors={errors} />
+        )}
 
         <LoadingButton
           type="submit"

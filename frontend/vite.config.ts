@@ -5,7 +5,11 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      fastRefresh: true,
+      // Include .tsx files for fast refresh
+      include: '**/*.{jsx,tsx}',
+    }),
   ],
   resolve: {
     alias: {
@@ -119,6 +123,15 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: true, // Listen on all addresses including LAN
+    hmr: {
+      overlay: true, // Show error overlay
+      port: 5173, // Use same port for HMR
+    },
+    watch: {
+      usePolling: true, // Use polling for file changes (better for some environments)
+      interval: 1000, // Check for changes every second
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

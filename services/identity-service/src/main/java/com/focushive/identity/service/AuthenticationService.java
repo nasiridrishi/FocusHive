@@ -66,7 +66,8 @@ public class AuthenticationService {
                 .email(request.getEmail())
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .displayName(request.getDisplayName())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .emailVerified(false)
                 .enabled(true)
                 .build();
@@ -80,7 +81,7 @@ public class AuthenticationService {
                 .type(Persona.PersonaType.valueOf(request.getPersonaType()))
                 .isDefault(true)
                 .isActive(true)
-                .displayName(request.getDisplayName())
+                .displayName(user.getUsername()) // Username is the public display name
                 .privacySettings(createDefaultPrivacySettings())
                 .build();
         
@@ -166,7 +167,7 @@ public class AuthenticationService {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .displayName(user.getDisplayName())
+                .displayName(user.getUsername()) // Username is the public display
                 .activePersona(buildPersonaInfo(activePersona))
                 .build();
     }
@@ -365,7 +366,7 @@ public class AuthenticationService {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .displayName(user.getDisplayName())
+                .displayName(user.getUsername()) // Username is the public display
                 .activePersona(buildPersonaInfo(activePersona))
                 .availablePersonas(personas.stream()
                         .map(this::buildPersonaInfo)
@@ -418,7 +419,7 @@ public class AuthenticationService {
                 .id(user.getId().toString())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .displayName(user.getDisplayName())
+                .displayName(user.getUsername()) // Username is the public display
                 .emailVerified(user.isEmailVerified())
                 .enabled(user.isEnabled())
                 .twoFactorEnabled(user.isTwoFactorEnabled())
