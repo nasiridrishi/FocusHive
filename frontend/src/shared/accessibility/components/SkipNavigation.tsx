@@ -299,49 +299,6 @@ export const AdvancedSkipNavigation: React.FC<{
   );
 };
 
-/**
- * Hook for managing skip navigation targets
- */
-export function useSkipNavigation() {
-  const [targets, setTargets] = React.useState<SkipLinkTarget[]>(DEFAULT_SKIP_TARGETS);
-
-  const addTarget = React.useCallback((target: SkipLinkTarget) => {
-    setTargets(prev => {
-      // Avoid duplicates
-      if (prev.some(t => t.id === target.id)) {
-        return prev;
-      }
-      return [...prev, target];
-    });
-  }, []);
-
-  const removeTarget = React.useCallback((targetId: string) => {
-    setTargets(prev => prev.filter(target => target.id !== targetId));
-  }, []);
-
-  const updateTarget = React.useCallback((targetId: string, updates: Partial<SkipLinkTarget>) => {
-    setTargets(prev => prev.map(target => 
-      target.id === targetId ? { ...target, ...updates } : target
-    ));
-  }, []);
-
-  const clearTargets = React.useCallback(() => {
-    setTargets([]);
-  }, []);
-
-  const resetTargets = React.useCallback(() => {
-    setTargets(DEFAULT_SKIP_TARGETS);
-  }, []);
-
-  return {
-    targets,
-    addTarget,
-    removeTarget,
-    updateTarget,
-    clearTargets,
-    resetTargets,
-    setTargets
-  };
-}
+// Hook should be imported directly from '../hooks/useSkipNavigation' to avoid Fast Refresh warning
 
 export default SkipNavigation;

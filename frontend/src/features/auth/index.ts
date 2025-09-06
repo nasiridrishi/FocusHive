@@ -1,10 +1,11 @@
 // Auth context exports
-export { 
-  AuthProvider, 
-  useAuth, 
-  useAuthState, 
-  useAuthActions 
-} from './contexts/AuthContext'
+export { AuthProvider } from './contexts/AuthContext'
+
+// Auth hooks exports (from separate file to avoid Fast Refresh warnings)
+export { useAuth, useAuthState, useAuthActions } from './hooks/useAuth'
+
+// Auth contexts exports (from separate file to avoid Fast Refresh warnings)
+export { AuthStateContext, AuthActionsContext } from './contexts/authContexts'
 
 // Auth components exports
 export { default as LoginForm } from './components/LoginForm'

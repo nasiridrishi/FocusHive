@@ -73,7 +73,7 @@ export const useServiceWorkerRegistration = (
       error: null,
     }));
     options.onRegistered?.(registration);
-  }, [options.onRegistered]);
+  }, [options]);
 
   const onRegisteredSWCallback = useCallback((swUrl: string, registration?: ServiceWorkerRegistration) => {
     setState(prev => ({
@@ -84,7 +84,7 @@ export const useServiceWorkerRegistration = (
       error: null,
     }));
     options.onRegistered?.(registration);
-  }, [options.onRegistered]);
+  }, [options]);
 
   const onNeedRefreshCallback = useCallback(() => {
     setState(prev => ({
@@ -92,7 +92,7 @@ export const useServiceWorkerRegistration = (
       needsRefresh: true,
     }));
     options.onNeedRefresh?.();
-  }, [options.onNeedRefresh]);
+  }, [options]);
 
   const onOfflineReadyCallback = useCallback(() => {
     setState(prev => ({
@@ -100,7 +100,7 @@ export const useServiceWorkerRegistration = (
       offlineReady: true,
     }));
     options.onOfflineReady?.();
-  }, [options.onOfflineReady]);
+  }, [options]);
 
   const onRegisterErrorCallback = useCallback((error: unknown) => {
     setState(prev => ({
@@ -110,7 +110,7 @@ export const useServiceWorkerRegistration = (
       error: error instanceof Error ? error : new Error(String(error)),
     }));
     options.onRegisterError?.(error);
-  }, [options.onRegisterError]);
+  }, [options]);
 
   // Memoize the register options to prevent infinite re-renders
   const registerOptions = useMemo(() => ({

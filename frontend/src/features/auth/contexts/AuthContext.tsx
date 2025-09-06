@@ -1,7 +1,6 @@
-import React, { createContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { useReducer, useEffect, ReactNode } from 'react';
 import {
   AuthState,
-  AuthContextType,
   LoginRequest,
   RegisterRequest,
   User,
@@ -123,9 +122,8 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-// Create contexts for state and actions (performance optimization)
-export const AuthStateContext = createContext<AuthState | null>(null);
-export const AuthActionsContext = createContext<Omit<AuthContextType, 'authState'> | null>(null);
+// Import contexts from separate file to avoid Fast Refresh warnings
+import { AuthStateContext, AuthActionsContext } from './authContexts';
 
 
 
@@ -307,5 +305,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     </FeatureLevelErrorBoundary>
   );
 }
+
+// Hooks are now exported from useAuth.ts to avoid Fast Refresh warnings
 
 export default AuthProvider;

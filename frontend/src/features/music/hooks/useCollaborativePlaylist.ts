@@ -371,7 +371,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
       totalDuration,
       averageVotes,
       topContributors: Object.entries(contributorCounts)
-        .sort(([,a], [,b]) => b - a)
+        .sort(([,a], [,b]) => (b as number) - (a as number))
         .slice(0, 3)
         .map(([userId, count]) => ({
           userId,

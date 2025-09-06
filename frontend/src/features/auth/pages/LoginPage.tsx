@@ -28,7 +28,6 @@ export default function LoginPage() {
     } catch (error) {
       // Error is already handled by the auth context
       // The error will be displayed via authState.error
-      console.error('Login failed:', error)
     }
   }
 

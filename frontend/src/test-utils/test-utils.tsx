@@ -1,14 +1,9 @@
 import React from 'react';
 import { render, RenderOptions, RenderResult, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as _BrowserRouter, MemoryRouter } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { I18nextProvider } from 'react-i18next';
-import i18n from '@lib/i18n';
-import theme from '@shared/theme/theme';
-import { AuthProvider } from '@features/auth/contexts/AuthContext';
 import type { User } from '@shared/types/auth';
+
+// Import components from separate file to avoid Fast Refresh warnings
+import { AllTheProviders } from './testProviders';
 
 // Custom render options
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
@@ -22,139 +17,6 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   withQueryClient?: boolean;
 }
 
-// Mock user for testing
-export const mockUser: User = {
-  id: '1',
-  username: 'testuser',
-  email: 'test@example.com',
-  firstName: 'Test',
-  lastName: 'User',
-  name: 'Test User',
-  avatar: undefined,
-  isEmailVerified: true,
-  createdAt: '2024-01-01T00:00:00Z',
-  updatedAt: '2024-01-15T00:00:00Z'
-};
-
-// Create a test query client with disabled retries and logging
-export const createTestQueryClient = () => {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        staleTime: 0,
-      },
-      mutations: {
-        retry: false,
-      },
-    },
-  });
-};
-
-// Mock AuthContext for testing
-const MockAuthProvider: React.FC<{ 
-  children: React.ReactNode; 
-  user?: User | null 
-}> = ({ children, user = null }) => {
-  const _mockAuthValue = {
-    user,
-    isAuthenticated: !!user,
-    loading: false,
-    error: null,
-    login: jest.fn(),
-    register: jest.fn(),
-    logout: jest.fn(),
-    refreshToken: jest.fn(),
-    clearError: jest.fn(),
-  };
-
-  // For testing, we'll just use the regular AuthProvider
-  // In a real test scenario, you might want to mock the context value
-  return (
-    <AuthProvider>
-      {children}
-    </AuthProvider>
-  );
-};
-
-// All providers wrapper
-function AllTheProviders({
-  children,
-  initialEntries = ['/'],
-  user = null,
-  withRouter = true,
-  withAuth = true,
-  withTheme = true,
-  withI18n = true,
-  withQueryClient = true,
-}: {
-  children: React.ReactNode;
-} & Pick<
-  CustomRenderOptions,
-  | 'initialEntries'
-  | 'user'
-  | 'withRouter'
-  | 'withAuth'
-  | 'withTheme'
-  | 'withI18n'
-  | 'withQueryClient'
->) {
-  const queryClient = createTestQueryClient();
-
-  let Wrapper: React.ComponentType<{ children: React.ReactNode }> = ({ children }) => (
-    <>{children}</>
-  );
-
-  // Apply providers conditionally
-  if (withQueryClient) {
-    const PrevWrapper = Wrapper;
-    Wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        <PrevWrapper>{children}</PrevWrapper>
-      </QueryClientProvider>
-    );
-  }
-
-  if (withI18n) {
-    const PrevWrapper = Wrapper;
-    Wrapper = ({ children }) => (
-      <I18nextProvider i18n={i18n}>
-        <PrevWrapper>{children}</PrevWrapper>
-      </I18nextProvider>
-    );
-  }
-
-  if (withTheme) {
-    const PrevWrapper = Wrapper;
-    Wrapper = ({ children }) => (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <PrevWrapper>{children}</PrevWrapper>
-      </ThemeProvider>
-    );
-  }
-
-  if (withAuth) {
-    const PrevWrapper = Wrapper;
-    Wrapper = ({ children }) => (
-      <MockAuthProvider user={user}>
-        <PrevWrapper>{children}</PrevWrapper>
-      </MockAuthProvider>
-    );
-  }
-
-  if (withRouter) {
-    const PrevWrapper = Wrapper;
-    Wrapper = ({ children }) => (
-      <MemoryRouter initialEntries={initialEntries}>
-        <PrevWrapper>{children}</PrevWrapper>
-      </MemoryRouter>
-    );
-  }
-
-  return <Wrapper>{children}</Wrapper>;
-}
 
 // Custom render function
 export function renderWithProviders(
@@ -223,8 +85,8 @@ export const renderWithQueryClient = (ui: React.ReactElement) => {
   });
 };
 
-// Utility functions for common test scenarios
-export const waitForElementToBeRemoved = async (element: HTMLElement) => {
+// Custom utility function with different name to avoid conflict
+export const waitForLoadingToDisappear = async (element: HTMLElement) => {
   return screen.findByText(/loading/i).then(() => {
     // Wait for loading to disappear
     return new Promise((resolve) => {
@@ -252,28 +114,69 @@ export const queryByTextContent = (content: string) => {
   });
 };
 
-// Form testing utilities
-export const fillForm = async (formData: Record<string, string>) => {
-  const { default: userEvent } = await import('@testing-library/user-event');
-  const user = userEvent.setup();
+// Re-export form utilities from separate file
+export { fillForm, submitForm } from './formUtils';
 
-  for (const [field, value] of Object.entries(formData)) {
-    const input = screen.getByLabelText(new RegExp(field, 'i'));
-    await user.clear(input);
-    await user.type(input, value);
-  }
-};
-
-export const submitForm = async () => {
-  const { default: userEvent } = await import('@testing-library/user-event');
-  const user = userEvent.setup();
-
-  const submitButton = screen.getByRole('button', { name: /submit|login|register/i });
-  await user.click(submitButton);
-};
-
-// Re-export everything from testing-library
-export * from '@testing-library/react';
+// Re-export specific functions from testing-library (not using * to avoid Fast Refresh warning)
+export {
+  act,
+  cleanup,
+  fireEvent,
+  getByLabelText,
+  getByPlaceholderText,
+  getByText,
+  getByAltText,
+  getByTitle,
+  getByDisplayValue,
+  getByRole,
+  getByTestId,
+  queryByLabelText,
+  queryByPlaceholderText,
+  queryByText,
+  queryByAltText,
+  queryByTitle,
+  queryByDisplayValue,
+  queryByRole,
+  queryByTestId,
+  findByLabelText,
+  findByPlaceholderText,
+  findByText,
+  findByAltText,
+  findByTitle,
+  findByDisplayValue,
+  findByRole,
+  findByTestId,
+  getAllByLabelText,
+  getAllByPlaceholderText,
+  getAllByText,
+  getAllByAltText,
+  getAllByTitle,
+  getAllByDisplayValue,
+  getAllByRole,
+  getAllByTestId,
+  queryAllByLabelText,
+  queryAllByPlaceholderText,
+  queryAllByText,
+  queryAllByAltText,
+  queryAllByTitle,
+  queryAllByDisplayValue,
+  queryAllByRole,
+  queryAllByTestId,
+  findAllByLabelText,
+  findAllByPlaceholderText,
+  findAllByText,
+  findAllByAltText,
+  findAllByTitle,
+  findAllByDisplayValue,
+  findAllByRole,
+  findAllByTestId,
+  waitFor,
+  waitForElementToBeRemoved,
+  within,
+  prettyDOM,
+  configure,
+  screen
+} from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';
 
 // Re-export the custom render as the default render

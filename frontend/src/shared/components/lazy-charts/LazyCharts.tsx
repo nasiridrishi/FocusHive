@@ -1,6 +1,8 @@
 import React, { lazy, Suspense } from 'react'
 import { Box, Skeleton, Typography } from '@mui/material'
 import { ComponentLoadingFallback as _ComponentLoadingFallback } from '@shared/components/loading'
+import type { LazyChartWrapperProps } from './lazyChartUtils'
+import { preloadChartLibrary, chartBundleInfo } from './lazyChartUtils'
 
 // Chart loading fallback component
 const ChartLoadingFallback = ({ 
@@ -70,17 +72,7 @@ export const LazySparkLineChart = lazy(() =>
 )
 
 // Wrapper components with Suspense and loading states
-export interface LazyChartWrapperProps {
-  title?: string
-  width?: string | number
-  height?: number
-  showFallback?: boolean
-  fallbackComponent?: React.ComponentType
-  children?: React.ReactNode
-  series?: unknown[]
-  data?: unknown[]
-  [key: string]: unknown
-}
+// Interface moved to lazyChartUtils.ts to avoid Fast Refresh warnings
 
 export const LineChartWrapper = ({ 
   title, 
@@ -246,25 +238,9 @@ export const SparkLineChartWrapper = ({
 )
 
 // Chart preloader function
-export const preloadChartLibrary = () => {
-  // Preload the most commonly used charts after a delay
-  setTimeout(() => {
-    import('@mui/x-charts/LineChart')
-    import('@mui/x-charts/BarChart')
-  }, 3000)
-}
+// Function moved to lazyChartUtils.ts to avoid Fast Refresh warnings
 
-// Chart bundle size information (for documentation)
-export const chartBundleInfo = {
-  '@mui/x-charts': {
-    estimatedSize: '~150KB',
-    components: [
-      'LineChart', 'BarChart', 'PieChart', 'ScatterChart', 
-      'Gauge', 'SparkLineChart'
-    ],
-    note: 'Large bundle - lazy loading recommended'
-  }
-}
+// Constant moved to lazyChartUtils.ts to avoid Fast Refresh warnings
 
 export default {
   LineChart: LineChartWrapper,

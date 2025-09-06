@@ -347,8 +347,12 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
   // Cleanup timers
   useEffect(() => {
     return () => {
-      if (scrobbleTimerRef.current) clearTimeout(scrobbleTimerRef.current)
-      if (crossfadeTimerRef.current) clearTimeout(crossfadeTimerRef.current)
+      const scrobbleTimer = scrobbleTimerRef.current
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const crossfadeTimer = crossfadeTimerRef.current
+      
+      if (scrobbleTimer) clearTimeout(scrobbleTimer)
+      if (crossfadeTimer) clearTimeout(crossfadeTimer)
     }
   }, [])
 

@@ -5,7 +5,7 @@
  */
 
 // Import preloader functions
-import { preloadCriticalRoutes, routePreloaders } from '@app/routes/LazyRoutes'
+import { preloadCriticalRoutes, routePreloaders } from '@app/routes/lazyRouteUtils'
 import { preloadCommonIcons } from '@shared/components/dynamic-icon'
 import { preloadChartLibrary } from '@shared/components/lazy-charts'
 import { preloadDatePickers } from '@shared/components/lazy-date-pickers'

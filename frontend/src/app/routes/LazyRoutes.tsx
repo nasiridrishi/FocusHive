@@ -1,27 +1,5 @@
-import { lazy, Suspense, ComponentType, ReactElement } from 'react'
 import { RouteLoadingFallback, FeatureLoadingFallback } from '@shared/components/loading'
-
-// Utility function to create lazy components with error boundaries and loading states
-function createLazyComponent(
-  importFn: () => Promise<{ default: ComponentType<unknown> }>,
-  fallbackElement?: ReactElement,
-  displayName?: string
-) {
-  const LazyComponent = lazy(importFn)
-  
-  const wrappedComponent = (props: Record<string, unknown>) => {
-    const fallback = fallbackElement || <RouteLoadingFallback />
-    
-    return (
-      <Suspense fallback={fallback}>
-        <LazyComponent {...props} />
-      </Suspense>
-    )
-  }
-  
-  wrappedComponent.displayName = displayName || 'lazyComponent'
-  return wrappedComponent
-}
+import { createLazyComponent } from './lazyRouteUtils'
 
 // Route-level lazy components
 export const LazyHomePage = createLazyComponent(
@@ -55,13 +33,8 @@ export const LazyDiscoverPage = createLazyComponent(
 )
 
 // Import heavy feature components with optimized lazy loading
-import { 
-  LazyGamificationDemo,
-  LazyAnalyticsDashboard
-} from '@shared/components/lazy-features'
-
-// Keep existing wrappers for backward compatibility
-export { LazyGamificationDemo, LazyAnalyticsDashboard }
+// These components should be imported directly from @shared/components/lazy-features
+// Not re-exported here to avoid Fast Refresh warnings
 
 export const LazyAnalyticsDemo = createLazyComponent(
   () => import('@features/analytics/pages/AnalyticsDemo'),
@@ -76,13 +49,8 @@ export const LazyProductivityDashboard = createLazyComponent(
 )
 
 // Import music components with optimized lazy loading
-import {
-  LazyMusicPlayer,
-  LazySpotifyConnect
-} from '@shared/components/lazy-features'
-
-// Keep existing exports for backward compatibility
-export { LazyMusicPlayer, LazySpotifyConnect }
+// Music components should be imported directly from @shared/components/lazy-features
+// Not re-exported here to avoid Fast Refresh warnings
 
 // Demo and development components
 export const LazyErrorBoundaryDemo = createLazyComponent(
@@ -104,14 +72,8 @@ export const LazyLoadingStatesDemo = createLazyComponent(
 )
 
 // Import communication and social features with optimized lazy loading
-import {
-  LazyChatWindow,
-  LazyForumHome,
-  LazyBuddyDashboard
-} from '@shared/components/lazy-features'
-
-// Keep backward compatibility exports
-export { LazyChatWindow, LazyForumHome, LazyBuddyDashboard }
+// Communication components should be imported directly from @shared/components/lazy-features
+// Not re-exported here to avoid Fast Refresh warnings
 
 // Forum post view remains as local component for now
 export const LazyForumPostView = createLazyComponent(
@@ -120,105 +82,8 @@ export const LazyForumPostView = createLazyComponent(
   'LazyForumPostView'
 )
 
-// Helper function for dynamic imports based on feature flags
-export function createConditionallazyComponent(
-  condition: boolean,
-  importFn: () => Promise<{ default: ComponentType<unknown> }>,
-  fallbackComponent?: ComponentType<unknown>,
-  loadingElement?: ReactElement
-) {
-  if (!condition && fallbackComponent) {
-    return fallbackComponent
-  }
-  
-  return createLazyComponent(importFn, loadingElement)
-}
+// Utilities should be imported directly from './lazyRouteUtils'
+// Not re-exported here to avoid Fast Refresh warnings
 
-// Route configuration with lazy loading
-export interface LazyRouteConfig {
-  path: string
-  component: ComponentType<unknown>
-  preload?: boolean
-  chunkName?: string
-}
-
-export const lazyRoutes: LazyRouteConfig[] = [
-  {
-    path: '/',
-    component: LazyHomePage,
-    preload: true, // Preload home page
-    chunkName: 'home'
-  },
-  {
-    path: '/login',
-    component: LazyLoginPage,
-    preload: true, // Preload auth pages
-    chunkName: 'auth'
-  },
-  {
-    path: '/register',
-    component: LazyRegisterPage,
-    preload: true,
-    chunkName: 'auth'
-  },
-  {
-    path: '/dashboard',
-    component: LazyDashboardPage,
-    preload: false,
-    chunkName: 'dashboard'
-  },
-  {
-    path: '/discover',
-    component: LazyDiscoverPage,
-    preload: false,
-    chunkName: 'discover'
-  },
-  {
-    path: '/gamification',
-    component: LazyGamificationDemo,
-    preload: false,
-    chunkName: 'gamification'
-  },
-  {
-    path: '/analytics',
-    component: LazyAnalyticsDemo,
-    preload: false,
-    chunkName: 'analytics'
-  },
-  {
-    path: '/productivity',
-    component: LazyProductivityDashboard,
-    preload: false,
-    chunkName: 'productivity'
-  },
-  {
-    path: '/error-boundary-demo',
-    component: LazyErrorBoundaryDemo,
-    preload: false,
-    chunkName: 'demo'
-  }
-]
-
-// Preloader function to prefetch critical routes
-export function preloadCriticalRoutes() {
-  // Critical routes are already loaded with the main bundle
-  console.log('[Routes] Critical routes preloaded')
-}
-
-// Export route preloading utilities
-export const routePreloaders = {
-  // Preload authentication routes
-  preloadAuth: () => {
-    console.log('[Routes] Auth routes ready for preload')
-  },
-  
-  // Preload main app routes
-  preloadMainApp: () => {
-    console.log('[Routes] Main app routes ready for preload')
-  },
-  
-  // Preload heavy features on user interaction
-  preloadHeavyFeatures: () => {
-    console.log('[Routes] Heavy features ready for preload')
-  }
-}
+// Re-export type using 'export type'
+export type { LazyRouteConfig } from './lazyRouteUtils'

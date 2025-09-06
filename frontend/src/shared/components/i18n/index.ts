@@ -1,4 +1,5 @@
-export { default as I18nProvider, withI18n, useI18nReady } from './I18nProvider'
+export { default as I18nProvider } from './I18nProvider'
+export { withI18n, useI18nReady } from './i18nHooks'
 export { 
   default as LanguageSwitcher, 
   CompactLanguageSwitcher, 

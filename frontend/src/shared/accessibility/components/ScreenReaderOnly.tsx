@@ -8,6 +8,7 @@
 import React from 'react';
 import { styled } from '@mui/material/styles';
 import { Box } from '@mui/material';
+import type { ScreenReaderOnlyProps } from '../utils/screenReaderUtils';
 
 /**
  * Styled component that hides content visually but keeps it accessible to screen readers
@@ -44,29 +45,7 @@ const VisuallyHidden = styled(Box)(({ theme }) => ({
   },
 }));
 
-export interface ScreenReaderOnlyProps {
-  /**
-   * Content to be hidden from visual display but available to screen readers
-   */
-  children: React.ReactNode;
-  
-  /**
-   * HTML element type to render
-   * @default 'span'
-   */
-  as?: 'span' | 'div' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'label' | 'legend';
-  
-  /**
-   * Whether the element can receive focus (useful for skip links)
-   * @default false
-   */
-  focusable?: boolean;
-  
-  /**
-   * Additional props to pass to the underlying element
-   */
-  [key: string]: unknown;
-}
+// Interface moved to utils/screenReaderUtils.ts to avoid Fast Refresh warnings
 
 /**
  * Screen Reader Only Component
@@ -191,48 +170,8 @@ export const ScreenReaderAlert: React.FC<{
   </ScreenReaderOnly>
 );
 
-/**
- * Hook for managing screen reader only content
- */
-export function useScreenReaderOnly(initialContent: string = '') {
-  const [content, setContent] = React.useState(initialContent);
-  const [isVisible, setIsVisible] = React.useState(false);
+// Hook moved to ../hooks/useScreenReaderOnly.tsx to avoid Fast Refresh warnings
 
-  const updateContent = React.useCallback((newContent: string) => {
-    setContent(newContent);
-  }, []);
-
-  const showTemporarily = React.useCallback((duration: number = 3000) => {
-    setIsVisible(true);
-    setTimeout(() => setIsVisible(false), duration);
-  }, []);
-
-  const clear = React.useCallback(() => {
-    setContent('');
-  }, []);
-
-  return {
-    content,
-    updateContent,
-    clear,
-    isVisible,
-    showTemporarily,
-    Component: React.useCallback(
-      ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => (
-        <ScreenReaderOnly {...props}>
-          {children || content}
-        </ScreenReaderOnly>
-      ),
-      [content]
-    )
-  };
-}
-
-/**
- * Utility function to create screen reader only content
- */
-export const createScreenReaderContent = (content: string) => (
-  <ScreenReaderOnly>{content}</ScreenReaderOnly>
-);
+// Utility function moved to ../hooks/useScreenReaderOnly.tsx to avoid Fast Refresh warnings
 
 export default ScreenReaderOnly;

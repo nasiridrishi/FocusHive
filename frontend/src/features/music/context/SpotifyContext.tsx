@@ -1,7 +1,7 @@
 // Spotify Context for managing Spotify Web SDK integration
 // Provides authentication, player state, and controls throughout the music feature
 
-import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react'
+import React, { createContext, useReducer, useCallback, useEffect, useRef } from 'react'
 import { getSpotifyService, SpotifyService } from '../services/spotifyService'
 import type { 
   SpotifyConfig, 
@@ -188,6 +188,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize Spotify integration' })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoConnect])
 
   // Sync service state with context state
@@ -242,6 +243,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoConnect])
 
   // Player Management
@@ -271,6 +273,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const connectPlayer = useCallback(async (): Promise<boolean> => {
@@ -416,7 +419,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
         dispatch({ type: 'SET_PLAYER_STATE', payload: playerState })
       }
     }, 1000)
-  }, [])
+  }, [dispatch])
 
   // Cleanup
   useEffect(() => {
@@ -462,13 +465,10 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
   )
 }
 
-// Hook to use Spotify context
-export const useSpotify = (): SpotifyContextType => {
-  const context = useContext(SpotifyContext)
-  if (context === undefined) {
-    throw new Error('useSpotify must be used within a SpotifyProvider')
-  }
-  return context
-}
+// Re-export hook from separate file
+export { useSpotify } from './useSpotifyContext'
 
+// Export context and type for use in hooks
+export { SpotifyContext }
+export type { SpotifyContextType }
 export default SpotifyContext

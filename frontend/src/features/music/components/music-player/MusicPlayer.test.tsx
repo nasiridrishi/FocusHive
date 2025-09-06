@@ -157,7 +157,7 @@ const _MockMusicPlayer = ({ mode, onSeek, onVolumeChange }: { mode?: string; onS
     };
 
     // Handle seek with proper onSeek callback
-    const handleSeek = (value: number) => {
+    const handleSeek = React.useCallback((value: number) => {
       // Convert percentage to seconds (value is percentage, duration is 180 seconds)  
       const seconds = (value / 100) * 180;
       
@@ -167,13 +167,13 @@ const _MockMusicPlayer = ({ mode, onSeek, onVolumeChange }: { mode?: string; onS
       if (mockPlaybackControl.seekTo) {
         mockPlaybackControl.seekTo(seconds);
       }
-    };
+    }, [onSeek]);
     
     // Create a ref to the seek function for debugging
     React.useEffect(() => {
       // Store the handleSeek function globally for test access
       (window as { mockHandleSeek?: typeof handleSeek }).mockHandleSeek = handleSeek;
-    }, []);
+    }, [handleSeek]);
 
     // Handle keyboard navigation  
     const handleKeyDown = (event: React.KeyboardEvent, action: () => void) => {

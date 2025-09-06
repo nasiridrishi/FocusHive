@@ -64,12 +64,7 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({
 }) => {
   // Memoize serviceWorkerOptions to prevent unnecessary re-renders
   const memoizedServiceWorkerOptions = useMemo(() => serviceWorkerOptions, [
-    serviceWorkerOptions?.immediate,
-    serviceWorkerOptions?.onRegistered,
-    serviceWorkerOptions?.onRegisteredSW,
-    serviceWorkerOptions?.onNeedRefresh,
-    serviceWorkerOptions?.onOfflineReady,
-    serviceWorkerOptions?.onRegisterError,
+    serviceWorkerOptions,
   ]);
 
   const serviceWorkerState = useServiceWorkerRegistration(memoizedServiceWorkerOptions);
