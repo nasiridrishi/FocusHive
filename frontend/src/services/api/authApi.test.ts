@@ -22,6 +22,9 @@ vi.mock('../httpInterceptors', () => ({
 describe('authApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear storage between tests to ensure test isolation
+    sessionStorage.clear();
+    localStorage.clear();
   });
 
   describe('login', () => {
@@ -79,7 +82,7 @@ describe('authApi', () => {
 
     it('should handle network errors', async () => {
       server.use(
-        http.post('/api/auth/login', () => {
+        http.post('http://localhost:8081/api/v1/auth/login', () => {
           return HttpResponse.error();
         })
       );
@@ -94,7 +97,7 @@ describe('authApi', () => {
 
     it('should handle server errors', async () => {
       server.use(
-        http.post('/api/auth/login', () => {
+        http.post('http://localhost:8081/api/v1/auth/login', () => {
           return HttpResponse.json(
             { message: 'Internal server error' },
             { status: 500 }
@@ -159,7 +162,7 @@ describe('authApi', () => {
 
     it('should handle registration validation errors', async () => {
       server.use(
-        http.post('/api/auth/register', () => {
+        http.post('http://localhost:8081/api/v1/auth/register', () => {
           return HttpResponse.json(
             { message: 'Email already exists' },
             { status: 400 }
@@ -180,7 +183,7 @@ describe('authApi', () => {
 
     it('should handle invalid registration data', async () => {
       server.use(
-        http.post('/api/auth/register', () => {
+        http.post('http://localhost:8081/api/v1/auth/register', () => {
           return HttpResponse.json(
             { message: 'Invalid registration data' },
             { status: 400 }
@@ -238,7 +241,7 @@ describe('authApi', () => {
 
     it('should handle logout errors gracefully', async () => {
       server.use(
-        http.post('/api/v1/auth/logout', () => {
+        http.post('http://localhost:8081/api/v1/auth/logout', () => {
           return HttpResponse.json(
             { message: 'Logout failed' },
             { status: 500 }
@@ -253,6 +256,12 @@ describe('authApi', () => {
 
   describe('getCurrentUser', () => {
     it('should get current user with valid token', async () => {
+      // Login first to get a valid token
+      await authApi.login({
+        email: 'testuser@example.com',
+        password: 'password'
+      });
+
       const response = await authApi.getCurrentUser();
 
       expect(response).toEqual(expect.objectContaining({
@@ -263,7 +272,7 @@ describe('authApi', () => {
 
     it('should handle unauthorized access', async () => {
       server.use(
-        http.get('/api/v1/auth/me', () => {
+        http.get('http://localhost:8081/api/v1/auth/me', () => {
           return HttpResponse.json(
             { message: 'Unauthorized' },
             { status: 401 }
@@ -275,15 +284,28 @@ describe('authApi', () => {
     });
 
     it('should include authorization header', async () => {
+      // Login first to get a valid token
+      await authApi.login({
+        email: 'testuser@example.com',
+        password: 'password'
+      });
+
       let capturedRequest: Request | null = null;
 
       server.use(
-        http.get('/api/v1/auth/me', ({ request }) => {
+        http.get('http://localhost:8081/api/v1/auth/me', ({ request }) => {
           capturedRequest = request;
           return HttpResponse.json({
             user: {
               id: '1',
-              email: 'testuser@example.com'
+              username: 'testuser',
+              email: 'testuser@example.com',
+              firstName: 'Test',
+              lastName: 'User',
+              name: 'Test User',
+              isEmailVerified: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
             }
           });
         })
@@ -298,9 +320,9 @@ describe('authApi', () => {
   describe('error handling', () => {
     it('should handle timeout errors', async () => {
       server.use(
-        http.post('/api/auth/login', async () => {
-          // Simulate timeout
-          await new Promise(resolve => setTimeout(resolve, 10000));
+        http.post('http://localhost:8081/api/v1/auth/login', async () => {
+          // Simulate timeout - longer than axios timeout (10s)
+          await new Promise(resolve => setTimeout(resolve, 11000));
           return HttpResponse.json({});
         })
       );
@@ -312,12 +334,13 @@ describe('authApi', () => {
 
       // This should timeout and throw an error
       await expect(authApi.login(loginData)).rejects.toThrow();
-    }, 5000); // 5 second test timeout
+    }, 12000); // 12 second test timeout
 
     it('should handle malformed JSON responses', async () => {
       server.use(
-        http.post('/api/auth/login', () => {
-          return new Response('Invalid JSON{', {
+        http.post('http://localhost:8081/api/v1/auth/login', () => {
+          // Return malformed JSON that will cause axios to fail parsing
+          return new Response('{"user": invalid}', {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
           });
@@ -334,8 +357,12 @@ describe('authApi', () => {
 
     it('should handle empty responses', async () => {
       server.use(
-        http.post('/api/auth/login', () => {
-          return new Response('', { status: 200 });
+        http.post('http://localhost:8081/api/v1/auth/login', () => {
+          // Return empty JSON object that lacks required fields
+          return new Response('{}', { 
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
         })
       );
 
@@ -353,11 +380,21 @@ describe('authApi', () => {
       let capturedRequest: Request | null = null;
 
       server.use(
-        http.post('/api/auth/login', ({ request }) => {
+        http.post('http://localhost:8081/api/v1/auth/login', ({ request }) => {
           capturedRequest = request;
           return HttpResponse.json({
-            user: { username: 'test' },
-            accessToken: 'token',
+            user: { 
+              id: '1',
+              username: 'test',
+              email: 'test@example.com',
+              firstName: 'Test',
+              lastName: 'User',
+              name: 'Test User',
+              isEmailVerified: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            },
+            token: 'token',
             refreshToken: 'refresh'
           });
         })
@@ -365,18 +402,28 @@ describe('authApi', () => {
 
       await authApi.login({ email: 'test@example.com', password: 'pass' });
 
-      expect(capturedRequest?.headers.get('content-type')).toContain('application/json');
+      expect(capturedRequest?.headers.get('content-type')).toBe('application/json');
     });
 
     it('should send correct request body', async () => {
       let capturedBody: unknown = null;
 
       server.use(
-        http.post('/api/auth/login', async ({ request }) => {
+        http.post('http://localhost:8081/api/v1/auth/login', async ({ request }) => {
           capturedBody = await request.json();
           return HttpResponse.json({
-            user: { username: 'test' },
-            accessToken: 'token',
+            user: { 
+              id: '1',
+              username: 'test',
+              email: 'testuser@example.com',
+              firstName: 'Test',
+              lastName: 'User',
+              name: 'Test User',
+              isEmailVerified: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            },
+            token: 'token',
             refreshToken: 'refresh'
           });
         })

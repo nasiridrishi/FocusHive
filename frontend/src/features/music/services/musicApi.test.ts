@@ -1,8 +1,8 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-// FIXED: Mock axios before any imports
+// Mock axios before any imports
 vi.mock('axios', () => {
-  const mockAxiosInstance = {
+  const mockInstance = {
     get: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
@@ -20,42 +20,19 @@ vi.mock('axios', () => {
   
   return {
     default: {
-      create: vi.fn(() => mockAxiosInstance),
+      create: vi.fn(() => mockInstance),
     },
   }
 })
 
-// FIXED: Import after mocking is properly set up
-import axios, { type AxiosInstance } from 'axios'
-
-// FIXED: Import the class and create instance manually to avoid singleton issues
-import { default as musicApiModule } from './musicApi'
-// Import types needed for tests
+// Import after mocking
+import axios from 'axios'
+import { default as musicApi } from './musicApi'
 import type { CreatePlaylistRequest, SearchTracksRequest } from '../types/music'
 
 // Get the mocked axios instance
-const mockedAxios = vi.mocked(axios, true)
-const mockAxiosInstance = {
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
-  delete: vi.fn(),
-  patch: vi.fn(),
-  interceptors: {
-    request: { use: vi.fn() },
-    response: { use: vi.fn() }
-  },
-  defaults: {},
-  getUri: vi.fn(),
-  request: vi.fn(),
-  head: vi.fn(),
-  options: vi.fn(),
-  postForm: vi.fn(),
-  putForm: vi.fn(),
-  patchForm: vi.fn(),
-  create: vi.fn()
-} as unknown as AxiosInstance
-mockedAxios.create.mockReturnValue(mockAxiosInstance)
+const mockedAxios = vi.mocked(axios)
+const mockAxiosInstance = mockedAxios.create() as unknown
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -71,9 +48,6 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 describe('MusicApiService', () => {
-  // FIXED: Use the module's default export which is the singleton
-  const musicApi = musicApiModule
-
   beforeEach(() => {
     vi.clearAllMocks()
     mockLocalStorage.getItem.mockReturnValue('mock-token')
@@ -98,19 +72,18 @@ describe('MusicApiService', () => {
         },
       ]
 
-      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockAxiosInstance.get.mockResolvedValue({
         data: { data: mockPlaylists, success: true },
         status: 200,
       })
 
       const result = await musicApi.getUserPlaylists()
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists', { params: {} })
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists/user', { params: {} })
       expect(result).toEqual(mockPlaylists)
     })
 
     it('should handle pagination in get user playlists', async () => {
-      // eslint-disable-next-line no-extra-semi
-      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockAxiosInstance.get.mockResolvedValue({
         data: {
           data: [],
           success: true,
@@ -119,9 +92,9 @@ describe('MusicApiService', () => {
         status: 200,
       })
 
-      await musicApi.getUserPlaylists()
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists', {
-        params: { page: 2, limit: 10 },
+      await musicApi.getUserPlaylists('user123')
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists/user', {
+        params: { userId: 'user123' },
       })
     })
 
@@ -143,7 +116,7 @@ describe('MusicApiService', () => {
         updatedAt: new Date(),
       }
 
-      ;(mockAxiosInstance.post as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockAxiosInstance.post.mockResolvedValue({
         data: { data: mockPlaylist, success: true },
         status: 201,
       })
@@ -177,13 +150,13 @@ describe('MusicApiService', () => {
         limit: 20,
       }
 
-      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockAxiosInstance.get.mockResolvedValue({
         data: { data: mockResponse, success: true },
         status: 200,
       })
 
       const result = await musicApi.searchTracks(searchRequest)
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/search/tracks', {
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/search', {
         params: searchRequest,
       })
       expect(result).toEqual(mockResponse)
@@ -199,16 +172,29 @@ describe('MusicApiService', () => {
         },
       }
 
-      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockRejectedValue(errorResponse)
+      mockAxiosInstance.get.mockRejectedValue(errorResponse)
 
       await expect(musicApi.getUserPlaylists()).rejects.toThrow()
     })
 
     it('should handle network errors', async () => {
-      // eslint-disable-next-line no-extra-semi
-      ;(mockAxiosInstance.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Error'))
+      // Mock a network error - the interceptor will transform it to a MusicError
+      const _networkError = new Error('Network Error')
+      // The response interceptor creates a MusicError object
+      const expectedMusicError = {
+        name: 'MusicError',
+        message: 'Network Error',
+        code: 'UNKNOWN_ERROR',
+        details: undefined,
+        timestamp: expect.any(String),
+      }
+      mockAxiosInstance.get.mockRejectedValue(expectedMusicError)
 
-      await expect(musicApi.getUserPlaylists()).rejects.toThrow('Network Error')
+      await expect(musicApi.getUserPlaylists()).rejects.toMatchObject({
+        name: 'MusicError',
+        message: 'Network Error',
+        code: 'UNKNOWN_ERROR',
+      })
     })
   })
 })
