@@ -160,3 +160,7 @@ Icon
 
 # Documentation directory
 /docs/
+
+# Local service PIDs (temporary runtime file)
+.local-services.pids
+
