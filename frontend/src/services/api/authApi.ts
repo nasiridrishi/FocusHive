@@ -183,7 +183,31 @@ export const authApiService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
       const response = await identityApi.post<LoginResponse>('/v1/auth/login', credentials);
-      const { user: _user, token, refreshToken } = response.data;
+      
+      // Validate response data contains required fields
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response format from server');
+      }
+      
+      const { user, token, refreshToken } = response.data;
+      
+      // Validate all required fields are present and valid
+      if (!user || typeof user !== 'object') {
+        throw new Error('Invalid user data in response');
+      }
+      
+      if (!token || typeof token !== 'string' || token.trim() === '') {
+        throw new Error('Invalid authentication token in response');
+      }
+      
+      if (!refreshToken || typeof refreshToken !== 'string' || refreshToken.trim() === '') {
+        throw new Error('Invalid refresh token in response');
+      }
+      
+      // Validate user object has required fields
+      if (!user.id || !user.email || !user.username) {
+        throw new Error('Incomplete user data in response');
+      }
       
       // Store tokens securely
       tokenStorage.setAccessToken(token);
@@ -192,10 +216,32 @@ export const authApiService = {
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
+        // Handle timeout errors
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          throw new Error('Request timeout - please try again');
+        }
+        
+        // Handle network errors
+        if (!error.response) {
+          throw new Error('Network error during login - please check your connection');
+        }
+        
+        // Handle JSON parsing errors
+        if (error.message.includes('JSON')) {
+          throw new Error('Invalid response format from server');
+        }
+        
+        // Handle server error responses
         const message = error.response?.data?.message || error.response?.data?.error || 'Login failed';
         throw new Error(message);
       }
-      throw new Error('Network error during login');
+      
+      // If it's already our custom error from validation, re-throw it
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('Unexpected error during login');
     }
   },
 
@@ -212,7 +258,31 @@ export const authApiService = {
       };
       
       const response = await identityApi.post<RegisterResponse>('/v1/auth/register', registrationData);
-      const { user: _user, token, refreshToken } = response.data;
+      
+      // Validate response data contains required fields
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response format from server');
+      }
+      
+      const { user, token, refreshToken } = response.data;
+      
+      // Validate all required fields are present and valid
+      if (!user || typeof user !== 'object') {
+        throw new Error('Invalid user data in response');
+      }
+      
+      if (!token || typeof token !== 'string' || token.trim() === '') {
+        throw new Error('Invalid authentication token in response');
+      }
+      
+      if (!refreshToken || typeof refreshToken !== 'string' || refreshToken.trim() === '') {
+        throw new Error('Invalid refresh token in response');
+      }
+      
+      // Validate user object has required fields
+      if (!user.id || !user.email || !user.username) {
+        throw new Error('Incomplete user data in response');
+      }
       
       // Store tokens securely
       tokenStorage.setAccessToken(token);
@@ -221,10 +291,32 @@ export const authApiService = {
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
+        // Handle timeout errors
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          throw new Error('Registration timeout - please try again');
+        }
+        
+        // Handle network errors
+        if (!error.response) {
+          throw new Error('Network error during registration - please check your connection');
+        }
+        
+        // Handle JSON parsing errors
+        if (error.message.includes('JSON')) {
+          throw new Error('Invalid response format from server');
+        }
+        
+        // Handle server error responses
         const message = error.response?.data?.message || error.response?.data?.error || 'Registration failed';
         throw new Error(message);
       }
-      throw new Error('Network error during registration');
+      
+      // If it's already our custom error from validation, re-throw it
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('Unexpected error during registration');
     }
   },
 
@@ -248,13 +340,53 @@ export const authApiService = {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await identityApi.get<{ user: User }>('/v1/auth/me');
-      return response.data.user;
+      
+      // Validate response data contains required fields
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response format from server');
+      }
+      
+      const { user } = response.data;
+      
+      // Validate user object is present and valid
+      if (!user || typeof user !== 'object') {
+        throw new Error('Invalid user data in response');
+      }
+      
+      // Validate user object has required fields
+      if (!user.id || !user.email || !user.username) {
+        throw new Error('Incomplete user data in response');
+      }
+      
+      return user;
     } catch (error) {
       if (error instanceof AxiosError) {
+        // Handle timeout errors
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          throw new Error('Request timeout - please try again');
+        }
+        
+        // Handle network errors
+        if (!error.response) {
+          throw new Error('Network error getting user profile - please check your connection');
+        }
+        
+        // Handle JSON parsing errors
+        if (error.message.includes('JSON')) {
+          throw new Error('Invalid response format from server');
+        }
+        
+        // Handle server error responses
         const message = error.response?.data?.message || 'Failed to get user profile';
         throw new Error(message);
       }
-      throw new Error('Network error getting user profile');
+      
+      // If it's already our custom error from validation, re-throw it
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('Unexpected error getting user profile');
     }
   },
 
@@ -264,13 +396,53 @@ export const authApiService = {
   async updateProfile(userData: Partial<User>): Promise<User> {
     try {
       const response = await identityApi.put<{ user: User }>('/v1/auth/profile', userData);
-      return response.data.user;
+      
+      // Validate response data contains required fields
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response format from server');
+      }
+      
+      const { user } = response.data;
+      
+      // Validate user object is present and valid
+      if (!user || typeof user !== 'object') {
+        throw new Error('Invalid user data in response');
+      }
+      
+      // Validate user object has required fields
+      if (!user.id || !user.email || !user.username) {
+        throw new Error('Incomplete user data in response');
+      }
+      
+      return user;
     } catch (error) {
       if (error instanceof AxiosError) {
+        // Handle timeout errors
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          throw new Error('Request timeout - please try again');
+        }
+        
+        // Handle network errors
+        if (!error.response) {
+          throw new Error('Network error updating profile - please check your connection');
+        }
+        
+        // Handle JSON parsing errors
+        if (error.message.includes('JSON')) {
+          throw new Error('Invalid response format from server');
+        }
+        
+        // Handle server error responses
         const message = error.response?.data?.message || 'Failed to update profile';
         throw new Error(message);
       }
-      throw new Error('Network error updating profile');
+      
+      // If it's already our custom error from validation, re-throw it
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('Unexpected error updating profile');
     }
   },
 
@@ -295,13 +467,48 @@ export const authApiService = {
   async requestPasswordReset(resetData: PasswordResetRequest): Promise<PasswordResetResponse> {
     try {
       const response = await identityApi.post<PasswordResetResponse>('/v1/auth/forgot-password', resetData);
+      
+      // Validate response data contains required fields
+      if (!response.data || typeof response.data !== 'object') {
+        throw new Error('Invalid response format from server');
+      }
+      
+      const { message } = response.data;
+      
+      // Validate message field is present
+      if (!message || typeof message !== 'string') {
+        throw new Error('Invalid response message from server');
+      }
+      
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
+        // Handle timeout errors
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          throw new Error('Request timeout - please try again');
+        }
+        
+        // Handle network errors
+        if (!error.response) {
+          throw new Error('Network error requesting password reset - please check your connection');
+        }
+        
+        // Handle JSON parsing errors
+        if (error.message.includes('JSON')) {
+          throw new Error('Invalid response format from server');
+        }
+        
+        // Handle server error responses
         const message = error.response?.data?.message || 'Failed to send password reset email';
         throw new Error(message);
       }
-      throw new Error('Network error requesting password reset');
+      
+      // If it's already our custom error from validation, re-throw it
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('Unexpected error requesting password reset');
     }
   },
 
@@ -354,11 +561,26 @@ async function refreshToken(): Promise<{ token: string; refreshToken: string } |
       { refreshToken: refreshTokenValue },
       {
         headers: { 'Content-Type': 'application/json' },
-        withCredentials: true
+        withCredentials: true,
+        timeout: 10000
       }
     );
 
+    // Validate response data contains required fields
+    if (!response.data || typeof response.data !== 'object') {
+      throw new Error('Invalid response format from server');
+    }
+
     const { token, refreshToken: newRefreshToken } = response.data;
+    
+    // Validate required fields are present and valid
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+      throw new Error('Invalid authentication token in response');
+    }
+    
+    if (!newRefreshToken || typeof newRefreshToken !== 'string' || newRefreshToken.trim() === '') {
+      throw new Error('Invalid refresh token in response');
+    }
     
     // Update stored tokens
     tokenStorage.setAccessToken(token);
@@ -368,6 +590,19 @@ async function refreshToken(): Promise<{ token: string; refreshToken: string } |
   } catch (error) {
     // Refresh failed, clear tokens
     tokenStorage.clearAllTokens();
+    
+    if (error instanceof AxiosError) {
+      // Handle timeout errors
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Token refresh timeout - please login again');
+      }
+      
+      // Handle JSON parsing errors
+      if (error.message.includes('JSON')) {
+        throw new Error('Invalid response format from server');
+      }
+    }
+    
     throw error;
   }
 }

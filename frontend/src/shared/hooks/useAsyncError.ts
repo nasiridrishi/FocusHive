@@ -94,13 +94,16 @@ export const useAsyncError = () => {
       options: AsyncErrorOptions = {}
     ): T => {
       return ((...args: Parameters<T>) => {
-        return wrapPromise(asyncFn(...args), {
-          ...options,
-          context: { ...options.context, source: 'async_function' },
+        return asyncFn(...args).catch((error) => {
+          captureError(error, {
+            ...options,
+            context: { ...options.context, source: 'async_function' },
+          })
+          return null
         })
       }) as T
     },
-    [wrapPromise]
+    [captureError]
   )
 
   /**

@@ -1,0 +1,7 @@
+
+# E2E Test Results
+frontend/playwright-report/
+frontend/test-results/
+frontend/e2e-results.json
+frontend/e2e-results.xml
+

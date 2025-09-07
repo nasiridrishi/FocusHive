@@ -149,11 +149,13 @@ describe('useAsyncError', () => {
       // Test error call
       const errorResult = await wrappedFunction('error')
       expect(errorResult).toBeNull()
-      expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        expect.any(Error),
-        { source: 'async_function', type: 'user_action' },
-        'medium'
-      )
+      expect(errorLogger.logAsyncError).toHaveBeenCalled()
+      
+      const [[error, context, severity]] = (errorLogger.logAsyncError as ReturnType<typeof vi.fn>).mock.calls
+      expect(error).toBeInstanceOf(Error)
+      expect(error.message).toBe('Function error')
+      expect(context).toEqual({ source: 'async_function', type: 'user_action' })
+      expect(severity).toBe('medium')
     })
   })
 
