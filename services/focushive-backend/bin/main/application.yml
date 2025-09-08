@@ -3,14 +3,8 @@ spring:
     name: focushive-backend
   main:
     allow-bean-definition-overriding: true
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+  # Removed harmful autoconfiguration exclusions that were breaking tests
+  # Individual features are now controlled via app.features.* configuration
 
   security:
     jwt:
@@ -35,7 +29,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: none  # Skip schema creation temporarily
+      ddl-auto: create  # Create schema automatically for demo
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
@@ -52,7 +46,7 @@ spring:
     show-sql: ${SHOW_SQL:false}
   
   flyway:
-    enabled: false
+    enabled: false  # Disable Flyway for demo mode
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: false
@@ -127,10 +121,32 @@ app:
       enabled: false
     authentication:
       enabled: false
+    authController:
+      enabled: false
     redis:
       enabled: false
     health:
       enabled: false
+
+# Rate Limiting Configuration
+focushive:
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:false}
+    use-redis: ${RATE_LIMIT_USE_REDIS:false}  # Set to true when Redis is available
+    public-api-requests-per-hour: ${RATE_LIMIT_PUBLIC:100}
+    authenticated-api-requests-per-hour: ${RATE_LIMIT_AUTHENTICATED:1000}
+    admin-api-requests-per-hour: ${RATE_LIMIT_ADMIN:10000}
+    websocket-connections-per-minute: ${RATE_LIMIT_WEBSOCKET:60}
+    burst-capacity: ${RATE_LIMIT_BURST:20}
+    burst-refill-duration: PT1M  # 1 minute in ISO-8601 duration format
+    bucket-ttl: PT2H  # 2 hours TTL for buckets
+    metrics-enabled: ${RATE_LIMIT_METRICS:true}
+    whitelisted-ips: ${RATE_LIMIT_WHITELIST:}
+    excluded-endpoints:
+      - /actuator/health
+      - /actuator/info
+      - /v3/api-docs/**
+      - /swagger-ui/**
 
 server:
   port: ${SERVER_PORT:8080}

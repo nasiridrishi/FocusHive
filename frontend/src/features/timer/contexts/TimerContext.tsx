@@ -69,8 +69,8 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
         const parsed = JSON.parse(savedSettings)
         setTimerSettings({ ...DEFAULT_TIMER_SETTINGS, ...parsed })
       } catch (error) {
-        // Failed to parse saved settings, using defaults
-      }
+      console.error('Error:', error);
+    }
     }
   }, [userId])
 
@@ -110,7 +110,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       oscillator.start(audioContextRef.current.currentTime)
       oscillator.stop(audioContextRef.current.currentTime + 0.5)
     } catch (error) {
-      // Sound playback failed
+      console.error('Error:', error);
     }
   }, [timerSettings.soundEnabled])
 
@@ -203,8 +203,8 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       try {
         audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       } catch (error) {
-        // Web Audio API not supported
-      }
+      console.error('Error:', error);
+    }
     }
   }, [timerSettings.soundEnabled])
 

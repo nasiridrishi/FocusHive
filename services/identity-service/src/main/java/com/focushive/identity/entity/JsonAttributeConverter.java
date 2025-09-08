@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,12 +13,10 @@ import java.util.Map;
  * JPA converter for storing Map as JSON in PostgreSQL jsonb columns.
  */
 @Slf4j
-@Component
-@Converter
-@RequiredArgsConstructor
+@Converter(autoApply = true)
 public class JsonAttributeConverter implements AttributeConverter<Map<String, Boolean>, String> {
     
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     
     @Override
     public String convertToDatabaseColumn(Map<String, Boolean> attribute) {

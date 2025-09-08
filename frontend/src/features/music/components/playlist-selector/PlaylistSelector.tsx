@@ -167,7 +167,7 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
       setCreateDialogOpen(false)
       onPlaylistSelect(playlist)
     } catch (error) {
-      // Failed to create playlist
+      console.error('Error:', error);
     }
   }, [newPlaylist, createPlaylist, onPlaylistSelect])
 
@@ -177,8 +177,8 @@ const PlaylistSelector: React.FC<PlaylistSelectorProps> = ({
         await deletePlaylist(selectedPlaylist.id)
         handleMenuClose()
       } catch (error) {
-        // Failed to delete playlist
-      }
+      console.error('Error:', error);
+    }
     }
   }, [selectedPlaylist, deletePlaylist, handleMenuClose])
 

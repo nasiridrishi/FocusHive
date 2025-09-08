@@ -1,0 +1,252 @@
+# Monitoring and Observability Configuration for FocusHive Backend
+# This configuration enables comprehensive monitoring capabilities
+
+spring:
+  application:
+    name: focushive-backend
+
+# Actuator configuration for health checks and metrics
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus,httptrace,loggers,threaddump,heapdump
+      cors:
+        allowed-origins: "*"
+        allowed-methods: GET,POST
+  
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: db,redis,diskSpace
+          additional-path: /actuator/health/readiness
+        liveness:
+          include: ping
+          additional-path: /actuator/health/liveness
+    
+    info:
+      enabled: true
+    
+    metrics:
+      enabled: true
+    
+    prometheus:
+      enabled: true
+    
+    loggers:
+      enabled: true
+
+  # Health indicators configuration
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 10GB
+    circuitbreakers:
+      enabled: true
+    
+  # Metrics configuration
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+      version: ${app.version:1.0.0-SNAPSHOT}
+    
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+        "[focushive.session.duration]": true
+        "[focushive.database.query.duration]": true
+      percentiles:
+        "[http.server.requests]": 0.5, 0.9, 0.95, 0.99
+        "[focushive.session.duration]": 0.5, 0.9, 0.95, 0.99
+        "[focushive.database.query.duration]": 0.5, 0.9, 0.95, 0.99
+      slo:
+        "[http.server.requests]": 100ms, 500ms, 1s, 2s
+        "[focushive.session.duration]": 1m, 5m, 25m, 60m
+        "[focushive.database.query.duration]": 50ms, 100ms, 500ms, 1s
+    
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+            percentiles: 0.5, 0.9, 0.95, 0.99
+    
+    export:
+      prometheus:
+        enabled: true
+        step: 60s
+        descriptions: true
+        histogram-flavor: prometheus
+      
+      # Optional: Enable if using other metrics systems
+      simple:
+        enabled: false
+      
+      jmx:
+        enabled: false
+
+  # Distributed tracing configuration
+  tracing:
+    enabled: true
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+    baggage:
+      remote-fields: user-id,session-id,correlation-id,persona-id
+      correlation:
+        fields: user-id,session-id,correlation-id,persona-id
+  
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+      timeout: 10s
+      connect-timeout: 5s
+      read-timeout: 10s
+  
+  # Observation configuration
+  observations:
+    key-values:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active:default}
+
+# Logging configuration for observability
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+    console: "%clr(%d{HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${spring.application.name:},%X{traceId:-},%X{spanId:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [${spring.application.name:},%X{traceId:-},%X{spanId:-}] %-5level ${PID:- } --- [%thread] %-40.40logger{39} : %msg%n"
+  
+  level:
+    com.focushive: ${FOCUSHIVE_LOG_LEVEL:INFO}
+    com.focushive.observability: ${OBSERVABILITY_LOG_LEVEL:INFO}
+    com.focushive.api: ${API_LOG_LEVEL:INFO}
+    
+    # Metrics and tracing
+    io.micrometer: ${MICROMETER_LOG_LEVEL:INFO}
+    brave: ${BRAVE_LOG_LEVEL:INFO}
+    zipkin2: ${ZIPKIN_LOG_LEVEL:INFO}
+    
+    # HTTP and performance
+    org.springframework.web: ${WEB_LOG_LEVEL:WARN}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
+    org.springframework.boot.actuator: ${ACTUATOR_LOG_LEVEL:WARN}
+    
+    # Database
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.hibernate.type: ${SQL_PARAMS_LOG_LEVEL:WARN}
+    com.zaxxer.hikari: ${HIKARI_LOG_LEVEL:WARN}
+    
+    # External integrations
+    feign: ${FEIGN_LOG_LEVEL:INFO}
+    io.github.resilience4j: ${RESILIENCE4J_LOG_LEVEL:INFO}
+    
+    # Infrastructure
+    org.springframework.data.redis: ${REDIS_LOG_LEVEL:WARN}
+    org.flywaydb: ${FLYWAY_LOG_LEVEL:INFO}
+    
+    # Root logger
+    root: ${ROOT_LOG_LEVEL:INFO}
+
+# Application-specific monitoring configuration
+app:
+  monitoring:
+    metrics:
+      # Business metrics configuration
+      business:
+        session-duration-buckets: 60s,300s,900s,1500s,3600s # 1m,5m,15m,25m,60m
+        member-count-buckets: 1,5,10,25,50,100,250,500
+        queue-size-buckets: 10,50,100,500,1000,5000
+      
+      # Performance thresholds for alerts
+      thresholds:
+        http-request-duration-p99: 2000ms
+        database-query-duration-p95: 500ms
+        identity-service-call-duration-p95: 1000ms
+        session-duration-max: 3600s
+        error-rate-max: 0.01 # 1%
+        cache-hit-rate-min: 0.80 # 80%
+    
+    health:
+      # Business health check thresholds
+      thresholds:
+        max-active-sessions: 1000
+        max-queue-size: 5000
+        max-websocket-connections: 2000
+        min-cache-hit-rate: 70.0
+        max-error-rate: 0.05 # 5%
+    
+    alerts:
+      enabled: ${ALERTS_ENABLED:true}
+      # Alert configuration would be handled by external systems
+      # like Prometheus Alertmanager, but we define thresholds here
+      
+# Environment-specific overrides
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0 # Sample all traces in development
+  
+logging:
+  level:
+    com.focushive: DEBUG
+    com.focushive.observability: DEBUG
+    io.micrometer.tracing: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1 # Sample 10% of traces in production
+  
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus # Reduce exposed endpoints in production
+
+logging:
+  level:
+    com.focushive: INFO
+    io.micrometer: INFO
+    brave: WARN
+    root: WARN
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+management:
+  tracing:
+    enabled: false # Disable tracing in tests
+  
+  metrics:
+    export:
+      prometheus:
+        enabled: false # Disable Prometheus export in tests
+
+logging:
+  level:
+    com.focushive: WARN
+    root: WARN

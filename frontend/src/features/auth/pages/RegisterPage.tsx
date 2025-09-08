@@ -24,8 +24,7 @@ export default function RegisterPage() {
       navigate('/dashboard', { replace: true })
       
     } catch (error) {
-      // Error is already handled by the auth context
-      // The error will be displayed via authState.error
+      console.error('Register error:', error);
     }
   }
 

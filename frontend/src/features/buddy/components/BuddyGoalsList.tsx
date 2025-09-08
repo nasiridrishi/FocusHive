@@ -75,7 +75,8 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
         const goalsData = await buddyApi.getRelationshipGoals(relationshipId)
         setGoals(goalsData)
       } catch (err) {
-        setError('Failed to load goals')
+      console.error('Error:', err);
+      setError('Failed to load goals')
       } finally {
         setLoading(false)
       }
@@ -89,6 +90,7 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
       const goalsData = await buddyApi.getRelationshipGoals(relationshipId)
       setGoals(goalsData)
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to load goals')
     } finally {
       setLoading(false)
@@ -175,6 +177,7 @@ const BuddyGoalsList: React.FC<BuddyGoalsListProps> = ({
       await loadGoals()
       if (onUpdate) onUpdate()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to complete goal')
     }
   }

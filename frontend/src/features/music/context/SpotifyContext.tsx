@@ -186,6 +186,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
         initializePlayer()
       }
     } catch (error) {
+      console.error('Failed to initialize Spotify integration:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize Spotify integration' })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -238,6 +239,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       
       return success
     } catch (error) {
+      console.error('Spotify authentication failed:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Authentication failed' })
       return false
     } finally {
@@ -268,6 +270,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       
       return success
     } catch (error) {
+      console.error('Failed to connect to Spotify:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to connect to Spotify' })
       return false
     } finally {
@@ -285,6 +288,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       const success = await state.player.player.connect()
       return success
     } catch (error) {
+      console.error('Failed to connect Spotify player:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to connect player' })
       return false
     }
@@ -313,6 +317,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
       })
       return true
     } catch (error) {
+      console.error('Failed to transfer playback:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to transfer playback to this device' })
       return false
     }
@@ -465,8 +470,6 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
   )
 }
 
-// Re-export hook from separate file
-export { useSpotify } from './useSpotifyContext'
 
 // Export context and type for use in hooks
 export { SpotifyContext }

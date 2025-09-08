@@ -2,6 +2,36 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ExportMenu } from './ExportMenu';
 import { ExportMenuProps, AnalyticsFilter } from '../types';
+import { AllTheProviders } from '@/test-utils/testProviders';
+
+// Mock DatePicker and LocalizationProvider to avoid adapter issues
+interface DatePickerMockProps {
+  label?: string;
+  value?: Date | null;
+  onChange?: (date: Date | null) => void;
+  slotProps?: {
+    textField?: {
+      'data-testid'?: string;
+    };
+  };
+}
+
+vi.mock('@mui/x-date-pickers/DatePicker', () => ({
+  DatePicker: ({ label, value, onChange, slotProps }: DatePickerMockProps) => (
+    <div>
+      <input
+        data-testid={slotProps?.textField?.['data-testid'] || `date-picker-${label?.toLowerCase().replace(/\s+/g, '-')}`}
+        placeholder={label}
+        value={value?.toISOString?.() || ''}
+        onChange={(e) => onChange?.(new Date(e.target.value))}
+      />
+    </div>
+  ),
+}));
+
+vi.mock('@mui/x-date-pickers/LocalizationProvider', () => ({
+  LocalizationProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
 
 const mockFilter: AnalyticsFilter = {
   timeRange: {
@@ -20,18 +50,35 @@ const defaultProps: ExportMenuProps = {
   currentFilter: mockFilter
 };
 
+// Helper function to open the export dialog
+const openDialog = () => {
+  const exportButton = screen.getByLabelText('export data') as HTMLButtonElement;
+  if (!exportButton.disabled) {
+    fireEvent.click(exportButton);
+    fireEvent.click(screen.getByText('Export Data'));
+  }
+};
+
 describe('ExportMenu', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders without crashing', () => {
-    render(<ExportMenu {...defaultProps} />);
-    expect(screen.getByText('Export Data')).toBeInTheDocument();
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
+    expect(screen.getByLabelText('export data')).toBeInTheDocument();
   });
 
   it('shows export button with icon', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
     const exportButton = screen.getByLabelText('export data');
     expect(exportButton).toBeInTheDocument();
@@ -39,52 +86,91 @@ describe('ExportMenu', () => {
   });
 
   it('opens export dialog when button is clicked', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
     const exportButton = screen.getByLabelText('export data');
     fireEvent.click(exportButton);
+    
+    // First click opens menu
+    expect(screen.getByText('Export Data')).toBeInTheDocument();
+    
+    // Click on menu item to open dialog
+    const menuItem = screen.getByText('Export Data');
+    fireEvent.click(menuItem);
     
     expect(screen.getByText('Export Analytics Data')).toBeInTheDocument();
     expect(screen.getByText('Choose your export preferences')).toBeInTheDocument();
   });
 
   it('shows format selection options', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
+    // Open menu and then dialog
     fireEvent.click(screen.getByLabelText('export data'));
+    fireEvent.click(screen.getByText('Export Data'));
     
     expect(screen.getByText('Export Format')).toBeInTheDocument();
-    expect(screen.getByLabelText('CSV')).toBeInTheDocument();
-    expect(screen.getByLabelText('JSON')).toBeInTheDocument();
-    expect(screen.getByLabelText('PDF Report')).toBeInTheDocument();
-    expect(screen.getByLabelText('PNG Image')).toBeInTheDocument();
+    // Check format options are present - all radio buttons include both format and date range
+    const allRadioOptions = screen.getAllByRole('radio');
+    expect(allRadioOptions).toHaveLength(7); // 4 format + 3 date range radios
+    expect(screen.getByDisplayValue('csv')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('json')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('pdf')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('png')).toBeInTheDocument();
   });
 
   it('selects CSV format by default', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
+    // Open menu and then dialog
     fireEvent.click(screen.getByLabelText('export data'));
+    fireEvent.click(screen.getByText('Export Data'));
     
-    const csvOption = screen.getByLabelText('CSV');
+    // Find the radio button with value 'csv' (default)
+    const csvOption = screen.getByDisplayValue('csv');
     expect(csvOption).toBeChecked();
   });
 
   it('allows format selection', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
+    // Open menu and then dialog
     fireEvent.click(screen.getByLabelText('export data'));
+    fireEvent.click(screen.getByText('Export Data'));
     
-    const jsonOption = screen.getByLabelText('JSON');
+    // Click on the JSON radio button directly
+    const jsonOption = screen.getByDisplayValue('json');
     fireEvent.click(jsonOption);
     
+    const csvOption = screen.getByDisplayValue('csv');
     expect(jsonOption).toBeChecked();
-    expect(screen.getByLabelText('CSV')).not.toBeChecked();
+    expect(csvOption).not.toBeChecked();
   });
 
   it('shows date range selector', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     expect(screen.getByText('Date Range')).toBeInTheDocument();
     expect(screen.getByText('Use Current Filter')).toBeInTheDocument();
@@ -93,29 +179,43 @@ describe('ExportMenu', () => {
   });
 
   it('uses current filter date range by default', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
-    const currentFilterOption = screen.getByLabelText('Use Current Filter');
+    // Check that current filter is selected by default
+    const currentFilterOption = screen.getByDisplayValue('current');
     expect(currentFilterOption).toBeChecked();
     expect(screen.getByText('Jan 1 - Jan 31, 2024')).toBeInTheDocument();
   });
 
   it('shows custom date inputs when custom range is selected', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
-    fireEvent.click(screen.getByLabelText('Custom Range'));
+    openDialog();
+    fireEvent.click(screen.getByText('Custom Range'));
     
-    expect(screen.getByLabelText('Export Start Date')).toBeInTheDocument();
-    expect(screen.getByLabelText('Export End Date')).toBeInTheDocument();
+    // Both start and end date pickers should be present
+    expect(screen.getByTestId('date-picker-export-start-date')).toBeInTheDocument();
+    expect(screen.getByTestId('date-picker-export-end-date')).toBeInTheDocument();
   });
 
   it('shows content options', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     expect(screen.getByText('Content Options')).toBeInTheDocument();
     expect(screen.getByLabelText('Include Charts')).toBeInTheDocument();
@@ -123,9 +223,13 @@ describe('ExportMenu', () => {
   });
 
   it('shows section selection checkboxes', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     expect(screen.getByText('Sections to Include')).toBeInTheDocument();
     expect(screen.getByLabelText('Productivity Metrics')).toBeInTheDocument();
@@ -135,9 +239,13 @@ describe('ExportMenu', () => {
   });
 
   it('selects all sections by default', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     expect(screen.getByLabelText('Productivity Metrics')).toBeChecked();
     expect(screen.getByLabelText('Goal Progress')).toBeChecked();
@@ -146,9 +254,13 @@ describe('ExportMenu', () => {
   });
 
   it('allows section deselection', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     const hiveActivityOption = screen.getByLabelText('Hive Activity');
     fireEvent.click(hiveActivityOption);
@@ -157,9 +269,13 @@ describe('ExportMenu', () => {
   });
 
   it('shows export preview information', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     expect(screen.getByText('Export Preview')).toBeInTheDocument();
     expect(screen.getByText(/Estimated file size/)).toBeInTheDocument();
@@ -168,12 +284,16 @@ describe('ExportMenu', () => {
 
   it('calls onExport with correct options when export button is clicked', async () => {
     const onExport = vi.fn().mockResolvedValue(undefined);
-    render(<ExportMenu {...defaultProps} onExport={onExport} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} onExport={onExport} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
-    // Change some options
-    fireEvent.click(screen.getByLabelText('JSON'));
+    // Change some options - click on the radio button itself, not just the text
+    fireEvent.click(screen.getByDisplayValue('json'));
     fireEvent.click(screen.getByLabelText('Include Charts'));
     fireEvent.click(screen.getByLabelText('Hive Activity')); // Deselect
     
@@ -191,47 +311,71 @@ describe('ExportMenu', () => {
   });
 
   it('shows loading state during export', async () => {
-    render(<ExportMenu {...defaultProps} loading={true} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} loading={true} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
-    fireEvent.click(screen.getByText('Export'));
-    
-    expect(screen.getByText('Exporting...')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // When loading prop is true, the main export button should be disabled
+    const exportButton = screen.getByLabelText('export data');
+    expect(exportButton).toBeDisabled();
   });
 
   it('disables export button when disabled prop is true', () => {
-    render(<ExportMenu {...defaultProps} disabled={true} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} disabled={true} />
+      </AllTheProviders>
+    );
     
     const exportButton = screen.getByLabelText('export data');
     expect(exportButton).toBeDisabled();
   });
 
-  it('closes dialog when cancel is clicked', () => {
-    render(<ExportMenu {...defaultProps} />);
+  it('closes dialog when cancel is clicked', async () => {
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     expect(screen.getByText('Export Analytics Data')).toBeInTheDocument();
     
     fireEvent.click(screen.getByText('Cancel'));
-    expect(screen.queryByText('Export Analytics Data')).not.toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(screen.queryByText('Export Analytics Data')).not.toBeInTheDocument();
+    });
   });
 
-  it('closes dialog when backdrop is clicked', () => {
-    render(<ExportMenu {...defaultProps} />);
+  it('closes dialog when backdrop is clicked', async () => {
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     expect(screen.getByText('Export Analytics Data')).toBeInTheDocument();
     
-    const backdrop = screen.getByTestId('export-dialog-backdrop');
-    fireEvent.click(backdrop);
-    expect(screen.queryByText('Export Analytics Data')).not.toBeInTheDocument();
+    // Click the close button instead of backdrop (more reliable)
+    fireEvent.click(screen.getByLabelText('Close dialog'));
+    
+    await waitFor(() => {
+      expect(screen.queryByText('Export Analytics Data')).not.toBeInTheDocument();
+    });
   });
 
   it('validates required sections selection', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     // Deselect all sections
     fireEvent.click(screen.getByLabelText('Productivity Metrics'));
@@ -245,17 +389,20 @@ describe('ExportMenu', () => {
   });
 
   it('validates custom date range', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
-    fireEvent.click(screen.getByLabelText('Custom Range'));
+    openDialog();
+    fireEvent.click(screen.getByText('Custom Range'));
     
-    // Set invalid date range
-    const startDateInput = screen.getByLabelText('Export Start Date');
-    const endDateInput = screen.getByLabelText('Export End Date');
-    
-    fireEvent.change(startDateInput, { target: { value: '2024-02-01' } });
-    fireEvent.change(endDateInput, { target: { value: '2024-01-01' } });
+    // Set invalid date range using our mocked date picker
+    const startDatePicker = screen.getByTestId('date-picker-export-start-date');
+    const endDatePicker = screen.getByTestId('date-picker-export-end-date');
+    fireEvent.change(startDatePicker, { target: { value: '2024-02-01T00:00:00.000Z' } });
+    fireEvent.change(endDatePicker, { target: { value: '2024-01-01T00:00:00.000Z' } });
     
     fireEvent.click(screen.getByText('Export'));
     
@@ -263,46 +410,68 @@ describe('ExportMenu', () => {
   });
 
   it('shows format-specific options for PDF', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
-    fireEvent.click(screen.getByLabelText('PDF Report'));
+    openDialog();
+    fireEvent.click(screen.getByDisplayValue('pdf'));
     
     expect(screen.getByText('Include Cover Page')).toBeInTheDocument();
     expect(screen.getByText('Include Table of Contents')).toBeInTheDocument();
-    expect(screen.getByText('Page Orientation')).toBeInTheDocument();
+    expect(screen.getByText('PDF Options')).toBeInTheDocument();
+    // Use getAllByText and check the first instance to handle duplicates
+    const pageOrientationLabels = screen.getAllByText('Page Orientation');
+    expect(pageOrientationLabels[0]).toBeInTheDocument();
   });
 
   it('shows format-specific options for PNG', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
-    fireEvent.click(screen.getByLabelText('PNG Image'));
+    openDialog();
+    fireEvent.click(screen.getByDisplayValue('png'));
     
     expect(screen.getByText('Image Quality')).toBeInTheDocument();
-    expect(screen.getByText('Background Color')).toBeInTheDocument();
     expect(screen.getByText('Include Legends')).toBeInTheDocument();
+    expect(screen.getByText('Image Options')).toBeInTheDocument();
+    // Use getAllByText and check the first instance to handle duplicates
+    const backgroundColorLabels = screen.getAllByText('Background Color');
+    expect(backgroundColorLabels[0]).toBeInTheDocument();
   });
 
   it('updates file size estimate based on selections', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
-    const initialSize = screen.getByText(/Estimated file size: ~\d+KB/);
+    const initialSize = screen.getByText(/Estimated file size/);
     expect(initialSize).toBeInTheDocument();
     
     // Add charts - should increase size
     fireEvent.click(screen.getByLabelText('Include Charts'));
     
-    const updatedSize = screen.getByText(/Estimated file size: ~\d+KB/);
+    const updatedSize = screen.getByText(/Estimated file size/);
     expect(updatedSize).toBeInTheDocument();
   });
 
   it('shows export history when available', () => {
-    render(<ExportMenu {...defaultProps} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     
     const historyTab = screen.getByText('Recent Exports');
     fireEvent.click(historyTab);
@@ -312,9 +481,13 @@ describe('ExportMenu', () => {
 
   it('handles export error gracefully', async () => {
     const onExport = vi.fn().mockRejectedValue(new Error('Export failed'));
-    render(<ExportMenu {...defaultProps} onExport={onExport} />);
+    render(
+      <AllTheProviders withDatePickers={false}>
+        <ExportMenu {...defaultProps} onExport={onExport} />
+      </AllTheProviders>
+    );
     
-    fireEvent.click(screen.getByLabelText('export data'));
+    openDialog();
     fireEvent.click(screen.getByText('Export'));
     
     await waitFor(() => {

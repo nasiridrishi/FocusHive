@@ -248,11 +248,13 @@ function validateEnvironmentVariable(
         break;
     }
   } catch (error) {
-    return {
+      console.error('Environment validation error:', error);
+      return {
       value: undefined,
       error: {
         variable,
-        message: `Failed to convert environment variable ${variable} to ${type}. Got: "${rawValue}"`,
+        message: `Failed to convert environment variable ${variable
+    } to ${type}. Got: "${rawValue}"`,
         severity: 'error'
       }
     };

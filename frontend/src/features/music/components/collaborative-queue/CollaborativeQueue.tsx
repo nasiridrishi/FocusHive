@@ -163,7 +163,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
     try {
       await reorderQueueItems(sourceIndex, targetIndex)
     } catch (error) {
-      // Failed to reorder queue
+      console.error('Error:', error);
     }
     
     handleDragEnd()
@@ -177,7 +177,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
     try {
       await voteOnQueueTrack(queueId, 'up')
     } catch (error) {
-      // Failed to vote
+      console.error('Error:', error);
     }
   }, [canVote, voteOnQueueTrack])
 
@@ -188,7 +188,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
     try {
       await voteOnQueueTrack(queueId, 'down')
     } catch (error) {
-      // Failed to vote
+      console.error('Error:', error);
     }
   }, [canVote, voteOnQueueTrack])
 
@@ -210,8 +210,8 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
         await removeTrackFromQueue(selectedItem.queueId)
         handleMenuClose()
       } catch (error) {
-        // Failed to remove track
-      }
+      console.error('Error:', error);
+    }
     }
   }, [selectedItem, removeTrackFromQueue, handleMenuClose])
 
@@ -259,6 +259,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
       ]
       setSearchResults(mockResults)
     } catch (error) {
+      console.error('Search error:', error);
       setSearchResults([])
     } finally {
       setIsSearching(false)
@@ -270,7 +271,7 @@ const CollaborativeQueue: React.FC<CollaborativeQueueProps> = ({
       await addTrackToQueue(track)
       handleSearchClose()
     } catch (error) {
-      // Failed to add track
+      console.error('Error:', error);
     }
   }, [addTrackToQueue, handleSearchClose])
 

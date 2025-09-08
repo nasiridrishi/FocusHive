@@ -71,7 +71,8 @@ public class AuthenticationServiceTest {
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
         testUser.setPassword("encodedPassword");
-        testUser.setDisplayName("Test User");
+        testUser.setFirstName("Test");
+        testUser.setLastName("User");
         testUser.setEmailVerified(true);
         testUser.setEnabled(true);
         
@@ -94,7 +95,8 @@ public class AuthenticationServiceTest {
         request.setEmail("newuser@example.com");
         request.setPassword("password123");
         // No confirmPassword field
-        request.setDisplayName("New User");
+        request.setFirstName("New");
+        request.setLastName("User");
         
         when(userRepository.existsByUsername("newuser")).thenReturn(false);
         when(userRepository.existsByEmail(anyString())).thenReturn(false);

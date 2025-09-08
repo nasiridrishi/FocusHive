@@ -26,8 +26,7 @@ export default function LoginPage() {
       navigate(from, { replace: true })
       
     } catch (error) {
-      // Error is already handled by the auth context
-      // The error will be displayed via authState.error
+      console.error('Login error:', error);
     }
   }
 

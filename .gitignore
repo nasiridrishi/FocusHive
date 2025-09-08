@@ -308,3 +308,6 @@ archive/
 !.gitignore
 !.github/
 !.husky/
+# macOS resource fork artifacts
+._*
+.DS_Store

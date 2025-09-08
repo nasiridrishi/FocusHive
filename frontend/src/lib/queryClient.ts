@@ -189,6 +189,7 @@ export const localStoragePersister = createSyncStoragePersister({
         }
       } catch (cleanupError) {
         // Cache cleanup failed - quota issue persists
+        console.error('Failed to cleanup cache:', cleanupError);
       }
     }
     

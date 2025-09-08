@@ -64,6 +64,7 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
         // User dismissed the install prompt
       }
     } catch (error) {
+      console.error('PWA install error:', error);
       setState(prev => ({
         ...prev,
         isInstalling: false,

@@ -78,7 +78,7 @@ public class Persona {
     
     // Notification preferences specific to this persona
     @Column(name = "notification_preferences", columnDefinition = "jsonb")
-    @Convert(converter = JsonAttributeConverter.class)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Builder.Default
     private Map<String, Boolean> notificationPreferences = new HashMap<>();
     

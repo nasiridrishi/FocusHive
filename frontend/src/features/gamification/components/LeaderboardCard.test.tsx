@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -9,10 +10,14 @@ import type { Leaderboard, User } from '../types/gamification';
 // Mock framer-motion for testing
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
-    li: ({ children, ...props }: React.ComponentProps<'li'>) => <li {...props}>{children}</li>,
+    div: React.forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(
+      ({ children, ...props }, ref) => <div ref={ref} {...props}>{children}</div>
+    ),
+    li: React.forwardRef<HTMLLIElement, React.ComponentProps<'li'>>(
+      ({ children, ...props }, ref) => <li ref={ref} {...props}>{children}</li>
+    ),
   },
-  animatePresence: ({ children }: { children: React.ReactNode }) => children,
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();
@@ -422,9 +427,13 @@ describe('LeaderboardCard', () => {
 
   describe('Loading and Error States', () => {
     it('shows loading state when data is being fetched', () => {
-      const loadingLeaderboard = null;
+      const loadingLeaderboard: Leaderboard = {
+        ...mockLeaderboard,
+        participants: [],
+        isLoading: true
+      };
       
-      renderWithTheme(<LeaderboardCard leaderboard={loadingLeaderboard!} />);
+      renderWithTheme(<LeaderboardCard leaderboard={loadingLeaderboard} />);
       
       expect(screen.getByTestId('leaderboard-skeleton')).toBeInTheDocument();
     });

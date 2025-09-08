@@ -32,7 +32,21 @@ import type { CreatePlaylistRequest, SearchTracksRequest } from '../types/music'
 
 // Get the mocked axios instance
 const mockedAxios = vi.mocked(axios)
-const mockAxiosInstance = mockedAxios.create() as unknown
+
+// Define the mock axios instance type
+interface MockAxiosInstance {
+  get: ReturnType<typeof vi.fn>
+  post: ReturnType<typeof vi.fn>
+  put: ReturnType<typeof vi.fn>
+  delete: ReturnType<typeof vi.fn>
+  patch: ReturnType<typeof vi.fn>
+  interceptors: {
+    request: { use: ReturnType<typeof vi.fn> }
+    response: { use: ReturnType<typeof vi.fn> }
+  }
+}
+
+const mockAxiosInstance = mockedAxios.create() as unknown as MockAxiosInstance
 
 // Mock localStorage
 const mockLocalStorage = {

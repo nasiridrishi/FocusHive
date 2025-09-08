@@ -19,7 +19,7 @@ import {
   CheckCircle as ConnectedIcon,
   Error as ErrorIcon
 } from '@mui/icons-material'
-import { useSpotify } from '../../context/SpotifyContext'
+import { useSpotify } from '../../context/useSpotifyContext'
 
 interface SpotifyConnectButtonProps {
   variant?: 'button' | 'card'

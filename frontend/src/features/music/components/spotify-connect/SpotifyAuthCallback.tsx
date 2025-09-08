@@ -17,7 +17,7 @@ import {
   Error as ErrorIcon,
   MusicNote as SpotifyIcon
 } from '@mui/icons-material'
-import { useSpotify } from '../../context/SpotifyContext'
+import { useSpotify } from '../../context/useSpotifyContext'
 
 interface SpotifyAuthCallbackProps {
   redirectTo?: string

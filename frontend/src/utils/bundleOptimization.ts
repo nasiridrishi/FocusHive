@@ -8,8 +8,8 @@
 import { preloadCriticalRoutes, routePreloaders } from '@app/routes/lazyRouteUtils'
 import { preloadCommonIcons } from '@shared/components/dynamic-icon'
 import { preloadChartLibrary } from '@shared/components/lazy-charts'
-import { preloadDatePickers } from '@shared/components/lazy-date-pickers'
-import { preloadHeavyFeatures as _preloadHeavyFeatures, featurePreloaders as _featurePreloaders } from '@shared/components/lazy-features'
+import { preloadDatePickers } from '@shared/components/lazy-date-pickers/datePickerUtils'
+import { preloadHeavyFeatures as _preloadHeavyFeatures, featurePreloaders as _featurePreloaders } from '@shared/components/lazy-features/featureUtils'
 import { libraryPreloader as _libraryPreloader, smartPreloader as _smartPreloader } from '@shared/utils/dynamicImports'
 
 export interface PreloadOptions {

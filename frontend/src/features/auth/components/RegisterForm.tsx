@@ -73,7 +73,7 @@ export default function RegisterForm({ onSubmit, isLoading = false, error }: Reg
       const { confirmPassword, acceptTerms, ...submitData } = data
       await onSubmit(submitData)
     } catch (err) {
-      // Registration error handled by parent component
+      console.error('Register form error:', err);
     }
   }
 

@@ -39,6 +39,33 @@ import frPresence from '../locales/fr/presence.json'
 import frError from '../locales/fr/error.json'
 import frValidation from '../locales/fr/validation.json'
 
+// ==========================================
+// i18next Formatting Usage Guide
+// ==========================================
+// 
+// The new i18next formatting approach (>=21.3.0) uses built-in Intl formatters.
+// Use these in your translation JSON files:
+//
+// Built-in formatters (recommended):
+// - "text": "Value: {{value, number}}"           -> Number formatting
+// - "text": "Price: {{value, currency}}"        -> Currency formatting  
+// - "text": "Date: {{value, datetime}}"         -> Date/time formatting
+// - "text": "Percent: {{value, percent}}"       -> Percentage formatting
+//
+// Custom formatters (added below):
+// - "text": "Name: {{value, uppercase}}"        -> UPPERCASE text
+// - "text": "Name: {{value, lowercase}}"        -> lowercase text
+// - "text": "Name: {{value, capitalize}}"       -> Capitalized text
+//
+// Advanced formatting with options:
+// - "text": "{{val, number(minimumFractionDigits: 2)}}"
+// - "text": "{{val, datetime(year: numeric; month: short)}}"
+//
+// Migration from legacy format function:
+// OLD: i18n.t('key', { value: 'hello', formatParams: { value: { format: 'uppercase' }}})
+// NEW: Use "key": "{{value, uppercase}}" in JSON and i18n.t('key', { value: 'hello' })
+// ==========================================
+
 // Language resources organized by namespace
 export const resources = {
   en: {
@@ -178,51 +205,8 @@ i18n
     interpolation: {
       // React already escapes by default
       escapeValue: false,
-
-      // Format function for interpolation
-      format: (value, format, lng) => {
-        if (format === 'uppercase') return value.toUpperCase()
-        if (format === 'lowercase') return value.toLowerCase()
-        if (format === 'capitalize') return value.charAt(0).toUpperCase() + value.slice(1)
-        
-        // Date formatting
-        if (format === 'date') {
-          return new Intl.DateTimeFormat(lng).format(new Date(value))
-        }
-        if (format === 'datetime') {
-          return new Intl.DateTimeFormat(lng, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          }).format(new Date(value))
-        }
-        if (format === 'time') {
-          return new Intl.DateTimeFormat(lng, {
-            hour: '2-digit',
-            minute: '2-digit',
-          }).format(new Date(value))
-        }
-
-        // Number formatting
-        if (format === 'number') {
-          return new Intl.NumberFormat(lng).format(value)
-        }
-        if (format === 'currency') {
-          return new Intl.NumberFormat(lng, {
-            style: 'currency',
-            currency: 'USD', // Default currency, can be made configurable
-          }).format(value)
-        }
-        if (format === 'percent') {
-          return new Intl.NumberFormat(lng, {
-            style: 'percent',
-          }).format(value / 100)
-        }
-
-        return value
-      },
+      // Note: Legacy format function removed - using new formatter approach
+      // Custom formatters are now added via i18next.services.formatter.add() after init
     },
 
     // React specific options
@@ -295,6 +279,28 @@ i18n
       : undefined,
   } as unknown)
 
+// Add custom formatters using the new approach (after init)
+// These replace the legacy format function that was deprecated
+i18n.services.formatter.add('uppercase', (value: string) => {
+  return value.toUpperCase()
+})
+
+i18n.services.formatter.add('lowercase', (value: string) => {
+  return value.toLowerCase()
+})
+
+i18n.services.formatter.add('capitalize', (value: string) => {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+})
+
+// Note: Date, time, number, currency, and percent formatting are now handled
+// by built-in Intl formatters in the new i18next approach:
+// - Use {{value, datetime}} for date and time formatting
+// - Use {{value, number}} for number formatting  
+// - Use {{value, currency}} for currency formatting
+// - Use {{value, percent}} for percentage formatting
+// These automatically use the current locale from i18next
+
 export default i18n
 
 // Helper function to get current language config
@@ -329,6 +335,7 @@ export const changeLanguage = async (language: SupportedLanguage): Promise<void>
 }
 
 // Helper function to format dates with current locale
+// Note: For i18next translations, prefer using {{value, datetime}} in translation strings
 export const formatDate = (
   date: Date | string | number,
   options?: Intl.DateTimeFormatOptions
@@ -338,6 +345,7 @@ export const formatDate = (
 }
 
 // Helper function to format numbers with current locale
+// Note: For i18next translations, prefer using {{value, number}} in translation strings
 export const formatNumber = (
   number: number,
   options?: Intl.NumberFormatOptions
@@ -347,6 +355,7 @@ export const formatNumber = (
 }
 
 // Helper function to format currency with current locale
+// Note: For i18next translations, prefer using {{value, currency}} in translation strings
 export const formatCurrency = (
   amount: number,
   currency: string = 'USD',

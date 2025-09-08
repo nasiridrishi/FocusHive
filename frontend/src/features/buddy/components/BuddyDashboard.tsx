@@ -98,6 +98,7 @@ const BuddyDashboard: React.FC = () => {
       setUpcomingSessions(sessions)
       setUserStats(stats)
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to load buddy dashboard data')
     } finally {
       setLoading(false)
@@ -109,6 +110,7 @@ const BuddyDashboard: React.FC = () => {
       await buddyApi.acceptBuddyRequest(relationshipId)
       await loadDashboardData()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to accept buddy request')
     }
   }
@@ -118,6 +120,7 @@ const BuddyDashboard: React.FC = () => {
       await buddyApi.rejectBuddyRequest(relationshipId)
       await loadDashboardData()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to reject buddy request')
     }
   }

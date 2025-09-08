@@ -111,6 +111,7 @@ const ForumHome: React.FC = () => {
       setForumStats(statsData)
       setTopContributors(usersData.users)
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to load forum data')
     } finally {
       setLoading(false)

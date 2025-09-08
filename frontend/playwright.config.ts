@@ -22,7 +22,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:5173',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -32,7 +32,24 @@ export default defineConfig({
     
     /* Record video for failed tests */
     video: 'retain-on-failure',
+    
+    /* Additional configuration for FocusHive */
+    ignoreHTTPSErrors: true,
+    
+    /* Wait for network idle by default for SPA */
+    waitForLoadState: 'networkidle',
+    
+    /* Timeout for individual actions */
+    actionTimeout: 10000,
+    
+    /* Timeout for waiting for elements */
+    expect: {
+      timeout: 5000,
+    },
   },
+  
+  /* Global test timeout */
+  timeout: 60000,
 
   /* Configure projects for major browsers */
   projects: [
@@ -75,8 +92,12 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev',
-    url: 'http://127.0.0.1:3000',
+    url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes
+    env: {
+      VITE_IDENTITY_API_URL: process.env.E2E_IDENTITY_API_URL || 'http://localhost:8081',
+      VITE_API_BASE_URL: process.env.E2E_API_BASE_URL || 'http://localhost:8080',
+    },
   },
 });

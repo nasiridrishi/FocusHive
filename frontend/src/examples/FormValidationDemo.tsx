@@ -58,6 +58,7 @@ const FormValidationDemo: React.FC = () => {
       setMessage(`Login successful! Email: ${credentials.email}`)
       setMessageType('success')
     } catch (error) {
+      console.error('Login demo error:', error);
       setMessage('Login failed. Please try again.')
       setMessageType('error')
     } finally {
@@ -77,6 +78,7 @@ const FormValidationDemo: React.FC = () => {
       setMessage(`Registration successful! Welcome, ${userData.firstName}!`)
       setMessageType('success')
     } catch (error) {
+      console.error('Registration demo error:', error);
       setMessage('Registration failed. Please try again.')
       setMessageType('error')
     } finally {
@@ -97,6 +99,7 @@ const FormValidationDemo: React.FC = () => {
       setMessageType('success')
       setHiveFormOpen(false)
     } catch (error) {
+      console.error('Create hive demo error:', error);
       setMessage('Failed to create hive. Please try again.')
       setMessageType('error')
     } finally {

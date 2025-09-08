@@ -153,6 +153,7 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
 }, ref) => {
   const { announceStatus, announcePolite } = useAnnouncement();
   const [isConfirming, setIsConfirming] = React.useState(false);
+  const [_hasInteracted, setHasInteracted] = React.useState(false);
 
   // Generate unique IDs for ARIA relationships
   const descriptionId = React.useId();
@@ -180,6 +181,7 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
         announceStatus(successText);
       }
     } catch (error) {
+      console.error('Error:', error);
       announceStatus('Action failed. Please try again.');
     } finally {
       setIsConfirming(false);
@@ -229,6 +231,7 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
         aria-label={buttonLabel}
         aria-describedby={describedByIds}
         aria-busy={loading}
+        aria-disabled={isDisabled}
         aria-pressed={showConfirmationState ? true : undefined}
         data-state={
           loading ? 'loading' : 

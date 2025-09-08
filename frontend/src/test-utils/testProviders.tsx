@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { I18nextProvider } from 'react-i18next';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import i18n from '@lib/i18n';
 import theme from '@shared/theme/theme';
 import type { User } from '@shared/types/auth';
@@ -56,6 +58,7 @@ interface AllTheProvidersProps {
   withTheme?: boolean;
   withI18n?: boolean;
   withQueryClient?: boolean;
+  withDatePickers?: boolean;
 }
 
 export function AllTheProviders({
@@ -67,6 +70,7 @@ export function AllTheProviders({
   withTheme = true,
   withI18n = true,
   withQueryClient = true,
+  withDatePickers = true,
 }: AllTheProvidersProps) {
   const queryClient = createTestQueryClient();
 
@@ -90,6 +94,15 @@ export function AllTheProviders({
       <I18nextProvider i18n={i18n}>
         <PrevWrapper>{children}</PrevWrapper>
       </I18nextProvider>
+    );
+  }
+
+  if (withDatePickers) {
+    const PrevWrapper = Wrapper;
+    Wrapper = ({ children }) => (
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <PrevWrapper>{children}</PrevWrapper>
+      </LocalizationProvider>
     );
   }
 

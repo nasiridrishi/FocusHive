@@ -90,6 +90,7 @@ export class SpotifyService {
         })
       }
     } catch (error) {
+      console.error('Error:', error);
       this.clearAuth()
     }
   }
@@ -182,6 +183,7 @@ export class SpotifyService {
 
       return true
     } catch (error) {
+      console.error('Error:', error);
       this.clearAuth()
       return false
     }
@@ -286,7 +288,9 @@ export class SpotifyService {
       const connected = await player.connect()
       return connected
     } catch (error) {
+      console.error('Error:', error);
       return false
+    ;
     }
   }
 

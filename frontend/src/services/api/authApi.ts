@@ -328,7 +328,7 @@ export const authApiService = {
       await identityApi.post('/v1/auth/logout');
     } catch (error) {
       // Log error but don't throw - we want to clear local tokens regardless
-      // Logout request failed - tokens cleared locally anyway
+      console.warn('Logout request failed - tokens cleared locally anyway:', error);
     } finally {
       tokenStorage.clearAllTokens();
     }
