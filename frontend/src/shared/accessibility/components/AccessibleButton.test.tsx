@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test-utils/test-utils';
 import { createA11yTestSuite } from '@/test-utils/accessibility-utils';
-import AccessibleButton from '../AccessibleButton';
+import AccessibleButton from './AccessibleButton';
 
 const renderAccessibleButton = (props = {}) => {
   return renderWithProviders(

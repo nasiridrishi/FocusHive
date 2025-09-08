@@ -41,7 +41,7 @@ import {
 } from '@mui/icons-material'
 import { useMusic } from '../../context'
 import { usePlaybackControl, useSpotifyPlayer } from '../../hooks'
-import { useSpotify } from '../../context/SpotifyContext'
+import { useSpotify } from '../../context/useSpotifyContext'
 import { SpotifyConnectButton } from '../spotify-connect'
 import { MusicPlayerProps } from '../../types'
 
@@ -127,7 +127,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         }
       }
     } catch (error) {
-      // Failed to toggle playback
+      console.error('Failed to toggle playback:', error);
     }
   }, [isUsingSpotify, spotifyPlayer, effectivePlaybackState?.isPlaying, effectivePlaybackState?.isPaused, effectiveCurrentTrack, pause, resume, playWithCrossfade])
 
@@ -142,7 +142,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         setVolume(normalizedVolume)
       }
     } catch (error) {
-      // Failed to set volume
+      console.error('Failed to set volume:', error);
     }
   }, [isUsingSpotify, spotifyPlayer, setVolume])
 
@@ -154,7 +154,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         skipNextEnhanced()
       }
     } catch (error) {
-      // Failed to skip next
+      console.error('Failed to skip next:', error);
     }
   }, [isUsingSpotify, spotifyPlayer, skipNextEnhanced])
 
@@ -166,7 +166,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         skipPreviousEnhanced()
       }
     } catch (error) {
-      // Failed to skip previous
+      console.error('Failed to skip previous:', error);
     }
   }, [isUsingSpotify, spotifyPlayer, skipPreviousEnhanced])
 
@@ -199,7 +199,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         seekTo(timeInSeconds)
       }
     } catch (error) {
-      // Failed to seek
+      console.error('Failed to seek:', error);
     }
     setIsDragging(false)
   }, [effectivePlaybackState?.duration, isUsingSpotify, spotifyPlayer, seekTo])
@@ -433,7 +433,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
               onChange={handlePositionChange}
               onChangeCommitted={handlePositionCommit}
               onMouseDown={handlePositionMouseDown}
+              min={0}
+              max={100}
               size="small"
+              aria-label="seek"
               sx={{
                 color: theme.palette.primary.main,
                 height: 4,
@@ -626,6 +629,9 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
             onChange={handlePositionChange}
             onChangeCommitted={handlePositionCommit}
             onMouseDown={handlePositionMouseDown}
+            min={0}
+            max={100}
+            aria-label="seek"
             sx={{
               color: theme.palette.primary.main,
               height: 6,
@@ -760,7 +766,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
                 <Slider
                   value={(effectivePlaybackState?.volume || 0) * 100}
                   onChange={handleVolumeChange}
+                  min={0}
+                  max={100}
                   size="small"
+                  aria-label="volume"
                   sx={{
                     color: theme.palette.primary.main,
                     '& .MuiSlider-thumb': {

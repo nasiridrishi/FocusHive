@@ -55,6 +55,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
       await onSubmit(data)
     } catch (err) {
       // Error handling is done by parent component
+      console.error('Login form submission error:', err);
     }
   }
 

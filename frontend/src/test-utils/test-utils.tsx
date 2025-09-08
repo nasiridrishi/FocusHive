@@ -15,6 +15,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   withTheme?: boolean;
   withI18n?: boolean;
   withQueryClient?: boolean;
+  withDatePickers?: boolean;
 }
 
 
@@ -31,6 +32,7 @@ export function renderWithProviders(
     withTheme = true,
     withI18n = true,
     withQueryClient = true,
+    withDatePickers = false,
     ...renderOptions
   } = options;
 
@@ -43,6 +45,7 @@ export function renderWithProviders(
       withTheme={withTheme}
       withI18n={withI18n}
       withQueryClient={withQueryClient}
+      withDatePickers={withDatePickers}
     >
       {children}
     </AllTheProviders>

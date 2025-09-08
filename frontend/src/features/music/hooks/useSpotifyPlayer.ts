@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useSpotify } from '../context/SpotifyContext'
+import { useSpotify } from '../context/useSpotifyContext'
 import { Track, PlaybackState } from '../types'
 import type { UseSpotifyPlayerOptions } from '../../../types/spotify'
 
@@ -215,6 +215,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
       }
       return null
     } catch (err) {
+      console.error('Failed to get Spotify player state:', err);
       return null
     }
   }, [spotify])
@@ -236,6 +237,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
       await play(spotifyUri)
       return true
     } catch (err) {
+      console.error('Failed to play track:', err);
       return false
     }
   }, [play])

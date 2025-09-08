@@ -90,7 +90,7 @@ public class User implements UserDetails {
     private String timezone = "UTC";
     
     @Column(name = "notification_preferences", columnDefinition = "jsonb")
-    @Convert(converter = JsonAttributeConverter.class)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Builder.Default
     private Map<String, Boolean> notificationPreferences = new HashMap<>();
     

@@ -29,6 +29,7 @@ export interface ServiceWorkerRegistrationState {
 
 export interface UseServiceWorkerRegistrationOptions extends RegisterSWOptions {
   // Additional options specific to our hook
+  autoUpdate?: boolean;
 }
 
 export interface UseServiceWorkerRegistrationReturn extends ServiceWorkerRegistrationState {

@@ -305,6 +305,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
         await audioRef.current.play()
       }
     } catch (error) {
+      console.error('Failed to start playback:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to start playback' })
     }
   }, [state.currentTrack])
@@ -386,6 +387,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
         dispatch({ type: 'ADD_TO_QUEUE', payload: queueItem })
       }
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add track to queue' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -400,6 +402,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
         dispatch({ type: 'REMOVE_FROM_QUEUE', payload: queueId })
       }
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to remove track from queue' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -412,6 +415,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       const updatedQueue = await musicApi.reorderQueue(fromIndex, toIndex, currentHiveId.current || undefined)
       dispatch({ type: 'SET_QUEUE', payload: updatedQueue })
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to reorder queue' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -424,6 +428,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       await musicApi.clearQueue(currentHiveId.current || undefined)
       dispatch({ type: 'CLEAR_QUEUE' })
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to clear queue' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -440,6 +445,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
         dispatch({ type: 'SET_QUEUE', payload: queue })
       }
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to vote on track' })
     }
   }, [])
@@ -451,6 +457,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       const playlists = await musicApi.getPlaylists(currentHiveId.current || undefined)
       dispatch({ type: 'SET_PLAYLISTS', payload: playlists })
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load playlists' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -464,6 +471,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       dispatch({ type: 'ADD_PLAYLIST', payload: playlist })
       return playlist
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to create playlist' })
       throw error
     } finally {
@@ -478,6 +486,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       dispatch({ type: 'UPDATE_PLAYLIST', payload: playlist })
       return playlist
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update playlist' })
       throw error
     } finally {
@@ -491,6 +500,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       await musicApi.deletePlaylist(id)
       dispatch({ type: 'REMOVE_PLAYLIST', payload: id })
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete playlist' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -505,6 +515,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       const updatedPlaylist = await musicApi.getPlaylist(playlistId)
       dispatch({ type: 'UPDATE_PLAYLIST', payload: updatedPlaylist })
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add tracks to playlist' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -519,6 +530,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       const updatedPlaylist = await musicApi.getPlaylist(playlistId)
       dispatch({ type: 'UPDATE_PLAYLIST', payload: updatedPlaylist })
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to remove track from playlist' })
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -532,6 +544,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       dispatch({ type: 'UPDATE_PLAYLIST', payload: playlist })
       return playlist
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load playlist' })
       throw error
     } finally {
@@ -547,6 +560,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       dispatch({ type: 'SET_RECOMMENDATIONS', payload: recommendations })
       return recommendations
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to get recommendations' })
       throw error
     } finally {
@@ -564,6 +578,7 @@ export const MusicProvider: React.FC<MusicProviderProps> = ({ children, hiveId }
       dispatch({ type: 'SET_LOADING', payload: true })
       return await musicApi.searchTracks(request)
     } catch (error) {
+      console.error('Error:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to search tracks' })
       throw error
     } finally {

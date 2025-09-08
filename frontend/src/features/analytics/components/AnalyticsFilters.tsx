@@ -34,7 +34,7 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { AnalyticsFiltersProps, AnalyticsFilter } from '../types';
+import { AnalyticsFiltersProps, AnalyticsFilter, Hive, Member } from '../types';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';
 
 const getTimeRangePreset = (period: AnalyticsFilter['timeRange']['period']) => {
@@ -344,7 +344,7 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
               badge={filter.selectedHives?.length}
             >
               <FormGroup>
-                {availableHives.map((hive) => (
+                {availableHives.map((hive: Hive) => (
                   <FormControlLabel
                     key={hive.id}
                     control={
@@ -375,7 +375,7 @@ export const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
                 aria-disabled={filter.viewType === 'individual'}
               >
                 <FormGroup>
-                  {availableMembers.map((member) => (
+                  {availableMembers.map((member: Member) => (
                     <FormControlLabel
                       key={member.id}
                       control={

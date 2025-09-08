@@ -23,11 +23,14 @@ export {
   LazyForumHome,
   LazyBuddyDashboard,
   
-  // Utilities
-  featurePreloaders,
-  preloadHeavyFeatures,
-  featureBundleInfo,
+  // Fallback component
   FeatureLoadingFallback
 } from './LazyFeatureComponents'
+
+export {
+  featurePreloaders,
+  preloadHeavyFeatures,
+  featureBundleInfo
+} from './featureUtils'
 
 export type { } from './LazyFeatureComponents'

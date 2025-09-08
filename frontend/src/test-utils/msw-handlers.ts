@@ -1,6 +1,11 @@
 import { http, HttpResponse } from 'msw';
 import type { User, LoginResponse, RegisterResponse, PasswordResetResponse } from '@shared/types/auth';
 
+// Extended user type for testing that includes optional displayName
+type TestUser = User & {
+  displayName?: string;
+};
+
 // Mock users database for different test scenarios
 const mockUsers = new Map<string, User>();
 
@@ -75,13 +80,9 @@ export const handlers = [
     return new HttpResponse(null, {
       status: 204,
       headers: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Access-Control-Allow-Origin': 'http://localhost:3000',
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Access-Control-Allow-Credentials': 'true'
       }
     });
@@ -157,7 +158,7 @@ export const handlers = [
     };
 
     // Add displayName property for compatibility
-    (newUser as unknown).displayName = body.username;
+    (newUser as TestUser).displayName = body.username;
 
     // Store new user for future requests
     mockUsers.set(body.email, newUser);
@@ -329,7 +330,7 @@ export const handlers = [
 
     // For registration tests that expect displayName fallback
     if (!body.firstName && !body.lastName) {
-      (newUser as unknown).displayName = body.username;
+      (newUser as TestUser).displayName = body.username;
     }
 
     const tokens = generateMockTokens(newUser);

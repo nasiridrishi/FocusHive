@@ -11,9 +11,9 @@ export {
   TimePickerWrapper,
   MobileDatePickerWrapper,
   DesktopDatePickerWrapper,
-  StaticDatePickerWrapper,
-  preloadDatePickers,
-  datePickerBundleInfo
+  StaticDatePickerWrapper
 } from './LazyDatePickers'
+
+export { preloadDatePickers, datePickerBundleInfo } from './datePickerUtils'
 
 export type { LazyDatePickerWrapperProps } from './LazyDatePickers'

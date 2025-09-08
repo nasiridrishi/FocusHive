@@ -79,6 +79,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       await buddyApi.startSession(session.id!)
       if (onUpdate) onUpdate()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to start session')
     } finally {
       setLoading(false)
@@ -92,6 +93,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       setRatingDialogOpen(true)
       if (onUpdate) onUpdate()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to end session')
     } finally {
       setLoading(false)
@@ -111,6 +113,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       setEditDialogOpen(false)
       if (onUpdate) onUpdate()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to update session')
     } finally {
       setLoading(false)
@@ -125,6 +128,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       setCancellationReason('')
       if (onUpdate) onUpdate()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to cancel session')
     } finally {
       setLoading(false)
@@ -145,6 +149,7 @@ const BuddySessionCard: React.FC<BuddySessionCardProps> = ({
       setFeedback('')
       if (onUpdate) onUpdate()
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to submit rating')
     } finally {
       setLoading(false)

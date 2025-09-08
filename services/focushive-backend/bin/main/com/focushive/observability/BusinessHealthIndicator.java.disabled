@@ -1,0 +1,135 @@
+package com.focushive.observability;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.actuator.health.Health;
+import org.springframework.boot.actuator.health.HealthIndicator;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Custom health indicator for FocusHive business logic health.
+ * 
+ * This health indicator monitors:
+ * - Active session count thresholds
+ * - Queue size limits
+ * - WebSocket connection limits
+ * - Cache performance
+ * - Error rates
+ * - Overall system capacity
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class BusinessHealthIndicator implements HealthIndicator {
+
+    private final MetricsService metricsService;
+
+    // Health thresholds
+    private static final int MAX_ACTIVE_SESSIONS = 1000;
+    private static final int MAX_QUEUE_SIZE = 5000;
+    private static final int MAX_WEBSOCKET_CONNECTIONS = 2000;
+    private static final double MIN_CACHE_HIT_RATE = 70.0; // 70%
+    
+    @Override
+    public Health health() {
+        try {
+            return performBusinessHealthCheck();
+        } catch (Exception e) {
+            log.error("Error performing business health check", e);
+            return Health.down()
+                    .withDetail("error", "Health check failed")
+                    .withDetail("exception", e.getMessage())
+                    .build();
+        }
+    }
+
+    private Health performBusinessHealthCheck() {
+        Health.Builder healthBuilder = Health.up();
+        List<String> issues = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+
+        // Check active sessions
+        int activeSessions = metricsService.getActiveSessionsCount();
+        healthBuilder.withDetail("activeSessions", activeSessions);
+        
+        if (activeSessions > MAX_ACTIVE_SESSIONS) {
+            issues.add("Too many active sessions: " + activeSessions + " (max: " + MAX_ACTIVE_SESSIONS + ")");
+        } else if (activeSessions > MAX_ACTIVE_SESSIONS * 0.8) {
+            warnings.add("High number of active sessions: " + activeSessions);
+        }
+
+        // Check queue size
+        int queueSize = metricsService.getCurrentQueueSize();
+        healthBuilder.withDetail("queueSize", queueSize);
+        
+        if (queueSize > MAX_QUEUE_SIZE) {
+            issues.add("Queue size too large: " + queueSize + " (max: " + MAX_QUEUE_SIZE + ")");
+        } else if (queueSize > MAX_QUEUE_SIZE * 0.8) {
+            warnings.add("High queue size: " + queueSize);
+        }
+
+        // Check WebSocket connections
+        int activeConnections = metricsService.getActiveWebSocketConnectionsCount();
+        healthBuilder.withDetail("activeWebSocketConnections", activeConnections);
+        
+        if (activeConnections > MAX_WEBSOCKET_CONNECTIONS) {
+            issues.add("Too many WebSocket connections: " + activeConnections + " (max: " + MAX_WEBSOCKET_CONNECTIONS + ")");
+        } else if (activeConnections > MAX_WEBSOCKET_CONNECTIONS * 0.8) {
+            warnings.add("High WebSocket connection count: " + activeConnections);
+        }
+
+        // Check cache performance
+        double cacheHitRate = metricsService.getCacheHitRatePercentage();
+        healthBuilder.withDetail("cacheHitRatePercent", cacheHitRate);
+        
+        if (cacheHitRate < MIN_CACHE_HIT_RATE) {
+            warnings.add("Low cache hit rate: " + String.format("%.1f%%", cacheHitRate) + 
+                        " (min: " + String.format("%.1f%%", MIN_CACHE_HIT_RATE) + ")");
+        }
+
+        // Check hive member count
+        int activeMembers = metricsService.getActiveHiveMembersCount();
+        healthBuilder.withDetail("activeHiveMembers", activeMembers);
+
+        // Add system capacity information
+        healthBuilder.withDetails(Map.of(
+                "maxActiveSessions", MAX_ACTIVE_SESSIONS,
+                "maxQueueSize", MAX_QUEUE_SIZE,
+                "maxWebSocketConnections", MAX_WEBSOCKET_CONNECTIONS,
+                "minCacheHitRate", MIN_CACHE_HIT_RATE
+        ));
+
+        // Calculate overall capacity usage
+        double sessionCapacity = (double) activeSessions / MAX_ACTIVE_SESSIONS * 100;
+        double queueCapacity = (double) queueSize / MAX_QUEUE_SIZE * 100;
+        double connectionCapacity = (double) activeConnections / MAX_WEBSOCKET_CONNECTIONS * 100;
+        double overallCapacity = Math.max(sessionCapacity, Math.max(queueCapacity, connectionCapacity));
+
+        healthBuilder.withDetail("capacityUsagePercent", Math.round(overallCapacity * 100.0) / 100.0);
+
+        // Add warnings if any
+        if (!warnings.isEmpty()) {
+            healthBuilder.withDetail("warnings", warnings);
+        }
+
+        // Determine overall health status
+        if (!issues.isEmpty()) {
+            healthBuilder.status("DOWN")
+                         .withDetail("issues", issues);
+            log.warn("Business health check failed with issues: {}", issues);
+        } else if (!warnings.isEmpty()) {
+            healthBuilder.status("UP")
+                         .withDetail("status", "Operational with warnings");
+            log.info("Business health check passed with warnings: {}", warnings);
+        } else {
+            healthBuilder.withDetail("status", "All systems operational");
+            log.debug("Business health check passed - all systems operational");
+        }
+
+        return healthBuilder.build();
+    }
+}

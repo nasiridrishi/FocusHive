@@ -9,7 +9,6 @@ declare global {
 }
 
 export namespace Spotify {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   class Player {
     constructor(options: SpotifyPlayerOptions);
     

@@ -52,6 +52,7 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
       const matchData = await buddyApi.findPotentialMatches()
       setMatches(matchData)
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to load potential matches')
     } finally {
       setLoading(false)
@@ -71,6 +72,7 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
         onMatchFound()
       }
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to send buddy request')
     } finally {
       setSendingRequest(null)

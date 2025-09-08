@@ -39,8 +39,6 @@ import {
   Close
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ExportMenuProps, ExportOptions } from '../types';
 import { format } from 'date-fns';
 
@@ -177,6 +175,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
       await onExport(exportOptions);
       handleCloseDialog();
     } catch (err) {
+      console.error('Export failed:', err);
       setError('Export failed. Please try again.');
     } finally {
       setExporting(false);
@@ -250,38 +249,36 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
       </RadioGroup>
 
       {customDateRange && (
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 1 }}>
-            <DatePicker
-              label="Export Start Date"
-              value={exportOptions.dateRange.start}
-              onChange={(date) => date && handleOptionChange('dateRange', {
-                ...exportOptions.dateRange,
-                start: date
-              })}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true
-                }
-              }}
-            />
-            <DatePicker
-              label="Export End Date"
-              value={exportOptions.dateRange.end}
-              onChange={(date) => date && handleOptionChange('dateRange', {
-                ...exportOptions.dateRange,
-                end: date
-              })}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true
-                }
-              }}
-            />
-          </Box>
-        </LocalizationProvider>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 1 }}>
+          <DatePicker
+            label="Export Start Date"
+            value={exportOptions.dateRange.start}
+            onChange={(date) => date && handleOptionChange('dateRange', {
+              ...exportOptions.dateRange,
+              start: date
+            })}
+            slotProps={{
+              textField: {
+                size: 'small',
+                fullWidth: true
+              }
+            }}
+          />
+          <DatePicker
+            label="Export End Date"
+            value={exportOptions.dateRange.end}
+            onChange={(date) => date && handleOptionChange('dateRange', {
+              ...exportOptions.dateRange,
+              end: date
+            })}
+            slotProps={{
+              textField: {
+                size: 'small',
+                fullWidth: true
+              }
+            }}
+          />
+        </Box>
       )}
     </Box>
   );
@@ -480,15 +477,14 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
   );
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box data-testid="export-menu">
-        <IconButton
-          aria-label="export data"
-          onClick={handleClick}
-          disabled={disabled || loading}
-        >
-          <Download data-testid="download-icon" />
-        </IconButton>
+    <Box data-testid="export-menu">
+      <IconButton
+        aria-label="export data"
+        onClick={handleClick}
+        disabled={disabled || loading}
+      >
+        <Download data-testid="download-icon" />
+      </IconButton>
 
         <Menu
           anchorEl={anchorEl}
@@ -511,7 +507,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
           <DialogTitle>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography variant="h6">Export Analytics Data</Typography>
-              <IconButton onClick={handleCloseDialog}>
+              <IconButton onClick={handleCloseDialog} aria-label="Close dialog">
                 <Close />
               </IconButton>
             </Box>
@@ -578,7 +574,6 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
             </Button>
           </DialogActions>
         </Dialog>
-      </Box>
-    </LocalizationProvider>
+    </Box>
   );
 };

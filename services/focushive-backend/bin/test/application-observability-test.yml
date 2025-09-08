@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: focushive-backend
+  
+  # Disable database and Flyway for observability testing
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+
+# Enable actuator endpoints for testing
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+# Application versioning
+app:
+  version: 1.0.0-SNAPSHOT
+
+# Logging configuration
+logging:
+  level:
+    com.focushive: INFO
+    org.springframework.boot.actuator: INFO
+    io.micrometer: INFO

@@ -146,7 +146,7 @@ const DemoContent: React.FC = () => {
     try {
       await addPoints(50, 'demo-action');
     } catch (error) {
-      // Failed to add points
+      console.error('Error:', error);
     }
   };
 
@@ -154,7 +154,7 @@ const DemoContent: React.FC = () => {
     try {
       await unlockAchievement('focus-master');
     } catch (error) {
-      // Failed to unlock achievement
+      console.error('Error:', error);
     }
   };
 
@@ -162,7 +162,7 @@ const DemoContent: React.FC = () => {
     try {
       await updateStreak('daily_login');
     } catch (error) {
-      // Failed to update streak
+      console.error('Error:', error);
     }
   };
 

@@ -9,10 +9,6 @@ export const axe = configureAxe({
   rules: {
     // Enable stricter color contrast checking
     'color-contrast': { enabled: true },
-    // Enable keyboard navigation checks
-    'keyboard': { enabled: true },
-    // Enable focus management checks
-    'focus': { enabled: true },
     // Enable ARIA usage checks
     'aria-roles': { enabled: true },
     'aria-valid-attr': { enabled: true },

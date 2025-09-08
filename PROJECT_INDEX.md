@@ -467,7 +467,6 @@ All services expose health endpoints:
 
 ### Documentation
 - [README](./README.md) - Project introduction
-- [CLAUDE.md](./CLAUDE.md) - AI assistant guidance
 - [Contributing Guide](./CONTRIBUTING.md) - Contribution guidelines
 - [API Specs](./shared/openapi/) - OpenAPI specifications
 

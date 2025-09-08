@@ -98,7 +98,7 @@ const ForumPostView: React.FC = () => {
         }
       }
     } catch (err) {
-      // Silently handle like/dislike errors
+      console.error('Error:', err);
     }
   }
 

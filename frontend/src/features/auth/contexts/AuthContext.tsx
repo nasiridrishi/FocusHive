@@ -194,8 +194,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     try {
       await authApiService.logout();
     } catch (error) {
-      // Log error but continue with logout
-      // Logout API call failed - continuing with local logout
+      console.error('Auth logout error:', error);
     } finally {
       dispatch({ type: 'AUTH_LOGOUT' });
     }
@@ -217,7 +216,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
         dispatch({ type: 'AUTH_VALIDATE_FAILURE' });
       }
     } catch (error) {
-      // Auth validation failed - user will be prompted to re-authenticate
+      console.error('Auth validation error:', error);
       dispatch({ type: 'AUTH_VALIDATE_FAILURE' });
     }
   };

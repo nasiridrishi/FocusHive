@@ -20,12 +20,15 @@ import {
   Schedule,
   EmojiEvents,
 } from '@mui/icons-material';
-import type { LeaderboardCardProps } from '../types/gamification';
+import type { LeaderboardCardProps, Leaderboard } from '../types/gamification';
 import { 
   formatPoints, 
   formatRankChange, 
   getUserInitials,
 } from '../utils/gamificationUtils';
+
+// Type for leaderboard with optional loading state
+type LeaderboardWithLoading = Leaderboard & { isLoading?: boolean };
 
 const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   leaderboard,
@@ -61,7 +64,7 @@ const LeaderboardCard: React.FC<LeaderboardCardProps> = ({
   }, [leaderboard, maxEntries, currentUserId]);
 
   // Handle loading state
-  if (!leaderboard) {
+  if (!leaderboard || (leaderboard as LeaderboardWithLoading).isLoading) {
     return (
       <Card 
         data-testid="leaderboard-skeleton"

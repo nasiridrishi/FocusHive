@@ -83,6 +83,10 @@ export default defineConfig({
       '@app': path.resolve(__dirname, './src/app'),
       '@features': path.resolve(__dirname, './src/features'),
       '@shared': path.resolve(__dirname, './src/shared'),
+      '@services': path.resolve(__dirname, './src/services'),
+      '@hooks': path.resolve(__dirname, './src/hooks'),
+      '@lib': path.resolve(__dirname, './src/lib'),
+      '@components': path.resolve(__dirname, './src/components'),
       // Fix MUI X Date Pickers import issue - comprehensive fix
       '@mui/material/styles$': path.resolve(__dirname, './node_modules/@mui/material/node/styles/index.js'),
       '@mui/material/styles/': path.resolve(__dirname, './node_modules/@mui/material/node/styles/'),

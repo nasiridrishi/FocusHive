@@ -142,7 +142,7 @@ export const checkPasswordStrength = (password: string): {
   else feedback.push('Add numbers')
 
   if (passwordStrengthRegex.special.test(password)) score += 1
-  else feedback.push('Add special characters')
+  else feedback.push('Add special characters (@$!%*?&)')
 
   // Length bonus
   if (password.length >= 12) score += 1

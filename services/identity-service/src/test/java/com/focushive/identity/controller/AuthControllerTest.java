@@ -70,7 +70,8 @@ public class AuthControllerTest {
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
         testUser.setPassword(passwordEncoder.encode("password123"));
-        testUser.setDisplayName("Test User");
+        testUser.setFirstName("Test");
+        testUser.setLastName("User");
         testUser.setEmailVerified(true);
         testUser.setEnabled(true);
         testUser = userRepository.save(testUser);
@@ -98,7 +99,8 @@ public class AuthControllerTest {
         request.setEmail("newuser@example.com");
         request.setPassword("password123");
         // No confirm password field in RegisterRequest
-        request.setDisplayName("New User");
+        request.setFirstName("New");
+        request.setLastName("User");
         
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -121,7 +123,8 @@ public class AuthControllerTest {
         request.setEmail("another@example.com");
         request.setPassword("password123");
         // No confirm password field in RegisterRequest
-        request.setDisplayName("Another User");
+        request.setFirstName("Another");
+        request.setLastName("User");
         
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -137,7 +140,8 @@ public class AuthControllerTest {
         request.setEmail("test@example.com"); // Already exists
         request.setPassword("password123");
         // No confirm password field in RegisterRequest
-        request.setDisplayName("Another User");
+        request.setFirstName("Another");
+        request.setLastName("User");
         
         mockMvc.perform(post("/api/v1/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
