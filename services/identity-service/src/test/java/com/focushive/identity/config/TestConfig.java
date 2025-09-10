@@ -1,6 +1,5 @@
 package com.focushive.identity.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.focushive.identity.service.EmailService;
 import com.focushive.identity.service.TokenBlacklistService;
 import org.mockito.Mockito;
@@ -9,10 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -47,35 +43,7 @@ public class TestConfig {
         return mockService;
     }
     
-    /**
-     * Mock Redis connection factory for tests when Redis is disabled.
-     */
-    @Bean
-    @Primary
-    public RedisConnectionFactory mockRedisConnectionFactory() {
-        return Mockito.mock(RedisConnectionFactory.class);
-    }
-    
-    /**
-     * Mock RedisTemplate for tests.
-     */
-    @Bean
-    @Primary
-    public RedisTemplate<String, String> mockRedisTemplate() {
-        @SuppressWarnings("unchecked")
-        RedisTemplate<String, String> mockTemplate = Mockito.mock(RedisTemplate.class);
-        return mockTemplate;
-    }
-    
-    /**
-     * Mock JSON RedisTemplate for tests.
-     */
-    @Bean
-    @Primary
-    public RedisTemplate<String, Object> mockJsonRedisTemplate() {
-        @SuppressWarnings("unchecked")
-        RedisTemplate<String, Object> mockTemplate = Mockito.mock(RedisTemplate.class);
-        return mockTemplate;
-    }
+    // Redis beans are now handled by using embedded Redis or H2 in tests
+    // No need to mock RedisTemplates - they will use test configurations
     
 }

@@ -1,0 +1,347 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service
+  namespace: focushive
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+spec:
+  replicas: 3  # High availability with 3 replicas
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero-downtime deployment
+  selector:
+    matchLabels:
+      app: identity-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: identity-service
+        version: v1
+        tier: backend
+        component: authentication
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+        prometheus.io/path: "/actuator/prometheus"
+        # Force pod restart on config changes
+        rollme: "${CONFIG_HASH}"
+    spec:
+      # Security Context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+
+      # Service Account
+      serviceAccountName: identity-service
+
+      # Container specification
+      containers:
+      - name: identity-service
+        image: focushive/identity-service:${IMAGE_TAG}
+        imagePullPolicy: IfNotPresent
+        
+        # Security Context for container
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+
+        # Environment Configuration
+        env:
+        # Spring Profile
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod,security,monitoring"
+        
+        # Database Configuration
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: db-host
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: db-name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: db-username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: db-password
+        
+        # Redis Configuration
+        - name: REDIS_CLUSTER_NODES
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: redis-cluster-nodes
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: redis-password
+        - name: REDIS_SSL_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: redis-ssl-enabled
+        
+        # JWT Configuration
+        - name: JWT_ISSUER
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: jwt-issuer
+        - name: JWT_ACCESS_TOKEN_EXPIRATION
+          value: "900000"  # 15 minutes
+        - name: JWT_REFRESH_TOKEN_EXPIRATION
+          value: "604800000"  # 7 days
+        - name: JWT_KEY_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: jwt-keystore-password
+        - name: JWT_PRIVATE_KEY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: jwt-private-key-password
+        
+        # OAuth2 Configuration
+        - name: ISSUER_URI
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: issuer-uri
+        - name: FOCUSHIVE_FRONTEND_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: frontend-client-id
+        - name: FOCUSHIVE_FRONTEND_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: frontend-client-secret
+        - name: FOCUSHIVE_BACKEND_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: backend-client-id
+        - name: FOCUSHIVE_BACKEND_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: backend-client-secret
+        
+        # CORS Configuration
+        - name: CORS_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: cors-origins
+        
+        # Email Configuration
+        - name: SMTP_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: smtp-host
+        - name: SMTP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: smtp-port
+        - name: SMTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: smtp-username
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: identity-service-secrets
+              key: smtp-password
+        - name: EMAIL_FROM
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: email-from
+        
+        # Application Configuration
+        - name: APP_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: identity-service-config
+              key: app-base-url
+        - name: INSTANCE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        # JVM Configuration
+        - name: JAVA_OPTS
+          value: >-
+            -XX:+UseContainerSupport
+            -XX:MaxRAMPercentage=75.0
+            -XX:+UseG1GC
+            -XX:MaxGCPauseMillis=200
+            -XX:G1HeapRegionSize=16m
+            -XX:+UseStringDeduplication
+            -XX:+OptimizeStringConcat
+            -Djava.security.egd=file:/dev/./urandom
+            -Dspring.backgroundpreinitializer.ignore=true
+            -Dfile.encoding=UTF-8
+            -Duser.timezone=UTC
+            -Djava.awt.headless=true
+
+        # Port Configuration
+        ports:
+        - name: http
+          containerPort: 8081
+          protocol: TCP
+        - name: actuator
+          containerPort: 8081
+          protocol: TCP
+
+        # Resource Limits and Requests
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+            ephemeral-storage: "5Gi"
+
+        # Health Checks
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 45
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+
+        # Startup Probe (for slow starting applications)
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 12  # Allow up to 2 minutes for startup
+          successThreshold: 1
+
+        # Volume Mounts
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: logs
+          mountPath: /var/log/identity-service
+        - name: ssl-certs
+          mountPath: /etc/ssl/certs
+          readOnly: true
+        - name: ssl-private
+          mountPath: /etc/ssl/private
+          readOnly: true
+        - name: app-config
+          mountPath: /app/config
+          readOnly: true
+
+      # Volumes
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 100Mi
+      - name: logs
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: ssl-certs
+        secret:
+          secretName: identity-service-ssl-certs
+          defaultMode: 0444
+      - name: ssl-private
+        secret:
+          secretName: identity-service-ssl-private
+          defaultMode: 0400
+      - name: app-config
+        configMap:
+          name: identity-service-config
+
+      # Pod Disruption Budget will be handled separately
+      # Scheduling preferences
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - identity-service
+              topologyKey: kubernetes.io/hostname
+      
+      # Node selection (if needed)
+      nodeSelector:
+        kubernetes.io/os: linux
+      
+      # Tolerations (if needed for dedicated nodes)
+      tolerations: []
+
+      # DNS Configuration
+      dnsPolicy: ClusterFirst
+      
+      # Restart Policy
+      restartPolicy: Always
+      
+      # Termination Grace Period
+      terminationGracePeriodSeconds: 60
+
+      # Image Pull Secrets (if needed for private registry)
+      imagePullSecrets:
+      - name: focushive-registry-secret

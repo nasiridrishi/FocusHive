@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+  namespace: focushive
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+  annotations:
+    # Prometheus scraping
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8081"
+    prometheus.io/path: "/actuator/prometheus"
+    # Service mesh annotations (if using Istio)
+    networking.istio.io/exportTo: "*"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: http
+    protocol: TCP
+  - name: actuator
+    port: 8081
+    targetPort: actuator
+    protocol: TCP
+  selector:
+    app: identity-service
+    version: v1
+  sessionAffinity: None
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service-headless
+  namespace: focushive
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for pod discovery
+  ports:
+  - name: http
+    port: 8081
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: identity-service
+    version: v1
+  publishNotReadyAddresses: false
+
+---
+# External Load Balancer Service (if needed)
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service-external
+  namespace: focushive
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+  annotations:
+    # Cloud provider specific annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "${SSL_CERT_ARN}"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    # Health check configuration
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: "HTTP"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "8081"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: "/actuator/health"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval-seconds: "30"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout-seconds: "5"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold-count: "2"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold-count: "3"
+spec:
+  type: LoadBalancer
+  ports:
+  - name: https
+    port: 443
+    targetPort: http
+    protocol: TCP
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: identity-service
+    version: v1
+  sessionAffinity: None
+  externalTrafficPolicy: Local  # Preserve source IP

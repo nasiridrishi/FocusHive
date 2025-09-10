@@ -2,6 +2,13 @@ spring:
   application:
     name: identity-service
   
+  # Disable tracing auto-configuration to avoid propagator conflicts in dev
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration
+  
   datasource:
     url: jdbc:postgresql://localhost:5433/identity_db
     username: identity_user
@@ -109,6 +116,8 @@ app:
 
 # Actuator Configuration
 management:
+  tracing:
+    enabled: false  # Disable tracing in dev to avoid propagator conflicts
   endpoints:
     web:
       exposure:

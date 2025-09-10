@@ -1,0 +1,355 @@
+package com.focushive.identity.config;
+
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
+import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
+
+/**
+ * Rate Limiting Configuration for Identity Service
+ * 
+ * Implements distributed rate limiting using Redis and Bucket4j library.
+ * Provides different rate limits for different API endpoints:
+ * - Authentication endpoints: Strict limits to prevent brute force attacks
+ * - OAuth2 endpoints: Moderate limits for OAuth flows
+ * - General API endpoints: Higher limits for normal operations
+ * 
+ * Uses token bucket algorithm with burst capacity and refill rates.
+ */
+@Configuration
+@Profile({"prod", "staging"})
+public class RateLimitConfig {
+
+    @Value("${security.rate-limit.auth.requests-per-minute:10}")
+    private long authRequestsPerMinute;
+
+    @Value("${security.rate-limit.auth.burst-capacity:5}")
+    private long authBurstCapacity;
+
+    @Value("${security.rate-limit.oauth2.requests-per-minute:20}")
+    private long oauth2RequestsPerMinute;
+
+    @Value("${security.rate-limit.oauth2.burst-capacity:10}")
+    private long oauth2BurstCapacity;
+
+    @Value("${security.rate-limit.api.requests-per-minute:100}")
+    private long apiRequestsPerMinute;
+
+    @Value("${security.rate-limit.api.requests-per-second:10}")
+    private long apiRequestsPerSecond;
+
+    @Value("${spring.redis.host:localhost}")
+    private String redisHost;
+
+    @Value("${spring.redis.port:6380}")
+    private int redisPort;
+
+    @Value("${spring.redis.password:}")
+    private String redisPassword;
+
+    @Value("${spring.redis.ssl:false}")
+    private boolean redisSSL;
+
+    /**
+     * Redis-based Proxy Manager for distributed rate limiting
+     */
+    @Bean
+    public ProxyManager<String> proxyManager() {
+        RedisURI.Builder redisUriBuilder = RedisURI.builder()
+                .withHost(redisHost)
+                .withPort(redisPort);
+
+        if (!redisPassword.isEmpty()) {
+            redisUriBuilder.withPassword(redisPassword.toCharArray());
+        }
+
+        if (redisSSL) {
+            redisUriBuilder.withSsl(true);
+        }
+
+        RedisClient redisClient = RedisClient.create(redisUriBuilder.build());
+        
+        return LettuceBasedProxyManager.builderFor(redisClient)
+                .withExpirationAfterWriteStrategy(
+                    io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager.ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(
+                        Duration.ofSeconds(10)
+                    )
+                )
+                .build();
+    }
+
+    /**
+     * Rate Limit Service for managing different bucket configurations
+     */
+    @Bean
+    public RateLimitService rateLimitService(ProxyManager<String> proxyManager) {
+        return new RateLimitService(proxyManager, createRateLimitConfigurations());
+    }
+
+    /**
+     * Create rate limit configurations for different endpoint types
+     */
+    private RateLimitConfigurations createRateLimitConfigurations() {
+        return RateLimitConfigurations.builder()
+                // Authentication endpoints - strict limits
+                .authConfiguration(createAuthBucketConfiguration())
+                // OAuth2 endpoints - moderate limits
+                .oauth2Configuration(createOAuth2BucketConfiguration())
+                // General API endpoints - higher limits
+                .apiConfiguration(createApiBucketConfiguration())
+                // IP-based global limits
+                .ipConfiguration(createIpBucketConfiguration())
+                .build();
+    }
+
+    /**
+     * Authentication endpoints bucket configuration
+     * Prevents brute force attacks with strict limits
+     */
+    private BucketConfiguration createAuthBucketConfiguration() {
+        return BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(authRequestsPerMinute, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.classic(authBurstCapacity, Duration.ofSeconds(10)))
+                .build();
+    }
+
+    /**
+     * OAuth2 endpoints bucket configuration
+     * Moderate limits for OAuth flows
+     */
+    private BucketConfiguration createOAuth2BucketConfiguration() {
+        return BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(oauth2RequestsPerMinute, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.classic(oauth2BurstCapacity, Duration.ofSeconds(10)))
+                .build();
+    }
+
+    /**
+     * General API endpoints bucket configuration
+     * Higher limits for normal operations
+     */
+    private BucketConfiguration createApiBucketConfiguration() {
+        return BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(apiRequestsPerMinute, Duration.ofMinutes(1)))
+                .addLimit(Bandwidth.classic(apiRequestsPerSecond, Duration.ofSeconds(1)))
+                .build();
+    }
+
+    /**
+     * IP-based global bucket configuration
+     * Prevents DoS attacks from single IP
+     */
+    private BucketConfiguration createIpBucketConfiguration() {
+        return BucketConfiguration.builder()
+                .addLimit(Bandwidth.classic(1000, Duration.ofMinutes(1))) // 1000 requests per minute per IP
+                .addLimit(Bandwidth.classic(100, Duration.ofSeconds(10)))  // 100 requests per 10 seconds per IP
+                .build();
+    }
+
+    /**
+     * Rate Limit Service Implementation
+     */
+    public static class RateLimitService {
+        private final ProxyManager<String> proxyManager;
+        private final RateLimitConfigurations configurations;
+        private final ConcurrentHashMap<String, Bucket> bucketCache = new ConcurrentHashMap<>();
+
+        public RateLimitService(ProxyManager<String> proxyManager, RateLimitConfigurations configurations) {
+            this.proxyManager = proxyManager;
+            this.configurations = configurations;
+        }
+
+        /**
+         * Check if request is allowed for authentication endpoints
+         */
+        public boolean isAllowedForAuth(String key) {
+            return getBucket("auth:" + key, configurations.getAuthConfiguration()).tryConsume(1);
+        }
+
+        /**
+         * Check if request is allowed for OAuth2 endpoints
+         */
+        public boolean isAllowedForOAuth2(String key) {
+            return getBucket("oauth2:" + key, configurations.getOauth2Configuration()).tryConsume(1);
+        }
+
+        /**
+         * Check if request is allowed for general API endpoints
+         */
+        public boolean isAllowedForApi(String key) {
+            return getBucket("api:" + key, configurations.getApiConfiguration()).tryConsume(1);
+        }
+
+        /**
+         * Check if request is allowed for IP-based limiting
+         */
+        public boolean isAllowedForIp(String ip) {
+            return getBucket("ip:" + ip, configurations.getIpConfiguration()).tryConsume(1);
+        }
+
+        /**
+         * Get bucket for specific key and configuration
+         */
+        private Bucket getBucket(String key, BucketConfiguration configuration) {
+            return bucketCache.computeIfAbsent(key, k -> {
+                Supplier<BucketConfiguration> configSupplier = () -> configuration;
+                return proxyManager.builder().build(key, configSupplier);
+            });
+        }
+
+        /**
+         * Get current bucket state for monitoring
+         */
+        public BucketState getBucketState(String key, String type) {
+            BucketConfiguration config = switch (type.toLowerCase()) {
+                case "auth" -> configurations.getAuthConfiguration();
+                case "oauth2" -> configurations.getOauth2Configuration();
+                case "api" -> configurations.getApiConfiguration();
+                case "ip" -> configurations.getIpConfiguration();
+                default -> configurations.getApiConfiguration();
+            };
+
+            Bucket bucket = getBucket(type + ":" + key, config);
+            return BucketState.builder()
+                    .availableTokens(bucket.getAvailableTokens())
+                    .capacity(bucket.getEstimatedCapacity())
+                    .build();
+        }
+
+        /**
+         * Reset bucket for specific key (admin function)
+         */
+        public void resetBucket(String key, String type) {
+            String bucketKey = type + ":" + key;
+            bucketCache.remove(bucketKey);
+            // Note: This will recreate the bucket on next access
+        }
+    }
+
+    /**
+     * Rate Limit Configurations holder
+     */
+    public static class RateLimitConfigurations {
+        private final BucketConfiguration authConfiguration;
+        private final BucketConfiguration oauth2Configuration;
+        private final BucketConfiguration apiConfiguration;
+        private final BucketConfiguration ipConfiguration;
+
+        private RateLimitConfigurations(Builder builder) {
+            this.authConfiguration = builder.authConfiguration;
+            this.oauth2Configuration = builder.oauth2Configuration;
+            this.apiConfiguration = builder.apiConfiguration;
+            this.ipConfiguration = builder.ipConfiguration;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public BucketConfiguration getAuthConfiguration() {
+            return authConfiguration;
+        }
+
+        public BucketConfiguration getOauth2Configuration() {
+            return oauth2Configuration;
+        }
+
+        public BucketConfiguration getApiConfiguration() {
+            return apiConfiguration;
+        }
+
+        public BucketConfiguration getIpConfiguration() {
+            return ipConfiguration;
+        }
+
+        public static class Builder {
+            private BucketConfiguration authConfiguration;
+            private BucketConfiguration oauth2Configuration;
+            private BucketConfiguration apiConfiguration;
+            private BucketConfiguration ipConfiguration;
+
+            public Builder authConfiguration(BucketConfiguration authConfiguration) {
+                this.authConfiguration = authConfiguration;
+                return this;
+            }
+
+            public Builder oauth2Configuration(BucketConfiguration oauth2Configuration) {
+                this.oauth2Configuration = oauth2Configuration;
+                return this;
+            }
+
+            public Builder apiConfiguration(BucketConfiguration apiConfiguration) {
+                this.apiConfiguration = apiConfiguration;
+                return this;
+            }
+
+            public Builder ipConfiguration(BucketConfiguration ipConfiguration) {
+                this.ipConfiguration = ipConfiguration;
+                return this;
+            }
+
+            public RateLimitConfigurations build() {
+                return new RateLimitConfigurations(this);
+            }
+        }
+    }
+
+    /**
+     * Bucket state for monitoring
+     */
+    public static class BucketState {
+        private final long availableTokens;
+        private final long capacity;
+
+        private BucketState(Builder builder) {
+            this.availableTokens = builder.availableTokens;
+            this.capacity = builder.capacity;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public long getAvailableTokens() {
+            return availableTokens;
+        }
+
+        public long getCapacity() {
+            return capacity;
+        }
+
+        public double getUsagePercentage() {
+            return capacity > 0 ? (double) (capacity - availableTokens) / capacity * 100.0 : 0.0;
+        }
+
+        public static class Builder {
+            private long availableTokens;
+            private long capacity;
+
+            public Builder availableTokens(long availableTokens) {
+                this.availableTokens = availableTokens;
+                return this;
+            }
+
+            public Builder capacity(long capacity) {
+                this.capacity = capacity;
+                return this;
+            }
+
+            public BucketState build() {
+                return new BucketState(this);
+            }
+        }
+    }
+}

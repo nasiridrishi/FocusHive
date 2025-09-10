@@ -1,0 +1,378 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: identity-service-monitor
+  namespace: focushive
+  labels:
+    app: identity-service
+    monitoring: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: identity-service
+  endpoints:
+  - port: actuator
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+    honorLabels: false
+    params:
+      format: ['prometheus']
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: instance
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: namespace
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: node
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: 'jvm_.*|system_.*|process_.*|http_.*|spring_.*|identity_.*'
+      action: keep
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: identity-service-alerts
+  namespace: focushive
+  labels:
+    app: identity-service
+    prometheus: kube-prometheus
+spec:
+  groups:
+  - name: identity-service
+    interval: 30s
+    rules:
+    
+    # High Error Rate Alert
+    - alert: IdentityServiceHighErrorRate
+      expr: |
+        (
+          rate(http_server_requests_seconds_count{job="identity-service", status=~"5.."}[5m]) /
+          rate(http_server_requests_seconds_count{job="identity-service"}[5m])
+        ) > 0.05
+      for: 5m
+      labels:
+        severity: critical
+        service: identity-service
+      annotations:
+        summary: "Identity Service has high error rate"
+        description: "Identity Service error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/high-error-rate"
+
+    # High Response Time Alert
+    - alert: IdentityServiceHighResponseTime
+      expr: |
+        histogram_quantile(0.95, 
+          rate(http_server_requests_seconds_bucket{job="identity-service"}[5m])
+        ) > 1
+      for: 5m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service has high response time"
+        description: "Identity Service 95th percentile response time is {{ $value }}s for the last 5 minutes"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/high-response-time"
+
+    # Database Connection Issues
+    - alert: IdentityServiceDatabaseDown
+      expr: |
+        up{job="identity-service"} == 0 or
+        health_component_status{component="db", job="identity-service"} == 0
+      for: 2m
+      labels:
+        severity: critical
+        service: identity-service
+      annotations:
+        summary: "Identity Service database connection is down"
+        description: "Identity Service cannot connect to the database"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/database-down"
+
+    # Redis Connection Issues
+    - alert: IdentityServiceRedisDown
+      expr: |
+        health_component_status{component="redis", job="identity-service"} == 0
+      for: 2m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service Redis connection is down"
+        description: "Identity Service cannot connect to Redis"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/redis-down"
+
+    # Memory Usage Alert
+    - alert: IdentityServiceHighMemoryUsage
+      expr: |
+        (
+          jvm_memory_used_bytes{area="heap", job="identity-service"} /
+          jvm_memory_max_bytes{area="heap", job="identity-service"}
+        ) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service high memory usage"
+        description: "Identity Service memory usage is {{ $value | humanizePercentage }}"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/high-memory"
+
+    # CPU Usage Alert
+    - alert: IdentityServiceHighCpuUsage
+      expr: |
+        rate(process_cpu_seconds_total{job="identity-service"}[5m]) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service high CPU usage"
+        description: "Identity Service CPU usage is {{ $value | humanizePercentage }}"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/high-cpu"
+
+    # Authentication Failures
+    - alert: IdentityServiceHighAuthFailureRate
+      expr: |
+        rate(authentication_attempts_total{result="failure", job="identity-service"}[5m]) > 10
+      for: 2m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service high authentication failure rate"
+        description: "Identity Service authentication failure rate is {{ $value }} failures/second"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/auth-failures"
+
+    # Rate Limiting Triggered
+    - alert: IdentityServiceRateLimitExceeded
+      expr: |
+        rate(rate_limit_exceeded_total{job="identity-service"}[5m]) > 5
+      for: 1m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service rate limit frequently exceeded"
+        description: "Identity Service rate limit is being exceeded {{ $value }} times/second"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/rate-limit"
+
+    # Service Discovery Issues
+    - alert: IdentityServiceDown
+      expr: |
+        up{job="identity-service"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: identity-service
+      annotations:
+        summary: "Identity Service is down"
+        description: "Identity Service has been down for more than 1 minute"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/service-down"
+
+    # JWT Token Issues
+    - alert: IdentityServiceJwtErrors
+      expr: |
+        rate(jwt_errors_total{job="identity-service"}[5m]) > 1
+      for: 2m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service JWT errors detected"
+        description: "Identity Service JWT error rate is {{ $value }} errors/second"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/jwt-errors"
+
+    # OAuth2 Issues
+    - alert: IdentityServiceOAuth2Errors
+      expr: |
+        rate(oauth2_errors_total{job="identity-service"}[5m]) > 0.5
+      for: 2m
+      labels:
+        severity: warning
+        service: identity-service
+      annotations:
+        summary: "Identity Service OAuth2 errors detected"
+        description: "Identity Service OAuth2 error rate is {{ $value }} errors/second"
+        runbook_url: "https://docs.focushive.com/runbooks/identity-service/oauth2-errors"
+
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-service-dashboard
+  namespace: focushive
+  labels:
+    grafana_dashboard: "1"
+    app: identity-service
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Identity Service - Production Dashboard",
+        "tags": ["identity", "authentication", "oauth2"],
+        "timezone": "UTC",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_server_requests_seconds_count{job=\"identity-service\"}[5m])",
+                "legendFormat": "{{method}} {{uri}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Requests/sec"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": 2,
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=\"identity-service\"}[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{job=\"identity-service\"}[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Seconds"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 0
+            }
+          },
+          {
+            "id": 3,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_server_requests_seconds_count{job=\"identity-service\", status=~\"4..|5..\"}[5m])",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Errors/sec"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 8
+            }
+          },
+          {
+            "id": 4,
+            "title": "JVM Memory",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "jvm_memory_used_bytes{job=\"identity-service\", area=\"heap\"}",
+                "legendFormat": "Heap Used"
+              },
+              {
+                "expr": "jvm_memory_max_bytes{job=\"identity-service\", area=\"heap\"}",
+                "legendFormat": "Heap Max"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Bytes"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 8
+            }
+          },
+          {
+            "id": 5,
+            "title": "Database Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "hikaricp_connections_active{job=\"identity-service\"}",
+                "legendFormat": "Active"
+              },
+              {
+                "expr": "hikaricp_connections_idle{job=\"identity-service\"}",
+                "legendFormat": "Idle"
+              },
+              {
+                "expr": "hikaricp_connections_max{job=\"identity-service\"}",
+                "legendFormat": "Max"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Connections"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 16
+            }
+          },
+          {
+            "id": 6,
+            "title": "Authentication Events",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(authentication_attempts_total{job=\"identity-service\", result=\"success\"}[5m])",
+                "legendFormat": "Successful"
+              },
+              {
+                "expr": "rate(authentication_attempts_total{job=\"identity-service\", result=\"failure\"}[5m])",
+                "legendFormat": "Failed"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Events/sec"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 16
+            }
+          }
+        ]
+      }
+    }

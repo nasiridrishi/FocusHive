@@ -1,0 +1,346 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: identity-service-ingress
+  namespace: focushive
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+  annotations:
+    # Ingress class
+    kubernetes.io/ingress.class: "nginx"
+    
+    # SSL/TLS Configuration
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/acme-challenge-type: "http01"
+    
+    # Security Headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "DENY" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" always;
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    
+    # Content Security Policy
+    nginx.ingress.kubernetes.io/server-snippet: |
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
+    
+    # Rate Limiting
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    
+    # Connection Limits
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    
+    # Proxy Configuration
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    
+    # HTTP to HTTPS redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # Session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    nginx.ingress.kubernetes.io/session-cookie-name: "identity-service-affinity"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "3600"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "3600"
+    nginx.ingress.kubernetes.io/session-cookie-path: "/"
+    
+    # Enable CORS for OAuth2 endpoints
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://focushive.com,https://app.focushive.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    
+    # Backend protocol
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    
+    # Load balancing
+    nginx.ingress.kubernetes.io/load-balance: "round_robin"
+    
+    # Health checks
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$remote_addr"
+    
+    # WAF-like protection
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    
+    # Custom error pages
+    nginx.ingress.kubernetes.io/custom-http-errors: "404,500,502,503,504"
+    nginx.ingress.kubernetes.io/default-backend: "identity-service-error-pages"
+
+spec:
+  tls:
+  - hosts:
+    - identity.focushive.com
+    - auth.focushive.com
+    secretName: identity-service-tls
+  
+  rules:
+  - host: identity.focushive.com
+    http:
+      paths:
+      # OAuth2 endpoints
+      - path: /oauth2
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 80
+      - path: /.well-known
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 80
+      
+      # API endpoints
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 80
+      
+      # Health checks (restricted)
+      - path: /actuator/health
+        pathType: Exact
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 80
+      
+      # Admin endpoints (restricted to admin users)
+      - path: /actuator
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 80
+  
+  # Alternative domain for backwards compatibility
+  - host: auth.focushive.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 80
+
+---
+# Ingress for development/staging environments
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: identity-service-ingress-staging
+  namespace: focushive-staging
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+    environment: staging
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    
+    # Relaxed security for staging
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "DENY" always;
+      add_header X-Content-Type-Options "nosniff" always;
+    
+    # Higher rate limits for testing
+    nginx.ingress.kubernetes.io/rate-limit: "500"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+    
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+
+spec:
+  tls:
+  - hosts:
+    - identity-staging.focushive.com
+    secretName: identity-service-staging-tls
+  
+  rules:
+  - host: identity-staging.focushive.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 80
+
+---
+# Error pages service and deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service-error-pages
+  namespace: focushive
+  labels:
+    app: identity-service-error-pages
+    tier: backend
+spec:
+  selector:
+    app: identity-service-error-pages
+  ports:
+  - port: 80
+    targetPort: 8080
+    name: http
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service-error-pages
+  namespace: focushive
+  labels:
+    app: identity-service-error-pages
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: identity-service-error-pages
+  template:
+    metadata:
+      labels:
+        app: identity-service-error-pages
+    spec:
+      containers:
+      - name: error-pages
+        image: nginx:alpine
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: error-pages
+          mountPath: /usr/share/nginx/html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: error-pages
+        configMap:
+          name: identity-service-error-pages
+      - name: nginx-config
+        configMap:
+          name: identity-service-error-pages-nginx
+
+---
+# Error pages content
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-service-error-pages
+  namespace: focushive
+data:
+  404.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>404 - Page Not Found</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+            .error-code { font-size: 72px; font-weight: bold; color: #dc3545; }
+            .error-message { font-size: 24px; margin: 20px 0; }
+            .error-description { font-size: 16px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="error-code">404</div>
+        <div class="error-message">Page Not Found</div>
+        <div class="error-description">The requested page could not be found.</div>
+    </body>
+    </html>
+  
+  500.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>500 - Internal Server Error</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+            .error-code { font-size: 72px; font-weight: bold; color: #dc3545; }
+            .error-message { font-size: 24px; margin: 20px 0; }
+            .error-description { font-size: 16px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="error-code">500</div>
+        <div class="error-message">Internal Server Error</div>
+        <div class="error-description">An unexpected error occurred. Please try again later.</div>
+    </body>
+    </html>
+  
+  502.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>502 - Bad Gateway</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+            .error-code { font-size: 72px; font-weight: bold; color: #dc3545; }
+            .error-message { font-size: 24px; margin: 20px 0; }
+            .error-description { font-size: 16px; color: #666; }
+        </style>
+    </head>
+    <body>
+        <div class="error-code">502</div>
+        <div class="error-message">Service Temporarily Unavailable</div>
+        <div class="error-description">The service is currently undergoing maintenance. Please try again in a few minutes.</div>
+    </body>
+    </html>
+
+---
+# Nginx configuration for error pages
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-service-error-pages-nginx
+  namespace: focushive
+data:
+  default.conf: |
+    server {
+        listen 8080;
+        server_name localhost;
+        
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+        
+        location = /healthz {
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Security headers
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        
+        # Hide nginx version
+        server_tokens off;
+    }

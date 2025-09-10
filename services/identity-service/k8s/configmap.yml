@@ -1,0 +1,205 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-service-config
+  namespace: focushive
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+data:
+  # Application Configuration
+  app-base-url: "https://focushive.com"
+  email-from: "noreply@focushive.com"
+  
+  # JWT Configuration
+  jwt-issuer: "https://identity.focushive.com"
+  
+  # OAuth2 Configuration
+  issuer-uri: "https://identity.focushive.com"
+  oauth2-device-verification-uri: "https://identity.focushive.com"
+  
+  # CORS Configuration (Production domains only)
+  cors-origins: "https://focushive.com,https://app.focushive.com,https://admin.focushive.com"
+  
+  # Redis Configuration
+  redis-cluster-nodes: "redis-cluster-0.redis-cluster.focushive.svc.cluster.local:6379,redis-cluster-1.redis-cluster.focushive.svc.cluster.local:6379,redis-cluster-2.redis-cluster.focushive.svc.cluster.local:6379"
+  redis-ssl-enabled: "true"
+  
+  # SMTP Configuration
+  smtp-host: "smtp.sendgrid.net"
+  smtp-port: "587"
+  
+  # Rate Limiting Configuration
+  auth-rate-limit-rpm: "10"
+  auth-rate-limit-rph: "50"
+  auth-rate-limit-burst: "5"
+  oauth2-rate-limit-rpm: "20"
+  oauth2-rate-limit-burst: "10"
+  api-rate-limit-rpm: "100"
+  api-rate-limit-rps: "10"
+  
+  # Brute Force Protection
+  brute-force-max-attempts: "5"
+  brute-force-lockout-duration: "PT15M"
+  brute-force-cleanup-interval: "PT1H"
+  
+  # Security Configuration
+  security-hsts-enabled: "true"
+  security-hsts-max-age: "31536000"
+  security-csp-enabled: "true"
+  security-cookie-secure: "true"
+  security-cookie-domain: ".focushive.com"
+  security-csrf-enabled: "true"
+  
+  # Password Policy
+  password-encoder-strength: "12"
+  password-min-length: "12"
+  password-max-length: "128"
+  password-require-uppercase: "true"
+  password-require-lowercase: "true"
+  password-require-digit: "true"
+  password-require-special: "true"
+  password-history-count: "5"
+  
+  # Account Security
+  account-lockout-max-attempts: "5"
+  account-lockout-duration: "PT15M"
+  account-lockout-reset-time: "PT1H"
+  account-email-verification-required: "true"
+  account-expire-unverified: "true"
+  account-unverified-ttl: "P7D"
+  
+  # Threat Detection
+  threat-detection-enabled: "true"
+  threat-detection-sensitivity: "medium"
+  threat-detection-learning-period: "P7D"
+  threat-geographic-enabled: "true"
+  threat-auto-block-ip: "true"
+  threat-auto-lock-account: "true"
+  threat-send-alerts: "true"
+  
+  # Feature Flags
+  registration-enabled: "true"
+  password-reset-enabled: "true"
+  remember-me-enabled: "true"
+  multi-persona-enabled: "true"
+  device-code-flow-enabled: "true"
+  
+  # Monitoring Configuration
+  tracing-sampling-probability: "0.1"
+  zipkin-endpoint: "http://zipkin.monitoring.svc.cluster.local:9411/api/v2/spans"
+  
+  # Health Check Configuration
+  health-disk-threshold: "10GB"
+  health-mail-enabled: "true"
+  
+  # Audit Configuration
+  audit-retention-days: "90"
+  
+  # TLS Configuration
+  tls-min-version: "1.2"
+  tls-max-version: "1.3"
+  tls-ocsp-enabled: "true"
+  
+  # OAuth2 Security Settings
+  oauth2-require-pkce: "true"
+  oauth2-access-token-ttl: "PT15M"
+  oauth2-refresh-token-ttl: "P7D"
+  
+  # Database Pool Configuration
+  db-pool-max-size: "25"
+  db-pool-min-idle: "5"
+  db-connection-timeout: "20000"
+  db-idle-timeout: "300000"
+  db-max-lifetime: "1200000"
+  
+  # Redis Pool Configuration
+  redis-pool-max-active: "20"
+  redis-pool-max-idle: "10"
+  redis-pool-min-idle: "5"
+  redis-pool-max-wait: "2000"
+  redis-timeout: "2000"
+  redis-shutdown-timeout: "100"
+  redis-topology-refresh-period: "30s"
+  
+  # Cache Configuration
+  cache-ttl: "1800000"  # 30 minutes
+  
+  # Server Configuration
+  server-port: "8081"
+  tomcat-max-threads: "200"
+  tomcat-min-spare-threads: "10"
+  tomcat-max-connections: "8192"
+  tomcat-accept-count: "100"
+  tomcat-connection-timeout: "20000"
+  tomcat-keep-alive-timeout: "20000"
+  tomcat-max-keep-alive-requests: "100"
+  
+  # SSL Configuration
+  ssl-enabled: "false"  # Handled by ingress/load balancer
+  ssl-ciphers: "TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_AES_128_GCM_SHA256,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-AES128-GCM-SHA256"
+  ssl-protocols: "TLSv1.3,TLSv1.2"
+  
+  # Logging Configuration
+  log-file: "/var/log/identity-service/application.log"
+  log-file-max-size: "100MB"
+  log-file-max-history: "30"
+  log-file-total-size-cap: "1GB"
+  security-log-file: "/var/log/identity-service/security.log"
+  audit-log-file: "/var/log/identity-service/audit.log"
+
+---
+# Application Properties ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-service-app-config
+  namespace: focushive
+  labels:
+    app: identity-service
+    version: v1
+    tier: backend
+    component: authentication
+data:
+  application-k8s.yml: |
+    # Kubernetes-specific configuration overrides
+    spring:
+      profiles:
+        active: prod,security,monitoring,k8s
+      
+      # Use Kubernetes service discovery for Redis
+      redis:
+        cluster:
+          nodes: ${REDIS_CLUSTER_NODES}
+      
+      # Kubernetes-specific datasource configuration
+      datasource:
+        url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?sslmode=require&ApplicationName=identity-service-k8s
+    
+    # Kubernetes-specific management endpoints
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus,readiness,liveness
+      endpoint:
+        health:
+          probes:
+            enabled: true
+      health:
+        livenessstate:
+          enabled: true
+        readinessstate:
+          enabled: true
+    
+    # Kubernetes-specific logging
+    logging:
+      file:
+        name: /var/log/identity-service/application.log
+      appender:
+        security:
+          file: /var/log/identity-service/security.log
+        audit:
+          file: /var/log/identity-service/audit.log
