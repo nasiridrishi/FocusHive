@@ -633,13 +633,7 @@ export const accessibleThemeVariants = {
   dark: createAccessibleDarkTheme(),
 };
 
-// Export accessibility utilities
-export {
-  accessibleColors,
-  focusRingConfig,
-  touchTargetConfig,
-  accessibilityComponentOverrides,
-};
+// Export accessibility utilities - already exported individually above
 
 // Type augmentations for custom palette properties
 declare module '@mui/material/styles' {

@@ -333,7 +333,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(new MusicWebSocketHandler(), "/ws/music")
-                .setAllowedOrigins("*")
+                .setAllowedOrigins("http://localhost:3000", "http://localhost:5173")
                 .withSockJS();
     }
 }

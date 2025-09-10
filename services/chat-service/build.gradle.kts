@@ -66,8 +66,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.testcontainers:redis")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("com.h2database:h2")
     
     // Test Annotations
     testAnnotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

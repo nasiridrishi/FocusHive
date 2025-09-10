@@ -24,7 +24,12 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:all": "npm run test:run && npm run test:e2e"
+    "test:all": "npm run test:run && npm run test:e2e",
+    "test:load:minimal": "playwright test e2e/tests/performance/load-test.spec.ts --grep 'Local Minimal'",
+    "test:load:small": "playwright test e2e/tests/performance/load-test.spec.ts --grep 'Local Small'",
+    "test:load:medium": "playwright test e2e/tests/performance/load-test.spec.ts --grep 'Local Medium'",
+    "test:load:stress": "playwright test e2e/tests/performance/load-test.spec.ts --grep 'Local Stress'",
+    "test:load:all": "playwright test e2e/tests/performance/load-test.spec.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
@@ -43,6 +48,8 @@
     "@types/node": "^24.2.1",
     "axios": "^1.7.2",
     "date-fns": "^2.30.0",
+    "focus-trap-react": "^11.0.4",
+    "focus-visible": "^5.2.1",
     "framer-motion": "^12.23.12",
     "i18next": "^25.4.0",
     "i18next-browser-languagedetector": "^8.2.0",

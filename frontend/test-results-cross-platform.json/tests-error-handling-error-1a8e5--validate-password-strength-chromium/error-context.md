@@ -1,0 +1,96 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e8]:
+    - heading "Join FocusHive" [level=1] [ref=e9]
+    - paragraph [ref=e10]: Create your account to start focusing together
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: First Name
+        - generic [ref=e14]:
+          - img [ref=e16]
+          - textbox "First Name" [ref=e18]
+          - group:
+            - generic: First Name
+      - generic [ref=e19]:
+        - generic [ref=e20]: Last Name
+        - generic [ref=e21]:
+          - img [ref=e23]
+          - textbox "Last Name" [ref=e25]
+          - group:
+            - generic: Last Name
+    - generic [ref=e26]:
+      - generic: Username
+      - generic [ref=e27]:
+        - textbox "Username" [ref=e28]
+        - group:
+          - generic: Username
+    - generic [ref=e29]:
+      - generic [ref=e30]: Email Address
+      - generic [ref=e31]:
+        - img [ref=e33]
+        - textbox "Email Address" [ref=e35]
+        - group:
+          - generic: Email Address
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - generic [ref=e38]: Password
+        - generic [ref=e39]:
+          - img [ref=e41]
+          - textbox "Password" [ref=e43]: "123"
+          - button "toggle password visibility" [ref=e45] [cursor=pointer]:
+            - img [ref=e46] [cursor=pointer]
+          - group:
+            - generic: Password
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - img [ref=e50]
+          - generic [ref=e52]: Password Strength
+          - generic [ref=e54]: Weak
+        - progressbar [ref=e55]
+        - generic [ref=e57]:
+          - generic [ref=e58]: "To improve your password:"
+          - generic [ref=e59]:
+            - img [ref=e60]
+            - generic [ref=e62]: Use at least 8 characters
+          - generic [ref=e63]:
+            - img [ref=e64]
+            - generic [ref=e66]: Add lowercase letters
+          - generic [ref=e67]:
+            - img [ref=e68]
+            - generic [ref=e70]: Add uppercase letters
+          - generic [ref=e71]:
+            - img [ref=e72]
+            - generic [ref=e74]: Add special characters (@$!%*?&)
+    - generic [ref=e75]:
+      - generic [ref=e76]: Confirm Password
+      - generic [ref=e77]:
+        - img [ref=e79]
+        - textbox "Confirm Password" [ref=e81]
+        - button "toggle confirm password visibility" [ref=e83] [cursor=pointer]:
+          - img [ref=e84] [cursor=pointer]
+        - group:
+          - generic: Confirm Password
+    - generic [ref=e87] [cursor=pointer]:
+      - generic [ref=e88] [cursor=pointer]:
+        - checkbox "I agree to the Terms of Service and Privacy Policy" [ref=e89] [cursor=pointer]
+        - img [ref=e90] [cursor=pointer]
+      - paragraph [ref=e92] [cursor=pointer]:
+        - text: I agree to the
+        - link "Terms of Service" [ref=e93] [cursor=pointer]:
+          - /url: /terms
+        - text: and
+        - link "Privacy Policy" [ref=e94] [cursor=pointer]:
+          - /url: /privacy
+    - button "Create Account" [ref=e95] [cursor=pointer]:
+      - img [ref=e97] [cursor=pointer]
+      - text: Create Account
+    - paragraph [ref=e100]:
+      - text: Already have an account?
+      - button "Sign In" [ref=e101] [cursor=pointer]
+  - generic [ref=e102]:
+    - img [ref=e104]
+    - button "Open Tanstack query devtools" [ref=e152] [cursor=pointer]:
+      - img [ref=e153] [cursor=pointer]
+```

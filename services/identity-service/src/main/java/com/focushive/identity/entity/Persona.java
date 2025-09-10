@@ -73,6 +73,7 @@ public class Persona {
                      joinColumns = @JoinColumn(name = "persona_id"))
     @MapKeyColumn(name = "attribute_key")
     @Column(name = "attribute_value")
+    @org.hibernate.annotations.BatchSize(size = 16)
     @Builder.Default
     private Map<String, String> customAttributes = new HashMap<>();
     

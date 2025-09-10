@@ -26,3 +26,131 @@ body.ltr {
 body {
   background-color: #fafafa;
 }
+
+/* =========================== */
+/* FOCUS MANAGEMENT & ACCESSIBILITY */
+/* =========================== */
+
+/* Enhanced focus indicators for keyboard navigation */
+*:focus-visible {
+  outline: 3px solid #0066cc !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.25) !important;
+}
+
+/* Specific focus styles for different element types */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #0066cc !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.3) !important;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #0066cc !important;
+  outline-offset: 0 !important;
+  border-color: #0066cc !important;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.25) !important;
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #0066cc;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 100000;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Ensure interactive elements have minimum touch target size */
+button,
+a,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Remove outline for mouse users (but keep for keyboard) */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  *:focus-visible {
+    outline: 4px solid currentColor !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Ensure proper list structure */
+ul, ol {
+  list-style-position: inside;
+}
+
+/* Fix for MUI lists that might have structural issues */
+.MuiList-root li:not(.MuiListItem-root) {
+  display: list-item;
+}
+
+/* Ensure buttons have visible text or proper aria-labels */
+button:empty::after {
+  content: attr(aria-label);
+  speak: none;
+}
+
+/* Focus trap for modals */
+[role="dialog"]:focus-visible,
+.MuiModal-root:focus-visible {
+  outline: none !important;
+}
+
+/* Ensure proper color contrast for disabled states */
+:disabled,
+[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Improved placeholder contrast */
+::placeholder {
+  color: #666;
+  opacity: 1;
+}
+
+/* Ensure links are distinguishable */
+a {
+  text-decoration: underline;
+}
+
+a:hover,
+a:focus {
+  text-decoration: none;
+  background-color: rgba(0, 102, 204, 0.1);
+}

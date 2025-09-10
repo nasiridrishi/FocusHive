@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - button "menu" [ref=e6] [cursor=pointer]:
+          - img [ref=e7] [cursor=pointer]
+        - generic [ref=e9]: FocusHive
+        - generic [ref=e11]: Online
+        - button "notifications" [ref=e12] [cursor=pointer]:
+          - generic [ref=e13] [cursor=pointer]:
+            - img [ref=e14] [cursor=pointer]
+            - generic [ref=e16] [cursor=pointer]: "3"
+    - generic [ref=e17]:
+      - button "Home" [ref=e18] [cursor=pointer]:
+        - img [ref=e19] [cursor=pointer]
+        - generic [ref=e21] [cursor=pointer]: Home
+      - button "Dashboard" [ref=e22] [cursor=pointer]:
+        - img [ref=e23] [cursor=pointer]
+        - generic [ref=e25] [cursor=pointer]: Dashboard
+      - button "Hives" [ref=e26] [cursor=pointer]:
+        - img [ref=e27] [cursor=pointer]
+        - generic [ref=e29] [cursor=pointer]: Hives
+      - button "3 Chat" [ref=e30] [cursor=pointer]:
+        - generic [ref=e31] [cursor=pointer]:
+          - img [ref=e32] [cursor=pointer]
+          - generic [ref=e34] [cursor=pointer]: "3"
+        - generic [ref=e35] [cursor=pointer]: Chat
+      - button "⏰ Focus" [ref=e36] [cursor=pointer]:
+        - generic [ref=e37] [cursor=pointer]: ⏰
+        - generic [ref=e38] [cursor=pointer]: Focus
+    - button "quick action" [ref=e39] [cursor=pointer]:
+      - img [ref=e40] [cursor=pointer]
+    - main [ref=e42]
+  - generic [ref=e43]:
+    - img [ref=e45]
+    - button "Open Tanstack query devtools" [ref=e93] [cursor=pointer]:
+      - img [ref=e94] [cursor=pointer]
+```

@@ -1,0 +1,134 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: FocusHive
+        - generic [ref=e8]: Online
+        - button "notifications" [ref=e9] [cursor=pointer]:
+          - generic [ref=e10] [cursor=pointer]:
+            - img [ref=e11] [cursor=pointer]
+            - generic [ref=e13] [cursor=pointer]: "3"
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: J
+        - generic [ref=e17]:
+          - heading "John Doe" [level=6] [ref=e18]
+          - generic [ref=e19]: john.doe@example.com
+      - list [ref=e21]:
+        - listitem [ref=e23]:
+          - button "Home" [ref=e24] [cursor=pointer]:
+            - img [ref=e26] [cursor=pointer]
+            - paragraph [ref=e29] [cursor=pointer]: Home
+        - listitem [ref=e31]:
+          - button "Dashboard" [ref=e32] [cursor=pointer]:
+            - img [ref=e34] [cursor=pointer]
+            - paragraph [ref=e37] [cursor=pointer]: Dashboard
+        - listitem [ref=e39]:
+          - button "Hives" [ref=e40] [cursor=pointer]:
+            - img [ref=e42] [cursor=pointer]
+            - paragraph [ref=e45] [cursor=pointer]: Hives
+            - img [ref=e46] [cursor=pointer]
+        - listitem [ref=e49]:
+          - button "3 Chat" [ref=e50] [cursor=pointer]:
+            - generic [ref=e52] [cursor=pointer]:
+              - img [ref=e53] [cursor=pointer]
+              - generic [ref=e55] [cursor=pointer]: "3"
+            - paragraph [ref=e57] [cursor=pointer]: Chat
+        - listitem [ref=e59]:
+          - button "⏰ Focus" [ref=e60] [cursor=pointer]:
+            - generic [ref=e62] [cursor=pointer]: ⏰
+            - paragraph [ref=e64] [cursor=pointer]: Focus
+      - generic [ref=e67]: FocusHive v1.0
+    - main [ref=e68]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - heading "Welcome back! 👋" [level=1] [ref=e72]
+          - paragraph [ref=e73]: Ready to focus and be productive? Check out your hives and start a new session.
+        - generic [ref=e74]:
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - heading "Focus Time" [level=6] [ref=e79]
+                - generic [ref=e80]: 145h
+                - paragraph [ref=e81]: This week
+              - img [ref=e82]
+            - generic [ref=e84]:
+              - progressbar [ref=e85]
+              - generic [ref=e87]: 73% of weekly goal
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - heading "My Hives" [level=6] [ref=e92]
+              - generic [ref=e93]: "0"
+              - paragraph [ref=e94]: Active memberships
+            - img [ref=e95]
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - heading "Sessions" [level=6] [ref=e101]
+              - generic [ref=e102]: "12"
+              - paragraph [ref=e103]: This week
+            - img [ref=e104]
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - heading "Streak" [level=6] [ref=e110]
+              - generic [ref=e111]: "7"
+              - paragraph [ref=e112]: Days active
+            - img [ref=e113]
+        - generic [ref=e115]:
+          - heading "Quick Start" [level=6] [ref=e116]:
+            - img [ref=e117]
+            - text: Quick Start
+          - generic [ref=e119]:
+            - button "Start 25min Pomodoro" [ref=e120] [cursor=pointer]:
+              - generic [ref=e121] [cursor=pointer]: Start 25min Pomodoro
+            - button "Join Active Hive" [ref=e122] [cursor=pointer]:
+              - generic [ref=e123] [cursor=pointer]: Join Active Hive
+            - button "Browse Discover" [ref=e124] [cursor=pointer]:
+              - generic [ref=e125] [cursor=pointer]: Browse Discover
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - heading "My Hives" [level=1] [ref=e128]
+            - generic [ref=e129]:
+              - button "Refresh" [disabled]:
+                - generic:
+                  - img
+                - text: Refresh
+              - button "Create Hive" [ref=e130] [cursor=pointer]:
+                - img [ref=e132] [cursor=pointer]
+                - text: Create Hive
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - generic [ref=e138]:
+                - img [ref=e140]
+                - textbox "Search hives..." [ref=e142]
+                - group
+              - group [ref=e143]:
+                - button "grid view" [pressed] [ref=e144] [cursor=pointer]:
+                  - img [ref=e145] [cursor=pointer]
+                - button "list view" [ref=e147] [cursor=pointer]:
+                  - img [ref=e148] [cursor=pointer]
+            - generic [ref=e150]:
+              - generic [ref=e151]:
+                - generic [ref=e152]: Category
+                - generic [ref=e153]:
+                  - combobox [ref=e154] [cursor=pointer]: All Hives
+                  - textbox: all
+                  - img
+                  - group:
+                    - generic: Category
+              - generic [ref=e155]:
+                - generic [ref=e156]: Sort by
+                - generic [ref=e157]:
+                  - combobox [ref=e158] [cursor=pointer]: Activity
+                  - textbox: activity
+                  - img
+                  - group:
+                    - generic: Sort by
+          - paragraph [ref=e159]: Loading...
+  - generic [ref=e275]:
+    - img [ref=e277]
+    - button "Open Tanstack query devtools" [ref=e325] [cursor=pointer]:
+      - img [ref=e326] [cursor=pointer]
+```

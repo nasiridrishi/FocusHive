@@ -141,7 +141,11 @@ export const useBreakpointBetween = (start: BreakpointKey, end: BreakpointKey) =
 export const useDeviceType = () => {
   const isTouchDevice = useMediaQuery(deviceTypes.touchDevice)
   const isMouseDevice = useMediaQuery(deviceTypes.mouseDevice)
-  const { isMobile, isTablet, isDesktopOrLarger } = useResponsive()
+  
+  // Use direct media queries to avoid circular dependency with useResponsive
+  const isMobile = useMediaQuery(`(max-width: ${breakpointValues.tablet - 1}px)`)
+  const isTablet = useMediaQuery(`(min-width: ${breakpointValues.tablet}px) and (max-width: ${breakpointValues.laptop - 1}px)`)
+  const isDesktopOrLarger = useMediaQuery(`(min-width: ${breakpointValues.laptop}px)`)
   
   return useMemo(() => {
     if (isMobile && isTouchDevice) return 'mobile'
@@ -155,7 +159,17 @@ export const useDeviceType = () => {
 // Hook for responsive spacing
 export const useResponsiveSpacing = () => {
   const theme = useTheme()
-  const { currentBreakpoint } = useResponsive()
+  
+  // Use direct media queries to avoid circular dependency with useResponsive
+  const isMobile = useMediaQuery(`(max-width: ${breakpointValues.tablet - 1}px)`)
+  const isTablet = useMediaQuery(`(min-width: ${breakpointValues.tablet}px) and (max-width: ${breakpointValues.laptop - 1}px)`)
+  
+  // Determine current breakpoint without calling useResponsive
+  const currentBreakpoint = useMemo((): BreakpointKey => {
+    if (isMobile) return 'mobile'
+    if (isTablet) return 'tablet'
+    return 'desktop'
+  }, [isMobile, isTablet])
   
   return useMemo(() => ({
     // Get spacing value for current breakpoint

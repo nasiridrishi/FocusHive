@@ -142,6 +142,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
   if (isAuthPage || isLandingPage) {
     return (
       <Box
+        id="main-content"
         sx={{
           display: 'flex',
           flexDirection: 'column',
@@ -194,6 +195,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
       >
         {/* Content Container */}
         <ResponsiveContainer
+          id="main-content"
           maxWidth="desktopLg"
           fluidPadding={true}
           contentType="dashboard"

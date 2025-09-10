@@ -27,17 +27,25 @@ spring:
           batch_versioned_data: true
         order_inserts: true
         order_updates: true
+        # Performance optimization for N+1 query prevention
+        default_batch_fetch_size: 16
+        enable_lazy_load_no_trans: false
+        query:
+          in_clause_parameter_padding: true
     show-sql: false
   
   flyway:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:identity_db}
+    user: ${DB_USER:identity_user}
+    password: ${DB_PASSWORD:identity_pass}
   
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6380}
-    password: ${REDIS_PASSWORD:focushive_pass}
+    password: ${REDIS_PASSWORD}  # REQUIRED: Must be set in environment
     timeout: 2000ms
     lettuce:
       pool:
@@ -66,7 +74,7 @@ server:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:thisisaverylongsecretkeythatshouldbeatleast256bitslongforsecurity}
+  secret: ${JWT_SECRET}  # REQUIRED: Must be set in environment
   access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000} # 1 hour
   refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:2592000000} # 30 days
   remember-me-expiration-ms: ${JWT_REMEMBER_ME_EXPIRATION:7776000000} # 90 days
@@ -76,9 +84,9 @@ jwt:
 security:
   jwt:
     key-store: classpath:keystore.p12
-    key-store-password: ${KEY_STORE_PASSWORD:changeme}
+    key-store-password: ${KEY_STORE_PASSWORD}  # REQUIRED: Must be set in environment
     key-alias: identity-service
-    private-key-passphrase: ${PRIVATE_KEY_PASSWORD:changeme}
+    private-key-passphrase: ${PRIVATE_KEY_PASSWORD}  # REQUIRED: Must be set in environment
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
     allowed-methods: GET,POST,PUT,DELETE,OPTIONS
@@ -98,7 +106,7 @@ oauth2:
   clients:
     focushive:
       client-id: focushive-backend
-      client-secret: ${FOCUSHIVE_CLIENT_SECRET:secret}
+      client-secret: ${FOCUSHIVE_CLIENT_SECRET}  # REQUIRED: Must be set in environment
       redirect-uris:
         - http://localhost:8080/login/oauth2/code/identity
       scopes:

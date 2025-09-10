@@ -1,0 +1,221 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: FocusHive
+        - generic [ref=e8]: Online
+        - button "notifications" [ref=e9] [cursor=pointer]:
+          - generic [ref=e10] [cursor=pointer]:
+            - img [ref=e11] [cursor=pointer]
+            - generic [ref=e13] [cursor=pointer]: "3"
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: J
+        - generic [ref=e17]:
+          - heading "John Doe" [level=6] [ref=e18]
+          - generic [ref=e19]: john.doe@example.com
+      - list [ref=e21]:
+        - listitem [ref=e23]:
+          - button "Home" [ref=e24] [cursor=pointer]:
+            - img [ref=e26] [cursor=pointer]
+            - paragraph [ref=e29] [cursor=pointer]: Home
+        - listitem [ref=e31]:
+          - button "Dashboard" [ref=e32] [cursor=pointer]:
+            - img [ref=e34] [cursor=pointer]
+            - paragraph [ref=e37] [cursor=pointer]: Dashboard
+        - listitem [ref=e39]:
+          - button "Hives" [ref=e40] [cursor=pointer]:
+            - img [ref=e42] [cursor=pointer]
+            - paragraph [ref=e45] [cursor=pointer]: Hives
+            - img [ref=e46] [cursor=pointer]
+        - listitem [ref=e49]:
+          - button "3 Chat" [ref=e50] [cursor=pointer]:
+            - generic [ref=e52] [cursor=pointer]:
+              - img [ref=e53] [cursor=pointer]
+              - generic [ref=e55] [cursor=pointer]: "3"
+            - paragraph [ref=e57] [cursor=pointer]: Chat
+        - listitem [ref=e59]:
+          - button "⏰ Focus" [ref=e60] [cursor=pointer]:
+            - generic [ref=e62] [cursor=pointer]: ⏰
+            - paragraph [ref=e64] [cursor=pointer]: Focus
+      - generic [ref=e67]: FocusHive v1.0
+    - main [ref=e68]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - heading "Welcome back! 👋" [level=1] [ref=e72]
+          - paragraph [ref=e73]: Ready to focus and be productive? Check out your hives and start a new session.
+        - generic [ref=e74]:
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - heading "Focus Time" [level=6] [ref=e79]
+                - generic [ref=e80]: 145h
+                - paragraph [ref=e81]: This week
+              - img [ref=e82]
+            - generic [ref=e84]:
+              - progressbar [ref=e85]
+              - generic [ref=e87]: 73% of weekly goal
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - heading "My Hives" [level=6] [ref=e92]
+              - generic [ref=e93]: "1"
+              - paragraph [ref=e94]: Active memberships
+            - img [ref=e95]
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - heading "Sessions" [level=6] [ref=e101]
+              - generic [ref=e102]: "12"
+              - paragraph [ref=e103]: This week
+            - img [ref=e104]
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - heading "Streak" [level=6] [ref=e110]
+              - generic [ref=e111]: "7"
+              - paragraph [ref=e112]: Days active
+            - img [ref=e113]
+        - generic [ref=e115]:
+          - heading "Quick Start" [level=6] [ref=e116]:
+            - img [ref=e117]
+            - text: Quick Start
+          - generic [ref=e119]:
+            - button "Start 25min Pomodoro" [ref=e120] [cursor=pointer]:
+              - generic [ref=e121] [cursor=pointer]: Start 25min Pomodoro
+            - button "Join Active Hive" [ref=e122] [cursor=pointer]:
+              - generic [ref=e123] [cursor=pointer]: Join Active Hive
+            - button "Browse Discover" [ref=e124] [cursor=pointer]:
+              - generic [ref=e125] [cursor=pointer]: Browse Discover
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - heading "My Hives" [level=1] [ref=e128]
+            - generic [ref=e129]:
+              - button "Refresh" [ref=e130] [cursor=pointer]:
+                - img [ref=e132] [cursor=pointer]
+                - text: Refresh
+              - button "Create Hive" [ref=e134] [cursor=pointer]:
+                - img [ref=e136] [cursor=pointer]
+                - text: Create Hive
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - generic [ref=e142]:
+                - img [ref=e144]
+                - textbox "Search hives..." [ref=e146]
+                - group
+              - group [ref=e147]:
+                - button "grid view" [pressed] [ref=e148] [cursor=pointer]:
+                  - img [ref=e149] [cursor=pointer]
+                - button "list view" [ref=e151] [cursor=pointer]:
+                  - img [ref=e152] [cursor=pointer]
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - generic [ref=e156]: Category
+                - generic [ref=e157]:
+                  - combobox [ref=e158] [cursor=pointer]: All Hives
+                  - textbox: all
+                  - img
+                  - group:
+                    - generic: Category
+              - generic [ref=e159]:
+                - generic [ref=e160]: Sort by
+                - generic [ref=e161]:
+                  - combobox [ref=e162] [cursor=pointer]: Activity
+                  - textbox: activity
+                  - img
+                  - group:
+                    - generic: Sort by
+            - generic [ref=e163]:
+              - paragraph [ref=e164]: "Filter by tags:"
+              - generic [ref=e165]:
+                - button "Academic" [ref=e166] [cursor=pointer]:
+                  - generic [ref=e167] [cursor=pointer]: Academic
+                - button "Books" [ref=e168] [cursor=pointer]:
+                  - generic [ref=e169] [cursor=pointer]: Books
+                - button "Learning" [ref=e170] [cursor=pointer]:
+                  - generic [ref=e171] [cursor=pointer]: Learning
+                - button "Literature" [ref=e172] [cursor=pointer]:
+                  - generic [ref=e173] [cursor=pointer]: Literature
+                - button "Project" [ref=e174] [cursor=pointer]:
+                  - generic [ref=e175] [cursor=pointer]: Project
+                - button "Reading" [ref=e176] [cursor=pointer]:
+                  - generic [ref=e177] [cursor=pointer]: Reading
+                - button "Study" [ref=e178] [cursor=pointer]:
+                  - generic [ref=e179] [cursor=pointer]: Study
+                - button "Team" [ref=e180] [cursor=pointer]:
+                  - generic [ref=e181] [cursor=pointer]: Team
+                - button "Work" [ref=e182] [cursor=pointer]:
+                  - generic [ref=e183] [cursor=pointer]: Work
+          - paragraph [ref=e184]: 3 hives found
+          - generic [ref=e185]:
+            - generic [ref=e186]:
+              - generic [ref=e187]:
+                - generic [ref=e188]:
+                  - heading "Study Group" [level=3] [ref=e189]
+                  - generic [ref=e191]: Member
+                - paragraph [ref=e192]: A collaborative space for focused studying and academic work. Perfect for students and lifelong learners.
+                - generic [ref=e193]:
+                  - generic [ref=e194]:
+                    - img [ref=e195]
+                    - generic [ref=e197]: 12/20
+                  - generic [ref=e198]:
+                    - img [ref=e199]
+                    - generic [ref=e201]: pomodoro
+                  - generic [ref=e202]:
+                    - img [ref=e203]
+                    - generic [ref=e205]: Public
+                - generic [ref=e206]:
+                  - generic "Alice Johnson - Online" [ref=e208]: AJ
+                  - generic [ref=e209]:
+                    - img [ref=e210]
+                    - generic [ref=e212]: 1 online
+              - generic [ref=e213]:
+                - button "Enter Hive" [ref=e214] [cursor=pointer]:
+                  - img [ref=e216] [cursor=pointer]
+                  - text: Enter Hive
+                - button [ref=e218] [cursor=pointer]:
+                  - img [ref=e219] [cursor=pointer]
+            - generic [ref=e221]:
+              - generic [ref=e222]:
+                - heading "Work Project" [level=3] [ref=e224]
+                - paragraph [ref=e225]: Deep focus sessions for important work projects. A private space for our team to maintain accountability.
+                - generic [ref=e226]:
+                  - generic [ref=e227]:
+                    - img [ref=e228]
+                    - generic [ref=e230]: 8/15
+                  - generic [ref=e231]:
+                    - img [ref=e232]
+                    - generic [ref=e234]: continuous
+                  - generic [ref=e235]:
+                    - img [ref=e236]
+                    - generic [ref=e238]: Private
+                - generic [ref=e239]:
+                  - generic "Bob Smith - Online" [ref=e241]: BS
+                  - generic [ref=e242]:
+                    - img [ref=e243]
+                    - generic [ref=e245]: 1 online
+              - button "Request to Join" [ref=e247] [cursor=pointer]:
+                - img [ref=e249] [cursor=pointer]
+                - text: Request to Join
+            - generic [ref=e251]:
+              - generic [ref=e252]:
+                - heading "Reading Club" [level=3] [ref=e254]
+                - paragraph [ref=e255]: Join fellow book lovers for quiet reading sessions. Share your progress and discover new books.
+                - generic [ref=e256]:
+                  - generic [ref=e257]:
+                    - img [ref=e258]
+                    - generic [ref=e260]: 25/30
+                  - generic [ref=e261]:
+                    - img [ref=e262]
+                    - generic [ref=e264]: flexible
+                  - generic [ref=e265]:
+                    - img [ref=e266]
+                    - generic [ref=e268]: Public
+              - button "Join Hive" [ref=e270] [cursor=pointer]:
+                - img [ref=e272] [cursor=pointer]
+                - text: Join Hive
+  - generic [ref=e274]:
+    - img [ref=e276]
+    - button "Open Tanstack query devtools" [ref=e324] [cursor=pointer]:
+      - img [ref=e325] [cursor=pointer]
+```

@@ -79,6 +79,7 @@ class PostgreSQLIntegrationTest {
             Flyway flyway = Flyway.configure()
                     .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
                     .locations("classpath:db/migration")
+                    .cleanDisabled(false)  // Explicitly enable clean for this test
                     .load();
             
             // Clean and migrate

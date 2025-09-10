@@ -1,0 +1,88 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e8]:
+    - heading "Join FocusHive" [level=1] [ref=e9]
+    - paragraph [ref=e10]: Create your account to start focusing together
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: First Name
+        - generic [ref=e14]:
+          - img [ref=e16]
+          - textbox "First Name" [ref=e18]
+          - group:
+            - generic: First Name
+      - generic [ref=e19]:
+        - generic [ref=e20]: Last Name
+        - generic [ref=e21]:
+          - img [ref=e23]
+          - textbox "Last Name" [ref=e25]
+          - group:
+            - generic: Last Name
+    - generic [ref=e26]:
+      - generic [ref=e27]: Username
+      - generic [ref=e28]:
+        - textbox "Username" [ref=e29]: e2e_new_user
+        - group:
+          - generic: Username
+    - generic [ref=e30]:
+      - generic [ref=e31]: Email Address
+      - generic [ref=e32]:
+        - img [ref=e34]
+        - textbox "Email Address" [ref=e36]: e2e.new@focushive.com
+        - group:
+          - generic: Email Address
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: Password
+        - generic [ref=e40]:
+          - img [ref=e42]
+          - textbox "Password" [ref=e44]: NewPassword123!
+          - button "toggle password visibility" [ref=e46] [cursor=pointer]:
+            - img [ref=e47] [cursor=pointer]
+          - group:
+            - generic: Password
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - img [ref=e51]
+          - generic [ref=e53]: Password Strength
+          - generic [ref=e55]: Strong
+        - progressbar [ref=e56]
+        - generic [ref=e58]:
+          - img [ref=e59]
+          - generic [ref=e61]: Strong password!
+    - generic [ref=e62]:
+      - generic [ref=e63]: Confirm Password
+      - generic [ref=e64]:
+        - img [ref=e66]
+        - textbox "Confirm Password" [ref=e68]
+        - button "toggle confirm password visibility" [ref=e70] [cursor=pointer]:
+          - img [ref=e71] [cursor=pointer]
+        - group:
+          - generic: Confirm Password
+    - generic [ref=e74] [cursor=pointer]:
+      - generic [ref=e75] [cursor=pointer]:
+        - checkbox "I agree to the Terms of Service and Privacy Policy" [ref=e76] [cursor=pointer]
+        - img [ref=e77] [cursor=pointer]
+      - paragraph [ref=e79] [cursor=pointer]:
+        - text: I agree to the
+        - link "Terms of Service" [ref=e80] [cursor=pointer]:
+          - /url: /terms
+        - text: and
+        - link "Privacy Policy" [ref=e81] [cursor=pointer]:
+          - /url: /privacy
+    - alert [ref=e83]:
+      - img [ref=e85]
+      - generic [ref=e87]: Please fill in all highlighted fields
+    - button "Create Account" [active] [ref=e88] [cursor=pointer]:
+      - img [ref=e90] [cursor=pointer]
+      - text: Create Account
+    - paragraph [ref=e93]:
+      - text: Already have an account?
+      - button "Sign In" [ref=e94] [cursor=pointer]
+  - generic [ref=e95]:
+    - img [ref=e97]
+    - button "Open Tanstack query devtools" [ref=e145] [cursor=pointer]:
+      - img [ref=e146] [cursor=pointer]
+```

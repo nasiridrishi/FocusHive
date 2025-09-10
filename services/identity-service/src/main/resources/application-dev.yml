@@ -1,0 +1,138 @@
+spring:
+  application:
+    name: identity-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5433/identity_db
+    username: identity_user
+    password: identity_pass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+        # N+1 query prevention optimizations
+        default_batch_fetch_size: 16
+        enable_lazy_load_no_trans: false
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+    show-sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    url: jdbc:postgresql://localhost:5433/identity_db
+    user: identity_user
+    password: identity_pass
+    # Allow mixed statements for development (ANALYZE commands in migrations)
+    mixed: true
+    validate-on-migrate: false
+
+  redis:
+    host: localhost
+    port: 6380
+    password: redis123
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 10
+
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:8081
+
+server:
+  port: 8081
+
+# JWT Configuration - simplified for development
+jwt:
+  secret: t2+oCqx61sNBNLnJ3jm7YtdH58rrWqS7dQ4yLSD5q7c=
+  access-token-expiration-ms: 3600000
+  refresh-token-expiration-ms: 2592000000
+  issuer: identity-service
+
+# Security Configuration - relaxed for development
+security:
+  jwt:
+    # Comment out keystore requirements for development
+    # key-store: classpath:keystore.p12
+    # key-store-password: password
+    # key-alias: identity-service
+    # private-key-passphrase: password
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173,http://localhost:8080
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
+# OAuth2 Configuration
+oauth2:
+  authorization:
+    consent-required: false  # Simplified for development
+    device-code-time-to-live: PT5M
+    access-token-time-to-live: PT15M
+    refresh-token-time-to-live: P30D
+    authorization-code-time-to-live: PT5M
+  clients:
+    focushive:
+      client-id: focushive-backend
+      client-secret: focushive-secret-123
+      redirect-uris:
+        - http://localhost:8080/login/oauth2/code/identity
+      scopes:
+        - openid
+        - profile
+        - email
+        - personas
+        - identity.read
+        - identity.write
+
+# Application Configuration
+app:
+  base-url: http://localhost:3000
+  email:
+    from: noreply@focushive.com
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,flyway
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration - enhanced for development/debugging
+logging:
+  level:
+    com.focushive.identity: DEBUG
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.flywaydb: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true

@@ -6,10 +6,11 @@ import { CssBaseline } from '@mui/material'
 import { ResponsiveLayout } from '@shared/layout'
 import { PWAProvider, PWAUpdateNotification } from '@shared/pwa'
 import { I18nProvider } from '@shared/components/i18n'
-import { createLightTheme } from '@shared/theme'
+import { createAccessibleLightTheme } from '@shared/accessibility/theme/accessibleTheme'
 import { AppLevelErrorBoundary, RouteLevelErrorBoundary } from '@shared/components/error-boundary'
 import EnvironmentProvider from '../providers/EnvironmentProvider'
 import { AuthProvider } from '../features/auth/contexts'
+import { SkipLink } from '@shared/components/SkipLink'
 // Import i18n configuration
 import '../lib/i18n'
 import {
@@ -31,8 +32,8 @@ const ReactQueryDevtools = import.meta.env.DEV
     })))
   : null
 
-// Create comprehensive responsive theme
-const theme = createLightTheme()
+// Create accessible responsive theme
+const theme = createAccessibleLightTheme()
 
 function App() {
   // Initialize bundle optimization on app start
@@ -64,6 +65,7 @@ function App() {
               <PWAProvider serviceWorkerOptions={{ immediate: true }}>
                 <AuthProvider>
                   <Router>
+                    <SkipLink />
                     <ResponsiveLayout
                   currentUser={{
                     name: 'John Doe',

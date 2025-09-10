@@ -52,6 +52,7 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.springframework.security:spring-security-test")
+    testRuntimeOnly("com.h2database:h2")
 }
 
 tasks.withType<Test> {
