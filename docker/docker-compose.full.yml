@@ -138,8 +138,8 @@ services:
       JWT_EXPIRATION: 86400000
       LOG_LEVEL: INFO
       SHOW_SQL: "false"
-      # CORS - Allow Cloudflare tunnel access
-      CORS_ORIGINS: "*"
+      # CORS - Allow Cloudflare tunnel access and internal network
+      CORS_ORIGINS: http://frontend:80,http://backend:8080,http://localhost:3000,http://localhost:5173
     networks:
       - focushive-network
     depends_on:

@@ -52,4 +52,19 @@ public interface PersonaRepository extends JpaRepository<Persona, UUID> {
            "CASE WHEN p.isDefault = true THEN 0 ELSE 1 END, " +
            "p.createdAt ASC")
     List<Persona> findByUserIdOrderByPriority(@Param("userId") UUID userId);
+    
+    // Performance optimized methods to prevent N+1 queries
+    
+    @Query("SELECT DISTINCT p FROM Persona p " +
+           "LEFT JOIN FETCH p.customAttributes " +
+           "WHERE p.user.id = :userId " +
+           "ORDER BY CASE WHEN p.isActive = true THEN 0 ELSE 1 END, " +
+           "CASE WHEN p.isDefault = true THEN 0 ELSE 1 END, " +
+           "p.createdAt ASC")
+    List<Persona> findByUserIdOrderByPriorityWithAttributes(@Param("userId") UUID userId);
+    
+    @Query("SELECT DISTINCT p FROM Persona p " +
+           "LEFT JOIN FETCH p.customAttributes " +
+           "WHERE p.user.id = :userId AND p.isActive = true")
+    Optional<Persona> findByUserIdAndIsActiveTrueWithAttributes(@Param("userId") UUID userId);
 }

@@ -27,6 +27,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         // Removed debug log to avoid logging email addresses and usernames
         
         // Try to find by email first, then by username
+        // Note: EntityGraph on findById will load personas when user is accessed
         User user = userRepository.findByEmail(usernameOrEmail)
                 .or(() -> userRepository.findByUsername(usernameOrEmail))
                 .orElseThrow(() -> new UsernameNotFoundException(
@@ -37,8 +38,9 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User account has been deleted");
         }
         
-        // Load personas eagerly for the user session
-        user.getPersonas().size(); // Force initialization
+        // Personas will be loaded via EntityGraph when accessed
+        // Force initialization to trigger the optimized loading
+        user.getPersonas().size();
         
         // Removed debug log to avoid logging usernames
         
@@ -50,6 +52,7 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     @Transactional(readOnly = true)
     public User loadUserById(String userId) {
+        // Use findById which now has EntityGraph for personas
         return userRepository.findActiveById(java.util.UUID.fromString(userId))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
     }

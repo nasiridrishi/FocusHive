@@ -8,16 +8,16 @@ spring:
 
   security:
     jwt:
-      secret: ${JWT_SECRET:mySecretKeyForFocusHiveApplicationThatIsAtLeast256BitsLongForHS256Algorithm}
+      secret: ${JWT_SECRET}  # REQUIRED: Must be set in environment
       expiration: ${JWT_EXPIRATION:86400000}
       refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   
   datasource:
-    # Temporary H2 in-memory database for quick startup
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password: password
-    driver-class-name: org.h2.Driver
+    # Database configuration - use PostgreSQL in production
+    url: ${DATABASE_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD}  # REQUIRED: Must be set in environment (use 'password' for local H2 development only)
+    driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -54,7 +54,7 @@ spring:
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:focushive_pass}
+    password: ${REDIS_PASSWORD}  # REQUIRED: Must be set in environment
     timeout: 2000ms
     lettuce:
       pool:

@@ -1,6 +1,7 @@
 package com.focushive.identity.repository;
 
 import com.focushive.identity.entity.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,4 +50,21 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Modifying
     @Query("UPDATE User u SET u.deletedAt = :deletedAt WHERE u.id = :userId")
     void softDelete(@Param("userId") UUID userId, @Param("deletedAt") Instant deletedAt);
+    
+    // Performance optimized methods using EntityGraph to prevent N+1 queries
+    
+    @EntityGraph("User.withPersonas")
+    @Override
+    Optional<User> findById(UUID id);
+    
+    @EntityGraph("User.withPersonas")
+    @Override
+    List<User> findAll();
+    
+    // JPQL with explicit JOIN FETCH for complex scenarios
+    @Query("SELECT DISTINCT u FROM User u " +
+           "LEFT JOIN FETCH u.personas p " +
+           "LEFT JOIN FETCH p.customAttributes " +
+           "WHERE u.id IN :userIds")
+    List<User> findUsersWithPersonasAndAttributes(@Param("userIds") List<UUID> userIds);
 }

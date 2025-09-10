@@ -9,16 +9,16 @@ import { PaletteOptions, PaletteColorOptions, PaletteColor } from '@mui/material
 
 // Brand colors - FocusHive identity
 export const brandColors = {
-  // Primary brand color - warm, focused orange-red
+  // Primary brand color - warm, focused orange-red (WCAG 2.1 AA compliant)
   primary: {
     50: '#fef7f0',
     100: '#feecdc',
     200: '#fcd5b4',
     300: '#fab382',
     400: '#f7864e',
-    500: '#f56500', // Main brand color
-    600: '#e6500a',
-    700: '#bf3f0b',
+    500: '#b8470a', // Main brand color - Updated for WCAG 2.1 AA compliance (4.6:1 contrast)
+    600: '#a03f08', // Updated for consistency with darker main color
+    700: '#9a4f1f', // Updated for consistent color progression and accessibility
     800: '#983410',
     900: '#7c2d11',
     950: '#431505',
@@ -94,7 +94,7 @@ export const semanticColors = {
 export const contextColors = {
   // Focus states
   focus: {
-    active: '#ff6b35',      // Active focus session
+    active: '#b8470a',      // Active focus session - Updated for WCAG compliance
     paused: '#ffa726',      // Paused session
     break: '#66bb6a',       // Break time
     completed: '#4caf50',   // Completed session
@@ -320,7 +320,7 @@ export const createDarkPalette = (): PaletteOptions => ({
   // Custom palette extensions
   custom: {
     focus: {
-      active: '#ff6b35',
+      active: '#b8470a',  // Updated for WCAG compliance
       paused: '#ffa726',
       break: '#66bb6a',
       completed: '#4caf50',

@@ -1,5 +1,7 @@
 package com.focushive.api.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,6 +15,7 @@ import java.util.HashMap;
 @Profile("security-test")
 public class SimpleAuthController {
     
+    private static final Logger logger = LoggerFactory.getLogger(SimpleAuthController.class);
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
     // Hardcoded demo account for testing
@@ -22,28 +25,29 @@ public class SimpleAuthController {
     
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-        System.out.println("Login request received: " + loginRequest);
+        logger.debug("Login attempt received");
         String username = loginRequest.get("username");
         String email = loginRequest.get("email");
         String password = loginRequest.get("password");
         
-        System.out.println("Username: " + username);
-        System.out.println("Email: " + email);
-        System.out.println("Password received: " + (password != null ? "***" : "null"));
+        logger.debug("Login attempt for username: {} or email: {}", 
+            username != null ? "***" : "null", 
+            email != null ? "***" : "null");
         
         // Check if it's the demo account
         boolean isValidUser = false;
         if (username != null && username.equals(DEMO_USERNAME)) {
-            System.out.println("Checking password for username: " + username);
+            logger.debug("Authenticating demo user by username");
             isValidUser = passwordEncoder.matches(password, DEMO_PASSWORD_HASH);
-            System.out.println("Password match result: " + isValidUser);
+            logger.debug("Authentication result: {}", isValidUser ? "success" : "failed");
         } else if (email != null && email.equals(DEMO_EMAIL)) {
-            System.out.println("Checking password for email: " + email);
+            logger.debug("Authenticating demo user by email");
             isValidUser = passwordEncoder.matches(password, DEMO_PASSWORD_HASH);
-            System.out.println("Password match result: " + isValidUser);
+            logger.debug("Authentication result: {}", isValidUser ? "success" : "failed");
         }
         
         if (isValidUser) {
+            logger.info("Successful authentication for demo user");
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Login successful");
@@ -57,7 +61,8 @@ public class SimpleAuthController {
             response.put("refreshToken", "demo-refresh-token");
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(400).body(Map.of(
+            logger.warn("Failed authentication attempt");
+            return ResponseEntity.status(401).body(Map.of(
                 "success", false,
                 "message", "Invalid credentials"
             ));
@@ -80,19 +85,5 @@ public class SimpleAuthController {
         ));
     }
     
-    @GetMapping("/test-hash")
-    public ResponseEntity<?> testHash() {
-        String password = "Demo123!";
-        String newHash = passwordEncoder.encode(password);
-        boolean oldHashMatches = passwordEncoder.matches(password, DEMO_PASSWORD_HASH);
-        boolean newHashMatches = passwordEncoder.matches(password, newHash);
-        
-        return ResponseEntity.ok(Map.of(
-            "password", password,
-            "newHash", newHash,
-            "oldHash", DEMO_PASSWORD_HASH,
-            "oldHashMatches", oldHashMatches,
-            "newHashMatches", newHashMatches
-        ));
-    }
+    // SECURITY: testHash endpoint removed - it exposed sensitive credential data
 }

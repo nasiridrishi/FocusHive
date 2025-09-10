@@ -23,6 +23,26 @@ import java.util.*;
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = {"personas", "oauthClients"})
 @ToString(exclude = {"password", "personas", "oauthClients"})
+@NamedEntityGraph(
+    name = "User.withPersonas",
+    attributeNodes = {
+        @NamedAttributeNode("personas")
+    }
+)
+@NamedEntityGraph(
+    name = "User.withPersonasAndAttributes", 
+    attributeNodes = {
+        @NamedAttributeNode(value = "personas", subgraph = "persona-details")
+    },
+    subgraphs = {
+        @NamedSubgraph(
+            name = "persona-details",
+            attributeNodes = {
+                @NamedAttributeNode("customAttributes")
+            }
+        )
+    }
+)
 public class User implements UserDetails {
     
     @Id
@@ -97,6 +117,7 @@ public class User implements UserDetails {
     // Relationships
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt ASC")
+    @org.hibernate.annotations.BatchSize(size = 16)
     @Builder.Default
     private List<Persona> personas = new ArrayList<>();
     

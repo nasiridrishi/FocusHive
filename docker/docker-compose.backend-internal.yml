@@ -136,8 +136,8 @@ services:
       JWT_EXPIRATION: 86400000
       LOG_LEVEL: INFO
       SHOW_SQL: "false"
-      # CORS - Allow Cloudflare tunnel access
-      CORS_ORIGINS: "*"
+      # CORS - Internal network only for security
+      CORS_ORIGINS: http://identity-service:8081
     networks:
       - focushive-network
     depends_on:
