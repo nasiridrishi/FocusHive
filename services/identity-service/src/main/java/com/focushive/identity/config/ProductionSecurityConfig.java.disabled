@@ -1,0 +1,350 @@
+package com.focushive.identity.config;
+
+import com.focushive.identity.security.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.XXssProtectionHeaderWriter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.core.Ordered;
+
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Production Security Configuration for Identity Service
+ * 
+ * This configuration provides enterprise-grade security features including:
+ * - Security headers (HSTS, CSP, X-Frame-Options, etc.)
+ * - Rate limiting and brute force protection
+ * - IP-based access control
+ * - Threat detection and monitoring
+ * - Audit logging for security events
+ * - Advanced CORS configuration
+ * 
+ * Activated only in production profile to avoid impacting development.
+ */
+@Configuration
+@EnableWebSecurity
+@Profile("prod")
+@ConditionalOnProperty(name = "security.hardening.enabled", havingValue = "true", matchIfMissing = true)
+public class ProductionSecurityConfig {
+
+    @Value("${security.cors.allowed-origins}")
+    private String corsAllowedOrigins;
+
+    @Value("${security.rate-limit.auth.requests-per-minute:10}")
+    private int authRateLimit;
+
+    @Value("${security.brute-force.max-attempts:5}")
+    private int bruteForceMaxAttempts;
+
+    @Value("${security.brute-force.lockout-duration:PT15M}")
+    private String bruteForceLockoutDuration;
+
+    @Value("${security.headers.csp.policy:default-src 'self'}")
+    private String cspPolicy;
+
+    @Value("${security.ip-security.whitelist.enabled:false}")
+    private boolean ipWhitelistEnabled;
+
+    @Value("${security.ip-security.whitelist.addresses:}")
+    private String ipWhitelistAddresses;
+
+    /**
+     * Production Security Filter Chain with comprehensive security hardening
+     */
+    @Bean
+    public SecurityFilterChain productionSecurityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            RateLimitingFilter rateLimitingFilter,
+            BruteForceProtectionFilter bruteForceFilter,
+            IpSecurityFilter ipSecurityFilter,
+            ThreatDetectionFilter threatDetectionFilter,
+            SecurityAuditFilter auditFilter) throws Exception {
+        
+        http
+            // CORS Configuration
+            .cors(cors -> cors.configurationSource(productionCorsConfigurationSource()))
+            
+            // CSRF Protection - Disabled for stateless JWT API
+            .csrf(csrf -> csrf.disable())
+            
+            // Security Headers
+            .headers(headers -> headers
+                // HSTS - HTTP Strict Transport Security
+                .httpStrictTransportSecurity(hstsConfig -> hstsConfig
+                    .maxAgeInSeconds(31536000) // 1 year
+                    .includeSubdomains(true)
+                    .preload(true))
+                
+                // Content Security Policy
+                .contentSecurityPolicy(cspConfig -> cspConfig
+                    .policyDirectives(cspPolicy))
+                
+                // X-Frame-Options
+                .frameOptions(frameConfig -> frameConfig.deny())
+                
+                // X-Content-Type-Options
+                .contentTypeOptions(contentTypeConfig -> contentTypeConfig.and())
+                
+                // X-XSS-Protection
+                .addHeaderWriter(new XXssProtectionHeaderWriter())
+                
+                // Referrer Policy
+                .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                
+                // Remove server identification headers
+                .and()
+            )
+            
+            // Session Management - Stateless for JWT
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .maximumSessions(1)
+                .maxSessionsPreventsLogin(false))
+            
+            // Authorization Rules
+            .authorizeHttpRequests(authorize -> authorize
+                // Public endpoints
+                .requestMatchers(
+                    "/actuator/health",
+                    "/actuator/readiness", 
+                    "/actuator/liveness"
+                ).permitAll()
+                
+                // Admin-only endpoints
+                .requestMatchers("/actuator/**").hasRole("ADMIN")
+                
+                // API documentation (disabled in prod by default)
+                .requestMatchers("/api-docs/**", "/swagger-ui/**").hasRole("ADMIN")
+                
+                // Authentication endpoints
+                .requestMatchers(
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/refresh",
+                    "/api/v1/auth/validate",
+                    "/api/v1/auth/password/reset-request",
+                    "/api/v1/auth/password/reset"
+                ).permitAll()
+                
+                // OAuth2 endpoints
+                .requestMatchers(
+                    "/oauth2/**",
+                    "/.well-known/**",
+                    "/api/v1/oauth2/**"
+                ).permitAll()
+                
+                // Health check endpoint
+                .requestMatchers("/api/v1/health").permitAll()
+                
+                // All other requests require authentication
+                .anyRequest().authenticated())
+            
+            // Exception Handling
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write(
+                        "{\"error\": \"Unauthorized\", \"message\": \"Authentication required\"," +
+                        "\"timestamp\": \"" + java.time.Instant.now() + "\"}"
+                    );
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write(
+                        "{\"error\": \"Access Denied\", \"message\": \"Insufficient privileges\"," +
+                        "\"timestamp\": \"" + java.time.Instant.now() + "\"}"
+                    );
+                }))
+            
+            // Security Filters Chain
+            .addFilterBefore(auditFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(ipSecurityFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(bruteForceFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(threatDetectionFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    /**
+     * Production CORS Configuration - Strict Security
+     */
+    @Bean
+    public CorsConfigurationSource productionCorsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Specific origins only - no wildcards in production
+        List<String> allowedOrigins = Arrays.asList(corsAllowedOrigins.split(","));
+        configuration.setAllowedOrigins(allowedOrigins);
+        
+        // Specific methods only
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        // Specific headers only - no wildcards
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers",
+            "X-CSRF-Token"
+        ));
+        
+        // Headers to expose to client
+        configuration.setExposedHeaders(Arrays.asList(
+            "X-Total-Count",
+            "X-Page-Count",
+            "Link"
+        ));
+        
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    /**
+     * Rate Limiting Filter Registration
+     */
+    @Bean
+    public FilterRegistrationBean<RateLimitingFilter> rateLimitingFilterRegistration() {
+        FilterRegistrationBean<RateLimitingFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(rateLimitingFilter());
+        registration.addUrlPatterns("/api/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+        registration.setName("rateLimitingFilter");
+        return registration;
+    }
+
+    /**
+     * Brute Force Protection Filter Registration
+     */
+    @Bean
+    public FilterRegistrationBean<BruteForceProtectionFilter> bruteForceFilterRegistration() {
+        FilterRegistrationBean<BruteForceProtectionFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(bruteForceProtectionFilter());
+        registration.addUrlPatterns("/api/v1/auth/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 2);
+        registration.setName("bruteForceProtectionFilter");
+        return registration;
+    }
+
+    /**
+     * IP Security Filter Registration
+     */
+    @Bean
+    @ConditionalOnProperty(name = "security.ip-security.whitelist.enabled", havingValue = "true")
+    public FilterRegistrationBean<IpSecurityFilter> ipSecurityFilterRegistration() {
+        FilterRegistrationBean<IpSecurityFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(ipSecurityFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        registration.setName("ipSecurityFilter");
+        return registration;
+    }
+
+    /**
+     * Threat Detection Filter Registration
+     */
+    @Bean
+    @ConditionalOnProperty(name = "security.threat-detection.enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<ThreatDetectionFilter> threatDetectionFilterRegistration() {
+        FilterRegistrationBean<ThreatDetectionFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(threatDetectionFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 3);
+        registration.setName("threatDetectionFilter");
+        return registration;
+    }
+
+    /**
+     * Security Audit Filter Registration
+     */
+    @Bean
+    public FilterRegistrationBean<SecurityAuditFilter> securityAuditFilterRegistration() {
+        FilterRegistrationBean<SecurityAuditFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(securityAuditFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
+        registration.setName("securityAuditFilter");
+        return registration;
+    }
+
+    // Filter Bean Definitions
+    
+    @Bean
+    public RateLimitingFilter rateLimitingFilter() {
+        return new RateLimitingFilter(authRateLimit);
+    }
+
+    @Bean
+    public BruteForceProtectionFilter bruteForceProtectionFilter() {
+        return new BruteForceProtectionFilter(bruteForceMaxAttempts, bruteForceLockoutDuration);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "security.ip-security.whitelist.enabled", havingValue = "true")
+    public IpSecurityFilter ipSecurityFilter() {
+        return new IpSecurityFilter(ipWhitelistAddresses);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "security.threat-detection.enabled", havingValue = "true", matchIfMissing = true)
+    public ThreatDetectionFilter threatDetectionFilter() {
+        return new ThreatDetectionFilter();
+    }
+
+    @Bean
+    public SecurityAuditFilter securityAuditFilter() {
+        return new SecurityAuditFilter();
+    }
+
+    /**
+     * Security Event Publisher for audit logging
+     */
+    @Bean
+    public SecurityEventPublisher securityEventPublisher() {
+        return new SecurityEventPublisher();
+    }
+
+    /**
+     * Threat Detection Service
+     */
+    @Bean
+    @ConditionalOnProperty(name = "security.threat-detection.enabled", havingValue = "true", matchIfMissing = true)
+    public ThreatDetectionService threatDetectionService() {
+        return new ThreatDetectionService();
+    }
+
+    /**
+     * Security Audit Service
+     */
+    @Bean
+    public SecurityAuditService securityAuditService() {
+        return new SecurityAuditService();
+    }
+}

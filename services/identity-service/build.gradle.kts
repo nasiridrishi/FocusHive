@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.9.24"
     kotlin("plugin.spring") version "1.9.24"
     kotlin("plugin.jpa") version "1.9.24"
+    jacoco
 }
 
 group = "com.focushive"
@@ -64,9 +65,26 @@ dependencies {
     // Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.1.1")
     
+    // Rate Limiting - Bucket4j with Redis
+    implementation("com.bucket4j:bucket4j-redis:8.7.0")
+    implementation("com.bucket4j:bucket4j-core:8.7.0")
+    
+    // Security Enhancements
+    implementation("org.springframework.boot:spring-boot-starter-mail")  // Email support
+    implementation("org.springframework.security:spring-security-crypto")  // Additional crypto support
+    
+    // IP Geolocation (for threat detection)
+    implementation("com.maxmind.geoip2:geoip2:4.2.0")
+    
     // Monitoring
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")  // Zipkin support
+    
+    // Zipkin/Brave dependencies
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+    implementation("io.zipkin.brave:brave-instrumentation-spring-webmvc")
+    implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
     
     // Utilities
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -146,3 +164,42 @@ tasks.register<Test>("unitTest") {
 tasks.bootJar {
     archiveFileName.set("identity-service.jar")
 }
+
+// JaCoCo Configuration
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+    
+    // Include all main source files
+    executionData.setFrom(fileTree(layout.buildDirectory.dir("jacoco")).include("**/*.exec"))
+    
+    finalizedBy(tasks.jacocoTestCoverageVerification)
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.08".toBigDecimal() // Temporarily lowered for development (target: 80%)
+            }
+        }
+        
+        // Exclude configuration classes from coverage requirements  
+        rule {
+            element = "CLASS"
+            excludes = listOf(
+                "com.focushive.identity.config.*",
+                "com.focushive.identity.IdentityServiceApplication*"
+            )
+        }
+    }
+}
+

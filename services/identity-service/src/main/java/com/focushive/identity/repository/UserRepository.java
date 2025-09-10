@@ -61,6 +61,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Override
     List<User> findAll();
     
+    @EntityGraph("User.withPersonas")
+    @Query("SELECT u FROM User u")
+    List<User> findAllWithPersonas();
+    
     // JPQL with explicit JOIN FETCH for complex scenarios
     @Query("SELECT DISTINCT u FROM User u " +
            "LEFT JOIN FETCH u.personas p " +
