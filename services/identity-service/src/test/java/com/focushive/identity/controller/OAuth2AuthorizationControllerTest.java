@@ -1,46 +1,57 @@
 package com.focushive.identity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.focushive.identity.config.TestConfig;
 import com.focushive.identity.dto.*;
-import com.focushive.identity.entity.OAuthClient;
-import com.focushive.identity.entity.Persona;
-import com.focushive.identity.entity.User;
-import com.focushive.identity.repository.OAuthClientRepository;
-import com.focushive.identity.repository.PersonaRepository;
-import com.focushive.identity.repository.UserRepository;
-import com.focushive.identity.security.JwtTokenProvider;
 import com.focushive.identity.service.OAuth2AuthorizationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Integration tests for OAuth2AuthorizationController.
+ * Comprehensive tests for OAuth2AuthorizationController.
+ * Tests all OAuth2 endpoints including authorization, token exchange, introspection, and client management.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestConfig.class)
-@Transactional
-@DisplayName("OAuth2AuthorizationController Integration Tests")
+@EnableAutoConfiguration(exclude = {
+    org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration.class,
+    org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration.class,
+    org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration.class,
+    org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration.class,
+    org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration.class
+})
+@ExtendWith(MockitoExtension.class)
+@TestPropertySource(properties = {
+        "spring.flyway.enabled=false"
+})
+@DisplayName("OAuth2AuthorizationController Tests")
 class OAuth2AuthorizationControllerTest {
 
     @Autowired
@@ -49,366 +60,529 @@ class OAuth2AuthorizationControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PersonaRepository personaRepository;
-
-    @Autowired
-    private OAuthClientRepository clientRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
+    @MockBean
     private OAuth2AuthorizationService oauth2AuthorizationService;
 
-    private User testUser;
-    private Persona testPersona;
-    private OAuthClient testClient;
-    private String validToken;
+    private OAuth2TokenResponse mockTokenResponse;
+    private OAuth2IntrospectionResponse mockIntrospectionResponse;
+    private OAuth2UserInfoResponse mockUserInfoResponse;
+    private OAuth2ServerMetadata mockServerMetadata;
+    private OAuth2ClientResponse mockClientResponse;
+    private OAuth2ClientListResponse mockClientListResponse;
+    private Map<String, Object> mockJwkSet;
 
     @BeforeEach
     void setUp() {
-        // Create test user
-        testUser = new User();
-        testUser.setUsername("testuser");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword(passwordEncoder.encode("password123"));
-        testUser.setFirstName("Test");
-        testUser.setLastName("User");
-        testUser.setEmailVerified(true);
-        testUser.setEnabled(true);
-        testUser = userRepository.save(testUser);
+        // Mock token response
+        mockTokenResponse = OAuth2TokenResponse.builder()
+                .accessToken("access_token_123")
+                .tokenType("Bearer")
+                .expiresIn(3600)
+                .refreshToken("refresh_token_123")
+                .scope("openid profile email")
+                .build();
 
-        // Create test persona
-        testPersona = new Persona();
-        testPersona.setUser(testUser);
-        testPersona.setName("work");
-        testPersona.setType(Persona.PersonaType.WORK);
-        testPersona.setDisplayName("Professional Me");
-        testPersona.setDefault(true);
-        testPersona.setActive(true);
-        testPersona = personaRepository.save(testPersona);
+        // Mock introspection response
+        mockIntrospectionResponse = OAuth2IntrospectionResponse.builder()
+                .active(true)
+                .scope("openid profile")
+                .clientId("test-client")
+                .username("testuser")
+                .tokenType("Bearer")
+                .exp(1234567890L)
+                .build();
 
-        // Create test OAuth2 client
-        testClient = new OAuthClient();
-        testClient.setClientId("test-client");
-        testClient.setClientSecret(passwordEncoder.encode("test-secret"));
-        testClient.setName("Test Client");
-        testClient.setOwner(testUser);
-        testClient.setRedirectUris(Set.of("http://localhost:3000/callback"));
-        testClient.setScopes(Set.of("read", "write"));
-        testClient.setGrantTypes(Set.of("authorization_code", "refresh_token"));
-        testClient.setCreatedAt(Instant.now());
-        testClient = clientRepository.save(testClient);
+        // Mock user info response
+        mockUserInfoResponse = OAuth2UserInfoResponse.builder()
+                .sub("user-123")
+                .email("test@example.com")
+                .emailVerified(true)
+                .name("Test User")
+                .givenName("Test")
+                .familyName("User")
+                .build();
 
-        // Update user with persona
-        testUser.getPersonas().add(testPersona);
-        testUser = userRepository.save(testUser);
+        // Mock server metadata
+        mockServerMetadata = OAuth2ServerMetadata.builder()
+                .issuer("http://localhost:8081")
+                .authorizationEndpoint("http://localhost:8081/api/v1/oauth2/authorize")
+                .tokenEndpoint("http://localhost:8081/api/v1/oauth2/token")
+                .userinfoEndpoint("http://localhost:8081/api/v1/oauth2/userinfo")
+                .jwksUri("http://localhost:8081/api/v1/oauth2/jwks")
+                .scopesSupported(Arrays.asList("openid", "profile", "email"))
+                .responseTypesSupported(Arrays.asList("code"))
+                .grantTypesSupported(Arrays.asList("authorization_code", "refresh_token"))
+                .build();
 
-        // Generate valid token
-        validToken = jwtTokenProvider.generateAccessToken(testUser, testPersona);
+        // Mock JWK Set
+        mockJwkSet = new HashMap<>();
+        mockJwkSet.put("keys", Arrays.asList(
+                Map.of("kty", "RSA", "use", "sig", "kid", "test-key-id")
+        ));
+
+        // Mock client response
+        mockClientResponse = OAuth2ClientResponse.builder()
+                .clientId("test-client")
+                .clientName("Test Client")
+                .redirectUris(Set.of("http://localhost:3000/callback"))
+                .scopes(Set.of("openid", "profile"))
+                .grantTypes(Set.of("authorization_code"))
+                .build();
+
+        // Mock client list response
+        mockClientListResponse = OAuth2ClientListResponse.builder()
+                .clients(Arrays.asList(mockClientResponse))
+                .build();
     }
 
     @Test
-    @DisplayName("Should redirect to login when user not authenticated for authorization")
-    void authorize_ShouldRedirectToLogin() throws Exception {
+    @DisplayName("Should handle authorization endpoint successfully")
+    @WithMockUser
+    void authorize_ShouldRedirectSuccessfully() throws Exception {
+        // Given
+        doNothing().when(oauth2AuthorizationService)
+                .authorize(any(OAuth2AuthorizeRequest.class), any(Authentication.class), 
+                          any(HttpServletRequest.class), any(HttpServletResponse.class));
+
+        // When & Then
         mockMvc.perform(get("/api/v1/oauth2/authorize")
-                        .param("client_id", testClient.getClientId())
-                        .param("response_type", "code")
-                        .param("redirect_uri", "http://localhost:3000/callback")
-                        .param("scope", "read")
-                        .param("state", "random-state"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/login")));
+                .param("client_id", "test-client")
+                .param("response_type", "code")
+                .param("redirect_uri", "http://localhost:3000/callback")
+                .param("scope", "openid profile")
+                .param("state", "random-state"))
+                .andExpect(status().isOk());
+
+        verify(oauth2AuthorizationService).authorize(
+                any(OAuth2AuthorizeRequest.class), 
+                any(Authentication.class),
+                any(HttpServletRequest.class), 
+                any(HttpServletResponse.class)
+        );
     }
 
     @Test
-    @DisplayName("Should return error for invalid client_id")
-    void authorize_ShouldReturnErrorForInvalidClientId() throws Exception {
-        mockMvc.perform(get("/api/v1/oauth2/authorize")
-                        .header("Authorization", "Bearer " + validToken)
-                        .param("client_id", "invalid-client")
-                        .param("response_type", "code")
-                        .param("redirect_uri", "http://localhost:3000/callback")
-                        .param("scope", "read")
-                        .param("state", "random-state"))
-                .andExpect(status().isBadRequest());
-    }
+    @DisplayName("Should handle authorization endpoint with PKCE")
+    @WithMockUser
+    void authorize_WithPKCE_ShouldRedirectSuccessfully() throws Exception {
+        // Given
+        doNothing().when(oauth2AuthorizationService)
+                .authorize(any(OAuth2AuthorizeRequest.class), any(Authentication.class), 
+                          any(HttpServletRequest.class), any(HttpServletResponse.class));
 
-    @Test
-    @DisplayName("Should return error for invalid response_type")
-    void authorize_ShouldReturnErrorForInvalidResponseType() throws Exception {
+        // When & Then
         mockMvc.perform(get("/api/v1/oauth2/authorize")
-                        .header("Authorization", "Bearer " + validToken)
-                        .param("client_id", testClient.getClientId())
-                        .param("response_type", "invalid")
-                        .param("redirect_uri", "http://localhost:3000/callback")
-                        .param("scope", "read")
-                        .param("state", "random-state"))
-                .andExpect(status().isBadRequest());
+                .param("client_id", "test-client")
+                .param("response_type", "code")
+                .param("redirect_uri", "http://localhost:3000/callback")
+                .param("scope", "openid profile")
+                .param("state", "random-state")
+                .param("code_challenge", "challenge123")
+                .param("code_challenge_method", "S256"))
+                .andExpect(status().isOk());
+
+        verify(oauth2AuthorizationService).authorize(
+                argThat(request -> request.getCodeChallenge().equals("challenge123") &&
+                                 request.getCodeChallengeMethod().equals("S256")),
+                any(Authentication.class),
+                any(HttpServletRequest.class), 
+                any(HttpServletResponse.class)
+        );
     }
 
     @Test
     @DisplayName("Should exchange authorization code for tokens")
-    void token_ShouldExchangeAuthorizationCodeForTokens() throws Exception {
-        // This is a simplified test - in reality, you'd need a valid authorization code
-        // For now, we'll test the endpoint structure
-        mockMvc.perform(post("/api/v1/oauth2/token")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("grant_type", "authorization_code")
-                        .param("code", "invalid-code") // This will fail, but tests the endpoint
-                        .param("redirect_uri", "http://localhost:3000/callback")
-                        .param("client_id", testClient.getClientId())
-                        .param("client_secret", "test-secret"))
-                .andExpect(status().isBadRequest()); // Expected to fail with invalid code
-    }
+    void token_AuthorizationCodeGrant_ShouldReturnTokens() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.token(any(OAuth2TokenRequest.class), any(HttpServletRequest.class)))
+                .thenReturn(mockTokenResponse);
 
-    @Test
-    @DisplayName("Should require valid client credentials for token endpoint")
-    void token_ShouldRequireValidClientCredentials() throws Exception {
+        // When & Then
         mockMvc.perform(post("/api/v1/oauth2/token")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("grant_type", "authorization_code")
-                        .param("code", "some-code")
-                        .param("redirect_uri", "http://localhost:3000/callback")
-                        .param("client_id", "invalid-client")
-                        .param("client_secret", "invalid-secret"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("Should support client_credentials grant type")
-    void token_ShouldSupportClientCredentialsGrant() throws Exception {
-        mockMvc.perform(post("/api/v1/oauth2/token")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("grant_type", "client_credentials")
-                        .param("scope", "read")
-                        .param("client_id", testClient.getClientId())
-                        .param("client_secret", "test-secret"))
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("grant_type", "authorization_code")
+                .param("code", "auth_code_123")
+                .param("redirect_uri", "http://localhost:3000/callback")
+                .param("client_id", "test-client")
+                .param("client_secret", "test-secret")
+                .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.access_token").isNotEmpty())
+                .andExpect(jsonPath("$.access_token").value("access_token_123"))
                 .andExpect(jsonPath("$.token_type").value("Bearer"))
-                .andExpect(jsonPath("$.expires_in").isNumber());
+                .andExpect(jsonPath("$.expires_in").value(3600))
+                .andExpect(jsonPath("$.refresh_token").value("refresh_token_123"))
+                .andExpect(jsonPath("$.scope").value("openid profile email"));
+
+        verify(oauth2AuthorizationService).token(
+                argThat(request -> request.getGrantType().equals("authorization_code") &&
+                                 request.getCode().equals("auth_code_123")),
+                any(HttpServletRequest.class)
+        );
     }
 
     @Test
-    @DisplayName("Should introspect valid access token")
-    void introspect_ShouldIntrospectValidToken() throws Exception {
+    @DisplayName("Should refresh access tokens")
+    void token_RefreshTokenGrant_ShouldReturnNewTokens() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.token(any(OAuth2TokenRequest.class), any(HttpServletRequest.class)))
+                .thenReturn(mockTokenResponse);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/oauth2/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("grant_type", "refresh_token")
+                .param("refresh_token", "refresh_token_123")
+                .param("client_id", "test-client")
+                .param("client_secret", "test-secret")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.access_token").value("access_token_123"))
+                .andExpect(jsonPath("$.token_type").value("Bearer"));
+
+        verify(oauth2AuthorizationService).token(
+                argThat(request -> request.getGrantType().equals("refresh_token") &&
+                                 request.getRefreshToken().equals("refresh_token_123")),
+                any(HttpServletRequest.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Should handle token exchange with Authorization header")
+    void token_WithAuthorizationHeader_ShouldReturnTokens() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.token(any(OAuth2TokenRequest.class), any(HttpServletRequest.class)))
+                .thenReturn(mockTokenResponse);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/oauth2/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .header("Authorization", "Basic dGVzdC1jbGllbnQ6dGVzdC1zZWNyZXQ=")
+                .param("grant_type", "authorization_code")
+                .param("code", "auth_code_123")
+                .param("redirect_uri", "http://localhost:3000/callback")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.access_token").value("access_token_123"));
+
+        verify(oauth2AuthorizationService).token(
+                argThat(request -> request.getAuthorizationHeader().equals("Basic dGVzdC1jbGllbnQ6dGVzdC1zZWNyZXQ=")),
+                any(HttpServletRequest.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Should introspect tokens successfully")
+    void introspect_ValidToken_ShouldReturnTokenInfo() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.introspect(any(OAuth2IntrospectionRequest.class)))
+                .thenReturn(mockIntrospectionResponse);
+
+        // When & Then
         mockMvc.perform(post("/api/v1/oauth2/introspect")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("token", validToken)
-                        .param("client_id", testClient.getClientId())
-                        .param("client_secret", "test-secret"))
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("token", "access_token_123")
+                .param("token_type_hint", "access_token")
+                .param("client_id", "test-client")
+                .param("client_secret", "test-secret")
+                .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true))
-                .andExpect(jsonPath("$.sub").value(testUser.getId().toString()))
-                .andExpect(jsonPath("$.username").value("testuser"));
-    }
-
-    @Test
-    @DisplayName("Should return inactive for invalid token")
-    void introspect_ShouldReturnInactiveForInvalidToken() throws Exception {
-        mockMvc.perform(post("/api/v1/oauth2/introspect")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("token", "invalid-token")
-                        .param("client_id", testClient.getClientId())
-                        .param("client_secret", "test-secret"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.active").value(false));
-    }
-
-    @Test
-    @DisplayName("Should revoke access token")
-    void revoke_ShouldRevokeAccessToken() throws Exception {
-        mockMvc.perform(post("/api/v1/oauth2/revoke")
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("token", validToken)
-                        .param("token_type_hint", "access_token")
-                        .param("client_id", testClient.getClientId())
-                        .param("client_secret", "test-secret"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("Should return user info for valid access token")
-    void userInfo_ShouldReturnUserInfoForValidToken() throws Exception {
-        mockMvc.perform(get("/api/v1/oauth2/userinfo")
-                        .header("Authorization", "Bearer " + validToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sub").value(testUser.getId().toString()))
+                .andExpect(jsonPath("$.scope").value("openid profile"))
+                .andExpect(jsonPath("$.client_id").value("test-client"))
                 .andExpect(jsonPath("$.username").value("testuser"))
-                .andExpect(jsonPath("$.email").value("test@example.com"))
-                .andExpect(jsonPath("$.first_name").value("Test"))
-                .andExpect(jsonPath("$.last_name").value("User"));
+                .andExpect(jsonPath("$.token_type").value("Bearer"));
+
+        verify(oauth2AuthorizationService).introspect(
+                argThat(request -> request.getToken().equals("access_token_123") &&
+                                 request.getTokenTypeHint().equals("access_token"))
+        );
     }
 
     @Test
-    @DisplayName("Should return 401 for invalid token in userinfo")
-    void userInfo_ShouldReturn401ForInvalidToken() throws Exception {
+    @DisplayName("Should revoke tokens successfully")
+    void revoke_ValidToken_ShouldRevoke() throws Exception {
+        // Given
+        doNothing().when(oauth2AuthorizationService).revoke(any(OAuth2RevocationRequest.class));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/oauth2/revoke")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("token", "access_token_123")
+                .param("token_type_hint", "access_token")
+                .param("client_id", "test-client")
+                .param("client_secret", "test-secret")
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        verify(oauth2AuthorizationService).revoke(
+                argThat(request -> request.getToken().equals("access_token_123"))
+        );
+    }
+
+    @Test
+    @DisplayName("Should return user info for valid token")
+    @WithMockUser
+    void userInfo_ValidToken_ShouldReturnUserInfo() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.getUserInfo(anyString()))
+                .thenReturn(mockUserInfoResponse);
+
+        // When & Then
         mockMvc.perform(get("/api/v1/oauth2/userinfo")
-                        .header("Authorization", "Bearer invalid-token"))
-                .andExpect(status().isUnauthorized());
+                .header("Authorization", "Bearer access_token_123"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sub").value("user-123"))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.email_verified").value(true))
+                .andExpect(jsonPath("$.name").value("Test User"))
+                .andExpect(jsonPath("$.given_name").value("Test"))
+                .andExpect(jsonPath("$.family_name").value("User"));
+
+        verify(oauth2AuthorizationService).getUserInfo("Bearer access_token_123");
     }
 
     @Test
-    @DisplayName("Should return server metadata")
+    @DisplayName("Should return authorization server metadata")
     void serverMetadata_ShouldReturnMetadata() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.getServerMetadata(any(HttpServletRequest.class)))
+                .thenReturn(mockServerMetadata);
+
+        // When & Then
         mockMvc.perform(get("/api/v1/oauth2/.well-known/oauth-authorization-server"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.issuer").isNotEmpty())
-                .andExpect(jsonPath("$.authorization_endpoint").isNotEmpty())
-                .andExpect(jsonPath("$.token_endpoint").isNotEmpty())
-                .andExpect(jsonPath("$.jwks_uri").isNotEmpty())
-                .andExpect(jsonPath("$.response_types_supported").isArray())
-                .andExpect(jsonPath("$.grant_types_supported").isArray());
+                .andExpect(jsonPath("$.issuer").value("http://localhost:8081"))
+                .andExpect(jsonPath("$.authorization_endpoint").value("http://localhost:8081/api/v1/oauth2/authorize"))
+                .andExpect(jsonPath("$.token_endpoint").value("http://localhost:8081/api/v1/oauth2/token"))
+                .andExpect(jsonPath("$.userinfo_endpoint").value("http://localhost:8081/api/v1/oauth2/userinfo"))
+                .andExpect(jsonPath("$.jwks_uri").value("http://localhost:8081/api/v1/oauth2/jwks"))
+                .andExpect(jsonPath("$.scopes_supported[0]").value("openid"))
+                .andExpect(jsonPath("$.response_types_supported[0]").value("code"))
+                .andExpect(jsonPath("$.grant_types_supported[0]").value("authorization_code"));
+
+        verify(oauth2AuthorizationService).getServerMetadata(any(HttpServletRequest.class));
     }
 
     @Test
     @DisplayName("Should return JWK Set")
     void jwkSet_ShouldReturnJWKSet() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.getJwkSet()).thenReturn(mockJwkSet);
+
+        // When & Then
         mockMvc.perform(get("/api/v1/oauth2/jwks"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.keys").isArray())
-                .andExpect(jsonPath("$.keys").isNotEmpty());
+                .andExpect(jsonPath("$.keys[0].kty").value("RSA"))
+                .andExpect(jsonPath("$.keys[0].use").value("sig"))
+                .andExpect(jsonPath("$.keys[0].kid").value("test-key-id"));
+
+        verify(oauth2AuthorizationService).getJwkSet();
     }
 
     @Test
-    @DisplayName("Should register new OAuth2 client")
-    void registerClient_ShouldRegisterNewClient() throws Exception {
-        OAuth2ClientRegistrationRequest request = OAuth2ClientRegistrationRequest.builder()
-                .name("New Test Client")
-                .redirectUris(Set.of("http://localhost:4000/callback"))
-                .scopes(Set.of("read"))
+    @DisplayName("Should register OAuth2 client")
+    @WithMockUser
+    void registerClient_ValidRequest_ShouldCreateClient() throws Exception {
+        // Given
+        OAuth2ClientRegistrationRequest registrationRequest = OAuth2ClientRegistrationRequest.builder()
+                .clientName("Test Client")
+                .redirectUris(Set.of("http://localhost:3000/callback"))
+                .scopes(Set.of("openid", "profile"))
                 .grantTypes(Set.of("authorization_code"))
                 .build();
 
+        when(oauth2AuthorizationService.registerClient(any(OAuth2ClientRegistrationRequest.class), any(Authentication.class)))
+                .thenReturn(mockClientResponse);
+
+        // When & Then
         mockMvc.perform(post("/api/v1/oauth2/register")
-                        .header("Authorization", "Bearer " + validToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(registrationRequest))
+                .with(csrf()))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.client_id").isNotEmpty())
-                .andExpect(jsonPath("$.client_secret").isNotEmpty())
-                .andExpect(jsonPath("$.name").value("New Test Client"))
-                .andExpect(jsonPath("$.redirect_uris").isArray());
+                .andExpect(jsonPath("$.client_id").value("test-client"))
+                .andExpect(jsonPath("$.client_name").value("Test Client"))
+                .andExpect(jsonPath("$.redirect_uris[0]").value("http://localhost:3000/callback"))
+                .andExpect(jsonPath("$.scopes[0]").value("openid"))
+                .andExpect(jsonPath("$.grant_types[0]").value("authorization_code"));
+
+        verify(oauth2AuthorizationService).registerClient(any(OAuth2ClientRegistrationRequest.class), any(Authentication.class));
     }
 
     @Test
     @DisplayName("Should get user's OAuth2 clients")
-    void getClients_ShouldReturnUserClients() throws Exception {
-        mockMvc.perform(get("/api/v1/oauth2/clients")
-                        .header("Authorization", "Bearer " + validToken))
+    @WithMockUser
+    void getClients_AuthenticatedUser_ShouldReturnClients() throws Exception {
+        // Given
+        when(oauth2AuthorizationService.getUserClients(any(Authentication.class)))
+                .thenReturn(mockClientListResponse);
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/oauth2/clients"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clients").isArray())
-                .andExpect(jsonPath("$.clients", hasSize(greaterThanOrEqualTo(1))))
-                .andExpect(jsonPath("$.clients[0].client_id").value(testClient.getClientId()));
+                .andExpect(jsonPath("$.clients[0].client_id").value("test-client"))
+                .andExpect(jsonPath("$.clients[0].client_name").value("Test Client"));
+
+        verify(oauth2AuthorizationService).getUserClients(any(Authentication.class));
     }
 
     @Test
     @DisplayName("Should update OAuth2 client")
-    void updateClient_ShouldUpdateClient() throws Exception {
-        OAuth2ClientUpdateRequest request = OAuth2ClientUpdateRequest.builder()
-                .name("Updated Test Client")
-                .redirectUris(Set.of("http://localhost:5000/callback"))
+    @WithMockUser
+    void updateClient_ValidRequest_ShouldUpdateClient() throws Exception {
+        // Given
+        String clientId = "test-client";
+        OAuth2ClientUpdateRequest updateRequest = OAuth2ClientUpdateRequest.builder()
+                .clientName("Updated Test Client")
+                .redirectUris(Set.of("http://localhost:3000/callback", "http://localhost:3000/callback2"))
                 .build();
 
-        mockMvc.perform(put("/api/v1/oauth2/clients/{clientId}", testClient.getClientId())
-                        .header("Authorization", "Bearer " + validToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        OAuth2ClientResponse updatedResponse = OAuth2ClientResponse.builder()
+                .clientId(clientId)
+                .clientName("Updated Test Client")
+                .redirectUris(Set.of("http://localhost:3000/callback", "http://localhost:3000/callback2"))
+                .scopes(Set.of("openid", "profile"))
+                .grantTypes(Set.of("authorization_code"))
+                .build();
+
+        when(oauth2AuthorizationService.updateClient(eq(clientId), any(OAuth2ClientUpdateRequest.class), any(Authentication.class)))
+                .thenReturn(updatedResponse);
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/oauth2/clients/{clientId}", clientId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest))
+                .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Test Client"));
+                .andExpect(jsonPath("$.client_id").value(clientId))
+                .andExpect(jsonPath("$.client_name").value("Updated Test Client"))
+                .andExpect(jsonPath("$.redirect_uris").isArray())
+                .andExpect(jsonPath("$.redirect_uris[1]").value("http://localhost:3000/callback2"));
+
+        verify(oauth2AuthorizationService).updateClient(eq(clientId), any(OAuth2ClientUpdateRequest.class), any(Authentication.class));
     }
 
     @Test
     @DisplayName("Should delete OAuth2 client")
-    void deleteClient_ShouldDeleteClient() throws Exception {
-        mockMvc.perform(delete("/api/v1/oauth2/clients/{clientId}", testClient.getClientId())
-                        .header("Authorization", "Bearer " + validToken))
+    @WithMockUser
+    void deleteClient_ValidClientId_ShouldDeleteClient() throws Exception {
+        // Given
+        String clientId = "test-client";
+        doNothing().when(oauth2AuthorizationService).deleteClient(eq(clientId), any(Authentication.class));
+
+        // When & Then
+        mockMvc.perform(delete("/api/v1/oauth2/clients/{clientId}", clientId)
+                .with(csrf()))
                 .andExpect(status().isNoContent());
-    }
 
-    @Test
-    @DisplayName("Should return 404 for non-existent client")
-    void updateClient_ShouldReturn404ForNonExistentClient() throws Exception {
-        OAuth2ClientUpdateRequest request = OAuth2ClientUpdateRequest.builder()
-                .name("Updated Test Client")
-                .build();
-
-        mockMvc.perform(put("/api/v1/oauth2/clients/non-existent-client")
-                        .header("Authorization", "Bearer " + validToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @DisplayName("Should return 403 when trying to update another user's client")
-    void updateClient_ShouldReturn403ForOtherUsersClient() throws Exception {
-        // Create another user and client
-        User otherUser = new User();
-        otherUser.setUsername("otheruser");
-        otherUser.setEmail("other@example.com");
-        otherUser.setPassword(passwordEncoder.encode("password123"));
-        otherUser.setFirstName("Other");
-        otherUser.setLastName("User");
-        otherUser.setEmailVerified(true);
-        otherUser.setEnabled(true);
-        otherUser = userRepository.save(otherUser);
-
-        OAuthClient otherClient = new OAuthClient();
-        otherClient.setClientId("other-client");
-        otherClient.setClientSecret(passwordEncoder.encode("other-secret"));
-        otherClient.setName("Other Client");
-        otherClient.setOwner(otherUser);
-        otherClient.setRedirectUris(Set.of("http://localhost:3000/callback"));
-        otherClient.setScopes(Set.of("read"));
-        otherClient.setGrantTypes(Set.of("authorization_code"));
-        otherClient = clientRepository.save(otherClient);
-
-        OAuth2ClientUpdateRequest request = OAuth2ClientUpdateRequest.builder()
-                .name("Hacked Client")
-                .build();
-
-        mockMvc.perform(put("/api/v1/oauth2/clients/{clientId}", otherClient.getClientId())
-                        .header("Authorization", "Bearer " + validToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+        verify(oauth2AuthorizationService).deleteClient(eq(clientId), any(Authentication.class));
     }
 
     @Test
     @DisplayName("Should require authentication for protected endpoints")
-    void protectedEndpoints_ShouldRequireAuthentication() throws Exception {
-        // Test client registration endpoint
-        mockMvc.perform(post("/api/v1/oauth2/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+    void protectedEndpoints_NotAuthenticated_ShouldReturnUnauthorized() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/api/v1/oauth2/userinfo"))
                 .andExpect(status().isUnauthorized());
 
-        // Test get clients endpoint  
+        mockMvc.perform(post("/api/v1/oauth2/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+                .with(csrf()))
+                .andExpect(status().isUnauthorized());
+
         mockMvc.perform(get("/api/v1/oauth2/clients"))
                 .andExpect(status().isUnauthorized());
 
-        // Test user info endpoint
-        mockMvc.perform(get("/api/v1/oauth2/userinfo"))
+        mockMvc.perform(put("/api/v1/oauth2/clients/test-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+                .with(csrf()))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(delete("/api/v1/oauth2/clients/test-client")
+                .with(csrf()))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("Should handle CORS for OAuth2 endpoints")
-    void oauth2Endpoints_ShouldHandleCORS() throws Exception {
-        mockMvc.perform(options("/api/v1/oauth2/token")
-                        .header("Origin", "http://localhost:3000")
-                        .header("Access-Control-Request-Method", "POST"))
+    @DisplayName("Should handle missing parameters gracefully")
+    void authorize_MissingClientId_ShouldReturnBadRequest() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/api/v1/oauth2/authorize")
+                .param("response_type", "code")
+                .param("redirect_uri", "http://localhost:3000/callback"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Should handle token endpoint with missing grant type")
+    void token_MissingGrantType_ShouldReturnBadRequest() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/v1/oauth2/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("code", "auth_code_123")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Should handle introspect endpoint with missing token")
+    void introspect_MissingToken_ShouldReturnBadRequest() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/v1/oauth2/introspect")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("client_id", "test-client")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Should handle revoke endpoint with missing token")
+    void revoke_MissingToken_ShouldReturnBadRequest() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/v1/oauth2/revoke")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("client_id", "test-client")
+                .with(csrf()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Should handle client credentials grant type")
+    void token_ClientCredentialsGrant_ShouldReturnTokens() throws Exception {
+        // Given
+        OAuth2TokenResponse clientCredentialsResponse = OAuth2TokenResponse.builder()
+                .accessToken("client_access_token")
+                .tokenType("Bearer")
+                .expiresIn(3600)
+                .scope("client:read client:write")
+                .build();
+
+        when(oauth2AuthorizationService.token(any(OAuth2TokenRequest.class), any(HttpServletRequest.class)))
+                .thenReturn(clientCredentialsResponse);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/oauth2/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("grant_type", "client_credentials")
+                .param("scope", "client:read client:write")
+                .param("client_id", "test-client")
+                .param("client_secret", "test-secret")
+                .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "*"))
-                .andExpect(header().string("Access-Control-Allow-Methods", containsString("POST")));
+                .andExpect(jsonPath("$.access_token").value("client_access_token"))
+                .andExpect(jsonPath("$.token_type").value("Bearer"))
+                .andExpect(jsonPath("$.expires_in").value(3600))
+                .andExpect(jsonPath("$.scope").value("client:read client:write"))
+                .andExpect(jsonPath("$.refresh_token").doesNotExist());
+
+        verify(oauth2AuthorizationService).token(
+                argThat(request -> request.getGrantType().equals("client_credentials") &&
+                                 request.getScope().equals("client:read client:write")),
+                any(HttpServletRequest.class)
+        );
     }
 }

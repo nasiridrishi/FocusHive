@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/password/reset-request", "/api/v1/auth/password/reset").permitAll()
                         .requestMatchers("/oauth2/**", "/.well-known/**").permitAll()
                         .requestMatchers("/api/v1/oauth2/**").permitAll()
+                        .requestMatchers("/api/v1/performance-test/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

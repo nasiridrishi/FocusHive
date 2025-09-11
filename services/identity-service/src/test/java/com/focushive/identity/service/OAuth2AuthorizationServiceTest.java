@@ -456,4 +456,555 @@ class OAuth2AuthorizationServiceTest {
         assertThat(result.getResponseTypesSupported()).containsExactlyInAnyOrder("code");
         assertThat(result.getScopesSupported()).containsExactlyInAnyOrder("openid", "profile", "email");
     }
+    
+    @Test
+    void testGetServerMetadata_WithNonStandardPort_IncludesPort() {
+        // Given
+        when(httpRequest.getScheme()).thenReturn("http");
+        when(httpRequest.getServerName()).thenReturn("localhost");
+        when(httpRequest.getServerPort()).thenReturn(8081);
+        when(httpRequest.getContextPath()).thenReturn("/identity");
+        
+        // When
+        OAuth2ServerMetadata result = oauth2Service.getServerMetadata(httpRequest);
+        
+        // Then
+        assertThat(result.getIssuer()).isEqualTo("http://localhost:8081/identity");
+        assertThat(result.getAuthorizationEndpoint()).isEqualTo("http://localhost:8081/identity/oauth2/authorize");
+    }
+    
+    @Test
+    void testGetJwkSet_CallsTokenProvider() {
+        // Given
+        Map<String, Object> mockJwkSet = Map.of("keys", List.of());
+        when(jwtTokenProvider.getJwkSet()).thenReturn(mockJwkSet);
+        
+        // When
+        Map<String, Object> result = oauth2Service.getJwkSet();
+        
+        // Then
+        assertThat(result).isEqualTo(mockJwkSet);
+        verify(jwtTokenProvider).getJwkSet();
+    }
+    
+    @Test
+    void testRegisterClient_ValidRequest_CreatesClient() throws Exception {
+        // Given
+        OAuth2ClientRegistrationRequest request = OAuth2ClientRegistrationRequest.builder()
+            .clientName("Test Application")
+            .description("Test OAuth2 client")
+            .redirectUris(Set.of("http://localhost:8080/callback"))
+            .grantTypes(Set.of("authorization_code", "refresh_token"))
+            .scopes(Set.of("read", "write"))
+            .accessTokenValiditySeconds(3600)
+            .refreshTokenValiditySeconds(86400)
+            .autoApprove(false)
+            .build();
+            
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com"))
+            .thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded-secret");
+        when(clientRepository.save(any(OAuthClient.class)))
+            .thenAnswer(invocation -> {
+                OAuthClient client = invocation.getArgument(0);
+                ReflectionTestUtils.setField(client, "createdAt", Instant.now());
+                return client;
+            });
+        
+        // When
+        OAuth2ClientResponse result = oauth2Service.registerClient(request, authentication);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getClientName()).isEqualTo("Test Application");
+        assertThat(result.getDescription()).isEqualTo("Test OAuth2 client");
+        assertThat(result.getClientId()).startsWith("client_");
+        assertThat(result.getClientSecret()).isNotNull();
+        assertThat(result.getRedirectUris()).contains("http://localhost:8080/callback");
+        assertThat(result.getGrantTypes()).containsExactlyInAnyOrder("authorization_code", "refresh_token");
+        assertThat(result.getScopes()).containsExactlyInAnyOrder("read", "write");
+        
+        verify(clientRepository).save(any(OAuthClient.class));
+    }
+    
+    @Test
+    void testRegisterClient_UserNotFound_ThrowsException() {
+        // Given
+        OAuth2ClientRegistrationRequest request = OAuth2ClientRegistrationRequest.builder()
+            .clientName("Test App")
+            .build();
+            
+        when(authentication.getName()).thenReturn("nonexistent@example.com");
+        when(userRepository.findByEmail("nonexistent@example.com"))
+            .thenReturn(Optional.empty());
+        
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.registerClient(request, authentication))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("User not found");
+    }
+    
+    @Test
+    void testGetUserClients_ReturnsClientList() {
+        // Given
+        OAuthClient client1 = OAuthClient.builder()
+            .id(UUID.randomUUID())
+            .clientId("client1")
+            .clientName("App 1")
+            .createdAt(Instant.now().minus(1, ChronoUnit.DAYS))
+            .build();
+            
+        OAuthClient client2 = OAuthClient.builder()
+            .id(UUID.randomUUID())
+            .clientId("client2")
+            .clientName("App 2")
+            .createdAt(Instant.now())
+            .build();
+            
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com"))
+            .thenReturn(Optional.of(testUser));
+        when(clientRepository.findByUserIdOrderByCreatedAtDesc(testUser.getId()))
+            .thenReturn(List.of(client2, client1)); // Newest first
+        
+        // When
+        OAuth2ClientListResponse result = oauth2Service.getUserClients(authentication);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalCount()).isEqualTo(2);
+        assertThat(result.getClients()).hasSize(2);
+        assertThat(result.getClients().get(0).getClientName()).isEqualTo("App 2");
+        assertThat(result.getClients().get(1).getClientName()).isEqualTo("App 1");
+    }
+    
+    @Test
+    void testUpdateClient_ValidRequest_UpdatesClient() {
+        // Given
+        String clientId = "test-client";
+        OAuth2ClientUpdateRequest request = OAuth2ClientUpdateRequest.builder()
+            .clientName("Updated App Name")
+            .description("Updated description")
+            .redirectUris(Set.of("http://localhost:9000/callback"))
+            .scopes(Set.of("read", "write", "admin"))
+            .build();
+            
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com"))
+            .thenReturn(Optional.of(testUser));
+        when(clientRepository.findByClientId(clientId))
+            .thenReturn(Optional.of(testClient));
+            
+        testClient.setUser(testUser); // Ensure ownership
+        
+        when(clientRepository.save(any(OAuthClient.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        
+        // When
+        OAuth2ClientResponse result = oauth2Service.updateClient(clientId, request, authentication);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(testClient.getClientName()).isEqualTo("Updated App Name");
+        assertThat(testClient.getDescription()).isEqualTo("Updated description");
+        assertThat(testClient.getRedirectUris()).contains("http://localhost:9000/callback");
+        assertThat(testClient.getAuthorizedScopes()).containsExactlyInAnyOrder("read", "write", "admin");
+        
+        verify(clientRepository).save(testClient);
+    }
+    
+    @Test
+    void testUpdateClient_NotOwner_ThrowsException() {
+        // Given
+        String clientId = "test-client";
+        OAuth2ClientUpdateRequest request = OAuth2ClientUpdateRequest.builder()
+            .clientName("Hacked App")
+            .build();
+            
+        User otherUser = User.builder()
+            .id(UUID.randomUUID())
+            .email("other@example.com")
+            .build();
+            
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com"))
+            .thenReturn(Optional.of(testUser));
+        when(clientRepository.findByClientId(clientId))
+            .thenReturn(Optional.of(testClient));
+            
+        testClient.setUser(otherUser); // Different owner
+        
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.updateClient(clientId, request, authentication))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Client does not belong to this user");
+    }
+    
+    @Test
+    void testDeleteClient_ValidRequest_DeletesClientAndRevokesTokens() {
+        // Given
+        String clientId = "test-client";
+        
+        when(authentication.getName()).thenReturn("test@example.com");
+        when(userRepository.findByEmail("test@example.com"))
+            .thenReturn(Optional.of(testUser));
+        when(clientRepository.findByClientId(clientId))
+            .thenReturn(Optional.of(testClient));
+            
+        testClient.setUser(testUser); // Ensure ownership
+        
+        doNothing().when(accessTokenRepository).revokeAllTokensForClient(
+            eq(testClient.getId()), any(Instant.class), eq("Client deleted"));
+        doNothing().when(refreshTokenRepository).revokeAllTokensForClient(
+            eq(testClient.getId()), any(Instant.class), eq("Client deleted"));
+        doNothing().when(clientRepository).delete(testClient);
+        
+        // When
+        assertThatCode(() -> oauth2Service.deleteClient(clientId, authentication))
+            .doesNotThrowAnyException();
+        
+        // Then
+        verify(accessTokenRepository).revokeAllTokensForClient(
+            eq(testClient.getId()), any(Instant.class), eq("Client deleted"));
+        verify(refreshTokenRepository).revokeAllTokensForClient(
+            eq(testClient.getId()), any(Instant.class), eq("Client deleted"));
+        verify(clientRepository).delete(testClient);
+    }
+    
+    @Test
+    void testGetUserInfo_ValidToken_ReturnsUserInfo() {
+        // Given
+        String authHeader = "Bearer valid-access-token";
+        
+        OAuth2TokenInfo tokenInfo = OAuth2TokenInfo.builder()
+            .active(true)
+            .userId(testUser.getId().toString())
+            .clientId("test-client")
+            .scope("openid profile email")
+            .build();
+            
+        when(accessTokenRepository.findValidTokenByHash(anyString(), any(Instant.class)))
+            .thenReturn(Optional.of(OAuthAccessToken.builder()
+                .userId(testUser.getId())
+                .clientId(testClient.getId())
+                .build()));
+        when(userRepository.findById(testUser.getId()))
+            .thenReturn(Optional.of(testUser));
+        when(clientRepository.findById(testClient.getId()))
+            .thenReturn(Optional.of(testClient));
+        
+        testUser.setFirstName("John");
+        testUser.setLastName("Doe");
+        testUser.setEmailVerified(true);
+        testUser.setPreferredLanguage("en-US");
+        testUser.setTimezone("America/New_York");
+        
+        // When
+        OAuth2UserInfoResponse result = oauth2Service.getUserInfo(authHeader);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getSub()).isEqualTo(testUser.getId().toString());
+        assertThat(result.getEmail()).isEqualTo(testUser.getEmail());
+        assertThat(result.getEmailVerified()).isTrue();
+        assertThat(result.getName()).isEqualTo(testUser.getUsername());
+        assertThat(result.getPreferredUsername()).isEqualTo(testUser.getUsername());
+        assertThat(result.getGivenName()).isEqualTo("John");
+        assertThat(result.getFamilyName()).isEqualTo("Doe");
+        assertThat(result.getLocale()).isEqualTo("en-US");
+        assertThat(result.getZoneinfo()).isEqualTo("America/New_York");
+    }
+    
+    @Test
+    void testGetUserInfo_InvalidAuthHeader_ThrowsException() {
+        // Given
+        String invalidHeader = "Invalid header";
+        
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.getUserInfo(invalidHeader))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid authorization header");
+    }
+    
+    @Test
+    void testGetUserInfo_ExpiredToken_ThrowsException() {
+        // Given
+        String authHeader = "Bearer expired-token";
+        
+        when(accessTokenRepository.findValidTokenByHash(anyString(), any(Instant.class)))
+            .thenReturn(Optional.empty());
+        
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.getUserInfo(authHeader))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid or expired access token");
+    }
+    
+    @Test
+    void testTokenEndpoint_AuthorizationCodeGrant_ReturnsTokens() {
+        // Given
+        OAuth2TokenRequest request = OAuth2TokenRequest.builder()
+            .grantType("authorization_code")
+            .code("auth-code-123")
+            .redirectUri("http://localhost:8080/callback")
+            .clientId("test-client")
+            .clientSecret("client-secret")
+            .build();
+            
+        // Mock client validation
+        when(clientRepository.findByClientIdAndEnabledTrue("test-client"))
+            .thenReturn(Optional.of(testClient));
+        when(passwordEncoder.matches("client-secret", "encoded-secret"))
+            .thenReturn(true);
+            
+        // Mock authorization code validation
+        OAuthAuthorizationCode authCode = OAuthAuthorizationCode.builder()
+            .id(UUID.randomUUID())
+            .code("auth-code-123")
+            .userId(testUser.getId())
+            .clientId(testClient.getId())
+            .redirectUri("http://localhost:8080/callback")
+            .scopes(Set.of("read", "write"))
+            .expiresAt(Instant.now().plus(10, ChronoUnit.MINUTES))
+            .used(false)
+            .build();
+            
+        when(clientRepository.findByClientId("test-client"))
+            .thenReturn(Optional.of(testClient));
+        when(authorizationCodeRepository.findValidCodeForClient(
+            eq("auth-code-123"), eq(testClient.getId()), 
+            eq("http://localhost:8080/callback"), any(Instant.class)))
+            .thenReturn(Optional.of(authCode));
+        when(authorizationCodeRepository.save(any(OAuthAuthorizationCode.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+            
+        // Mock token generation
+        when(userRepository.findById(testUser.getId()))
+            .thenReturn(Optional.of(testUser));
+        when(clientRepository.findById(testClient.getId()))
+            .thenReturn(Optional.of(testClient));
+        when(jwtTokenProvider.generateToken(eq("test@example.com"), any(Map.class), eq(3600)))
+            .thenReturn("jwt-access-token");
+        when(accessTokenRepository.save(any(OAuthAccessToken.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(refreshTokenRepository.save(any(OAuthRefreshToken.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        
+        // When
+        OAuth2TokenResponse result = oauth2Service.token(request, httpRequest);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getAccessToken()).isEqualTo("jwt-access-token");
+        assertThat(result.getTokenType()).isEqualTo("Bearer");
+        assertThat(result.getExpiresIn()).isEqualTo(3600);
+        assertThat(result.getRefreshToken()).isNotNull();
+        
+        // Verify authorization code was marked as used
+        verify(authorizationCodeRepository).save(argThat(code -> code.isUsed()));
+        verify(entityManager).flush();
+    }
+    
+    @Test
+    void testTokenEndpoint_RefreshTokenGrant_ReturnsNewTokens() {
+        // Given
+        OAuth2TokenRequest request = OAuth2TokenRequest.builder()
+            .grantType("refresh_token")
+            .refreshToken("valid-refresh-token")
+            .clientId("test-client")
+            .clientSecret("client-secret")
+            .build();
+            
+        // Mock client validation
+        when(clientRepository.findByClientIdAndEnabledTrue("test-client"))
+            .thenReturn(Optional.of(testClient));
+        when(passwordEncoder.matches("client-secret", "encoded-secret"))
+            .thenReturn(true);
+            
+        // Mock refresh token validation
+        OAuthRefreshToken refreshToken = OAuthRefreshToken.builder()
+            .id(UUID.randomUUID())
+            .tokenHash("hashed-refresh-token")
+            .userId(testUser.getId())
+            .clientId(testClient.getId())
+            .scopes(Set.of("read", "write"))
+            .expiresAt(Instant.now().plus(30, ChronoUnit.DAYS))
+            .revoked(false)
+            .build();
+            
+        when(refreshTokenRepository.findValidTokenByHash(anyString(), any(Instant.class)))
+            .thenReturn(Optional.of(refreshToken));
+        when(clientRepository.findByClientId("test-client"))
+            .thenReturn(Optional.of(testClient));
+        when(refreshTokenRepository.save(any(OAuthRefreshToken.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+            
+        // Mock new token generation
+        when(userRepository.findById(testUser.getId()))
+            .thenReturn(Optional.of(testUser));
+        when(clientRepository.findById(testClient.getId()))
+            .thenReturn(Optional.of(testClient));
+        when(jwtTokenProvider.generateToken(eq("test@example.com"), any(Map.class), eq(3600)))
+            .thenReturn("new-jwt-access-token");
+        when(accessTokenRepository.save(any(OAuthAccessToken.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        
+        // When
+        OAuth2TokenResponse result = oauth2Service.token(request, httpRequest);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getAccessToken()).isEqualTo("new-jwt-access-token");
+        assertThat(result.getTokenType()).isEqualTo("Bearer");
+        assertThat(result.getRefreshToken()).isNotNull();
+        
+        // Verify old refresh token was revoked
+        verify(refreshTokenRepository).save(argThat(token -> 
+            token.isRevoked() && "Token rotation".equals(token.getRevocationReason())));
+    }
+    
+    @Test
+    void testTokenEndpoint_ClientCredentialsGrant_ReturnsToken() {
+        // Given
+        OAuth2TokenRequest request = OAuth2TokenRequest.builder()
+            .grantType("client_credentials")
+            .scope("api")
+            .clientId("test-client")
+            .clientSecret("client-secret")
+            .build();
+            
+        // Mock client validation
+        when(clientRepository.findByClientIdAndEnabledTrue("test-client"))
+            .thenReturn(Optional.of(testClient));
+        when(passwordEncoder.matches("client-secret", "encoded-secret"))
+            .thenReturn(true);
+        when(clientRepository.findByClientId("test-client"))
+            .thenReturn(Optional.of(testClient));
+        when(clientRepository.findById(testClient.getId()))
+            .thenReturn(Optional.of(testClient));
+            
+        when(jwtTokenProvider.generateToken(eq("test-client"), any(Map.class), eq(3600)))
+            .thenReturn("client-credentials-token");
+        when(accessTokenRepository.save(any(OAuthAccessToken.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+        
+        // When
+        OAuth2TokenResponse result = oauth2Service.token(request, httpRequest);
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getAccessToken()).isEqualTo("client-credentials-token");
+        assertThat(result.getTokenType()).isEqualTo("Bearer");
+        assertThat(result.getExpiresIn()).isEqualTo(3600);
+        assertThat(result.getRefreshToken()).isNull(); // No refresh token for client credentials
+        assertThat(result.getScope()).isEqualTo("api");
+    }
+    
+    @Test
+    void testTokenEndpoint_UnsupportedGrantType_ThrowsException() {
+        // Given
+        OAuth2TokenRequest request = OAuth2TokenRequest.builder()
+            .grantType("password")
+            .build();
+        
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.token(request, httpRequest))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Unsupported grant type: password");
+    }
+    
+    @Test
+    void testTokenRevocation_RefreshToken_RevokesToken() {
+        // Given
+        OAuth2RevocationRequest request = new OAuth2RevocationRequest();
+        request.setToken("refresh-token-to-revoke");
+        request.setAuthorizationHeader("Basic " + Base64.getEncoder().encodeToString("test-client:client-secret".getBytes()));
+        
+        // Mock client validation
+        when(clientRepository.findByClientIdAndEnabledTrue("test-client"))
+            .thenReturn(Optional.of(testClient));
+        when(passwordEncoder.matches("client-secret", "encoded-secret"))
+            .thenReturn(true);
+            
+        // No access token found
+        when(accessTokenRepository.findByTokenHash(anyString()))
+            .thenReturn(Optional.empty());
+            
+        // Refresh token found
+        OAuthRefreshToken refreshToken = OAuthRefreshToken.builder()
+            .id(UUID.randomUUID())
+            .tokenHash("any-hash")
+            .clientId(testClient.getId())
+            .revoked(false)
+            .build();
+            
+        when(refreshTokenRepository.findByTokenHash(anyString()))
+            .thenReturn(Optional.of(refreshToken));
+        when(clientRepository.findById(testClient.getId()))
+            .thenReturn(Optional.of(testClient));
+        
+        // When & Then
+        assertThatCode(() -> oauth2Service.revoke(request))
+            .doesNotThrowAnyException();
+            
+        verify(refreshTokenRepository).save(argThat(token -> 
+            token.isRevoked() && "Explicit revocation".equals(token.getRevocationReason())));
+    }
+    
+    @Test
+    void testValidateAccessToken_ClientCredentialsToken_ReturnsTokenInfo() {
+        // Given
+        OAuthAccessToken accessToken = OAuthAccessToken.builder()
+            .id(UUID.randomUUID())
+            .tokenHash("any-hash")
+            .userId(null) // No user for client credentials
+            .clientId(testClient.getId())
+            .scopes(Set.of("api"))
+            .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+            .createdAt(Instant.now().minus(30, ChronoUnit.MINUTES))
+            .revoked(false)
+            .build();
+            
+        when(accessTokenRepository.findValidTokenByHash(anyString(), any(Instant.class)))
+            .thenReturn(Optional.of(accessToken));
+        when(clientRepository.findById(testClient.getId()))
+            .thenReturn(Optional.of(testClient));
+            
+        // When
+        OAuth2TokenInfo result = oauth2Service.validateAccessToken("client-token");
+        
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getUserId()).isNull(); // No user for client credentials
+        assertThat(result.getUsername()).isNull();
+        assertThat(result.getClientId()).isEqualTo(testClient.getClientId());
+        assertThat(result.getSub()).isEqualTo(testClient.getClientId()); // Client ID as subject
+        assertThat(result.isActive()).isTrue();
+    }
+    
+    @Test
+    void testValidateAccessToken_ClientNotFound_ReturnsNull() {
+        // Given
+        OAuthAccessToken accessToken = OAuthAccessToken.builder()
+            .id(UUID.randomUUID())
+            .tokenHash("any-hash")
+            .userId(testUser.getId())
+            .clientId(UUID.randomUUID()) // Non-existent client
+            .scopes(Set.of("read"))
+            .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
+            .revoked(false)
+            .build();
+            
+        when(accessTokenRepository.findValidTokenByHash(anyString(), any(Instant.class)))
+            .thenReturn(Optional.of(accessToken));
+        when(clientRepository.findById(any(UUID.class)))
+            .thenReturn(Optional.empty());
+            
+        // When
+        OAuth2TokenInfo result = oauth2Service.validateAccessToken("invalid-client-token");
+        
+        // Then
+        assertThat(result).isNull();
+    }
 }

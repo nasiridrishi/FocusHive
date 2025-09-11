@@ -30,6 +30,15 @@ spring:
     oauth2:
       authorizationserver:
         issuer: http://localhost:8081
+  
+  # Auto-configuration exclusions for tests to prevent tracing bean conflicts
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration
 
 server:
   port: 0  # Random port for tests
@@ -76,3 +85,7 @@ management:
     web:
       exposure:
         include: health
+  tracing:
+    enabled: false  # Disable tracing for tests
+  observations:
+    enabled: false  # Disable observations for tests
