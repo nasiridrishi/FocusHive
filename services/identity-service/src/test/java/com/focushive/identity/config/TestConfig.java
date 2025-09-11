@@ -2,6 +2,7 @@ package com.focushive.identity.config;
 
 import com.focushive.identity.service.EmailService;
 import com.focushive.identity.service.TokenBlacklistService;
+import io.micrometer.observation.ObservationRegistry;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +42,15 @@ public class TestConfig {
         // By default, no tokens are blacklisted
         Mockito.when(mockService.isBlacklisted(Mockito.anyString())).thenReturn(false);
         return mockService;
+    }
+    
+    /**
+     * No-op ObservationRegistry for tests to avoid tracing issues.
+     */
+    @Bean
+    @Primary
+    public ObservationRegistry observationRegistry() {
+        return ObservationRegistry.NOOP;
     }
     
     // Redis beans are now handled by using embedded Redis or H2 in tests

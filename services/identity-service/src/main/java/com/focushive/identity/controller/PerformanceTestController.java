@@ -20,6 +20,14 @@ import java.time.Instant;
 @RestController
 @RequestMapping("/api/v1/performance-test")
 public class PerformanceTestController {
+    
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "UP");
+        response.put("message", "PerformanceTestController is working");
+        return ResponseEntity.ok(response);
+    }
 
     @Autowired
     private UserRepository userRepository;

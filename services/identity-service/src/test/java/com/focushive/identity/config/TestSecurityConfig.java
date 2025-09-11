@@ -52,9 +52,5 @@ public class TestSecurityConfig {
                 .build();
     }
     
-    @Bean
-    @Primary
-    public PasswordEncoder testPasswordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    // PasswordEncoder is provided by main SecurityConfig
 }
