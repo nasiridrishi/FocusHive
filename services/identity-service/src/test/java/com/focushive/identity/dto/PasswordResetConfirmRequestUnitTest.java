@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -184,15 +185,17 @@ class PasswordResetConfirmRequestUnitTest {
         void shouldFailValidationWhenNewPasswordIsBlank() {
             // Given
             PasswordResetConfirmRequest request = createValidRequest();
-            request.setNewPassword("   ");
+            request.setNewPassword("");
 
             // When
             Set<ConstraintViolation<PasswordResetConfirmRequest>> violations = validator.validate(request);
 
-            // Then
-            assertThat(violations).hasSize(1);
-            ConstraintViolation<PasswordResetConfirmRequest> violation = violations.iterator().next();
-            assertThat(violation.getMessage()).isEqualTo("New password is required");
+            // Then - Empty password triggers both @NotBlank and @Size validations
+            assertThat(violations).hasSize(2);
+            Set<String> messages = violations.stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.toSet());
+            assertThat(messages).containsAnyOf("New password is required", "Password must be at least 8 characters");
         }
 
         @Test

@@ -890,4 +890,472 @@ class PersonaServiceTest {
         assertThat(result.getPrivacySettings()).isNotNull();
         // Should return empty DTO with default values (null/false/empty)
     }
+
+    // ======================= NEW COMPREHENSIVE TESTS =======================
+
+    @Test
+    @DisplayName("Should handle creating persona with empty name (current behavior test)")
+    void createPersona_EmptyName_CurrentBehavior() {
+        // Given - Test empty name (this tests current behavior, not validation)
+        PersonaDto emptyNameRequest = PersonaDto.builder()
+                .name("")
+                .type(Persona.PersonaType.WORK)
+                .displayName("Empty Name Profile")
+                .build();
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.findByUserIdAndName(testUserId, "")).thenReturn(Optional.empty());
+        when(personaRepository.countByUserId(testUserId)).thenReturn(1L);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> {
+            Persona persona = invocation.getArgument(0);
+            persona.setId(UUID.randomUUID());
+            persona.setCreatedAt(Instant.now());
+            return persona;
+        });
+
+        // When 
+        PersonaDto result = personaService.createPersona(testUserId, emptyNameRequest);
+
+        // Then - Current behavior allows empty name
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("");
+        assertThat(result.getDisplayName()).isEqualTo("Empty Name Profile");
+        
+        verify(personaRepository).save(argThat(persona -> 
+            persona.getName().equals("")));
+    }
+
+    @Test
+    @DisplayName("Should create persona with all valid PersonaType enum values")
+    void createPersona_AllPersonaTypes_ShouldCreateSuccessfully() {
+        // Test all PersonaType enum values
+        Persona.PersonaType[] allTypes = {
+            Persona.PersonaType.WORK,
+            Persona.PersonaType.PERSONAL, 
+            Persona.PersonaType.GAMING,
+            Persona.PersonaType.STUDY,
+            Persona.PersonaType.CUSTOM
+        };
+
+        for (int i = 0; i < allTypes.length; i++) {
+            Persona.PersonaType type = allTypes[i];
+            
+            // Given
+            PersonaDto createRequest = PersonaDto.builder()
+                    .name(type.name() + "_Test")
+                    .type(type)
+                    .displayName(type.name() + " Profile Test")
+                    .bio("Testing " + type.name() + " persona creation")
+                    .build();
+
+            // Reset mocks for each iteration
+            reset(userRepository, personaRepository);
+            
+            when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+            when(personaRepository.findByUserIdAndName(testUserId, type.name() + "_Test")).thenReturn(Optional.empty());
+            when(personaRepository.countByUserId(testUserId)).thenReturn((long) i); // Simulate existing personas
+            when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> {
+                Persona persona = invocation.getArgument(0);
+                persona.setId(UUID.randomUUID());
+                persona.setCreatedAt(Instant.now());
+                return persona;
+            });
+
+            // When
+            PersonaDto result = personaService.createPersona(testUserId, createRequest);
+
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getName()).isEqualTo(type.name() + "_Test");
+            assertThat(result.getType()).isEqualTo(type);
+            assertThat(result.getDisplayName()).isEqualTo(type.name() + " Profile Test");
+            assertThat(result.getBio()).isEqualTo("Testing " + type.name() + " persona creation");
+            
+            // Verify first persona is default and active, others are not
+            if (i == 0) {
+                assertThat(result.isDefault()).isTrue();
+                assertThat(result.isActive()).isTrue();
+            } else {
+                assertThat(result.isDefault()).isFalse();
+                assertThat(result.isActive()).isFalse();
+            }
+
+            verify(personaRepository).save(argThat(persona -> 
+                persona.getType().equals(type) && 
+                persona.getName().equals(type.name() + "_Test")));
+        }
+    }
+
+    @Test
+    @DisplayName("Should create persona with default privacy settings when not provided")
+    void createPersona_NoPrivacySettings_ShouldUseDefaults() {
+        // Given - Create persona without privacy settings
+        PersonaDto createRequest = PersonaDto.builder()
+                .name("DefaultPrivacy")
+                .type(Persona.PersonaType.WORK)
+                .displayName("Default Privacy Profile")
+                .privacySettings(null) // No privacy settings provided
+                .build();
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.findByUserIdAndName(testUserId, "DefaultPrivacy")).thenReturn(Optional.empty());
+        when(personaRepository.countByUserId(testUserId)).thenReturn(1L);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> {
+            Persona persona = invocation.getArgument(0);
+            persona.setId(UUID.randomUUID());
+            persona.setCreatedAt(Instant.now());
+            return persona;
+        });
+
+        // When
+        PersonaDto result = personaService.createPersona(testUserId, createRequest);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getPrivacySettings()).isNotNull();
+        
+        // Verify actual default privacy settings are applied (based on PrivacySettings entity defaults)
+        PersonaDto.PrivacySettingsDto privacySettings = result.getPrivacySettings();
+        assertThat(privacySettings.isShowRealName()).isFalse(); // Default is false
+        assertThat(privacySettings.isShowEmail()).isFalse(); // Default is false  
+        assertThat(privacySettings.isShowActivity()).isTrue(); // Default is true
+        assertThat(privacySettings.isAllowDirectMessages()).isTrue(); // Default is true
+        assertThat(privacySettings.getVisibilityLevel()).isEqualTo("FRIENDS"); // Default is "FRIENDS"
+        assertThat(privacySettings.isSearchable()).isTrue(); // Default is true
+        assertThat(privacySettings.isShowOnlineStatus()).isTrue(); // Default is true
+        assertThat(privacySettings.isShareFocusSessions()).isTrue(); // Default is true
+        assertThat(privacySettings.isShareAchievements()).isTrue(); // Default is true
+
+        verify(personaRepository).save(argThat(persona -> 
+            persona.getPrivacySettings() != null));
+    }
+
+    @Test
+    @DisplayName("Should update lastActiveAt timestamp when switching personas")
+    void switchPersona_ShouldUpdateLastActiveAtTimestamp() {
+        // Given
+        Instant beforeSwitching = Instant.now().minusSeconds(60); // 1 minute ago
+        personalPersona.setLastActiveAt(beforeSwitching);
+        UUID targetPersonaId = personalPersona.getId();
+        
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.findByIdAndUser(targetPersonaId, testUser)).thenReturn(Optional.of(personalPersona));
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        PersonaDto result = personaService.switchPersona(testUserId, targetPersonaId);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(targetPersonaId);
+        assertThat(result.isActive()).isTrue();
+        assertThat(result.getLastActiveAt()).isNotNull();
+        
+        // Verify lastActiveAt was updated to a recent time (within last 5 seconds)
+        assertThat(result.getLastActiveAt()).isAfter(beforeSwitching);
+        assertThat(result.getLastActiveAt()).isAfter(Instant.now().minusSeconds(5));
+        
+        verify(personaRepository).updateActivePersona(testUserId, targetPersonaId);
+        verify(personaRepository).save(personalPersona);
+        
+        // Verify the entity was updated
+        assertThat(personalPersona.isActive()).isTrue();
+        assertThat(personalPersona.getLastActiveAt()).isAfter(beforeSwitching);
+    }
+
+    @Test
+    @DisplayName("Should handle persona update with selective null field updates")
+    void updatePersona_NullFieldHandling_ShouldUpdateOnlyNonNullFields() {
+        // Given - Original persona with all fields set
+        UUID personaId = workPersona.getId();
+        workPersona.setDisplayName("Original Display");
+        workPersona.setBio("Original Bio");
+        workPersona.setStatusMessage("Original Status");
+        workPersona.setAvatarUrl("https://original.com/avatar.jpg");
+        workPersona.setThemePreference("dark");
+        workPersona.setLanguagePreference("en-US");
+
+        // Update request with mixed null and non-null values
+        PersonaDto updateRequest = PersonaDto.builder()
+                .displayName("Updated Display Name") // Non-null update
+                .bio(null) // Null - should not change original
+                .statusMessage("Updated Status") // Non-null update
+                .avatarUrl(null) // Null - should not change original
+                .themePreference(null) // Null - should not change original
+                .languagePreference("es-ES") // Non-null update
+                .build();
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.findByIdAndUser(personaId, testUser)).thenReturn(Optional.of(workPersona));
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        PersonaDto result = personaService.updatePersona(testUserId, personaId, updateRequest);
+
+        // Then
+        assertThat(result).isNotNull();
+        
+        // Verify only non-null fields were updated
+        assertThat(result.getDisplayName()).isEqualTo("Updated Display Name"); // Updated
+        assertThat(result.getBio()).isEqualTo("Original Bio"); // Unchanged (was null in request)
+        assertThat(result.getStatusMessage()).isEqualTo("Updated Status"); // Updated
+        assertThat(result.getAvatarUrl()).isEqualTo("https://original.com/avatar.jpg"); // Unchanged (was null in request)
+        assertThat(result.getThemePreference()).isEqualTo("dark"); // Unchanged (was null in request)
+        assertThat(result.getLanguagePreference()).isEqualTo("es-ES"); // Updated
+
+        // Verify entity state
+        assertThat(workPersona.getDisplayName()).isEqualTo("Updated Display Name");
+        assertThat(workPersona.getBio()).isEqualTo("Original Bio");
+        assertThat(workPersona.getStatusMessage()).isEqualTo("Updated Status");
+        assertThat(workPersona.getLanguagePreference()).isEqualTo("es-ES");
+
+        verify(personaRepository).save(workPersona);
+    }
+
+    @Test
+    @DisplayName("Should handle persona deletion cascade with active persona switching")
+    void deletePersona_ActivePersonaCascade_ShouldSwitchToDefaultAndDelete() {
+        // Given - Setup a scenario where we delete an active persona
+        UUID activePersonaId = personalPersona.getId();
+        personalPersona.setActive(true); // Make personal persona active
+        workPersona.setDefault(true); // Work persona is default
+        workPersona.setActive(false); // But not active
+        
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.findByIdAndUser(activePersonaId, testUser)).thenReturn(Optional.of(personalPersona));
+        when(personaRepository.findByUserAndIsDefaultTrue(testUser)).thenReturn(Optional.of(workPersona));
+        when(personaRepository.findByIdAndUser(workPersona.getId(), testUser)).thenReturn(Optional.of(workPersona));
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When - Delete the active persona
+        personaService.deletePersona(testUserId, activePersonaId);
+
+        // Then - Verify cascade behavior
+        verify(personaRepository).findByUserAndIsDefaultTrue(testUser);
+        verify(personaRepository).updateActivePersona(testUserId, workPersona.getId());
+        verify(personaRepository).save(workPersona); // Default persona should be activated
+        verify(personaRepository).delete(personalPersona); // Active persona should be deleted
+        
+        // Verify the default persona was activated
+        assertThat(workPersona.isActive()).isTrue();
+        assertThat(workPersona.getLastActiveAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Should create persona from template with specific type characteristics")
+    void createPersonaFromTemplate_TypeSpecificCharacteristics_ShouldMatchTemplate() {
+        // Test WORK template specifically (most comprehensive)
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.findByUserIdAndName(testUserId, "Work")).thenReturn(Optional.empty());
+        when(personaRepository.countByUserId(testUserId)).thenReturn(1L);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> {
+            Persona persona = invocation.getArgument(0);
+            persona.setId(UUID.randomUUID());
+            persona.setCreatedAt(Instant.now());
+            return persona;
+        });
+
+        // When - Create WORK persona from template
+        PersonaDto result = personaService.createPersonaFromTemplate(testUserId, Persona.PersonaType.WORK);
+
+        // Then - Verify WORK template characteristics
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("Work");
+        assertThat(result.getType()).isEqualTo(Persona.PersonaType.WORK);
+        assertThat(result.getDisplayName()).isEqualTo("Work Profile");
+        assertThat(result.getBio()).contains("Professional work profile");
+        assertThat(result.getThemePreference()).isEqualTo("light");
+        
+        // Verify WORK-specific privacy settings (more open for professional use)
+        PersonaDto.PrivacySettingsDto privacy = result.getPrivacySettings();
+        assertThat(privacy.isShowRealName()).isTrue(); // Work persona shows real name
+        assertThat(privacy.isShowActivity()).isTrue();
+        assertThat(privacy.isAllowDirectMessages()).isTrue();
+        assertThat(privacy.getVisibilityLevel()).isEqualTo("PUBLIC"); // Work is public
+        assertThat(privacy.isSearchable()).isTrue();
+        assertThat(privacy.isShowOnlineStatus()).isTrue();
+        assertThat(privacy.isShareFocusSessions()).isTrue();
+        assertThat(privacy.isShareAchievements()).isTrue();
+
+        verify(personaRepository).save(argThat(persona -> 
+            persona.getType().equals(Persona.PersonaType.WORK) && 
+            persona.getName().equals("Work")));
+    }
+
+    @Test 
+    @DisplayName("Should create persona from PERSONAL template with privacy-focused settings")
+    void createPersonaFromTemplate_PersonalType_ShouldHavePrivacyFocusedSettings() {
+        // Given
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.findByUserIdAndName(testUserId, "Personal")).thenReturn(Optional.empty());
+        when(personaRepository.countByUserId(testUserId)).thenReturn(1L);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> {
+            Persona persona = invocation.getArgument(0);
+            persona.setId(UUID.randomUUID());
+            persona.setCreatedAt(Instant.now());
+            return persona;
+        });
+
+        // When - Create PERSONAL persona from template
+        PersonaDto result = personaService.createPersonaFromTemplate(testUserId, Persona.PersonaType.PERSONAL);
+
+        // Then - Verify PERSONAL template characteristics (privacy-focused)
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("Personal");
+        assertThat(result.getType()).isEqualTo(Persona.PersonaType.PERSONAL);
+        assertThat(result.getThemePreference()).isEqualTo("system");
+        
+        // Verify PERSONAL-specific privacy settings (more restrictive)
+        PersonaDto.PrivacySettingsDto privacy = result.getPrivacySettings();
+        assertThat(privacy.isShowRealName()).isFalse(); // Personal persona hides real name
+        assertThat(privacy.isShowActivity()).isFalse(); // Hide activity
+        assertThat(privacy.isAllowDirectMessages()).isFalse(); // No direct messages
+        assertThat(privacy.getVisibilityLevel()).isEqualTo("PRIVATE"); // Private visibility
+        assertThat(privacy.isSearchable()).isFalse(); // Not searchable
+        assertThat(privacy.isShowOnlineStatus()).isFalse(); // Hide online status
+        assertThat(privacy.isShareFocusSessions()).isFalse(); // Don't share sessions
+        assertThat(privacy.isShareAchievements()).isFalse(); // Don't share achievements
+    }
+
+    @Test
+    @DisplayName("Should allow creating multiple personas without limit (current behavior)")
+    void createPersona_MultiplePersonas_ShouldAllowUnlimitedCreation() {
+        // Given - Simulate creating many personas (test current behavior)
+        int maxPersonasToTest = 15; // Test reasonable number
+        
+        for (int i = 1; i <= maxPersonasToTest; i++) {
+            String personaName = "Persona" + i;
+            PersonaDto createRequest = PersonaDto.builder()
+                    .name(personaName)
+                    .type(Persona.PersonaType.CUSTOM)
+                    .displayName("Test Persona " + i)
+                    .build();
+
+            // Reset mocks for each iteration
+            reset(userRepository, personaRepository);
+            
+            when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+            when(personaRepository.findByUserIdAndName(testUserId, personaName)).thenReturn(Optional.empty());
+            when(personaRepository.countByUserId(testUserId)).thenReturn((long) (i - 1)); // Previous persona count
+            when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> {
+                Persona persona = invocation.getArgument(0);
+                persona.setId(UUID.randomUUID());
+                persona.setCreatedAt(Instant.now());
+                return persona;
+            });
+
+            // When - Create persona
+            PersonaDto result = personaService.createPersona(testUserId, createRequest);
+
+            // Then - Verify creation successful
+            assertThat(result).isNotNull();
+            assertThat(result.getName()).isEqualTo(personaName);
+            assertThat(result.getDisplayName()).isEqualTo("Test Persona " + i);
+            
+            // First persona should be default and active
+            if (i == 1) {
+                assertThat(result.isDefault()).isTrue();
+                assertThat(result.isActive()).isTrue();
+            } else {
+                assertThat(result.isDefault()).isFalse();
+                assertThat(result.isActive()).isFalse();
+            }
+        }
+
+        // All personas should have been created successfully without limits
+        // This test documents the current behavior - no persona limits enforced
+    }
+
+    @Test
+    @DisplayName("Should maintain data integrity during multiple persona operations")
+    void multiplePersonaOperations_DataIntegrity_ShouldMaintainConsistency() {
+        // Given - Setup personas with different states
+        UUID persona1Id = UUID.randomUUID();
+        UUID persona2Id = UUID.randomUUID();
+        UUID persona3Id = UUID.randomUUID();
+        
+        Persona persona1 = Persona.builder()
+                .id(persona1Id)
+                .user(testUser)
+                .name("Persona1")
+                .type(Persona.PersonaType.WORK)
+                .displayName("Work Persona")
+                .isDefault(true)
+                .isActive(false)
+                .customAttributes(new HashMap<>())
+                .privacySettings(new Persona.PrivacySettings())
+                .createdAt(Instant.now())
+                .build();
+
+        Persona persona2 = Persona.builder()
+                .id(persona2Id)
+                .user(testUser)
+                .name("Persona2")
+                .type(Persona.PersonaType.PERSONAL)
+                .displayName("Personal Persona")
+                .isDefault(false)
+                .isActive(true)
+                .customAttributes(new HashMap<>())
+                .privacySettings(new Persona.PrivacySettings())
+                .createdAt(Instant.now())
+                .build();
+
+        Persona persona3 = Persona.builder()
+                .id(persona3Id)
+                .user(testUser)
+                .name("Persona3")
+                .type(Persona.PersonaType.GAMING)
+                .displayName("Gaming Persona")
+                .isDefault(false)
+                .isActive(false)
+                .customAttributes(new HashMap<>())
+                .privacySettings(new Persona.PrivacySettings())
+                .createdAt(Instant.now())
+                .build();
+
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
+        when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Test 1: Switch from persona2 to persona1 (active to default)
+        when(personaRepository.findByIdAndUser(persona1Id, testUser)).thenReturn(Optional.of(persona1));
+        
+        PersonaDto result1 = personaService.switchPersona(testUserId, persona1Id);
+        
+        // Verify switch integrity
+        assertThat(result1.getId()).isEqualTo(persona1Id);
+        assertThat(result1.isActive()).isTrue();
+        assertThat(result1.isDefault()).isTrue(); // Should remain default
+        
+        // Test 2: Update persona while it's active
+        PersonaDto updateRequest = PersonaDto.builder()
+                .displayName("Updated Active Persona")
+                .statusMessage("Currently Active")
+                .build();
+        
+        PersonaDto result2 = personaService.updatePersona(testUserId, persona1Id, updateRequest);
+        
+        // Verify update integrity while active
+        assertThat(result2.getDisplayName()).isEqualTo("Updated Active Persona");
+        assertThat(result2.getStatusMessage()).isEqualTo("Currently Active");
+        assertThat(result2.isActive()).isTrue(); // Should remain active
+        assertThat(result2.isDefault()).isTrue(); // Should remain default
+
+        // Test 3: Set different persona as default (persona3)
+        when(personaRepository.findByIdAndUser(persona3Id, testUser)).thenReturn(Optional.of(persona3));
+        
+        PersonaDto result3 = personaService.setDefaultPersona(testUserId, persona3Id);
+        
+        // Verify default change integrity
+        assertThat(result3.getId()).isEqualTo(persona3Id);
+        assertThat(result3.isDefault()).isTrue();
+        
+        // Verify repository interactions maintain integrity
+        verify(personaRepository, atLeast(1)).updateActivePersona(testUserId, persona1Id);
+        verify(personaRepository, atLeast(1)).clearDefaultPersonaExcept(testUserId, persona3Id);
+        verify(personaRepository, atLeastOnce()).save(any(Persona.class));
+        
+        // Verify entities maintain consistent state
+        assertThat(persona1.isActive()).isTrue(); // Last active persona
+        assertThat(persona3.isDefault()).isTrue(); // Last default persona
+    }
 }

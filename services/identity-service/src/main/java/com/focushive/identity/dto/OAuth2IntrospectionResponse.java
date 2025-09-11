@@ -60,8 +60,8 @@ public class OAuth2IntrospectionResponse {
     private String sub;
 
     @JsonProperty("aud")
-    @Schema(description = "Audience", example = "focushive-api")
-    private String aud;
+    @Schema(description = "Audience", example = "[\"focushive-api\"]")
+    private Object aud; // Can be either String or String[] depending on Spring Authorization Server version
 
     @JsonProperty("iss")
     @Schema(description = "Issuer", example = "https://identity.focushive.com")
@@ -70,4 +70,17 @@ public class OAuth2IntrospectionResponse {
     @JsonProperty("jti")
     @Schema(description = "JWT ID", example = "abc-123-def-456")
     private String jti;
+    
+    /**
+     * Get audience as string for backward compatibility
+     */
+    public String getAudString() {
+        if (aud instanceof String) {
+            return (String) aud;
+        } else if (aud instanceof String[]) {
+            String[] audArray = (String[]) aud;
+            return audArray.length > 0 ? audArray[0] : null;
+        }
+        return null;
+    }
 }

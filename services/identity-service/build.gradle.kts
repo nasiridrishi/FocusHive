@@ -107,6 +107,7 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.h2database:h2")
+    runtimeOnly("com.h2database:h2")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
     testImplementation("net.ttddyy:datasource-proxy:1.10")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

@@ -2,6 +2,9 @@ package com.focushive.identity.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.focushive.identity.entity.Persona;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,13 +25,23 @@ import java.util.UUID;
 public class PersonaDto {
     
     private UUID id;
+    
+    @NotBlank(message = "Persona name is required")
+    @Size(min = 1, max = 100, message = "Persona name must be between 1 and 100 characters")
     private String name;
+    
+    @NotNull(message = "Persona type is required")
     private Persona.PersonaType type;
+    
     private boolean isDefault;
     private boolean isActive;
     private String displayName;
     private String avatarUrl;
+    
+    @Size(max = 500, message = "Bio must not exceed 500 characters")
     private String bio;
+    
+    @Size(max = 200, message = "Status message must not exceed 200 characters")
     private String statusMessage;
     private PrivacySettingsDto privacySettings;
     private Map<String, String> customAttributes;

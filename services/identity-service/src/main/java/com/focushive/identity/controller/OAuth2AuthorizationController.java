@@ -45,10 +45,10 @@ public class OAuth2AuthorizationController {
             @ApiResponse(responseCode = "404", description = "Client not found or invalid")
     })
     @GetMapping("/authorize")
-    public void authorize(
-            @Parameter(description = "OAuth2 client ID") @RequestParam("client_id") String clientId,
-            @Parameter(description = "Response type (must be 'code')") @RequestParam("response_type") String responseType,
-            @Parameter(description = "Redirect URI") @RequestParam("redirect_uri") String redirectUri,
+    public ResponseEntity<Void> authorize(
+            @Parameter(description = "OAuth2 client ID") @RequestParam(value = "client_id", required = false) String clientId,
+            @Parameter(description = "Response type (must be 'code')") @RequestParam(value = "response_type", required = false) String responseType,
+            @Parameter(description = "Redirect URI") @RequestParam(value = "redirect_uri", required = false) String redirectUri,
             @Parameter(description = "Space-separated scopes") @RequestParam(value = "scope", required = false) String scope,
             @Parameter(description = "State parameter for CSRF protection") @RequestParam(value = "state", required = false) String state,
             @Parameter(description = "Challenge for PKCE") @RequestParam(value = "code_challenge", required = false) String codeChallenge,
@@ -57,12 +57,23 @@ public class OAuth2AuthorizationController {
             HttpServletRequest request,
             HttpServletResponse response) throws IOException {
 
+        // Validate required parameters
+        if (clientId == null || clientId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (responseType == null || responseType.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (redirectUri == null || redirectUri.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         log.info("OAuth2 authorization request for client: {}", clientId);
         
         OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest.builder()
-                .clientId(clientId)
-                .responseType(responseType)
-                .redirectUri(redirectUri)
+                .clientId(clientId.trim())
+                .responseType(responseType.trim())
+                .redirectUri(redirectUri.trim())
                 .scope(scope)
                 .state(state)
                 .codeChallenge(codeChallenge)
@@ -70,6 +81,7 @@ public class OAuth2AuthorizationController {
                 .build();
 
         oauth2AuthorizationService.authorize(authorizeRequest, authentication, request, response);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(
@@ -83,7 +95,7 @@ public class OAuth2AuthorizationController {
     })
     @PostMapping(value = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<OAuth2TokenResponse> token(
-            @Parameter(description = "Grant type") @RequestParam("grant_type") String grantType,
+            @Parameter(description = "Grant type") @RequestParam(value = "grant_type", required = false) String grantType,
             @Parameter(description = "Authorization code (for authorization_code grant)") @RequestParam(value = "code", required = false) String code,
             @Parameter(description = "Redirect URI (for authorization_code grant)") @RequestParam(value = "redirect_uri", required = false) String redirectUri,
             @Parameter(description = "PKCE code verifier") @RequestParam(value = "code_verifier", required = false) String codeVerifier,
@@ -94,10 +106,15 @@ public class OAuth2AuthorizationController {
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             HttpServletRequest request) {
 
+        // Validate required parameters
+        if (grantType == null || grantType.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         log.info("OAuth2 token request for grant type: {}", grantType);
 
         OAuth2TokenRequest tokenRequest = OAuth2TokenRequest.builder()
-                .grantType(grantType)
+                .grantType(grantType.trim())
                 .code(code)
                 .redirectUri(redirectUri)
                 .codeVerifier(codeVerifier)
@@ -122,16 +139,21 @@ public class OAuth2AuthorizationController {
     })
     @PostMapping(value = "/introspect", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<OAuth2IntrospectionResponse> introspect(
-            @Parameter(description = "Token to introspect") @RequestParam("token") String token,
+            @Parameter(description = "Token to introspect") @RequestParam(value = "token", required = false) String token,
             @Parameter(description = "Token type hint") @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint,
             @Parameter(description = "Client ID (alternative to Authorization header)") @RequestParam(value = "client_id", required = false) String clientId,
             @Parameter(description = "Client secret (alternative to Authorization header)") @RequestParam(value = "client_secret", required = false) String clientSecret,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
+        // Validate required parameters
+        if (token == null || token.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         log.debug("OAuth2 token introspection request");
 
         OAuth2IntrospectionRequest introspectionRequest = OAuth2IntrospectionRequest.builder()
-                .token(token)
+                .token(token.trim())
                 .tokenTypeHint(tokenTypeHint)
                 .clientId(clientId)
                 .clientSecret(clientSecret)
@@ -152,16 +174,21 @@ public class OAuth2AuthorizationController {
     })
     @PostMapping(value = "/revoke", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<Void> revoke(
-            @Parameter(description = "Token to revoke") @RequestParam("token") String token,
+            @Parameter(description = "Token to revoke") @RequestParam(value = "token", required = false) String token,
             @Parameter(description = "Token type hint") @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint,
             @Parameter(description = "Client ID (alternative to Authorization header)") @RequestParam(value = "client_id", required = false) String clientId,
             @Parameter(description = "Client secret (alternative to Authorization header)") @RequestParam(value = "client_secret", required = false) String clientSecret,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
+        // Validate required parameters
+        if (token == null || token.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         log.info("OAuth2 token revocation request");
 
         OAuth2RevocationRequest revocationRequest = OAuth2RevocationRequest.builder()
-                .token(token)
+                .token(token.trim())
                 .tokenTypeHint(tokenTypeHint)
                 .clientId(clientId)
                 .clientSecret(clientSecret)
@@ -183,7 +210,7 @@ public class OAuth2AuthorizationController {
     @GetMapping("/userinfo")
     @SecurityRequirement(name = "OAuth2")
     public ResponseEntity<OAuth2UserInfoResponse> userInfo(
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
         log.debug("OAuth2 user info request");
         

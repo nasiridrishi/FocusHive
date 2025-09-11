@@ -27,6 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -654,10 +655,12 @@ class OAuth2AuthorizationServiceTest {
             
         testClient.setUser(testUser); // Ensure ownership
         
-        doNothing().when(accessTokenRepository).revokeAllTokensForClient(
-            eq(testClient.getId()), any(Instant.class), eq("Client deleted"));
-        doNothing().when(refreshTokenRepository).revokeAllTokensForClient(
-            eq(testClient.getId()), any(Instant.class), eq("Client deleted"));
+        when(accessTokenRepository.revokeAllTokensForClient(
+            eq(testClient.getId()), any(Instant.class), eq("Client deleted")))
+            .thenReturn(0); // Return number of revoked tokens
+        when(refreshTokenRepository.revokeAllTokensForClient(
+            eq(testClient.getId()), any(Instant.class), eq("Client deleted")))
+            .thenReturn(0); // Return number of revoked tokens
         doNothing().when(clientRepository).delete(testClient);
         
         // When
@@ -1006,5 +1009,83 @@ class OAuth2AuthorizationServiceTest {
         
         // Then
         assertThat(result).isNull();
+    }
+    
+    @Test
+    void testAuthorizeEndpoint_InvalidClient_ThrowsException() throws IOException {
+        // Given
+        OAuth2AuthorizeRequest request = OAuth2AuthorizeRequest.builder()
+            .clientId("invalid-client")
+            .redirectUri("http://localhost:8080/callback")
+            .responseType("code")
+            .scope("read write")
+            .state("state123")
+            .build();
+            
+        when(clientRepository.findByClientIdAndEnabledTrue("invalid-client"))
+            .thenReturn(Optional.empty());
+            
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.authorize(request, authentication, httpRequest, httpResponse))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid client_id");
+            
+        verify(clientRepository).findByClientIdAndEnabledTrue("invalid-client");
+        verifyNoInteractions(httpResponse);
+    }
+    
+    @Test
+    void testAuthorizeEndpoint_InvalidRedirectUri_ThrowsException() throws IOException {
+        // Given
+        OAuth2AuthorizeRequest request = OAuth2AuthorizeRequest.builder()
+            .clientId("test-client")
+            .redirectUri("http://malicious-site.com/callback") // Not in client's allowed URIs
+            .responseType("code")
+            .scope("read write")
+            .state("state123")
+            .build();
+            
+        when(clientRepository.findByClientIdAndEnabledTrue("test-client"))
+            .thenReturn(Optional.of(testClient));
+            
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.authorize(request, authentication, httpRequest, httpResponse))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid redirect_uri");
+            
+        verify(clientRepository).findByClientIdAndEnabledTrue("test-client");
+        verifyNoInteractions(httpResponse);
+    }
+    
+    @Test
+    void testTokenEndpoint_InvalidBasicAuthHeader_ThrowsException() {
+        // Given
+        OAuth2TokenRequest request = OAuth2TokenRequest.builder()
+            .grantType("authorization_code")
+            .code("auth-code-123")
+            .redirectUri("http://localhost:8080/callback")
+            .authorizationHeader("Basic invalid-base64") // Invalid base64
+            .build();
+            
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.token(request, httpRequest))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Failed to parse client credentials");
+    }
+    
+    @Test
+    void testTokenEndpoint_MissingClientCredentials_ThrowsException() {
+        // Given
+        OAuth2TokenRequest request = OAuth2TokenRequest.builder()
+            .grantType("authorization_code")
+            .code("auth-code-123")
+            .redirectUri("http://localhost:8080/callback")
+            // No authorization header or client credentials
+            .build();
+            
+        // When & Then
+        assertThatThrownBy(() -> oauth2Service.token(request, httpRequest))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Client credentials not provided");
     }
 }

@@ -31,12 +31,13 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"user"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"user"})
 public class DataExportRequest {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
     
     /**
@@ -315,7 +316,15 @@ public class DataExportRequest {
             return null;
         }
         
-        long daysRemaining = ChronoUnit.DAYS.between(Instant.now(), expiresAt);
+        Instant now = Instant.now();
+        if (expiresAt.isBefore(now)) {
+            return 0L; // Already expired
+        }
+        
+        // Calculate the difference in milliseconds and convert to days, rounding up
+        long millisRemaining = expiresAt.toEpochMilli() - now.toEpochMilli();
+        long daysRemaining = (millisRemaining + (24 * 60 * 60 * 1000 - 1)) / (24 * 60 * 60 * 1000);
+        
         return Math.max(0, daysRemaining);
     }
     
@@ -400,6 +409,11 @@ public class DataExportRequest {
             }
         }
         
-        return Math.max(5, estimatedMinutes);
+        // Apply minimum only for single small categories
+        if (dataCategories.size() == 1 && estimatedMinutes < 5) {
+            return 5L;
+        }
+        
+        return estimatedMinutes;
     }
 }

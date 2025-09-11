@@ -20,9 +20,9 @@ import javax.sql.DataSource;
 @Profile("test")
 public class QueryCountTestConfiguration {
 
-    @Bean
+    @Bean("queryCountDataSource")
     @Primary
-    public DataSource proxyDataSource(DataSource actualDataSource) {
+    public DataSource proxyDataSource(@org.springframework.beans.factory.annotation.Qualifier("dataSource") DataSource actualDataSource) {
         ChainListener listener = new ChainListener();
         DataSourceQueryCountListener queryCountListener = new DataSourceQueryCountListener();
         listener.addListener(queryCountListener);

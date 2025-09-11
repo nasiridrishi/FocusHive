@@ -21,7 +21,7 @@ import java.util.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"personas", "oauthClients"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"password", "personas", "oauthClients"})
 @NamedEntityGraph(
     name = "User.withPersonas",
@@ -47,6 +47,7 @@ public class User implements UserDetails {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
     
     @Column(unique = true, nullable = false, length = 100)
@@ -109,7 +110,7 @@ public class User implements UserDetails {
     @Builder.Default
     private String timezone = "UTC";
     
-    @Column(name = "notification_preferences", columnDefinition = "jsonb")
+    @Column(name = "notification_preferences")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Builder.Default
     private Map<String, Boolean> notificationPreferences = new HashMap<>();
@@ -194,15 +195,19 @@ public class User implements UserDetails {
      * Add a persona to this user.
      */
     public void addPersona(Persona persona) {
-        personas.add(persona);
-        persona.setUser(this);
+        if (persona != null) {
+            personas.add(persona);
+            persona.setUser(this);
+        }
     }
     
     /**
      * Remove a persona from this user.
      */
     public void removePersona(Persona persona) {
-        personas.remove(persona);
-        persona.setUser(null);
+        if (persona != null) {
+            personas.remove(persona);
+            persona.setUser(null);
+        }
     }
 }

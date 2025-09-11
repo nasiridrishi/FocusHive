@@ -1,7 +1,7 @@
 package com.focushive.identity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.focushive.identity.config.TestConfig;
+import com.focushive.identity.IdentityServiceApplication;
 import com.focushive.identity.config.TestSecurityConfig;
 import com.focushive.identity.entity.Persona;
 import com.focushive.identity.entity.User;
@@ -12,9 +12,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -30,16 +33,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-@Import({TestConfig.class, TestSecurityConfig.class})
+@ActiveProfiles({"test", "h2"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@EnableAutoConfiguration(exclude = {
-    org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration.class
-})
+@Transactional
+@Import(TestSecurityConfig.class)
 @DisplayName("PerformanceTestController Integration Tests")
 class PerformanceTestControllerTest {
 
@@ -79,32 +76,49 @@ class PerformanceTestControllerTest {
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(jsonPath("$.message").value("PerformanceTestController is working"));
     }
+    
+    @Test
+    @DisplayName("Should return simple test response")
+    void simple_ShouldReturnTestResponse() throws Exception {
+        mockMvc.perform(get("/api/v1/performance-test/simple"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.test").value("working"));
+    }
+    
+    @Test
+    @DisplayName("Should return basic test response")
+    void basic_ShouldReturnTestResponse() throws Exception {
+        mockMvc.perform(get("/api/v1/performance-test/basic"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.basic").value("test"));
+    }
+
+    @Test
+    @DisplayName("Should return debug response with all required fields")
+    void debug_ShouldReturnDebugResponse() throws Exception {
+        mockMvc.perform(get("/api/v1/performance-test/debug"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.queryCount").isNumber())
+                .andExpect(jsonPath("$.executionTime").isString())
+                .andExpect(jsonPath("$.usersLoaded").isNumber())
+                .andExpect(jsonPath("$.personasLoaded").isNumber())
+                .andExpect(jsonPath("$.entityLoadCount").isNumber())
+                .andExpect(jsonPath("$.collectionLoadCount").isNumber())
+                .andExpect(jsonPath("$.message").value("Debug endpoint working"));
+    }
 
     @Test
     @DisplayName("Should setup test data successfully")
     void setupTestData_ShouldCreateUsersAndPersonas() throws Exception {
         int userCount = 5;
 
-        String response = mockMvc.perform(post("/api/v1/performance-test/setup-test-data")
+        mockMvc.perform(post("/api/v1/performance-test/setup-test-data")
                         .param("userCount", String.valueOf(userCount))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        
-        System.out.println("Response: " + response);
-        
-        // Only proceed with JSON assertions if we have content
-        if (!response.isEmpty()) {
-            mockMvc.perform(post("/api/v1/performance-test/setup-test-data")
-                            .param("userCount", String.valueOf(userCount))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.usersCreated").value(userCount))
-                    .andExpect(jsonPath("$.personasCreated").value(userCount * 3)) // 3 personas per user
-                    .andExpect(jsonPath("$.message").value("Test data created successfully"));
-        }
+                .andExpect(jsonPath("$.usersCreated").value(userCount))
+                .andExpect(jsonPath("$.personasCreated").value(userCount * 3)) // 3 personas per user
+                .andExpect(jsonPath("$.message").value("Test data created successfully"));
 
         // Verify data was actually created
         long actualUserCount = userRepository.count();

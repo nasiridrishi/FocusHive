@@ -64,7 +64,7 @@ public class PersonaActivity {
     private String status = "ACTIVE";
     
     // Metadata for extensibility
-    @Column(name = "metadata", columnDefinition = "jsonb")
+    @Column(name = "metadata")
     @Convert(converter = JsonAttributeConverter.class)
     @Builder.Default
     private Map<String, Object> metadata = new HashMap<>();

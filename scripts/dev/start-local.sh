@@ -5,6 +5,9 @@
 
 set -e  # Exit on error
 
+# Set JAVA_HOME for the script
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -55,7 +58,10 @@ echo ""
 # Function to check if port is in use
 check_port() {
     local port=$1
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+    # Try netstat first, fall back to lsof if needed
+    if netstat -tln 2>/dev/null | grep -q ":$port "; then
+        return 0
+    elif lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
         return 0
     else
         return 1
@@ -81,6 +87,34 @@ wait_for_service() {
     done
     echo -e " ${GREEN}Ready!${NC}"
     return 0
+}
+
+# Function to wait for Redis specifically
+wait_for_redis() {
+    local service=$1
+    local port=$2
+    local password=$3
+    local container=$4
+    local max_attempts=30
+    local attempt=1
+    
+    echo -n "Waiting for $service on port $port..."
+    while true; do
+        if [ $attempt -eq $max_attempts ]; then
+            echo -e " ${RED}Failed!${NC}"
+            return 1
+        fi
+        
+        # Check if container is running and Redis responds to ping
+        if docker exec "$container" redis-cli -a "$password" ping >/dev/null 2>&1; then
+            echo -e " ${GREEN}Ready!${NC}"
+            return 0
+        fi
+        
+        echo -n "."
+        sleep 2
+        attempt=$((attempt + 1))
+    done
 }
 
 # Function to add colored prefix to output
@@ -148,6 +182,10 @@ start_service() {
         REDIS_PORT="$IDENTITY_REDIS_PORT" \
         REDIS_PASSWORD="identity_redis_pass" \
         SERVER_PORT="$IDENTITY_PORT" \
+        SPRING_PROFILES_ACTIVE="dev" \
+        SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5433/$IDENTITY_DB_NAME" \
+        SPRING_DATASOURCE_USERNAME="$IDENTITY_DB_USER" \
+        SPRING_DATASOURCE_PASSWORD="$IDENTITY_DB_PASSWORD" \
         ./gradlew bootRun 2>&1 | add_prefix "$prefix_name" "$prefix_color" &
     else
         # Other services use main database
@@ -259,7 +297,7 @@ if ! check_port $REDIS_PORT; then
         --rm \
         redis:7-alpine \
         redis-server --requirepass focushive_pass
-    wait_for_service "Redis (Main)" $REDIS_PORT
+    wait_for_redis "Redis (Main)" $REDIS_PORT "focushive_pass" "focushive-redis"
 else
     echo -e "${YELLOW}Redis (Main) already running on port $REDIS_PORT${NC}"
 fi
@@ -271,7 +309,7 @@ if ! check_port $IDENTITY_REDIS_PORT; then
         --rm \
         redis:7-alpine \
         redis-server --requirepass identity_redis_pass
-    wait_for_service "Redis (Identity)" $IDENTITY_REDIS_PORT
+    wait_for_redis "Redis (Identity)" $IDENTITY_REDIS_PORT "identity_redis_pass" "focushive-identity-redis"
 else
     echo -e "${YELLOW}Redis (Identity) already running on port $IDENTITY_REDIS_PORT${NC}"
 fi

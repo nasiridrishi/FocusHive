@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class AuthController {
         @ApiResponse(responseCode = "400", description = "Invalid input data"),
         @ApiResponse(responseCode = "409", description = "User already exists")
     })
-    @PostMapping("/register")
+    @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) {
         log.info("Processing user registration request");
         AuthenticationResponse response = authenticationService.register(request);
@@ -48,7 +49,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Successfully authenticated"),
         @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
-    @PostMapping("/login")
+    @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody LoginRequest request) {
         log.info("User login attempt for: {}", request.getUsernameOrEmail());
         AuthenticationResponse response = authenticationService.login(request);
@@ -61,7 +62,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Token successfully refreshed"),
         @ApiResponse(responseCode = "401", description = "Invalid refresh token")
     })
-    @PostMapping("/refresh")
+    @PostMapping(value = "/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AuthenticationResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         AuthenticationResponse response = authenticationService.refreshToken(request);
         return ResponseEntity.ok(response);
@@ -73,7 +74,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Token is valid"),
         @ApiResponse(responseCode = "401", description = "Invalid token")
     })
-    @PostMapping("/validate")
+    @PostMapping(value = "/validate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ValidateTokenResponse> validateToken(
             @Valid @RequestBody ValidateTokenRequest request) {
         ValidateTokenResponse response = authenticationService.validateToken(request);
@@ -86,7 +87,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Token information returned"),
         @ApiResponse(responseCode = "401", description = "Invalid token")
     })
-    @PostMapping("/introspect")
+    @PostMapping(value = "/introspect", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<IntrospectTokenResponse> introspectToken(
             @Valid @RequestBody IntrospectTokenRequest request) {
         IntrospectTokenResponse response = authenticationService.introspectToken(request);
@@ -99,7 +100,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Successfully logged out"),
         @ApiResponse(responseCode = "401", description = "Not authenticated")
     })
-    @PostMapping("/logout")
+    @PostMapping(value = "/logout", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MessageResponse> logout(
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody LogoutRequest request,
@@ -114,7 +115,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Reset email sent if user exists"),
         @ApiResponse(responseCode = "400", description = "Invalid request")
     })
-    @PostMapping("/password/reset-request")
+    @PostMapping(value = "/password/reset-request", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MessageResponse> requestPasswordReset(
             @Valid @RequestBody PasswordResetRequest request) {
         authenticationService.requestPasswordReset(request.getEmail());
@@ -128,7 +129,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Password successfully reset"),
         @ApiResponse(responseCode = "400", description = "Invalid or expired token")
     })
-    @PostMapping("/password/reset")
+    @PostMapping(value = "/password/reset", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MessageResponse> resetPassword(
             @Valid @RequestBody PasswordResetConfirmRequest request) {
         authenticationService.resetPassword(request);
@@ -142,7 +143,7 @@ public class AuthController {
         @ApiResponse(responseCode = "404", description = "Persona not found"),
         @ApiResponse(responseCode = "401", description = "Not authenticated")
     })
-    @PostMapping("/personas/switch")
+    @PostMapping(value = "/personas/switch", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AuthenticationResponse> switchPersona(
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody SwitchPersonaRequest request,

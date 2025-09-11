@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -51,6 +52,11 @@ public class AuthenticationService {
     @Transactional
     public AuthenticationResponse register(RegisterRequest request) {
         log.info("Processing user registration request");
+        
+        // Validate email format
+        if (!isValidEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
         
         // Check if user already exists
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -104,12 +110,18 @@ public class AuthenticationService {
         log.info("Processing login for: {}", request.getUsernameOrEmail());
         
         // Authenticate
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsernameOrEmail(),
-                        request.getPassword()
-                )
-        );
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsernameOrEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            log.warn("Invalid login attempt for: {}", request.getUsernameOrEmail());
+            throw new AuthenticationException("Invalid username or password");
+        }
         
         User user = (User) authentication.getPrincipal();
         
@@ -450,5 +462,18 @@ public class AuthenticationService {
                 .isDefault(persona.isDefault())
                 .isActive(persona.isActive())
                 .build();
+    }
+    
+    /**
+     * Validate email format using a simple regex pattern.
+     */
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Simple email validation regex
+        String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        return email.matches(emailPattern);
     }
 }
