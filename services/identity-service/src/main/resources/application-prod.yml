@@ -503,26 +503,23 @@ spring:
   config:
     activate:
       on-profile: prod-high-load
-      
-# Increased capacity for high-load scenarios
-server:
-  tomcat:
-    max-threads: 400
-    min-spare-threads: 50
-    max-connections: 16384
-
-spring:
   redis:
     lettuce:
       pool:
         max-active: 50
         max-idle: 20
         min-idle: 10
-
   datasource:
     hikari:
       maximum-pool-size: 50
       minimum-idle: 15
+
+# Increased capacity for high-load scenarios  
+server:
+  tomcat:
+    max-threads: 400
+    min-spare-threads: 50
+    max-connections: 16384
 
 resilience4j:
   ratelimiter:

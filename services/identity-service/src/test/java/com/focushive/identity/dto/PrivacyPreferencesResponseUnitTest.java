@@ -1,6 +1,7 @@
 package com.focushive.identity.dto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +28,8 @@ class PrivacyPreferencesResponseUnitTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.findAndRegisterModules();
+        // Ensure Jackson writes timestamps as ISO strings, not arrays or numbers
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @Nested
@@ -443,17 +446,17 @@ class PrivacyPreferencesResponseUnitTest {
 
             // Then
             assertAll(
-                    () -> assertThat(json).contains("\"marketingCommunicationConsent\":false"),
-                    () -> assertThat(json).contains("\"analyticsConsent\":true"),
-                    () -> assertThat(json).contains("\"thirdPartyDataSharingConsent\":false"),
-                    () -> assertThat(json).contains("\"accountVisibility\":\"private\""),
-                    () -> assertThat(json).contains("\"profileVisibility\":\"friends\""),
-                    () -> assertThat(json).contains("\"activityVisibility\":\"hidden\""),
-                    () -> assertThat(json).contains("\"dataRetentionDays\":365"),
-                    () -> assertThat(json).contains("\"autoDataDeletion\":true"),
-                    () -> assertThat(json).contains("\"updatedAt\":\"2023-12-01T10:15:30Z\""),
-                    () -> assertThat(json).contains("\"consentStatus\":{"),
-                    () -> assertThat(json).contains("\"dataSharingPreferences\":{")
+                    () -> assertThat(json).contains("\"marketing_communication_consent\":false"),
+                    () -> assertThat(json).contains("\"analytics_consent\":true"),
+                    () -> assertThat(json).contains("\"third_party_data_sharing_consent\":false"),
+                    () -> assertThat(json).contains("\"account_visibility\":\"private\""),
+                    () -> assertThat(json).contains("\"profile_visibility\":\"friends\""),
+                    () -> assertThat(json).contains("\"activity_visibility\":\"hidden\""),
+                    () -> assertThat(json).contains("\"data_retention_days\":365"),
+                    () -> assertThat(json).contains("\"auto_data_deletion\":true"),
+                    () -> assertThat(json).contains("\"updated_at\":\"2023-12-01T10:15:30Z\""),
+                    () -> assertThat(json).contains("\"consent_status\":{"),
+                    () -> assertThat(json).contains("\"data_sharing_preferences\":{")
             );
         }
 
@@ -463,23 +466,23 @@ class PrivacyPreferencesResponseUnitTest {
             // Given
             String json = """
                 {
-                    "consentStatus": {
+                    "consent_status": {
                         "gdpr": true,
                         "marketing": false
                     },
-                    "dataSharingPreferences": {
+                    "data_sharing_preferences": {
                         "analytics": "restricted",
                         "marketing": "disabled"
                     },
-                    "marketingCommunicationConsent": false,
-                    "analyticsConsent": true,
-                    "thirdPartyDataSharingConsent": false,
-                    "accountVisibility": "private",
-                    "profileVisibility": "friends",
-                    "activityVisibility": "hidden",
-                    "dataRetentionDays": 365,
-                    "autoDataDeletion": true,
-                    "updatedAt": "2023-12-01T10:15:30Z"
+                    "marketing_communication_consent": false,
+                    "analytics_consent": true,
+                    "third_party_data_sharing_consent": false,
+                    "account_visibility": "private",
+                    "profile_visibility": "friends",
+                    "activity_visibility": "hidden",
+                    "data_retention_days": 365,
+                    "auto_data_deletion": true,
+                    "updated_at": "2023-12-01T10:15:30Z"
                 }
                 """;
 
@@ -513,17 +516,17 @@ class PrivacyPreferencesResponseUnitTest {
             // Given
             String json = """
                 {
-                    "consentStatus": null,
-                    "dataSharingPreferences": null,
-                    "marketingCommunicationConsent": null,
-                    "analyticsConsent": null,
-                    "thirdPartyDataSharingConsent": null,
-                    "accountVisibility": null,
-                    "profileVisibility": null,
-                    "activityVisibility": null,
-                    "dataRetentionDays": null,
-                    "autoDataDeletion": null,
-                    "updatedAt": null
+                    "consent_status": null,
+                    "data_sharing_preferences": null,
+                    "marketing_communication_consent": null,
+                    "analytics_consent": null,
+                    "third_party_data_sharing_consent": null,
+                    "account_visibility": null,
+                    "profile_visibility": null,
+                    "activity_visibility": null,
+                    "data_retention_days": null,
+                    "auto_data_deletion": null,
+                    "updated_at": null
                 }
                 """;
 
@@ -571,8 +574,8 @@ class PrivacyPreferencesResponseUnitTest {
             // Given
             String json = """
                 {
-                    "consentStatus": {},
-                    "dataSharingPreferences": {}
+                    "consent_status": {},
+                    "data_sharing_preferences": {}
                 }
                 """;
 

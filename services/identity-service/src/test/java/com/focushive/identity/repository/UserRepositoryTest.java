@@ -216,7 +216,7 @@ class UserRepositoryTest {
         User saved = entityManager.persistAndFlush(testUser);
         saved.setFirstName("Updated");
         saved.setLastName("Name");
-        saved.setUpdatedAt(Instant.now());
+        // Don't manually set updatedAt - let @UpdateTimestamp handle it
 
         // When
         User updated = userRepository.save(saved);
@@ -227,8 +227,10 @@ class UserRepositoryTest {
         assertThat(updated.getLastName()).isEqualTo("Name");
 
         // Verify in database
+        entityManager.flush();
         entityManager.clear();
         User found = entityManager.find(User.class, saved.getId());
+        assertThat(found).isNotNull();
         assertThat(found.getFirstName()).isEqualTo("Updated");
         assertThat(found.getLastName()).isEqualTo("Name");
     }
@@ -254,21 +256,25 @@ class UserRepositoryTest {
         // Given
         User saved = entityManager.persistAndFlush(testUser);
         
-        // Simulate concurrent modification
+        // Simulate concurrent modification - both users loaded with same initial state
         User user1 = userRepository.findById(saved.getId()).orElseThrow();
         User user2 = userRepository.findById(saved.getId()).orElseThrow();
         
         user1.setFirstName("First Update");
         user2.setLastName("Second Update");
 
-        // When
+        // When - save in sequence (last writer wins scenario)
         userRepository.save(user1);
+        entityManager.flush(); // Ensure first save is committed
         userRepository.save(user2);
+        entityManager.flush(); // Ensure second save is committed
 
-        // Then
+        // Then - both saves should have persisted their respective changes
+        // This demonstrates that JPA/Hibernate handles concurrent field updates gracefully
         entityManager.clear();
         User result = userRepository.findById(saved.getId()).orElseThrow();
         assertThat(result.getLastName()).isEqualTo("Second Update");
+        assertThat(result.getFirstName()).isEqualTo("First Update");
     }
 
     @Test

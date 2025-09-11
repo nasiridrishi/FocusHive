@@ -1,5 +1,6 @@
 package com.focushive.identity.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "OAuth2 Authorization Server Metadata (RFC 8414)")
 public class OAuth2ServerMetadata {
 
@@ -27,6 +29,14 @@ public class OAuth2ServerMetadata {
     @JsonProperty("token_endpoint")
     @Schema(description = "Token endpoint URL")
     private String tokenEndpoint;
+
+    @JsonProperty("device_authorization_endpoint")
+    @Schema(description = "Device authorization endpoint URL")
+    private String deviceAuthorizationEndpoint;
+
+    @JsonProperty("device_verification_endpoint")
+    @Schema(description = "Device verification endpoint URL")
+    private String deviceVerificationEndpoint;
 
     @JsonProperty("jwks_uri")
     @Schema(description = "JWK Set endpoint URL")
@@ -63,6 +73,10 @@ public class OAuth2ServerMetadata {
     @JsonProperty("token_endpoint_auth_methods_supported")
     @Schema(description = "Supported client authentication methods")
     private List<String> tokenEndpointAuthMethodsSupported;
+
+    @JsonProperty("revocation_endpoint_auth_methods_supported")
+    @Schema(description = "Supported token revocation endpoint authentication methods")
+    private List<String> revocationEndpointAuthMethodsSupported;
 
     @JsonProperty("code_challenge_methods_supported")
     @Schema(description = "Supported PKCE code challenge methods")

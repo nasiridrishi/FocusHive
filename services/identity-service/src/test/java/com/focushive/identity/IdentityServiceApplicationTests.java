@@ -1,12 +1,15 @@
 package com.focushive.identity;
 
+import com.focushive.identity.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 @EnableAutoConfiguration(exclude = {
     org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration.class,
     org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration.class,

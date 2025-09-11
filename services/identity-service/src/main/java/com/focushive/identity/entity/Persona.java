@@ -15,20 +15,25 @@ import java.util.UUID;
  * Each user can have multiple personas (work, personal, gaming, etc.)
  */
 @Entity
-@Table(name = "personas", indexes = {
-    @Index(name = "idx_persona_user", columnList = "user_id"),
-    @Index(name = "idx_persona_active", columnList = "user_id, is_active")
-})
+@Table(name = "personas", 
+       indexes = {
+           @Index(name = "idx_persona_user", columnList = "user_id"),
+           @Index(name = "idx_persona_active", columnList = "user_id, is_active")
+       },
+       uniqueConstraints = {
+           @UniqueConstraint(name = "uk_persona_user_name", columnNames = {"user_id", "name"})
+       })
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"user"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"user"})
 public class Persona {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
     
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -78,7 +83,7 @@ public class Persona {
     private Map<String, String> customAttributes = new HashMap<>();
     
     // Notification preferences specific to this persona
-    @Column(name = "notification_preferences", columnDefinition = "jsonb")
+    @Column(name = "notification_preferences")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
     @Builder.Default
     private Map<String, Boolean> notificationPreferences = new HashMap<>();

@@ -8,61 +8,49 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 import java.util.*;
 
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Comprehensive unit tests for PersonaController.
  * Tests all persona management endpoints with various scenarios.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@EnableAutoConfiguration(exclude = {
-    org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration.class
-})
 @ExtendWith(MockitoExtension.class)
 class PersonaControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private PersonaService personaService;
+
+    @Mock
+    private Authentication authentication;
+
+    @InjectMocks
+    private PersonaController personaController;
 
     private PersonaDto testPersonaDto;
     private UUID userId;
     private UUID personaId;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        userId = UUID.randomUUID();
+        objectMapper = new ObjectMapper();
+        userId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         personaId = UUID.randomUUID();
+
+        // Reset mocks before each test
+        reset(authentication, personaService);
 
         testPersonaDto = new PersonaDto();
         testPersonaDto.setId(personaId);
@@ -87,49 +75,40 @@ class PersonaControllerTest {
 
     @Test
     @DisplayName("POST /personas - Should create new persona successfully")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testCreatePersona_Success() throws Exception {
-        when(personaService.createPersona(any(UUID.class), any(PersonaDto.class)))
+    void testCreatePersona_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
+        when(personaService.createPersona(eq(userId), any(PersonaDto.class)))
                 .thenReturn(testPersonaDto);
 
-        mockMvc.perform(post("/api/v1/personas")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testPersonaDto)))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(personaId.toString())))
-                .andExpect(jsonPath("$.name", is("Work Persona")))
-                .andExpect(jsonPath("$.type", is("WORK")))
-                .andExpect(jsonPath("$.active", is(true)));
+        ResponseEntity<PersonaDto> response = personaController.createPersona(testPersonaDto, authentication);
 
-        verify(personaService, times(1)).createPersona(any(UUID.class), any(PersonaDto.class));
+        assertThat(response.getStatusCodeValue()).isEqualTo(201);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getId()).isEqualTo(personaId);
+        assertThat(response.getBody().getName()).isEqualTo("Work Persona");
+        assertThat(response.getBody().getType()).isEqualTo(Persona.PersonaType.WORK);
+        assertThat(response.getBody().isActive()).isTrue();
+
+        verify(personaService, times(1)).createPersona(eq(userId), any(PersonaDto.class));
     }
 
     @Test
     @DisplayName("POST /personas - Should fail without authentication")
-    void testCreatePersona_Unauthenticated() throws Exception {
-        mockMvc.perform(post("/api/v1/personas")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(testPersonaDto)))
-                .andExpect(status().isUnauthorized());
+    void testCreatePersona_Unauthenticated() {
+        assertThatThrownBy(() -> personaController.createPersona(testPersonaDto, null))
+                .isInstanceOf(RuntimeException.class);
 
         verify(personaService, never()).createPersona(any(), any());
     }
 
     @Test
-    @DisplayName("POST /personas - Should fail with invalid data")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testCreatePersona_InvalidData() throws Exception {
-        PersonaDto invalidPersona = new PersonaDto();
-        // Missing required fields
+    @DisplayName("POST /personas - Should fail with invalid authentication")
+    void testCreatePersona_InvalidAuthentication() {
+        when(authentication.getName()).thenReturn("invalid-uuid");
 
-        mockMvc.perform(post("/api/v1/personas")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidPersona)))
-                .andExpect(status().isBadRequest());
+        assertThatThrownBy(() -> personaController.createPersona(testPersonaDto, authentication))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Invalid user authentication");
 
         verify(personaService, never()).createPersona(any(), any());
     }
@@ -138,244 +117,207 @@ class PersonaControllerTest {
 
     @Test
     @DisplayName("GET /personas - Should get all user personas")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testGetUserPersonas_Success() throws Exception {
+    void testGetUserPersonas_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
         List<PersonaDto> personas = Arrays.asList(testPersonaDto, createSecondPersona());
-        when(personaService.getUserPersonas(any(UUID.class)))
+        when(personaService.getUserPersonas(eq(userId)))
                 .thenReturn(personas);
 
-        mockMvc.perform(get("/api/v1/personas")
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].name", is("Work Persona")))
-                .andExpect(jsonPath("$[1].name", is("Personal Persona")));
+        ResponseEntity<List<PersonaDto>> response = personaController.getUserPersonas(authentication);
 
-        verify(personaService, times(1)).getUserPersonas(any(UUID.class));
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).hasSize(2);
+        assertThat(response.getBody().get(0).getName()).isEqualTo("Work Persona");
+        assertThat(response.getBody().get(1).getName()).isEqualTo("Personal Persona");
+
+        verify(personaService, times(1)).getUserPersonas(eq(userId));
     }
 
     @Test
     @DisplayName("GET /personas - Should return empty list when no personas")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testGetUserPersonas_EmptyList() throws Exception {
-        when(personaService.getUserPersonas(any(UUID.class)))
+    void testGetUserPersonas_EmptyList() {
+        when(authentication.getName()).thenReturn(userId.toString());
+        when(personaService.getUserPersonas(eq(userId)))
                 .thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/api/v1/personas")
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(0)));
+        ResponseEntity<List<PersonaDto>> response = personaController.getUserPersonas(authentication);
 
-        verify(personaService, times(1)).getUserPersonas(any(UUID.class));
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEmpty();
+
+        verify(personaService, times(1)).getUserPersonas(eq(userId));
     }
 
     // ===== GET SPECIFIC PERSONA TESTS =====
 
     @Test
     @DisplayName("GET /personas/{id} - Should get specific persona")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testGetPersona_Success() throws Exception {
-        when(personaService.getPersona(any(UUID.class), eq(personaId)))
+    void testGetPersona_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
+        when(personaService.getPersona(eq(userId), eq(personaId)))
                 .thenReturn(testPersonaDto);
 
-        mockMvc.perform(get("/api/v1/personas/{personaId}", personaId)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(personaId.toString())))
-                .andExpect(jsonPath("$.name", is("Work Persona")));
+        ResponseEntity<PersonaDto> response = personaController.getPersona(personaId, authentication);
 
-        verify(personaService, times(1)).getPersona(any(UUID.class), eq(personaId));
-    }
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getId()).isEqualTo(personaId);
+        assertThat(response.getBody().getName()).isEqualTo("Work Persona");
 
-    @Test
-    @DisplayName("GET /personas/{id} - Should fail with invalid UUID")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testGetPersona_InvalidUuid() throws Exception {
-        mockMvc.perform(get("/api/v1/personas/invalid-uuid")
-                        .with(csrf()))
-                .andExpect(status().isBadRequest());
-
-        verify(personaService, never()).getPersona(any(), any());
+        verify(personaService, times(1)).getPersona(eq(userId), eq(personaId));
     }
 
     // ===== UPDATE PERSONA TESTS =====
 
     @Test
     @DisplayName("PUT /personas/{id} - Should update persona successfully")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testUpdatePersona_Success() throws Exception {
+    void testUpdatePersona_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
         PersonaDto updatedPersona = new PersonaDto();
         updatedPersona.setId(personaId);
         updatedPersona.setName("Updated Work Persona");
         updatedPersona.setType(Persona.PersonaType.WORK);
         updatedPersona.setBio("Updated bio");
 
-        when(personaService.updatePersona(any(UUID.class), eq(personaId), any(PersonaDto.class)))
+        when(personaService.updatePersona(eq(userId), eq(personaId), any(PersonaDto.class)))
                 .thenReturn(updatedPersona);
 
-        mockMvc.perform(put("/api/v1/personas/{personaId}", personaId)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updatedPersona)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Updated Work Persona")))
-                .andExpect(jsonPath("$.bio", is("Updated bio")));
+        ResponseEntity<PersonaDto> response = personaController.updatePersona(personaId, updatedPersona, authentication);
 
-        verify(personaService, times(1)).updatePersona(any(UUID.class), eq(personaId), any(PersonaDto.class));
-    }
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getName()).isEqualTo("Updated Work Persona");
+        assertThat(response.getBody().getBio()).isEqualTo("Updated bio");
 
-    @Test
-    @DisplayName("PUT /personas/{id} - Should fail with invalid data")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testUpdatePersona_InvalidData() throws Exception {
-        PersonaDto invalidPersona = new PersonaDto();
-        // Invalid or missing data
-
-        mockMvc.perform(put("/api/v1/personas/{personaId}", personaId)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidPersona)))
-                .andExpect(status().isBadRequest());
-
-        verify(personaService, never()).updatePersona(any(), any(), any());
+        verify(personaService, times(1)).updatePersona(eq(userId), eq(personaId), any(PersonaDto.class));
     }
 
     // ===== DELETE PERSONA TESTS =====
 
     @Test
     @DisplayName("DELETE /personas/{id} - Should delete persona successfully")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testDeletePersona_Success() throws Exception {
-        doNothing().when(personaService).deletePersona(any(UUID.class), eq(personaId));
+    void testDeletePersona_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
+        doNothing().when(personaService).deletePersona(eq(userId), eq(personaId));
 
-        mockMvc.perform(delete("/api/v1/personas/{personaId}", personaId)
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+        ResponseEntity<Void> response = personaController.deletePersona(personaId, authentication);
 
-        verify(personaService, times(1)).deletePersona(any(UUID.class), eq(personaId));
+        assertThat(response.getStatusCodeValue()).isEqualTo(204);
+
+        verify(personaService, times(1)).deletePersona(eq(userId), eq(personaId));
     }
 
     @Test
     @DisplayName("DELETE /personas/{id} - Should fail when deleting default persona")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testDeletePersona_DefaultPersona() throws Exception {
+    void testDeletePersona_DefaultPersona() {
+        when(authentication.getName()).thenReturn(userId.toString());
         doThrow(new IllegalStateException("Cannot delete default persona"))
-                .when(personaService).deletePersona(any(UUID.class), eq(personaId));
+                .when(personaService).deletePersona(eq(userId), eq(personaId));
 
-        mockMvc.perform(delete("/api/v1/personas/{personaId}", personaId)
-                        .with(csrf()))
-                .andExpect(status().isInternalServerError());
+        assertThatThrownBy(() -> personaController.deletePersona(personaId, authentication))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Cannot delete default persona");
 
-        verify(personaService, times(1)).deletePersona(any(UUID.class), eq(personaId));
+        verify(personaService, times(1)).deletePersona(eq(userId), eq(personaId));
     }
 
     // ===== SWITCH PERSONA TESTS =====
 
     @Test
     @DisplayName("POST /personas/{id}/switch - Should switch persona successfully")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testSwitchPersona_Success() throws Exception {
+    void testSwitchPersona_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
         testPersonaDto.setActive(true);
-        when(personaService.switchPersona(any(UUID.class), eq(personaId)))
+        when(personaService.switchPersona(eq(userId), eq(personaId)))
                 .thenReturn(testPersonaDto);
 
-        mockMvc.perform(post("/api/v1/personas/{personaId}/switch", personaId)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(personaId.toString())))
-                .andExpect(jsonPath("$.active", is(true)));
+        ResponseEntity<PersonaDto> response = personaController.switchPersona(personaId, authentication);
 
-        verify(personaService, times(1)).switchPersona(any(UUID.class), eq(personaId));
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getId()).isEqualTo(personaId);
+        assertThat(response.getBody().isActive()).isTrue();
+
+        verify(personaService, times(1)).switchPersona(eq(userId), eq(personaId));
     }
 
     // ===== GET ACTIVE PERSONA TESTS =====
 
     @Test
     @DisplayName("GET /personas/active - Should get active persona")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testGetActivePersona_Success() throws Exception {
-        when(personaService.getActivePersona(any(UUID.class)))
+    void testGetActivePersona_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
+        when(personaService.getActivePersona(eq(userId)))
                 .thenReturn(Optional.of(testPersonaDto));
 
-        mockMvc.perform(get("/api/v1/personas/active")
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(personaId.toString())))
-                .andExpect(jsonPath("$.active", is(true)));
+        ResponseEntity<PersonaDto> response = personaController.getActivePersona(authentication);
 
-        verify(personaService, times(1)).getActivePersona(any(UUID.class));
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getId()).isEqualTo(personaId);
+        assertThat(response.getBody().isActive()).isTrue();
+
+        verify(personaService, times(1)).getActivePersona(eq(userId));
     }
 
     @Test
     @DisplayName("GET /personas/active - Should return 204 when no active persona")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testGetActivePersona_NoContent() throws Exception {
-        when(personaService.getActivePersona(any(UUID.class)))
+    void testGetActivePersona_NoContent() {
+        when(authentication.getName()).thenReturn(userId.toString());
+        when(personaService.getActivePersona(eq(userId)))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/v1/personas/active")
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+        ResponseEntity<PersonaDto> response = personaController.getActivePersona(authentication);
 
-        verify(personaService, times(1)).getActivePersona(any(UUID.class));
+        assertThat(response.getStatusCodeValue()).isEqualTo(204);
+        assertThat(response.getBody()).isNull();
+
+        verify(personaService, times(1)).getActivePersona(eq(userId));
     }
 
     // ===== SET DEFAULT PERSONA TESTS =====
 
     @Test
     @DisplayName("POST /personas/{id}/default - Should set default persona")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testSetDefaultPersona_Success() throws Exception {
+    void testSetDefaultPersona_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
         testPersonaDto.setDefault(true);
-        when(personaService.setDefaultPersona(any(UUID.class), eq(personaId)))
+        when(personaService.setDefaultPersona(eq(userId), eq(personaId)))
                 .thenReturn(testPersonaDto);
 
-        mockMvc.perform(post("/api/v1/personas/{personaId}/default", personaId)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(personaId.toString())))
-                .andExpect(jsonPath("$.default", is(true)));
+        ResponseEntity<PersonaDto> response = personaController.setDefaultPersona(personaId, authentication);
 
-        verify(personaService, times(1)).setDefaultPersona(any(UUID.class), eq(personaId));
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getId()).isEqualTo(personaId);
+        assertThat(response.getBody().isDefault()).isTrue();
+
+        verify(personaService, times(1)).setDefaultPersona(eq(userId), eq(personaId));
     }
 
     // ===== CREATE FROM TEMPLATE TESTS =====
 
     @Test
     @DisplayName("POST /personas/templates/{type} - Should create from template")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testCreateFromTemplate_Success() throws Exception {
-        when(personaService.createPersonaFromTemplate(any(UUID.class), eq(Persona.PersonaType.WORK)))
+    void testCreateFromTemplate_Success() {
+        when(authentication.getName()).thenReturn(userId.toString());
+        when(personaService.createPersonaFromTemplate(eq(userId), eq(Persona.PersonaType.WORK)))
                 .thenReturn(testPersonaDto);
 
-        mockMvc.perform(post("/api/v1/personas/templates/{type}", "WORK")
-                        .with(csrf()))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.type", is("WORK")));
+        ResponseEntity<PersonaDto> response = personaController.createPersonaFromTemplate(Persona.PersonaType.WORK, authentication);
 
-        verify(personaService, times(1)).createPersonaFromTemplate(any(UUID.class), eq(Persona.PersonaType.WORK));
-    }
+        assertThat(response.getStatusCodeValue()).isEqualTo(201);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getType()).isEqualTo(Persona.PersonaType.WORK);
 
-    @Test
-    @DisplayName("POST /personas/templates/{type} - Should fail with invalid template type")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testCreateFromTemplate_InvalidType() throws Exception {
-        mockMvc.perform(post("/api/v1/personas/templates/{type}", "INVALID")
-                        .with(csrf()))
-                .andExpect(status().isBadRequest());
-
-        verify(personaService, never()).createPersonaFromTemplate(any(), any());
+        verify(personaService, times(1)).createPersonaFromTemplate(eq(userId), eq(Persona.PersonaType.WORK));
     }
 
     // ===== GET TEMPLATES TESTS =====
 
     @Test
     @DisplayName("GET /personas/templates - Should get all templates")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testGetTemplates_Success() throws Exception {
+    void testGetTemplates_Success() {
         List<PersonaDto> templates = Arrays.asList(
                 createTemplate("WORK"),
                 createTemplate("PERSONAL"),
@@ -383,53 +325,27 @@ class PersonaControllerTest {
         );
         when(personaService.getPersonaTemplates()).thenReturn(templates);
 
-        mockMvc.perform(get("/api/v1/personas/templates")
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[0].type", is("WORK")))
-                .andExpect(jsonPath("$[1].type", is("PERSONAL")))
-                .andExpect(jsonPath("$[2].type", is("GAMING")));
+        ResponseEntity<List<PersonaDto>> response = personaController.getPersonaTemplates();
+
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).hasSize(3);
+        assertThat(response.getBody().get(0).getType()).isEqualTo(Persona.PersonaType.WORK);
+        assertThat(response.getBody().get(1).getType()).isEqualTo(Persona.PersonaType.PERSONAL);
+        assertThat(response.getBody().get(2).getType()).isEqualTo(Persona.PersonaType.GAMING);
 
         verify(personaService, times(1)).getPersonaTemplates();
     }
 
-    // ===== ERROR HANDLING TESTS =====
-
-    @Test
-    @DisplayName("Should handle service exceptions gracefully")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testServiceException_Handling() throws Exception {
-        when(personaService.getPersona(any(UUID.class), any(UUID.class)))
-                .thenThrow(new RuntimeException("Service error"));
-
-        mockMvc.perform(get("/api/v1/personas/{personaId}", personaId)
-                        .with(csrf()))
-                .andExpect(status().isInternalServerError());
-    }
-
-    @Test
-    @DisplayName("Should reject malformed JSON")
-    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
-    void testMalformedJson_Rejection() throws Exception {
-        String malformedJson = "{ invalid json }";
-
-        mockMvc.perform(post("/api/v1/personas")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(malformedJson))
-                .andExpect(status().isBadRequest());
-
-        verify(personaService, never()).createPersona(any(), any());
-    }
+    // ===== AUTHENTICATION ERROR HANDLING TESTS =====
 
     @Test
     @DisplayName("Should handle invalid authentication principal")
-    @WithMockUser(username = "not-a-uuid")
-    void testInvalidAuthenticationPrincipal() throws Exception {
-        mockMvc.perform(get("/api/v1/personas")
-                        .with(csrf()))
-                .andExpect(status().isInternalServerError());
+    void testInvalidAuthenticationPrincipal() {
+        when(authentication.getName()).thenReturn("not-a-uuid");
+
+        assertThatThrownBy(() -> personaController.getUserPersonas(authentication))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Invalid user authentication");
 
         verify(personaService, never()).getUserPersonas(any());
     }

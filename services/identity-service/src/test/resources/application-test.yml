@@ -39,6 +39,7 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration
+      # Note: OAuth2AuthorizationServerAutoConfiguration is now allowed for integration tests
 
 server:
   port: 0  # Random port for tests
@@ -77,7 +78,10 @@ app:
 logging:
   level:
     com.focushive.identity: DEBUG
-    org.springframework.security: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.oauth2.server.authorization: DEBUG
+    org.springframework.web: DEBUG
     org.hibernate.SQL: false
     
 management:
