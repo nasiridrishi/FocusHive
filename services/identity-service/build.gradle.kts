@@ -105,6 +105,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("com.redis.testcontainers:testcontainers-redis:1.6.4")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.h2database:h2")
     runtimeOnly("com.h2database:h2")

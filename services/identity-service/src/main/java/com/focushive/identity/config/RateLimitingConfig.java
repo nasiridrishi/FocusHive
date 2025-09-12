@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -25,7 +26,7 @@ import java.time.Duration;
 @ConditionalOnProperty(name = "focushive.rate-limiting.enabled", havingValue = "true", matchIfMissing = true)
 public class RateLimitingConfig implements WebMvcConfigurer {
     
-    private final RateLimitingInterceptor rateLimitingInterceptor;
+    private final @Lazy RateLimitingInterceptor rateLimitingInterceptor;
     private final JedisConnectionFactory jedisConnectionFactory;
     
     @Override

@@ -8,6 +8,8 @@ import 'focus-visible'
 // The EnvironmentProvider will validate environment variables at startup
 // and show an error page if required variables are missing.
 
+// PWA functionality is automatically initialized through PWAProvider in App.tsx
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

@@ -98,7 +98,7 @@ class AuthorizationSecurityTest {
         testPersona = new PersonaDto();
         testPersona.setId(testPersonaId);
         testPersona.setName("Test Persona");
-        testPersona.setDescription("Test persona for authorization tests");
+        testPersona.setBio("Test persona for authorization tests");
     }
 
     @Test

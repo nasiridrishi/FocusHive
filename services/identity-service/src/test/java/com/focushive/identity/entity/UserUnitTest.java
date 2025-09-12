@@ -168,13 +168,34 @@ class UserUnitTest {
         Set<OAuthClient> oauthClients = new HashSet<>(Arrays.asList(testOAuthClient));
 
         // When
-        User user = new User(
-                userId, "allArgsUser", "allargs@example.com", "password",
-                "All", "Args", true, "verify-token", "reset-token", now.plusSeconds(3600),
-                true, true, true, true, false, "2fa-secret",
-                "fr-FR", "Europe/Paris", testNotificationPreferences, personas, oauthClients,
-                now, now, now.minusSeconds(300), "10.0.0.1", null
-        );
+        User user = User.builder()
+                .id(userId)
+                .username("allArgsUser")
+                .email("allargs@example.com")
+                .password("password")
+                .firstName("All")
+                .lastName("Args")
+                .emailVerified(true)
+                .emailVerificationToken("verify-token")
+                .passwordResetToken("reset-token")
+                .passwordResetTokenExpiry(now.plusSeconds(3600))
+                .enabled(true)
+                .accountNonExpired(true)
+                .accountNonLocked(true)
+                .credentialsNonExpired(true)
+                .twoFactorEnabled(false)
+                .twoFactorSecret("2fa-secret")
+                .timezone("Europe/Paris")
+                .notificationPreferences(testNotificationPreferences)
+                .personas(personas)
+                .oauthClients(oauthClients)
+                .createdAt(now)
+                .updatedAt(now)
+                .lastLoginAt(now.minusSeconds(300))
+                .lastLoginIp("10.0.0.1")
+                .role(Role.USER)
+                .additionalRoles(new HashSet<>())
+                .build();
 
         // Then
         assertThat(user.getId()).isEqualTo(userId);
