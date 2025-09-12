@@ -83,6 +83,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
+    testImplementation("com.github.tomakehurst:wiremock-jre8:3.0.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

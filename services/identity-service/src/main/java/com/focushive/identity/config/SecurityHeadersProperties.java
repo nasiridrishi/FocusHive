@@ -234,10 +234,10 @@ public class SecurityHeadersProperties {
      */
     public static class PermissionsPolicy {
         private boolean enabled = true;
-        private final List<String> disabledFeatures = List.of(
+        private List<String> disabledFeatures = new ArrayList<>(List.of(
             "camera", "microphone", "geolocation", "interest-cohort",
             "payment", "usb", "serial", "bluetooth"
-        );
+        ));
         private final List<String> allowedFeatures = new ArrayList<>();
         private final List<String> customDirectives = new ArrayList<>();
 
@@ -246,6 +246,10 @@ public class SecurityHeadersProperties {
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
         public List<String> getDisabledFeatures() { return disabledFeatures; }
+        public void setDisabledFeatures(List<String> disabledFeatures) { 
+            this.disabledFeatures = disabledFeatures != null ? disabledFeatures : new ArrayList<>(); 
+        }
+        
         public List<String> getAllowedFeatures() { return allowedFeatures; }
         public List<String> getCustomDirectives() { return customDirectives; }
     }

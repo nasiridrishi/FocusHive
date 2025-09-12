@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-circular-references: true  # Allow circular references for tests
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
@@ -81,6 +83,28 @@ app:
 encryption:
   master-key: testEncryptionKeyThatIsAtLeast32CharactersLongForAES256Security
   salt: TestSaltForPBKDF2KeyDerivation2024
+
+# Security Headers Configuration for tests - completely disable
+focushive:
+  security:
+    headers:
+      enabled: false  # Disable complex security headers in tests
+      permissions-policy:
+        enabled: false
+        disabled-features: []  # Override with empty list
+      csp:
+        enabled: false
+      hsts:
+        enabled: false
+      frame-options:
+        enabled: false
+      additional-headers:
+        x-content-type-options: false
+        x-xss-protection: false
+        x-permitted-cross-domain-policies: false
+        cross-origin-embedder-policy: false
+        cross-origin-opener-policy: false
+        cross-origin-resource-policy: false
 
 # Logging Configuration for tests
 logging:

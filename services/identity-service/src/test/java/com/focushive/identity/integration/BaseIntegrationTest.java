@@ -1,6 +1,7 @@
 package com.focushive.identity.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -8,12 +9,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -27,18 +28,18 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ContextConfiguration(initializers = BaseIntegrationTest.Initializer.class)
 @Testcontainers
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class BaseIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:15.7-alpine")
+    static PostgreSQLContainer<?> postgresql = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("identity_service_test")
             .withUsername("test")
             .withPassword("test")
             .withReuse(true);
 
     @Container 
-    static GenericContainer<?> redis = new GenericContainer<>("redis:7.0-alpine")
-            .withExposedPorts(6379)
+    static RedisContainer redis = new RedisContainer("redis:7")
             .withReuse(true);
 
     @Autowired
@@ -65,7 +66,7 @@ public abstract class BaseIntegrationTest {
                 "spring.datasource.password=" + postgresql.getPassword(),
                 "spring.datasource.driver-class-name=" + postgresql.getDriverClassName(),
                 "spring.redis.host=" + redis.getHost(),
-                "spring.redis.port=" + redis.getMappedPort(6379),
+                "spring.redis.port=" + redis.getFirstMappedPort(),
                 "spring.jpa.hibernate.ddl-auto=create-drop",
                 "spring.flyway.enabled=false"
             ).applyTo(context.getEnvironment());

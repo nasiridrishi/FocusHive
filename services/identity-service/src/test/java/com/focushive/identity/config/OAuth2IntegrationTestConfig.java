@@ -55,7 +55,7 @@ import java.util.UUID;
  * Provides minimal override for Spring Authorization Server testing.
  */
 @TestConfiguration
-@Profile("test")
+@Profile("integration-test")
 @Import(TestConfig.class)
 public class OAuth2IntegrationTestConfig {
 

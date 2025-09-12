@@ -41,12 +41,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for OAuth2 Authorization Code Flow.
  * Tests the complete OAuth2 Authorization Code Grant flow using Spring Authorization Server.
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("integration-test")
 @Import(OAuth2IntegrationTestConfig.class)
 @Transactional
-class OAuth2AuthorizationCodeFlowIntegrationTest {
+class OAuth2AuthorizationCodeFlowIntegrationTest extends BaseIntegrationTest {
 
     private static final String TEST_CLIENT_ID = "test-client";
     private static final String TEST_CLIENT_SECRET = "test-secret";

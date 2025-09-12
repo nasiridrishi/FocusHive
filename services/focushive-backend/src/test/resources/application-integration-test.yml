@@ -1,0 +1,200 @@
+# Integration Test Configuration
+# Uses TestContainers with PostgreSQL and Redis for realistic testing
+
+spring:
+  # Allow bean definition overriding for tests
+  main:
+    allow-bean-definition-overriding: true
+    lazy-initialization: false  # Need real initialization for integration tests
+    
+  # Exclude problematic auto-configurations for integration tests
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.openfeign.FeignAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration
+
+  # PostgreSQL configuration (will be overridden by TestContainers)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/focushive_test
+    driver-class-name: org.postgresql.Driver
+    username: test
+    password: test
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+
+  # JPA Configuration for PostgreSQL
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+    defer-datasource-initialization: true
+
+  # Redis configuration (will be overridden by TestContainers)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      connect-timeout: 2000ms
+      jedis:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+
+  # Flyway disabled - use JPA schema generation for faster test setup
+  flyway:
+    enabled: false
+  
+  # TestContainers will override datasource configuration dynamically
+  test:
+    database:
+      replace: any  # Let TestContainers replace any database configuration
+
+  # Cache configuration
+  cache:
+    type: simple
+    cache-names: 
+      - hives
+      - hive-members
+      - user-presence
+      - hive-presence
+      - timer-sessions
+      - active-timers
+
+  # Security configuration for tests
+  security:
+    jwt:
+      secret: test-jwt-secret-key-that-is-long-enough-for-hs256-algorithm-minimum-256-bits-for-testing
+      expiration: 3600000
+      refresh-expiration: 7200000
+
+  # WebSocket configuration enabled for integration tests
+  websocket:
+    enabled: true
+
+# Server configuration
+server:
+  port: 0  # Random port for parallel execution
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+
+# Application features enabled for integration testing  
+app:
+  features:
+    analytics: false  # Disable external dependencies
+    authentication: false  # Using @WithMockUser instead
+    redis: false  # Disabled auto-configuration
+    websocket: false  # Disabled auto-configuration  
+    health: false
+    forum: false
+    buddy: false
+
+# External services configuration
+identity:
+  service:
+    url: http://localhost:8081
+    connect-timeout: 5000
+    read-timeout: 5000
+    api-key: integration-test-api-key
+
+# Actuator configuration
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+    info:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: false
+  tracing:
+    enabled: false
+
+# Resilience4j configuration (simplified for tests)
+resilience4j:
+  circuitbreaker:
+    instances:
+      identity-service:
+        registerHealthIndicator: false
+        enabled: true
+        failureRateThreshold: 75
+        waitDurationInOpenState: 30s
+        slidingWindowSize: 10
+  retry:
+    instances:
+      identity-service:
+        enabled: true
+        maxAttempts: 3
+        waitDuration: 1s
+  timelimiter:
+    instances:
+      identity-service:
+        timeoutDuration: 5s
+
+# Logging configuration
+logging:
+  level:
+    root: WARN
+    com.focushive: INFO
+    org.springframework: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN
+    org.testcontainers: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level [%X{testClass}] %logger{36} - %msg%n"
+
+# Test data configuration
+testdata:
+  users:
+    default:
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      email: "test@focushive.com"
+      username: "testuser"
+      displayName: "Test User"
+      enabled: true
+      roles: ["USER"]
+    admin:
+      id: "123e4567-e89b-12d3-a456-426614174001"
+      email: "admin@focushive.com"
+      username: "admin"
+      displayName: "Admin User"
+      enabled: true
+      roles: ["USER", "ADMIN"]
+  hives:
+    default:
+      id: "456e7890-e89b-12d3-a456-426614174000"
+      name: "Integration Test Hive"
+      description: "Test hive for integration tests"
+      slug: "integration-test-hive"
+      isPublic: true
+      maxMembers: 20
+      type: "STUDY"

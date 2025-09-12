@@ -34,6 +34,8 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.tracing.TracingAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
 
 server:
   port: 0  # Random port for tests

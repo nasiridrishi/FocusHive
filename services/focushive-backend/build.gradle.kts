@@ -80,6 +80,9 @@ dependencies {
     implementation("com.bucket4j:bucket4j-redis:8.7.0")
     implementation("com.bucket4j:bucket4j-core:8.7.0")
     
+    // Redis Jedis client
+    implementation("redis.clients:jedis:5.1.0")
+    
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

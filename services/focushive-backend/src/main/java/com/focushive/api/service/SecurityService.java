@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Security service for centralized authorization logic in the FocusHive Backend.
@@ -50,14 +49,13 @@ public class SecurityService {
 
         if (principal instanceof String identifier) {
             // Handle JWT tokens where principal is username or userId string
-            // Try UUID first, then username/email
-            try {
-                UUID userId = UUID.fromString(identifier);
-                return userRepository.findById(userId);
-            } catch (IllegalArgumentException e) {
-                // Not a UUID, try as username/email
-                return userRepository.findByUsernameOrEmail(identifier, identifier);
+            // Try as ID first, then username/email
+            Optional<User> userById = userRepository.findById(identifier);
+            if (userById.isPresent()) {
+                return userById;
             }
+            // Not found by ID, try as username/email
+            return userRepository.findByUsername(identifier);
         }
 
         log.warn("Unknown principal type in security context: {}", principal.getClass());
@@ -69,7 +67,7 @@ public class SecurityService {
      *
      * @return Optional containing current user ID, or empty if not authenticated
      */
-    public Optional<UUID> getCurrentUserId() {
+    public Optional<String> getCurrentUserId() {
         return getCurrentUser().map(User::getId);
     }
 
@@ -79,7 +77,7 @@ public class SecurityService {
      * @param userId The user ID to check access for
      * @return true if current user can access the user data
      */
-    public boolean hasAccessToUser(UUID userId) {
+    public boolean hasAccessToUser(String userId) {
         if (userId == null) {
             log.debug("hasAccessToUser called with null userId");
             return false;
@@ -116,7 +114,7 @@ public class SecurityService {
      * @param hiveId The hive ID to check access for
      * @return true if current user can access the hive
      */
-    public boolean hasAccessToHive(UUID hiveId) {
+    public boolean hasAccessToHive(String hiveId) {
         if (hiveId == null) {
             log.debug("hasAccessToHive called with null hiveId");
             return false;
@@ -166,7 +164,7 @@ public class SecurityService {
      * @param hiveId The hive ID to check membership for
      * @return true if current user is a member of the hive
      */
-    public boolean isHiveMember(UUID hiveId) {
+    public boolean isHiveMember(String hiveId) {
         if (hiveId == null) {
             log.debug("isHiveMember called with null hiveId");
             return false;
@@ -183,7 +181,7 @@ public class SecurityService {
      * @param hiveId The hive ID to check ownership for
      * @return true if current user owns the hive
      */
-    public boolean isHiveOwner(UUID hiveId) {
+    public boolean isHiveOwner(String hiveId) {
         if (hiveId == null) {
             log.debug("isHiveOwner called with null hiveId");
             return false;
@@ -205,7 +203,7 @@ public class SecurityService {
      * @param hiveId The hive ID to check moderator access for
      * @return true if current user can moderate the hive
      */
-    public boolean canModerateHive(UUID hiveId) {
+    public boolean canModerateHive(String hiveId) {
         if (hiveId == null) {
             log.debug("canModerateHive called with null hiveId");
             return false;
@@ -233,7 +231,7 @@ public class SecurityService {
      * @param sessionId The session ID to check access for
      * @return true if current user can access the session
      */
-    public boolean hasAccessToTimer(UUID sessionId) {
+    public boolean hasAccessToTimer(String sessionId) {
         if (sessionId == null) {
             log.debug("hasAccessToTimer called with null sessionId");
             return false;
@@ -255,7 +253,7 @@ public class SecurityService {
      * @param hiveId The hive ID to check chat access for
      * @return true if current user can access chat in the hive
      */
-    public boolean hasAccessToChat(UUID hiveId) {
+    public boolean hasAccessToChat(String hiveId) {
         // Chat access is the same as hive member access
         return isHiveMember(hiveId) || isHiveOwner(hiveId);
     }
@@ -266,7 +264,7 @@ public class SecurityService {
      * @param ownerId The ID of the resource owner
      * @return true if current user is the owner
      */
-    public boolean isOwner(UUID ownerId) {
+    public boolean isOwner(String ownerId) {
         if (ownerId == null) {
             log.debug("isOwner called with null ownerId");
             return false;

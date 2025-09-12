@@ -51,7 +51,7 @@ if ! nc -z localhost 5433 2>/dev/null; then
     docker run -d \
       --name identity-postgres \
       -e POSTGRES_USER=identity_user \
-      -e POSTGRES_PASSWORD=identity_pass \
+      -e POSTGRES_PASSWORD=${DB_PASSWORD:-identity_pass} \
       -e POSTGRES_DB=identity_db \
       -p 5433:5432 \
       postgres:15-alpine || {
@@ -66,29 +66,43 @@ if ! nc -z localhost 5433 2>/dev/null; then
     sleep 10
 fi
 
+# SECURITY WARNING: Set these via environment variables in production
 # Set required environment variables for Identity Service
 export DB_HOST=localhost
 export DB_PORT=5433
 export DB_NAME=identity_db
 export DB_USER=identity_user
-export DB_PASSWORD=identity_pass
+export DB_PASSWORD=${DB_PASSWORD:-identity_pass}  # SECURITY: Set via env var
 
-# JWT Configuration
-export JWT_SECRET=${JWT_SECRET:-"t2+oCqx61sNBNLnJ3jm7YtdH58rrWqS7dQ4yLSD5q7c="}
+# JWT Configuration - SECURITY: Must be set via environment variable
+if [ -z "${JWT_SECRET}" ]; then
+    log_error "JWT_SECRET environment variable must be set"
+    log_info "Generate with: openssl rand -base64 64"
+    exit 1
+fi
+export JWT_SECRET=${JWT_SECRET}
 export JWT_ACCESS_TOKEN_EXPIRATION=3600000
 export JWT_REFRESH_TOKEN_EXPIRATION=2592000000
 
-# OAuth2 Configuration
-export FOCUSHIVE_CLIENT_SECRET=${FOCUSHIVE_CLIENT_SECRET:-"focushive-secret-123"}
+# OAuth2 Configuration - SECURITY: Must be set via environment variable
+if [ -z "${FOCUSHIVE_CLIENT_SECRET}" ]; then
+    log_error "FOCUSHIVE_CLIENT_SECRET environment variable must be set"
+    exit 1
+fi
+export FOCUSHIVE_CLIENT_SECRET=${FOCUSHIVE_CLIENT_SECRET}
 
-# Security Configuration (simplified for development/testing)
+# Security Configuration - SECURITY: Set via environment variables
 export KEY_STORE_PASSWORD=${KEY_STORE_PASSWORD:-"password"}
 export PRIVATE_KEY_PASSWORD=${PRIVATE_KEY_PASSWORD:-"password"}
 
-# Redis Configuration (use different port to avoid conflicts)
+# Redis Configuration - SECURITY: Set via environment variable
 export REDIS_HOST=localhost
 export REDIS_PORT=6380
-export REDIS_PASSWORD=${REDIS_PASSWORD:-"redis123"}
+if [ -z "${REDIS_PASSWORD}" ]; then
+    log_error "REDIS_PASSWORD environment variable must be set"
+    exit 1
+fi
+export REDIS_PASSWORD=${REDIS_PASSWORD}
 
 # Other configuration
 export CORS_ORIGINS="http://localhost:3000,http://localhost:5173,http://localhost:8080"

@@ -1,22 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-// Temporarily disabled PWA imports due to build issues
-// import { registerSW } from 'virtual:pwa-register';
-// import type { RegisterSWOptions } from 'virtual:pwa-register';
-
-// Stub for RegisterSWOptions
-interface RegisterSWOptions {
-  immediate?: boolean;
-  onNeedRefresh?: () => void;
-  onOfflineReady?: () => void;
-  onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
-  onRegisterError?: (error: unknown) => void;
-}
-
-// Stub registerSW function
-const registerSW = (_options?: RegisterSWOptions) => {
-  console.warn('PWA registration is currently disabled');
-  return () => Promise.resolve();
-}
+import { registerSW } from 'virtual:pwa-register';
+import type { RegisterSWOptions } from 'virtual:pwa-register';
 
 export interface ServiceWorkerRegistrationState {
   isRegistered: boolean;

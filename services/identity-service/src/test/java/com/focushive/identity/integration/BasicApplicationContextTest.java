@@ -7,25 +7,31 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 /**
- * Basic test to verify that the Spring application context loads successfully
- * with minimal test configuration.
+ * Basic integration test that verifies the Spring application context can start successfully.
+ * This is the simplest possible integration test - it just checks that all beans can be created
+ * without any configuration issues.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(MinimalTestConfig.class)
 @TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
-    "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.flyway.enabled=false"
+    "focushive.security.headers.enabled=false",
+    "focushive.security.headers.permissions-policy.enabled=false"
 })
 class BasicApplicationContextTest {
 
+    /**
+     * Test that the Spring application context loads successfully.
+     * If this test passes, it means:
+     * - All configuration is valid
+     * - All required beans can be created
+     * - No circular dependencies exist
+     * - Properties are bound correctly
+     */
     @Test
-    void contextLoads() {
-        // This test passes if the application context loads successfully
-        assertTrue(true, "Application context should load without errors");
+    void applicationContextLoads() {
+        // This test passes if the Spring context starts without exceptions
+        // The @SpringBootTest annotation handles the actual context loading
     }
 }

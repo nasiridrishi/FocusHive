@@ -5,6 +5,7 @@ import com.focushive.exception.RateLimitExceededException;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.EstimationProbe;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -99,8 +100,8 @@ public class RedisRateLimiter {
             Bucket bucket = proxyManager.builder()
                     .build(bucketKey.getBytes(), config);
             
-            Duration timeToRefill = bucket.estimateAbilityToConsume(1);
-            return timeToRefill.getSeconds();
+            EstimationProbe estimation = bucket.estimateAbilityToConsume(1);
+            return estimation.getNanosToWaitForRefill() / 1_000_000_000L;
             
         } catch (Exception e) {
             log.error("Error calculating refill time for key: {}", key, e);
