@@ -79,6 +79,14 @@ jwt:
   refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:2592000000} # 30 days
   remember-me-expiration-ms: ${JWT_REMEMBER_ME_EXPIRATION:7776000000} # 90 days
   issuer: identity-service
+  # Cookie Configuration for secure httpOnly JWT storage
+  cookie:
+    access-token-name: ${JWT_COOKIE_ACCESS_NAME:access_token}
+    refresh-token-name: ${JWT_COOKIE_REFRESH_NAME:refresh_token}
+    domain: ${JWT_COOKIE_DOMAIN:} # Leave empty for same-origin, set for subdomains
+    path: ${JWT_COOKIE_PATH:/}
+    secure: ${JWT_COOKIE_SECURE:true} # false for localhost development
+    same-site: ${JWT_COOKIE_SAME_SITE:Strict} # Strict, Lax, or None
 
 # Security Configuration
 security:
@@ -122,6 +130,11 @@ app:
   base-url: ${APP_BASE_URL:http://localhost:3000}
   email:
     from: ${EMAIL_FROM:noreply@focushive.com}
+
+# Encryption Configuration
+encryption:
+  master-key: ${ENCRYPTION_MASTER_KEY}  # Required: Must be at least 32 characters
+  salt: ${ENCRYPTION_SALT:FocusHive2024Salt}  # Optional: Default salt for key derivation
     
 # Actuator Configuration
 management:
@@ -173,3 +186,95 @@ resilience4j:
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
+
+# Rate Limiting Configuration
+focushive:
+  rate-limiting:
+    enabled: ${RATE_LIMITING_ENABLED:true}
+    redis:
+      enabled: ${RATE_LIMITING_REDIS_ENABLED:true}
+    endpoints:
+      # Login endpoint: 5 requests per minute (IP + User)
+      login:
+        limit: ${LOGIN_RATE_LIMIT:5}
+        window: 1
+        unit: MINUTES
+        type: IP_AND_USER
+      # Registration: 2 requests per minute (IP only)  
+      register:
+        limit: ${REGISTER_RATE_LIMIT:2}
+        window: 1
+        unit: MINUTES
+        type: IP
+      # Token refresh: 10 requests per minute (User only)
+      refresh:
+        limit: ${REFRESH_RATE_LIMIT:10}
+        window: 1
+        unit: MINUTES
+        type: USER
+      # Password reset request: 1 request per minute (IP only)
+      password-reset-request:
+        limit: ${PASSWORD_RESET_REQUEST_LIMIT:1}
+        window: 1
+        unit: MINUTES
+        type: IP
+      # Password reset: 3 requests per 5 minutes (IP only)
+      password-reset:
+        limit: ${PASSWORD_RESET_LIMIT:3}
+        window: 5
+        unit: MINUTES
+        type: IP
+  
+  # Security Headers Configuration
+  security:
+    headers:
+      enabled: ${SECURITY_HEADERS_ENABLED:true}
+      mode: AUTO # AUTO, DEVELOPMENT, PRODUCTION
+      
+      # HTTP Strict Transport Security (HSTS)
+      hsts:
+        enabled: ${HSTS_ENABLED:true}
+        max-age: ${HSTS_MAX_AGE:31536000} # 1 year
+        include-subdomains: ${HSTS_INCLUDE_SUBDOMAINS:true}
+        preload: ${HSTS_PRELOAD:true}
+      
+      # Content Security Policy (CSP)
+      csp:
+        enabled: ${CSP_ENABLED:true}
+        report-only: ${CSP_REPORT_ONLY:false}
+        report-uri: ${CSP_REPORT_URI:}
+        custom-directives: []
+      
+      # Frame Options
+      frame-options:
+        enabled: ${FRAME_OPTIONS_ENABLED:true}
+        policy: DENY # DENY, SAMEORIGIN, ALLOW_FROM
+        allow-from: []
+      
+      # Permissions Policy
+      permissions-policy:
+        enabled: ${PERMISSIONS_POLICY_ENABLED:true}
+        disabled-features:
+          - camera
+          - microphone  
+          - geolocation
+          - interest-cohort
+          - payment
+          - usb
+          - serial
+          - bluetooth
+          - magnetometer
+          - gyroscope
+          - accelerometer
+          - ambient-light-sensor
+        custom-directives: []
+      
+      # Additional Security Headers
+      additional-headers:
+        x-content-type-options: ${X_CONTENT_TYPE_OPTIONS:true}
+        x-xss-protection: ${X_XSS_PROTECTION:true}
+        x-permitted-cross-domain-policies: ${X_PERMITTED_CROSS_DOMAIN_POLICIES:true}
+        referrer-policy: ${REFERRER_POLICY:strict-origin-when-cross-origin}
+        cross-origin-embedder-policy: ${CROSS_ORIGIN_EMBEDDER_POLICY:false}
+        cross-origin-opener-policy: ${CROSS_ORIGIN_OPENER_POLICY:false}
+        cross-origin-resource-policy: ${CROSS_ORIGIN_RESOURCE_POLICY:false}

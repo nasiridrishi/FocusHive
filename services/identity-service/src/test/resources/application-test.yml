@@ -31,7 +31,7 @@ spring:
       authorizationserver:
         issuer: http://localhost:8081
   
-  # Auto-configuration exclusions for tests to prevent tracing bean conflicts
+  # Auto-configuration exclusions for tests to prevent tracing and Redis bean conflicts
   autoconfigure:
     exclude:
       - org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration
@@ -39,6 +39,9 @@ spring:
       - org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration
       - org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
       # Note: OAuth2AuthorizationServerAutoConfiguration is now allowed for integration tests
 
 server:
@@ -46,7 +49,7 @@ server:
 
 # JWT Configuration for tests
 jwt:
-  secret: testSecretKeyThatIsAtLeast256BitsLongForSecurityPurposes12345678
+  secret: testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposesAbcDefGhiJklMnoPqrStuVwxYz123456789
   access-token-expiration-ms: 300000  # 5 minutes for tests
   refresh-token-expiration-ms: 600000  # 10 minutes for tests
   remember-me-expiration-ms: 900000  # 15 minutes for tests
@@ -73,6 +76,11 @@ app:
   base-url: http://localhost:3000
   email:
     from: test@focushive.com
+
+# Encryption Configuration for tests
+encryption:
+  master-key: testEncryptionKeyThatIsAtLeast32CharactersLongForAES256Security
+  salt: TestSaltForPBKDF2KeyDerivation2024
 
 # Logging Configuration for tests
 logging:

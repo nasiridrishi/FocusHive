@@ -1,13 +1,17 @@
 package com.focushive.identity.config;
 
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
@@ -32,6 +36,12 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.mockito.Mockito;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -46,48 +56,29 @@ import java.util.UUID;
  */
 @TestConfiguration
 @Profile("test")
+@Import(TestConfig.class)
 public class OAuth2IntegrationTestConfig {
 
-    private static final String TEST_CLIENT_ID = "12345678-1234-1234-1234-123456789012";
-    private static final String TEST_CLIENT_SECRET = "test-client";
-    private static final String TEST_CLIENT_SECRET_VALUE = "test-secret";
+    private static final String TEST_CLIENT_REGISTRATION_ID = "12345678-1234-1234-1234-123456789012";
+    private static final String TEST_CLIENT_ID = "test-client";
+    private static final String TEST_CLIENT_SECRET = "test-secret";
 
     /**
      * OAuth2 Authorization Server security filter chain for tests.
-     * This enables all OAuth2 protocol endpoints needed for integration tests.
+     * Uses the default Spring Authorization Server configuration.
      */
     @Bean
-    @Order(1) // High priority to ensure it handles OAuth2 requests first
-    public SecurityFilterChain testOAuth2AuthorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
-                new OAuth2AuthorizationServerConfigurer();
-
-        http
-                .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-                .with(authorizationServerConfigurer, (authorizationServer) ->
-                        authorizationServer
-                                .authorizationEndpoint(authorizationEndpoint ->
-                                        authorizationEndpoint
-                                                .consentPage("/oauth2/consent")
-                                )
-                                .oidc(Customizer.withDefaults()) // Enable OpenID Connect 1.0
+    @Order(1)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        
+        http.exceptionHandling(exceptions -> exceptions
+                .defaultAuthenticationEntryPointFor(
+                        new LoginUrlAuthenticationEntryPoint("/login"),
+                        new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                 )
-                .authorizeHttpRequests(authorize ->
-                        authorize.anyRequest().authenticated()
-                )
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/oauth2/**", "/.well-known/**", "/userinfo", "/connect/**")
-                )
-                .exceptionHandling(exceptions -> exceptions
-                        .defaultAuthenticationEntryPointFor(
-                                new LoginUrlAuthenticationEntryPoint("/login"),
-                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-                        )
-                )
-                .oauth2ResourceServer(resourceServer ->
-                        resourceServer.jwt(Customizer.withDefaults())
-                );
-
+        );
+        
         return http.build();
     }
 
@@ -96,10 +87,11 @@ public class OAuth2IntegrationTestConfig {
      * This overrides the main configuration to use a specific test client.
      */
     @Bean
+    @Primary
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient testClient = RegisteredClient.withId(TEST_CLIENT_ID)
-                .clientId("test-client")
-                .clientSecret("{noop}test-secret")
+        RegisteredClient testClient = RegisteredClient.withId(TEST_CLIENT_REGISTRATION_ID)
+                .clientId(TEST_CLIENT_ID)
+                .clientSecret("{noop}" + TEST_CLIENT_SECRET)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -169,6 +161,8 @@ public class OAuth2IntegrationTestConfig {
         RSAKey rsaKey = new RSAKey.Builder(publicKey)
             .privateKey(privateKey)
             .keyID("test-key-id")
+            .keyUse(KeyUse.SIGNATURE) // Add "use" field for signature
+            .algorithm(JWSAlgorithm.RS256) // Add algorithm
             .build();
             
         JWKSet jwkSet = new JWKSet(rsaKey);
@@ -212,6 +206,34 @@ public class OAuth2IntegrationTestConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
+    }
+
+
+    /**
+     * Mock RedisTemplate for test environment.
+     * Uses Mockito to create a mock RedisTemplate to avoid actual Redis dependency.
+     */
+    @Bean
+    @Primary
+    public RedisTemplate<String, String> redisTemplate() {
+        return Mockito.mock(RedisTemplate.class);
+    }
+
+    /**
+     * Mock StringRedisTemplate for test environment.
+     */
+    @Bean
+    public StringRedisTemplate stringRedisTemplate() {
+        return Mockito.mock(StringRedisTemplate.class);
+    }
+
+    /**
+     * Mock RedisConnectionFactory for test environment.
+     */
+    @Bean
+    @Primary
+    public RedisConnectionFactory redisConnectionFactory() {
+        return Mockito.mock(RedisConnectionFactory.class);
     }
 
 }

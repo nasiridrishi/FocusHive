@@ -2,6 +2,99 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+// Security headers configuration
+const securityHeaders = {
+  // Content Security Policy - strict for production, lenient for dev
+  'Content-Security-Policy': process.env.NODE_ENV === 'production' 
+    ? `
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://www.spotify.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com data:;
+      img-src 'self' data: https: blob:;
+      media-src 'self' data: https: blob:;
+      connect-src 'self' wss://localhost:* ws://localhost:* https://api.spotify.com wss://*.focushive.app ws://*.focushive.app;
+      worker-src 'self' blob:;
+      child-src 'self';
+      frame-src 'none';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+    `.replace(/\s+/g, ' ').trim()
+    : `
+      default-src 'self';
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.spotify.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com data:;
+      img-src 'self' data: https: blob:;
+      media-src 'self' data: https: blob:;
+      connect-src 'self' wss://localhost:* ws://localhost:* https://api.spotify.com wss://*.focushive.app ws://*.focushive.app;
+      worker-src 'self' blob:;
+      child-src 'self';
+      frame-src 'none';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+    `.replace(/\s+/g, ' ').trim(),
+  
+  // Prevent clickjacking
+  'X-Frame-Options': 'DENY',
+  
+  // Prevent MIME type sniffing
+  'X-Content-Type-Options': 'nosniff',
+  
+  // Enable XSS protection
+  'X-XSS-Protection': '1; mode=block',
+  
+  // Referrer policy
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  
+  // Permissions policy - restrict sensitive features
+  'Permissions-Policy': [
+    'geolocation=()',
+    'microphone=(self)',
+    'camera=(self)',
+    'payment=()',
+    'usb=()',
+    'magnetometer=()',
+    'gyroscope=()',
+    'accelerometer=()',
+    'ambient-light-sensor=()',
+    'autoplay=(self)',
+    'encrypted-media=(self)',
+    'fullscreen=(self)',
+    'picture-in-picture=(self)',
+    'screen-wake-lock=(self)',
+    'web-share=(self)'
+  ].join(', '),
+
+  // Cross-Origin policies
+  'Cross-Origin-Embedder-Policy': 'credentialless',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'same-origin'
+}
+
+// Add HSTS only in production
+if (process.env.NODE_ENV === 'production') {
+  securityHeaders['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+}
+
+// Security headers plugin for Vite dev server
+const securityHeadersPlugin = () => ({
+  name: 'security-headers',
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      // Add security headers to all responses
+      Object.entries(securityHeaders).forEach(([header, value]) => {
+        res.setHeader(header, value)
+      })
+      next()
+    })
+  }
+})
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -10,6 +103,7 @@ export default defineConfig({
       // Include .tsx files for fast refresh
       include: '**/*.{jsx,tsx}',
     }),
+    securityHeadersPlugin(),
   ],
   resolve: {
     alias: {

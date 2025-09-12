@@ -54,21 +54,223 @@ const getUserFromAuthHeader = (authHeader: string | null): User | null => {
   return session?.user || defaultMockUser; // Fallback for tests
 };
 
+// Mock hive data for testing
 const mockHives = [
   {
     id: '1',
-    name: 'Test Hive',
-    description: 'A test hive for development',
+    name: 'Study Marathon',
+    description: 'A focused environment for intensive study sessions',
     ownerId: '1',
+    owner: {
+      id: '1',
+      username: 'studymaster',
+      email: 'study@example.com',
+      firstName: 'Study',
+      lastName: 'Master',
+      name: 'Study Master',
+      avatar: null,
+      profilePicture: null,
+      isEmailVerified: true,
+      isVerified: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    maxMembers: 20,
     isPublic: true,
-    memberCount: 5,
-    createdAt: new Date('2024-01-01').toISOString(),
+    tags: ['study', 'academic', 'focus'],
     settings: {
       allowChat: true,
-      requireApproval: false
-    }
+      allowVoice: false,
+      requireApproval: false,
+      focusMode: 'pomodoro',
+      defaultSessionLength: 25,
+      maxSessionLength: 120
+    },
+    currentMembers: 8,
+    memberCount: 8,
+    isOwner: false,
+    isMember: false,
+    createdAt: new Date('2024-01-01').toISOString(),
+    updatedAt: new Date('2024-01-01').toISOString()
+  },
+  {
+    id: '2',
+    name: 'Programming Hub',
+    description: 'Code together, debug together, learn together',
+    ownerId: '2',
+    owner: {
+      id: '2',
+      username: 'codemaster',
+      email: 'code@example.com',
+      firstName: 'Code',
+      lastName: 'Master',
+      name: 'Code Master',
+      avatar: null,
+      profilePicture: null,
+      isEmailVerified: true,
+      isVerified: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    maxMembers: 15,
+    isPublic: true,
+    tags: ['programming', 'coding', 'development'],
+    settings: {
+      allowChat: true,
+      allowVoice: true,
+      requireApproval: false,
+      focusMode: 'continuous',
+      defaultSessionLength: 50,
+      maxSessionLength: 180
+    },
+    currentMembers: 12,
+    memberCount: 12,
+    isOwner: false,
+    isMember: true,
+    createdAt: new Date('2024-01-02').toISOString(),
+    updatedAt: new Date('2024-01-02').toISOString()
+  },
+  {
+    id: '3',
+    name: 'Private Writing Circle',
+    description: 'A quiet space for writers and content creators',
+    ownerId: '1',
+    owner: {
+      id: '1',
+      username: 'studymaster',
+      email: 'study@example.com',
+      firstName: 'Study',
+      lastName: 'Master',
+      name: 'Study Master',
+      avatar: null,
+      profilePicture: null,
+      isEmailVerified: true,
+      isVerified: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    maxMembers: 8,
+    isPublic: false,
+    tags: ['writing', 'creative', 'quiet'],
+    settings: {
+      allowChat: false,
+      allowVoice: false,
+      requireApproval: true,
+      focusMode: 'flexible',
+      defaultSessionLength: 60,
+      maxSessionLength: 240
+    },
+    currentMembers: 5,
+    memberCount: 5,
+    isOwner: true,
+    isMember: true,
+    createdAt: new Date('2024-01-03').toISOString(),
+    updatedAt: new Date('2024-01-03').toISOString()
+  },
+  {
+    id: '4',
+    name: 'Full Capacity Hive',
+    description: 'This hive is at full capacity',
+    ownerId: '2',
+    owner: {
+      id: '2',
+      username: 'codemaster',
+      email: 'code@example.com',
+      firstName: 'Code',
+      lastName: 'Master',
+      name: 'Code Master',
+      avatar: null,
+      profilePicture: null,
+      isEmailVerified: true,
+      isVerified: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    maxMembers: 5,
+    isPublic: true,
+    tags: ['full', 'busy'],
+    settings: {
+      allowChat: true,
+      allowVoice: false,
+      requireApproval: false,
+      focusMode: 'pomodoro',
+      defaultSessionLength: 25,
+      maxSessionLength: 60
+    },
+    currentMembers: 5,
+    memberCount: 5,
+    isOwner: false,
+    isMember: false,
+    createdAt: new Date('2024-01-04').toISOString(),
+    updatedAt: new Date('2024-01-04').toISOString()
   }
 ];
+
+// Mock members data for testing
+const mockMembers = {
+  '1': [
+    {
+      id: 'member1',
+      userId: '1',
+      user: defaultMockUser,
+      hiveId: '1',
+      role: 'owner' as const,
+      joinedAt: '2024-01-01T00:00:00Z',
+      isActive: true,
+      permissions: {
+        canInviteMembers: true,
+        canModerateChat: true,
+        canManageSettings: true,
+        canStartTimers: true
+      }
+    },
+    {
+      id: 'member2',
+      userId: 'user2',
+      user: {
+        id: 'user2',
+        username: 'activeuser',
+        email: 'active@example.com',
+        firstName: 'Active',
+        lastName: 'User',
+        name: 'Active User',
+        avatar: null,
+        profilePicture: null,
+        isEmailVerified: true,
+        isVerified: true,
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      },
+      hiveId: '1',
+      role: 'member' as const,
+      joinedAt: '2024-01-02T00:00:00Z',
+      isActive: true,
+      permissions: {
+        canInviteMembers: false,
+        canModerateChat: false,
+        canManageSettings: false,
+        canStartTimers: false
+      }
+    }
+  ],
+  '2': [
+    {
+      id: 'member3',
+      userId: '1',
+      user: defaultMockUser,
+      hiveId: '2',
+      role: 'member' as const,
+      joinedAt: '2024-01-02T00:00:00Z',
+      isActive: true,
+      permissions: {
+        canInviteMembers: false,
+        canModerateChat: false,
+        canManageSettings: false,
+        canStartTimers: false
+      }
+    }
+  ]
+};
 
 export const handlers = [
   // ====================================
@@ -346,12 +548,130 @@ export const handlers = [
   // BACKEND API ENDPOINTS (Port 8080)
   // ====================================
   
-  http.get('/api/hives', () => {
-    return HttpResponse.json(mockHives);
+  http.get('/api/hives', ({ request }) => {
+    const url = new URL(request.url);
+    const searchQuery = url.searchParams.get('search')?.toLowerCase();
+    const category = url.searchParams.get('category');
+    const tags = url.searchParams.get('tags')?.split(',') || [];
+    const sortBy = url.searchParams.get('sortBy') || 'activity';
+    
+    let filteredHives = [...mockHives];
+    
+    // Apply search filter
+    if (searchQuery) {
+      filteredHives = filteredHives.filter(hive => 
+        hive.name.toLowerCase().includes(searchQuery) ||
+        hive.description.toLowerCase().includes(searchQuery) ||
+        hive.tags.some(tag => tag.toLowerCase().includes(searchQuery))
+      );
+    }
+    
+    // Apply category filter
+    if (category && category !== 'all') {
+      const currentUserId = '1'; // Mock current user
+      filteredHives = filteredHives.filter(hive => {
+        const isMember = mockMembers[hive.id]?.some(m => m.userId === currentUserId);
+        
+        switch (category) {
+          case 'public':
+            return hive.isPublic;
+          case 'private':
+            return !hive.isPublic;
+          case 'joined':
+            return isMember;
+          case 'available':
+            return !isMember && hive.currentMembers < hive.maxMembers;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Apply tags filter
+    if (tags.length > 0) {
+      filteredHives = filteredHives.filter(hive => 
+        tags.some(tag => hive.tags.includes(tag))
+      );
+    }
+    
+    // Apply sorting
+    filteredHives.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'members':
+          return b.currentMembers - a.currentMembers;
+        case 'created':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'activity':
+        default: {
+          // Sort by online members, then by total members
+          const aOnline = mockMembers[a.id]?.filter(m => m.isActive).length || 0;
+          const bOnline = mockMembers[b.id]?.filter(m => m.isActive).length || 0;
+          if (aOnline !== bOnline) return bOnline - aOnline;
+          return b.currentMembers - a.currentMembers;
+        }
+      }
+    });
+    
+    return HttpResponse.json({
+      hives: filteredHives,
+      total: filteredHives.length,
+      page: 1,
+      size: 20
+    });
   }),
 
-  http.post('/api/hives', () => {
-    return HttpResponse.json(mockHives[0], { status: 201 });
+  http.get('/api/hives/:id/members', ({ params }) => {
+    const hiveId = params.id as string;
+    const members = mockMembers[hiveId] || [];
+    return HttpResponse.json(members);
+  }),
+
+  http.post('/api/hives', async ({ request }) => {
+    const body = await request.json() as {
+      name: string;
+      description: string;
+      maxMembers: number;
+      isPublic: boolean;
+      tags: string[];
+      settings: {
+        allowChat: boolean;
+        allowVoice: boolean;
+        requireApproval: boolean;
+        focusMode: 'pomodoro' | 'continuous' | 'flexible';
+        defaultSessionLength: number;
+        maxSessionLength: number;
+      };
+    };
+    const newHive = {
+      id: `hive-${Date.now()}`,
+      name: body.name,
+      description: body.description,
+      ownerId: '1',
+      owner: defaultMockUser,
+      maxMembers: body.maxMembers,
+      isPublic: body.isPublic,
+      tags: body.tags,
+      settings: body.settings,
+      currentMembers: 1,
+      memberCount: 1,
+      isOwner: true,
+      isMember: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return HttpResponse.json(newHive, { status: 201 });
+  }),
+
+  http.post('/api/hives/:id/join', ({ params }) => {
+    const hiveId = params.id as string;
+    return HttpResponse.json({ message: 'Successfully joined hive' });
+  }),
+
+  http.delete('/api/hives/:id/leave', ({ params }) => {
+    const hiveId = params.id as string;
+    return HttpResponse.json({ message: 'Successfully left hive' });
   }),
 
   // ====================================

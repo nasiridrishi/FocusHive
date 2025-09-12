@@ -328,6 +328,69 @@ app:
     device-code-flow-enabled: ${DEVICE_CODE_FLOW_ENABLED:true}
 
 # ============================================================================
+# SECURITY HEADERS CONFIGURATION - Production Grade
+# ============================================================================
+focushive:
+  security:
+    headers:
+      enabled: true
+      mode: PRODUCTION
+      
+      # HTTP Strict Transport Security - Strict Production Settings
+      hsts:
+        enabled: true
+        max-age: 63072000  # 2 years for production
+        include-subdomains: true
+        preload: true
+      
+      # Content Security Policy - Strict Production Policy
+      csp:
+        enabled: true
+        report-only: false
+        report-uri: ${CSP_REPORT_URI:}  # Optional CSP violation reporting
+        custom-directives:
+          - "upgrade-insecure-requests"
+          - "block-all-mixed-content"
+      
+      # Frame Options - Prevent all framing
+      frame-options:
+        enabled: true
+        policy: DENY
+      
+      # Permissions Policy - Strict Production Restrictions
+      permissions-policy:
+        enabled: true
+        disabled-features:
+          - camera
+          - microphone
+          - geolocation
+          - interest-cohort
+          - payment
+          - usb
+          - serial
+          - bluetooth
+          - magnetometer
+          - gyroscope
+          - accelerometer
+          - ambient-light-sensor
+          - screen-wake-lock
+        custom-directives:
+          - "autoplay=(self)"
+          - "fullscreen=(self)"
+          - "picture-in-picture=(self)"
+          - "web-share=(self)"
+      
+      # Additional Security Headers - Production Hardening
+      additional-headers:
+        x-content-type-options: true
+        x-xss-protection: true
+        x-permitted-cross-domain-policies: true
+        referrer-policy: "strict-origin-when-cross-origin"
+        cross-origin-embedder-policy: false  # Can break functionality - enable with care
+        cross-origin-opener-policy: true     # Enable for production security
+        cross-origin-resource-policy: false  # Can break resource loading - enable with care
+
+# ============================================================================
 # ACTUATOR CONFIGURATION - Production Monitoring
 # ============================================================================
 management:

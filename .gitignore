@@ -30,6 +30,13 @@ frontend/e2e-results.json
 frontend/e2e-results.xml
 *.lcov
 
+# Cypress
+frontend/cypress/videos/
+frontend/cypress/screenshots/
+frontend/cypress/downloads/
+cypress-results.json
+mochawesome-report/
+
 # ==========================================
 # Java / Spring Boot / Gradle
 # ==========================================

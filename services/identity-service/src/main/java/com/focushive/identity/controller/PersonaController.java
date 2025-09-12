@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +47,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PostMapping
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PersonaDto> createPersona(
             @Valid @RequestBody PersonaDto personaDto,
             Authentication authentication) {
@@ -67,6 +69,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @GetMapping
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<PersonaDto>> getUserPersonas(Authentication authentication) {
         // Removed debug log to avoid logging usernames frequently
         UUID userId = getUserIdFromAuthentication(authentication);
@@ -85,6 +88,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "Persona or user not found")
     })
     @GetMapping("/{personaId}")
+    @PreAuthorize("hasRole('USER') and @securityService.hasAccessToPersona(#personaId)")
     public ResponseEntity<PersonaDto> getPersona(
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
@@ -107,6 +111,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "Persona or user not found")
     })
     @PutMapping("/{personaId}")
+    @PreAuthorize("hasRole('USER') and @securityService.hasAccessToPersona(#personaId)")
     public ResponseEntity<PersonaDto> updatePersona(
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             @Valid @RequestBody PersonaDto personaDto,
@@ -130,6 +135,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "Persona or user not found")
     })
     @DeleteMapping("/{personaId}")
+    @PreAuthorize("hasRole('USER') and @securityService.hasAccessToPersona(#personaId)")
     public ResponseEntity<Void> deletePersona(
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
@@ -151,6 +157,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "Persona or user not found")
     })
     @PostMapping("/{personaId}/switch")
+    @PreAuthorize("hasRole('USER') and @securityService.hasAccessToPersona(#personaId)")
     public ResponseEntity<PersonaDto> switchPersona(
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
@@ -173,6 +180,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @GetMapping("/active")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PersonaDto> getActivePersona(Authentication authentication) {
         // Removed debug log to avoid logging usernames frequently
         UUID userId = getUserIdFromAuthentication(authentication);
@@ -193,6 +201,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "Persona or user not found")
     })
     @PostMapping("/{personaId}/default")
+    @PreAuthorize("hasRole('USER') and @securityService.hasAccessToPersona(#personaId)")
     public ResponseEntity<PersonaDto> setDefaultPersona(
             @Parameter(description = "Persona ID") @PathVariable UUID personaId,
             Authentication authentication) {
@@ -215,6 +224,7 @@ public class PersonaController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @PostMapping("/templates/{type}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PersonaDto> createPersonaFromTemplate(
             @Parameter(description = "Template type") @PathVariable Persona.PersonaType type,
             Authentication authentication) {

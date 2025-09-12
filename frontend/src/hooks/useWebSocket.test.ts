@@ -403,4 +403,300 @@ describe('useWebSocket', () => {
     result.current.unsubscribe(subId);
     expect(mockService.unsubscribe).toHaveBeenCalledWith(subId);
   });
+
+  it('should handle notification management', async () => {
+    const onNotification = vi.fn();
+    const { result } = renderHook(() => 
+      useWebSocket({
+        onNotification,
+        autoConnect: false
+      })
+    );
+
+    // Mock notification handler call
+    const mockNotificationHandler = vi.mocked(mockService.onMessage).mock.calls
+      .find(([type]) => type === 'notification')?.[1];
+
+    expect(mockNotificationHandler).toBeDefined();
+
+    // Simulate notification received
+    const testNotification = {
+      id: 'notif-1',
+      type: 'INFO',
+      title: 'Test Notification',
+      message: 'This is a test',
+      priority: 'NORMAL' as const,
+      createdAt: new Date().toISOString()
+    };
+
+    const notificationMessage = {
+      id: 'msg-1',
+      type: 'NOTIFICATION' as const,
+      event: 'notification',
+      payload: testNotification,
+      timestamp: new Date().toISOString()
+    };
+
+    act(() => {
+      mockNotificationHandler!(notificationMessage);
+    });
+
+    await waitFor(() => {
+      expect(result.current.notifications).toHaveLength(1);
+      expect(result.current.notifications[0]).toEqual(testNotification);
+      expect(onNotification).toHaveBeenCalledWith(testNotification);
+    });
+
+    // Test clearing specific notification
+    act(() => {
+      result.current.clearNotification('notif-1');
+    });
+
+    await waitFor(() => {
+      expect(result.current.notifications).toHaveLength(0);
+    });
+  });
+
+  it('should handle multiple notifications and clear all', async () => {
+    const onNotification = vi.fn();
+    const { result } = renderHook(() => 
+      useWebSocket({ 
+        autoConnect: false,
+        onNotification 
+      })
+    );
+
+    const mockNotificationHandler = vi.mocked(mockService.onMessage).mock.calls
+      .find(([type]) => type === 'notification')?.[1];
+
+    expect(mockNotificationHandler).toBeDefined();
+
+    // Add multiple notifications
+    const notifications = [
+      {
+        id: 'notif-1',
+        type: 'INFO',
+        title: 'First Notification',
+        message: 'First message',
+        priority: 'NORMAL' as const,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'notif-2',
+        type: 'WARNING',
+        title: 'Second Notification',
+        message: 'Second message',
+        priority: 'HIGH' as const,
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    for (const notif of notifications) {
+      act(() => {
+        mockNotificationHandler!({
+          id: 'msg-' + notif.id,
+          type: 'NOTIFICATION' as const,
+          event: 'notification',
+          payload: notif,
+          timestamp: new Date().toISOString()
+        });
+      });
+    }
+
+    await waitFor(() => {
+      expect(result.current.notifications).toHaveLength(2);
+    });
+
+    // Clear all notifications
+    act(() => {
+      result.current.clearAllNotifications();
+    });
+
+    await waitFor(() => {
+      expect(result.current.notifications).toHaveLength(0);
+    });
+  });
+
+  it('should handle reconnection scenarios', async () => {
+    const onConnect = vi.fn();
+    const onDisconnect = vi.fn();
+    
+    const { result } = renderHook(() => 
+      useWebSocket({ 
+        onConnect, 
+        onDisconnect,
+        autoConnect: false 
+      })
+    );
+
+    // Initial connection
+    mockService.getConnectionState.mockReturnValue('CONNECTED');
+    act(() => {
+      connectionChangeHandler(true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isConnected).toBe(true);
+      expect(onConnect).toHaveBeenCalledTimes(1);
+    });
+
+    // Connection lost
+    mockService.getConnectionState.mockReturnValue('DISCONNECTED');
+    mockService.getReconnectionInfo.mockReturnValue({
+      attempts: 1,
+      maxAttempts: 10,
+      isReconnecting: true
+    });
+
+    act(() => {
+      connectionChangeHandler(false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isConnected).toBe(false);
+      expect(result.current.connectionInfo.reconnectionInfo.isReconnecting).toBe(true);
+      expect(onDisconnect).toHaveBeenCalledTimes(1);
+    });
+
+    // Reconnection successful
+    mockService.getConnectionState.mockReturnValue('CONNECTED');
+    mockService.getReconnectionInfo.mockReturnValue({
+      attempts: 0,
+      maxAttempts: 10,
+      isReconnecting: false
+    });
+
+    act(() => {
+      connectionChangeHandler(true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isConnected).toBe(true);
+      expect(result.current.connectionInfo.reconnectionInfo.isReconnecting).toBe(false);
+      expect(onConnect).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('should handle multiple subscriptions cleanup', () => {
+    const { result, unmount } = renderHook(() => 
+      useWebSocket({ autoConnect: false })
+    );
+
+    // Create multiple subscriptions
+    const callback1 = vi.fn();
+    const callback2 = vi.fn();
+    const callback3 = vi.fn();
+    
+    const subId1 = result.current.subscribe('/test/1', callback1);
+    const subId2 = result.current.subscribe('/test/2', callback2);  
+    const subId3 = result.current.subscribe('/test/3', callback3);
+
+    expect(mockService.subscribe).toHaveBeenCalledTimes(3);
+
+    // Manually unsubscribe one
+    result.current.unsubscribe(subId2);
+    expect(mockService.unsubscribe).toHaveBeenCalledWith(subId2);
+
+    // Unmount should cleanup remaining subscriptions
+    unmount();
+    
+    expect(mockService.unsubscribe).toHaveBeenCalledWith(subId1);
+    expect(mockService.unsubscribe).toHaveBeenCalledWith(subId3);
+  });
+
+  it('should handle edge case where subscription returns null', () => {
+    const { result } = renderHook(() => 
+      useWebSocket({ autoConnect: false })
+    );
+
+    // Mock subscribe to return null (error case)
+    mockService.subscribe.mockReturnValueOnce(null);
+
+    const callback = vi.fn();
+    const subId = result.current.subscribe('/test/destination', callback);
+    
+    expect(subId).toBeNull();
+    expect(mockService.subscribe).toHaveBeenCalledWith('/test/destination', callback);
+  });
+
+  it('should handle connection state during different phases', async () => {
+    const { result } = renderHook(() => 
+      useWebSocket({ autoConnect: false })
+    );
+
+    // Test CONNECTING state
+    mockService.getConnectionState.mockReturnValue('CONNECTING');
+    mockService.getReconnectionInfo.mockReturnValue({
+      attempts: 0,
+      maxAttempts: 10,
+      isReconnecting: false
+    });
+
+    act(() => {
+      connectionChangeHandler(false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.connectionState).toBe('CONNECTING');
+      expect(result.current.isConnected).toBe(false);
+    });
+
+    // Test CONNECTED state
+    mockService.getConnectionState.mockReturnValue('CONNECTED');
+    act(() => {
+      connectionChangeHandler(true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.connectionState).toBe('CONNECTED');
+      expect(result.current.isConnected).toBe(true);
+    });
+
+    // Test ERROR state
+    mockService.getConnectionState.mockReturnValue('ERROR');
+    act(() => {
+      connectionChangeHandler(false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.connectionState).toBe('ERROR');
+      expect(result.current.isConnected).toBe(false);
+    });
+  });
+
+  it('should update presence status locally when calling updatePresence', async () => {
+    const { result } = renderHook(() => 
+      useWebSocket({ autoConnect: false })
+    );
+
+    expect(result.current.presenceStatus).toBe(PresenceStatus.OFFLINE);
+
+    act(() => {
+      result.current.updatePresence(PresenceStatus.BUSY, 123, 'In a meeting');
+    });
+
+    await waitFor(() => {
+      expect(result.current.presenceStatus).toBe(PresenceStatus.BUSY);
+    });
+
+    expect(mockService.updatePresenceStatus).toHaveBeenCalledWith(
+      PresenceStatus.BUSY, 123, 'In a meeting'
+    );
+  });
+
+  it('should update presence status when starting focus session', async () => {
+    const { result } = renderHook(() => 
+      useWebSocket({ autoConnect: false })
+    );
+
+    act(() => {
+      result.current.startFocusSession(456, 30);
+    });
+
+    await waitFor(() => {
+      expect(result.current.presenceStatus).toBe(PresenceStatus.IN_FOCUS_SESSION);
+    });
+
+    expect(mockService.startFocusSession).toHaveBeenCalledWith(456, 30);
+  });
 });

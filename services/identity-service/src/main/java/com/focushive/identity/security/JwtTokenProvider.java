@@ -38,6 +38,26 @@ public class JwtTokenProvider {
             @Value("${jwt.remember-me-expiration-ms:7776000000}") long rememberMeTokenExpirationMs, // 90 days
             @Value("${jwt.issuer:identity-service}") String issuer) {
         
+        // Validate JWT secret strength - CRITICAL SECURITY REQUIREMENT
+        if (secret == null || secret.trim().isEmpty()) {
+            throw new IllegalArgumentException("JWT_SECRET environment variable must be set and not empty");
+        }
+        
+        // JWT secret must be at least 256 bits (32 characters) for HS256/HS512 security
+        if (secret.length() < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters (256 bits) long for security. Current length: " + secret.length());
+        }
+        
+        // Check for common weak patterns that should not be used in production
+        if (secret.contains("your-super-secret") || 
+            secret.contains("changeme") || 
+            secret.contains("secret") ||
+            secret.contains("password") ||
+            secret.equals("test")) {
+            throw new IllegalArgumentException("JWT secret contains insecure patterns. Use a cryptographically secure random string.");
+        }
+        
+        log.info("JWT secret validation passed - length: {} characters", secret.length());
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;

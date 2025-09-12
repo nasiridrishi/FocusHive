@@ -1,5 +1,7 @@
 package com.focushive.identity.entity;
 
+import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.converters.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,9 +29,9 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
 @ToString(exclude = {"user"})
-public class Persona {
+public class Persona extends BaseEncryptedEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -55,16 +57,19 @@ public class Persona {
     @Builder.Default
     private boolean isActive = false;
     
-    @Column(name = "display_name", length = 100)
+    @Column(name = "display_name", length = 255)
+    @Convert(converter = EncryptedStringConverter.class)
     private String displayName;
     
     @Column(name = "avatar_url")
     private String avatarUrl;
     
-    @Column(length = 500)
+    @Column(length = 1000)
+    @Convert(converter = EncryptedStringConverter.class)
     private String bio;
     
-    @Column(name = "status_message", length = 200)
+    @Column(name = "status_message", length = 500)
+    @Convert(converter = EncryptedStringConverter.class)
     private String statusMessage;
     
     // Privacy settings as embedded object
@@ -79,12 +84,14 @@ public class Persona {
     @MapKeyColumn(name = "attribute_key")
     @Column(name = "attribute_value")
     @org.hibernate.annotations.BatchSize(size = 16)
+    @Convert(converter = EncryptedStringMapConverter.class, attributeName = "value")
     @Builder.Default
     private Map<String, String> customAttributes = new HashMap<>();
     
     // Notification preferences specific to this persona
     @Column(name = "notification_preferences")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Convert(converter = EncryptedBooleanMapConverter.class)
     @Builder.Default
     private Map<String, Boolean> notificationPreferences = new HashMap<>();
     
@@ -186,5 +193,16 @@ public class Persona {
             // This will be handled by the repository method
             // to ensure only one active persona per user
         }
+    }
+    
+    /**
+     * Update searchable hashes for encrypted fields.
+     * Called before persisting or updating the entity.
+     */
+    @Override
+    protected void updateSearchableHashes(EncryptionService encryptionService) {
+        // Persona doesn't have any searchable encrypted fields
+        // All PII fields use regular encryption without search capability
+        // This is intentional as personas are looked up by user relationship, not by content
     }
 }

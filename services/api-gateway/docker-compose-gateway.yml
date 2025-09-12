@@ -1,0 +1,96 @@
+# Docker Compose extension for FocusHive API Gateway
+# Add this to the main docker-compose.yml file
+
+version: '3.9'
+
+services:
+  # API Gateway Redis (dedicated for gateway rate limiting and caching)
+  gateway-redis:
+    image: redis:7-alpine
+    container_name: gateway-redis
+    command: redis-server --requirepass ${GATEWAY_REDIS_PASSWORD:-gateway_redis_pass} --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:6381:6379"
+    volumes:
+      - gateway_redis_data:/data
+      - app_logs:/var/log/redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${GATEWAY_REDIS_PASSWORD:-gateway_redis_pass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - focushive-network
+
+  # Spring Cloud Gateway (API Gateway Service)
+  api-gateway:
+    build:
+      context: ../services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "127.0.0.1:8090:8090"
+    environment:
+      # Redis for rate limiting and caching
+      REDIS_HOST: gateway-redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${GATEWAY_REDIS_PASSWORD:-gateway_redis_pass}
+      # JWT Configuration
+      FOCUSHIVE_JWT_SECRET: ${JWT_SECRET}  # CRITICAL: Must be set in environment
+      FOCUSHIVE_JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      # OAuth2 Resource Server
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://identity-service:8081
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://identity-service:8081/oauth2/jwks
+      # Application
+      SERVER_PORT: 8090
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SPRING_PROFILES_ACTIVE: docker
+      # Downstream Service URLs (will be mapped to Docker network)
+      IDENTITY_SERVICE_URL: http://identity-service:8081
+      FOCUSHIVE_BACKEND_URL: http://backend:8080
+      MUSIC_SERVICE_URL: http://music-service:8082
+      NOTIFICATION_SERVICE_URL: http://notification-service:8083
+      CHAT_SERVICE_URL: http://chat-service:8084
+      ANALYTICS_SERVICE_URL: http://analytics-service:8085
+      FORUM_SERVICE_URL: http://forum-service:8086
+      BUDDY_SERVICE_URL: http://buddy-service:8087
+      # CORS Origins
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:8090,http://localhost:80}
+      # Management
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: when_authorized
+      # Circuit Breaker Configuration
+      RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_SLIDING_WINDOW_SIZE: 10
+      RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_MINIMUM_NUMBER_OF_CALLS: 5
+      RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_FAILURE_RATE_THRESHOLD: 50
+      RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_WAIT_DURATION_IN_OPEN_STATE: 10s
+    volumes:
+      - app_logs:/app/logs
+    depends_on:
+      gateway-redis:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - focushive-network
+
+volumes:
+  gateway_redis_data:
+    driver: local
+
+# NOTE: To integrate this with the main docker-compose.yml:
+# 1. Add the gateway-redis and api-gateway services to the main services section
+# 2. Add gateway_redis_data to the volumes section
+# 3. Update the web service environment to use the gateway:
+#    VITE_API_URL: ${VITE_API_URL:-http://localhost:8090/api}
+# 4. Update nginx configuration to proxy to the gateway instead of direct services
+# 5. Consider making services depend on api-gateway for proper startup order

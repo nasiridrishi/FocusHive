@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/identity_db
     username: identity_user
-    password: identity_pass
+    password: ${DB_PASSWORD}  # REQUIRED: Must be set in environment
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -42,7 +42,7 @@ spring:
     locations: classpath:db/migration
     url: jdbc:postgresql://localhost:5433/identity_db
     user: identity_user
-    password: identity_pass
+    password: ${DB_PASSWORD}  # REQUIRED: Must be set in environment
     # Allow mixed statements for development (ANALYZE commands in migrations)
     mixed: true
     validate-on-migrate: false
@@ -50,7 +50,7 @@ spring:
   redis:
     host: localhost
     port: 6380
-    password: redis123
+    password: ${REDIS_PASSWORD}  # REQUIRED: Must be set in environment
     timeout: 2000ms
     lettuce:
       pool:
@@ -64,9 +64,9 @@ spring:
 server:
   port: 8081
 
-# JWT Configuration - simplified for development
+# JWT Configuration - CRITICAL SECURITY: Use environment variables
 jwt:
-  secret: t2+oCqx61sNBNLnJ3jm7YtdH58rrWqS7dQ4yLSD5q7c=
+  secret: ${JWT_SECRET}  # REQUIRED: Must be set in environment
   access-token-expiration-ms: 3600000
   refresh-token-expiration-ms: 2592000000
   issuer: identity-service
@@ -97,7 +97,7 @@ oauth2:
   clients:
     focushive:
       client-id: focushive-backend
-      client-secret: focushive-secret-123
+      client-secret: ${FOCUSHIVE_CLIENT_SECRET}  # REQUIRED: Must be set in environment
       redirect-uris:
         - http://localhost:8080/login/oauth2/code/identity
       scopes:
@@ -145,3 +145,33 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     display-request-duration: true
+
+# Security Headers Configuration - Development Overrides
+focushive:
+  security:
+    headers:
+      mode: DEVELOPMENT
+      
+      # HSTS disabled in development (no SSL)
+      hsts:
+        enabled: false
+      
+      # More permissive frame options for development tools
+      frame-options:
+        policy: SAMEORIGIN
+      
+      # CSP Report-only mode for development
+      csp:
+        report-only: true
+        custom-directives:
+          - "connect-src 'self' ws: wss: http: https: localhost:* 127.0.0.1:*"
+      
+      # Allow additional browser features for development testing
+      permissions-policy:
+        disabled-features:
+          - interest-cohort # Keep this disabled
+          - payment # Keep payment disabled
+        custom-directives:
+          - "camera=(self)"
+          - "microphone=(self)"
+          - "geolocation=(self)"
