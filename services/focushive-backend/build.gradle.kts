@@ -76,10 +76,9 @@ dependencies {
     // Development
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     
-    // Rate Limiting with Bucket4j - temporarily disabled
-    //implementation("com.bucket4j:bucket4j_jdk17-core:8.14.0")
-    //implementation("com.bucket4j:bucket4j_jdk17-redis:8.14.0")
-    //implementation("com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.12.7")
+    // Rate Limiting with Bucket4j
+    implementation("com.bucket4j:bucket4j-redis:8.7.0")
+    implementation("com.bucket4j:bucket4j-core:8.7.0")
     
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")

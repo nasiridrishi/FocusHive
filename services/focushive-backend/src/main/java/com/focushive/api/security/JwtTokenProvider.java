@@ -27,14 +27,27 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(@Value("${spring.security.jwt.secret}") String secret,
                            @Value("${spring.security.jwt.expiration}") Long expiration) {
-        // Ensure the secret is at least 256 bits (32 bytes) for HS256
-        byte[] keyBytes;
-        if (secret.length() < 32) {
-            // Pad the secret to make it 32 bytes
-            secret = String.format("%-32s", secret).replace(' ', '0');
+        // Validate JWT secret strength - CRITICAL SECURITY REQUIREMENT
+        if (secret == null || secret.trim().isEmpty()) {
+            throw new IllegalArgumentException("JWT_SECRET environment variable must be set and not empty");
         }
-        keyBytes = secret.getBytes();
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        
+        // JWT secret must be at least 256 bits (32 characters) for HS256/HS512 security
+        if (secret.length() < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters (256 bits) long for security. Current length: " + secret.length());
+        }
+        
+        // Check for common weak patterns that should not be used in production
+        if (secret.contains("your-super-secret") || 
+            secret.contains("changeme") || 
+            secret.contains("secret") ||
+            secret.contains("password") ||
+            secret.equals("test")) {
+            throw new IllegalArgumentException("JWT secret contains insecure patterns. Use a cryptographically secure random string.");
+        }
+        
+        log.info("JWT secret validation passed - length: {} characters", secret.length());
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.expiration = expiration;
         this.refreshExpiration = expiration * 2; // Refresh tokens last twice as long
     }

@@ -14,11 +14,12 @@ import {
  * Authentication API Configuration
  * 
  * Implements secure JWT authentication with:
- * - Automatic token refresh
+ * - HttpOnly cookie-based token storage (XSS protection)
+ * - Automatic token refresh via cookies
  * - Request/response interceptors
- * - Secure token storage
  * - CSRF protection
  * - Error handling
+ * - Backward compatibility with localStorage
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';

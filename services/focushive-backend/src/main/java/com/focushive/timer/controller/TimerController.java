@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ public class TimerController {
     @PostMapping("/sessions/start")
     @Operation(summary = "Start a new session", 
                description = "Start a new focus, work, study, or break session")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FocusSessionDto> startSession(
             @Valid @RequestBody StartSessionRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -48,6 +50,7 @@ public class TimerController {
     @PostMapping("/sessions/{sessionId}/end")
     @Operation(summary = "End a session", 
                description = "End the specified session and calculate productivity stats")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToTimer(T(java.util.UUID).fromString(#sessionId))")
     public ResponseEntity<FocusSessionDto> endSession(
             @PathVariable String sessionId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -62,6 +65,7 @@ public class TimerController {
     @PostMapping("/sessions/{sessionId}/pause")
     @Operation(summary = "Pause a session", 
                description = "Pause the specified session (counts as interruption)")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToTimer(T(java.util.UUID).fromString(#sessionId))")
     public ResponseEntity<FocusSessionDto> pauseSession(
             @PathVariable String sessionId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -76,6 +80,7 @@ public class TimerController {
     @GetMapping("/sessions/current")
     @Operation(summary = "Get current session", 
                description = "Get the user's current active session if any")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FocusSessionDto> getCurrentSession(
             @AuthenticationPrincipal UserDetails userDetails) {
         
@@ -89,6 +94,7 @@ public class TimerController {
     @GetMapping("/sessions/history")
     @Operation(summary = "Get session history", 
                description = "Get paginated history of user's sessions")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<FocusSessionDto>> getSessionHistory(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
@@ -105,6 +111,7 @@ public class TimerController {
     @GetMapping("/stats/daily")
     @Operation(summary = "Get daily stats", 
                description = "Get productivity statistics for a specific date")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProductivityStatsDto> getDailyStats(
             @Parameter(description = "Date (YYYY-MM-DD)") 
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -120,6 +127,7 @@ public class TimerController {
     @GetMapping("/stats/weekly")
     @Operation(summary = "Get weekly stats", 
                description = "Get productivity statistics for a week starting from specified date")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ProductivityStatsDto>> getWeeklyStats(
             @Parameter(description = "Start date (YYYY-MM-DD)") 
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -136,6 +144,7 @@ public class TimerController {
     @GetMapping("/stats/monthly")
     @Operation(summary = "Get monthly stats", 
                description = "Get productivity statistics for a specific month")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ProductivityStatsDto>> getMonthlyStats(
             @Parameter(description = "Year") @RequestParam int year,
             @Parameter(description = "Month (1-12)") @RequestParam int month,
@@ -152,6 +161,7 @@ public class TimerController {
     @GetMapping("/stats/streak")
     @Operation(summary = "Get current streak", 
                description = "Get the number of consecutive days with completed sessions")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Integer> getCurrentStreak(
             @AuthenticationPrincipal UserDetails userDetails) {
         
@@ -165,6 +175,7 @@ public class TimerController {
     @GetMapping("/pomodoro/settings")
     @Operation(summary = "Get Pomodoro settings", 
                description = "Get user's Pomodoro timer preferences")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PomodoroSettingsDto> getPomodoroSettings(
             @AuthenticationPrincipal UserDetails userDetails) {
         
@@ -178,6 +189,7 @@ public class TimerController {
     @PutMapping("/pomodoro/settings")
     @Operation(summary = "Update Pomodoro settings", 
                description = "Update user's Pomodoro timer preferences")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PomodoroSettingsDto> updatePomodoroSettings(
             @Valid @RequestBody PomodoroSettingsDto settings,
             @AuthenticationPrincipal UserDetails userDetails) {

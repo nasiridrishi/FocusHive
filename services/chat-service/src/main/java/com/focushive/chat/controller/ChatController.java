@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,7 @@ public class ChatController {
     
     @PostMapping("/hives/{hiveId}/messages")
     @Operation(summary = "Send a message to a hive chat")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToChat(#hiveId)")
     public ResponseEntity<ChatMessageDto> sendMessage(
             @Parameter(description = "Hive ID") @PathVariable UUID hiveId,
             @Valid @RequestBody ChatMessageDto messageDto,
@@ -61,6 +63,7 @@ public class ChatController {
     
     @GetMapping("/hives/{hiveId}/messages")
     @Operation(summary = "Get paginated messages for a hive")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToChat(#hiveId)")
     public ResponseEntity<Page<ChatMessageDto>> getHiveMessages(
             @Parameter(description = "Hive ID") @PathVariable UUID hiveId,
             @RequestParam(defaultValue = "0") int page,
@@ -86,6 +89,7 @@ public class ChatController {
     
     @GetMapping("/hives/{hiveId}/messages/recent")
     @Operation(summary = "Get recent messages for a hive")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToChat(#hiveId)")
     public ResponseEntity<List<ChatMessageDto>> getRecentMessages(
             @Parameter(description = "Hive ID") @PathVariable UUID hiveId,
             @RequestParam(defaultValue = "50") int limit,
@@ -108,6 +112,7 @@ public class ChatController {
     
     @GetMapping("/hives/{hiveId}/messages/since")
     @Operation(summary = "Get messages since a specific timestamp")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToChat(#hiveId)")
     public ResponseEntity<List<ChatMessageDto>> getMessagesSince(
             @Parameter(description = "Hive ID") @PathVariable UUID hiveId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime since,
@@ -130,6 +135,7 @@ public class ChatController {
     
     @GetMapping("/hives/{hiveId}/messages/search")
     @Operation(summary = "Search messages in a hive")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToChat(#hiveId)")
     public ResponseEntity<Page<ChatMessageDto>> searchMessages(
             @Parameter(description = "Hive ID") @PathVariable UUID hiveId,
             @RequestParam String q,
@@ -156,6 +162,7 @@ public class ChatController {
     
     @PutMapping("/messages/{messageId}")
     @Operation(summary = "Edit a message")
+    @PreAuthorize("isAuthenticated() and @securityService.isMessageOwner(#messageId)")
     public ResponseEntity<ChatMessageDto> editMessage(
             @Parameter(description = "Message ID") @PathVariable UUID messageId,
             @RequestBody @Valid ChatMessageDto messageDto,
@@ -179,6 +186,7 @@ public class ChatController {
     
     @DeleteMapping("/messages/{messageId}")
     @Operation(summary = "Delete a message")
+    @PreAuthorize("isAuthenticated() and (@securityService.isMessageOwner(#messageId) or @securityService.canModerateHive(null))")
     public ResponseEntity<Void> deleteMessage(
             @Parameter(description = "Message ID") @PathVariable UUID messageId,
             Authentication authentication) {
@@ -201,6 +209,7 @@ public class ChatController {
     
     @GetMapping("/hives/{hiveId}/typing")
     @Operation(summary = "Get active typing indicators for a hive")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToChat(#hiveId)")
     public ResponseEntity<List<TypingIndicatorDto>> getTypingIndicators(
             @Parameter(description = "Hive ID") @PathVariable UUID hiveId,
             Authentication authentication) {
@@ -220,6 +229,7 @@ public class ChatController {
     
     @GetMapping("/hives/{hiveId}/stats")
     @Operation(summary = "Get chat statistics for a hive")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToChat(#hiveId)")
     public ResponseEntity<Object> getChatStatistics(
             @Parameter(description = "Hive ID") @PathVariable UUID hiveId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime date,

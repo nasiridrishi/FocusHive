@@ -1,5 +1,7 @@
 package com.focushive.identity.entity;
 
+import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.converters.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,18 +12,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.Comparator;
 
 /**
  * User entity representing the core identity in the system.
  * A user can have multiple personas for different contexts.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_email_hash", columnList = "email_hash"),
+    @Index(name = "idx_user_username", columnList = "username"),
+    @Index(name = "idx_user_created_at", columnList = "created_at"),
+    @Index(name = "idx_user_last_login", columnList = "last_login_at")
+})
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
 @ToString(exclude = {"password", "personas", "oauthClients"})
 @NamedEntityGraph(
     name = "User.withPersonas",
@@ -43,7 +51,7 @@ import java.util.*;
         )
     }
 )
-public class User implements UserDetails {
+public class User extends BaseEncryptedEntity implements UserDetails {
     
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -54,15 +62,21 @@ public class User implements UserDetails {
     private String username;
     
     @Column(unique = true, nullable = false)
+    @Convert(converter = com.focushive.identity.security.encryption.converters.SearchableEncryptedStringConverter.class)
     private String email;
+    
+    @Column(name = "email_hash")
+    private String emailHash;
     
     @Column(nullable = false)
     private String password;
     
-    @Column(name = "first_name", nullable = false, length = 50)
+    @Column(name = "first_name", nullable = false, length = 255)
+    @Convert(converter = com.focushive.identity.security.encryption.converters.EncryptedStringConverter.class)
     private String firstName;
     
-    @Column(name = "last_name", nullable = false, length = 50)
+    @Column(name = "last_name", nullable = false, length = 255)
+    @Convert(converter = com.focushive.identity.security.encryption.converters.EncryptedStringConverter.class)
     private String lastName;
     
     @Column(name = "email_verified", nullable = false)
@@ -99,6 +113,7 @@ public class User implements UserDetails {
     private boolean twoFactorEnabled = false;
     
     @Column(name = "two_factor_secret")
+    @Convert(converter = com.focushive.identity.security.encryption.converters.EncryptedStringConverter.class)
     private String twoFactorSecret;
     
     // User preferences
@@ -138,17 +153,40 @@ public class User implements UserDetails {
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
     
-    @Column(name = "last_login_ip", length = 45)
+    @Column(name = "last_login_ip", length = 255)
+    @Convert(converter = com.focushive.identity.security.encryption.converters.EncryptedStringConverter.class)
     private String lastLoginIp;
     
     @Column(name = "deleted_at")
     private Instant deletedAt;
     
+    // Role-based access control
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    private Role role = Role.USER;
+    
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "user_additional_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
+    @Builder.Default
+    private Set<Role> additionalRoles = new HashSet<>();
+    
     // UserDetails implementation
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Basic role for all users
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+        
+        // Add primary role
+        authorities.add(new SimpleGrantedAuthority(role.getAuthority()));
+        
+        // Add additional roles
+        additionalRoles.forEach(additionalRole -> 
+            authorities.add(new SimpleGrantedAuthority(additionalRole.getAuthority()))
+        );
+        
+        return authorities;
     }
     
     @Override
@@ -209,5 +247,69 @@ public class User implements UserDetails {
             personas.remove(persona);
             persona.setUser(null);
         }
+    }
+    
+    /**
+     * Check if user has a specific role (primary or additional).
+     */
+    public boolean hasRole(Role roleToCheck) {
+        return role.equals(roleToCheck) || additionalRoles.contains(roleToCheck);
+    }
+    
+    /**
+     * Check if user has a role with equal or higher privilege level.
+     */
+    public boolean hasRoleLevel(Role minimumRole) {
+        return role.hasPrivilegeLevel(minimumRole) || 
+               additionalRoles.stream().anyMatch(r -> r.hasPrivilegeLevel(minimumRole));
+    }
+    
+    /**
+     * Add an additional role to this user.
+     */
+    public void addRole(Role roleToAdd) {
+        if (roleToAdd != null && !roleToAdd.equals(this.role)) {
+            additionalRoles.add(roleToAdd);
+        }
+    }
+    
+    /**
+     * Remove an additional role from this user.
+     */
+    public void removeRole(Role roleToRemove) {
+        additionalRoles.remove(roleToRemove);
+    }
+    
+    /**
+     * Get all roles (primary and additional).
+     */
+    public Set<Role> getAllRoles() {
+        Set<Role> allRoles = new HashSet<>(additionalRoles);
+        allRoles.add(role);
+        return allRoles;
+    }
+    
+    /**
+     * Get the highest privilege role.
+     */
+    public Role getHighestRole() {
+        return getAllRoles().stream()
+                .max(Comparator.comparing(Role::getHierarchyLevel))
+                .orElse(role);
+    }
+    
+    /**
+     * Update searchable hashes for encrypted fields.
+     * Called before persisting or updating the entity.
+     */
+    @Override
+    protected void updateSearchableHashes(EncryptionService encryptionService) {
+        // Update email hash for searchable encrypted email field
+        if (email != null) {
+            this.emailHash = encryptionService.hash(email.toLowerCase());
+        }
+        
+        // Note: Other PII fields (firstName, lastName, etc.) don't need hashes
+        // as they are not searchable - they use regular encryption only
     }
 }

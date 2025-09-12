@@ -1,0 +1,89 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true  # Allow test configurations to override main beans
+  # Database configuration will be provided by TestContainers
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+  
+  flyway:
+    enabled: false  # Disabled for integration tests - using Hibernate DDL
+  
+  # Cache configuration  
+  cache:
+    type: simple
+  
+  # Redis configuration will be provided by TestContainers
+  
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:8081
+  
+  # Exclude autoconfiguration that causes issues in tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.tracing.TracingAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.observation.ObservationAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration
+
+server:
+  port: 0  # Random port for tests
+
+# JWT Configuration for integration tests
+jwt:
+  secret: integrationTestSecretKeyThatIsAtLeast512BitsLongForHS512AlgorithmSecurityRequirementsAndTestingPurposesHere
+  access-token-expiration-ms: 300000  # 5 minutes
+  refresh-token-expiration-ms: 600000  # 10 minutes
+  remember-me-expiration-ms: 900000   # 15 minutes
+  issuer: identity-service-integration-test
+
+# Security Configuration
+security:
+  jwt:
+    key-store: classpath:test-keystore.p12
+    key-store-password: testpass
+    key-alias: test
+    private-key-passphrase: testpass
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
+    
+# OAuth2 Configuration for integration tests
+oauth2:
+  authorization:
+    access-token-time-to-live: PT5M
+    refresh-token-time-to-live: PT30M
+
+# Application Configuration
+app:
+  base-url: http://localhost:3000
+  email:
+    from: integration-test@focushive.com
+
+# Logging Configuration - reduced for integration tests
+logging:
+  level:
+    com.focushive.identity: INFO
+    org.springframework.security: WARN
+    org.springframework.security.oauth2: INFO
+    org.springframework.security.oauth2.server.authorization: INFO
+    org.hibernate.SQL: false
+    org.testcontainers: INFO
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  tracing:
+    enabled: false
+  observations:
+    enabled: false

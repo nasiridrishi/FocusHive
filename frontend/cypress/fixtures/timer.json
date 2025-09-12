@@ -1,0 +1,243 @@
+{
+  "defaultSettings": {
+    "focusLength": 25,
+    "shortBreakLength": 5,
+    "longBreakLength": 15,
+    "longBreakInterval": 4,
+    "autoStartBreaks": false,
+    "autoStartFocus": false,
+    "soundEnabled": true,
+    "notificationsEnabled": true,
+    "selectedSounds": {
+      "focusStart": "bell",
+      "focusEnd": "chime",
+      "breakStart": "soft-bell",
+      "breakEnd": "notification"
+    }
+  },
+  "customSettings": {
+    "focusLength": 30,
+    "shortBreakLength": 10,
+    "longBreakLength": 20,
+    "longBreakInterval": 3,
+    "autoStartBreaks": true,
+    "autoStartFocus": false,
+    "soundEnabled": false,
+    "notificationsEnabled": false,
+    "selectedSounds": {
+      "focusStart": "none",
+      "focusEnd": "none",
+      "breakStart": "none",
+      "breakEnd": "none"
+    }
+  },
+  "activeSession": {
+    "id": "session-123",
+    "userId": "test-user-123",
+    "hiveId": "test-hive-456",
+    "targetCycles": 4,
+    "completedCycles": 0,
+    "distractions": 0,
+    "goals": [],
+    "productivity": {
+      "rating": 0,
+      "notes": ""
+    },
+    "startTime": "2024-09-12T10:00:00Z",
+    "focusTime": 0,
+    "breakTime": 0
+  },
+  "sessionWithGoals": {
+    "id": "session-456",
+    "userId": "test-user-123",
+    "hiveId": "test-hive-456",
+    "targetCycles": 4,
+    "completedCycles": 1,
+    "distractions": 2,
+    "goals": [
+      {
+        "id": "goal-1",
+        "description": "Complete chapter 5 reading",
+        "isCompleted": false,
+        "priority": "high",
+        "createdAt": "2024-09-12T10:00:00Z"
+      },
+      {
+        "id": "goal-2",
+        "description": "Review lecture notes",
+        "isCompleted": true,
+        "priority": "medium",
+        "completedAt": "2024-09-12T10:25:00Z",
+        "createdAt": "2024-09-12T10:00:00Z"
+      },
+      {
+        "id": "goal-3",
+        "description": "Outline essay structure",
+        "isCompleted": false,
+        "priority": "low",
+        "createdAt": "2024-09-12T10:15:00Z"
+      }
+    ],
+    "productivity": {
+      "rating": 4,
+      "notes": "Good focus, minimal distractions"
+    },
+    "startTime": "2024-09-12T10:00:00Z",
+    "focusTime": 25,
+    "breakTime": 5
+  },
+  "completedSession": {
+    "id": "session-789",
+    "userId": "test-user-123",
+    "hiveId": "test-hive-456",
+    "targetCycles": 4,
+    "completedCycles": 4,
+    "distractions": 1,
+    "goals": [
+      {
+        "id": "goal-1",
+        "description": "Finish project proposal",
+        "isCompleted": true,
+        "priority": "high",
+        "completedAt": "2024-09-12T11:45:00Z",
+        "createdAt": "2024-09-12T10:00:00Z"
+      }
+    ],
+    "productivity": {
+      "rating": 5,
+      "notes": "Excellent focus session, completed all goals ahead of schedule"
+    },
+    "startTime": "2024-09-12T10:00:00Z",
+    "endTime": "2024-09-12T12:30:00Z",
+    "focusTime": 100,
+    "breakTime": 30,
+    "achievements": ["perfect-focus", "goal-achiever", "time-master"]
+  },
+  "timerStates": {
+    "idle": {
+      "currentPhase": "idle",
+      "timeRemaining": 1500,
+      "isRunning": false,
+      "isPaused": false,
+      "currentCycle": 0,
+      "totalCycles": 4
+    },
+    "focusActive": {
+      "currentPhase": "focus",
+      "timeRemaining": 1200,
+      "isRunning": true,
+      "isPaused": false,
+      "currentCycle": 1,
+      "totalCycles": 4,
+      "sessionStartTime": "2024-09-12T10:00:00Z"
+    },
+    "focusPaused": {
+      "currentPhase": "focus",
+      "timeRemaining": 900,
+      "isRunning": false,
+      "isPaused": true,
+      "currentCycle": 1,
+      "totalCycles": 4,
+      "sessionStartTime": "2024-09-12T10:00:00Z"
+    },
+    "shortBreak": {
+      "currentPhase": "short-break",
+      "timeRemaining": 300,
+      "isRunning": true,
+      "isPaused": false,
+      "currentCycle": 1,
+      "totalCycles": 4,
+      "sessionStartTime": "2024-09-12T10:00:00Z"
+    },
+    "longBreak": {
+      "currentPhase": "long-break",
+      "timeRemaining": 900,
+      "isRunning": true,
+      "isPaused": false,
+      "currentCycle": 4,
+      "totalCycles": 4,
+      "sessionStartTime": "2024-09-12T10:00:00Z"
+    }
+  },
+  "memberActivity": [
+    {
+      "userId": "user-1",
+      "userName": "Alice Cooper",
+      "status": "focusing",
+      "phase": "focus",
+      "timeRemaining": 1200,
+      "currentCycle": 2,
+      "isOnline": true
+    },
+    {
+      "userId": "user-2", 
+      "userName": "Bob Smith",
+      "status": "on-break",
+      "phase": "short-break",
+      "timeRemaining": 180,
+      "currentCycle": 1,
+      "isOnline": true
+    },
+    {
+      "userId": "user-3",
+      "userName": "Charlie Brown",
+      "status": "idle",
+      "phase": "idle",
+      "timeRemaining": 1500,
+      "currentCycle": 0,
+      "isOnline": false
+    }
+  ],
+  "notifications": {
+    "focusStart": {
+      "title": "Focus Time!",
+      "body": "Time to concentrate and get things done.",
+      "icon": "/icons/focus.png"
+    },
+    "focusEnd": {
+      "title": "Great Focus!",
+      "body": "You've completed a focus session. Time for a break!",
+      "icon": "/icons/break.png"
+    },
+    "breakStart": {
+      "title": "Break Time",
+      "body": "Take a well-deserved break and recharge.",
+      "icon": "/icons/coffee.png"
+    },
+    "breakEnd": {
+      "title": "Break Over",
+      "body": "Ready to focus again? Let's continue!",
+      "icon": "/icons/focus.png"
+    }
+  },
+  "achievements": [
+    {
+      "id": "perfect-focus",
+      "name": "Perfect Focus",
+      "description": "Complete a focus session without any distractions",
+      "icon": "🎯",
+      "rarity": "common"
+    },
+    {
+      "id": "goal-achiever",
+      "name": "Goal Achiever",
+      "description": "Complete all session goals",
+      "icon": "✅",
+      "rarity": "common"
+    },
+    {
+      "id": "time-master",
+      "name": "Time Master",
+      "description": "Complete 4 consecutive Pomodoro cycles",
+      "icon": "⏰",
+      "rarity": "rare"
+    },
+    {
+      "id": "consistency-king",
+      "name": "Consistency King",
+      "description": "Complete focus sessions for 7 days in a row",
+      "icon": "👑",
+      "rarity": "epic"
+    }
+  ]
+}

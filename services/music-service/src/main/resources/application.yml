@@ -11,7 +11,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:focushive_music}
     username: ${DB_USER:music_user}
-    password: ${DB_PASSWORD:music_pass}
+    password: ${DB_PASSWORD}  # REQUIRED: Must be set in environment
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 20000
@@ -43,7 +43,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}  # REQUIRED: Must be set in environment
       timeout: 2000ms
       lettuce:
         pool:
@@ -88,7 +88,7 @@ services:
 
 # Security
 jwt:
-  secret: ${JWT_SECRET:your-super-secret-jwt-key-change-in-production}
+  secret: ${JWT_SECRET}  # REQUIRED: Must be set in environment
 
 # Logging
 logging:

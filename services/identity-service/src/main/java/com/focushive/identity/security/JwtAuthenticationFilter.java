@@ -3,6 +3,7 @@ package com.focushive.identity.security;
 import com.focushive.identity.entity.User;
 import com.focushive.identity.service.CustomUserDetailsService;
 import com.focushive.identity.service.TokenBlacklistService;
+import com.focushive.identity.service.CookieJwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,12 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService userDetailsService;
     private final TokenBlacklistService tokenBlacklistService;
+    private final CookieJwtService cookieJwtService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            String jwt = getJwtFromRequest(request);
+            // First try to get JWT from cookies, then from Authorization header
+            String jwt = cookieJwtService.extractJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt) && !tokenBlacklistService.isBlacklisted(jwt)) {
                 String username = tokenProvider.extractUsername(jwt);
@@ -52,7 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     // Authentication successful - detailed logging controlled by config
                     if (log.isDebugEnabled()) {
-                        log.debug("User authentication successful");
+                        log.debug("User authentication successful via {}", 
+                                cookieJwtService.getAccessTokenFromCookie(request) != null ? "cookie" : "header");
                     }
                 }
             }
@@ -63,6 +67,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * @deprecated Use CookieJwtService.extractJwtFromRequest() instead
+     * This method is kept for backward compatibility
+     */
+    @Deprecated
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {

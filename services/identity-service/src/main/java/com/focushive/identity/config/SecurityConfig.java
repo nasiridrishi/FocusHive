@@ -8,6 +8,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -27,6 +28,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import com.focushive.identity.security.JwtAuthenticationFilter;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,6 +40,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 @Profile("!test")
 public class SecurityConfig {
 
@@ -47,9 +52,36 @@ public class SecurityConfig {
     @Bean
     @Order(3)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+        // Create CSRF token request handler for Double Submit Cookie pattern
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        // Set the name of the attribute the CsrfToken will be populated on
+        requestHandler.setCsrfRequestAttributeName("_csrf");
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                // Enable CSRF protection for cookie-based authentication
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(requestHandler)
+                        .ignoringRequestMatchers(
+                                // Allow these endpoints without CSRF for initial authentication
+                                "/api/v1/auth/register", 
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/validate",
+                                "/api/v1/auth/introspect",
+                                "/api/v1/auth/password/reset-request", 
+                                "/api/v1/auth/password/reset",
+                                "/oauth2/**", 
+                                "/.well-known/**",
+                                "/api/v1/oauth2/**",
+                                "/api/v1/performance-test/**",
+                                "/actuator/health", 
+                                "/api-docs/**", 
+                                "/swagger-ui/**",
+                                "/api/v1/health"
+                        )
+                )
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/actuator/health", "/api-docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/v1/health").permitAll()
@@ -99,7 +131,15 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Content-Type", 
+            "Authorization", 
+            "X-Requested-With", 
+            "Accept", 
+            "Origin", 
+            "Access-Control-Request-Method", 
+            "Access-Control-Request-Headers"
+        ));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

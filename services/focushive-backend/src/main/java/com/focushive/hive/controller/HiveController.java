@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +46,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping
+    @PreAuthorize("isAuthenticated() and @securityService.canManageHives()")
     public ResponseEntity<HiveResponse> createHive(
             @Valid @RequestBody CreateHiveRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -61,6 +63,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToHive(T(java.util.UUID).fromString(#id))")
     public ResponseEntity<HiveResponse> getHive(
             @Parameter(description = "Hive ID") @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -91,6 +94,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated() and @securityService.canModerateHive(T(java.util.UUID).fromString(#id))")
     public ResponseEntity<HiveResponse> updateHive(
             @PathVariable String id,
             @Valid @RequestBody UpdateHiveRequest request,
@@ -107,6 +111,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated() and @securityService.isHiveOwner(T(java.util.UUID).fromString(#id))")
     public ResponseEntity<Void> deleteHive(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -120,6 +125,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<HiveResponse>> listHives(
             @Parameter(description = "Filter by user's hives only") @RequestParam(defaultValue = "false") boolean myHivesOnly,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
@@ -155,6 +161,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/{id}/join")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MemberResponse> joinHive(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -176,6 +183,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/{id}/leave")
+    @PreAuthorize("isAuthenticated() and @securityService.isHiveMember(T(java.util.UUID).fromString(#id))")
     public ResponseEntity<Void> leaveHive(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -190,6 +198,7 @@ public class HiveController {
         @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping("/{id}/members")
+    @PreAuthorize("isAuthenticated() and @securityService.hasAccessToHive(T(java.util.UUID).fromString(#id))")
     public ResponseEntity<Page<MemberResponse>> getHiveMembers(
             @PathVariable String id,
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,

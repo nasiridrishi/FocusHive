@@ -1,0 +1,60 @@
+# Security Headers for Production Deployment
+# Compatible with Netlify, Vercel, and other JAMstack platforms
+
+/*
+  # Strict Transport Security (HTTPS only)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  
+  # Content Security Policy - Production Configuration
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.spotify.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; media-src 'self' data: https: blob:; connect-src 'self' wss: ws: https://api.spotify.com; worker-src 'self' blob:; child-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  
+  # Prevent clickjacking attacks
+  X-Frame-Options: DENY
+  
+  # Prevent MIME type sniffing
+  X-Content-Type-Options: nosniff
+  
+  # XSS Protection
+  X-XSS-Protection: 1; mode=block
+  
+  # Referrer Policy
+  Referrer-Policy: strict-origin-when-cross-origin
+  
+  # Permissions Policy - Restrict sensitive browser features
+  Permissions-Policy: geolocation=(), microphone=(self), camera=(self), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), ambient-light-sensor=(), autoplay=(self), encrypted-media=(self), fullscreen=(self), picture-in-picture=(self), screen-wake-lock=(self), web-share=(self)
+  
+  # Cross-Origin Policies
+  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  
+  # Cache Control for Security
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# Static Assets - Allow caching with security headers
+/assets/*
+  # Static assets can be cached
+  Cache-Control: public, max-age=31536000, immutable
+  # But still need security headers
+  X-Content-Type-Options: nosniff
+  Cross-Origin-Resource-Policy: same-origin
+
+# Service Worker
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Content-Type-Options: nosniff
+
+# Manifest files
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  X-Content-Type-Options: nosniff
+  Cache-Control: public, max-age=86400
+
+# API routes (if using edge functions)
+/api/*
+  # API-specific headers
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Cache-Control: no-cache, no-store, must-revalidate
