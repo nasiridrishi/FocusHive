@@ -448,7 +448,7 @@ jobs:
 
       - name: Comment PR with test results
         if: github.event_name == 'pull_request' && always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
@@ -468,7 +468,7 @@ jobs:
 
       - name: Create test status check
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const testSuccess = '${{ needs.e2e-tests.result }}' === 'success';
@@ -490,7 +490,7 @@ jobs:
     
     steps:
       - name: Send failure notification
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = '🚨 Nightly E2E Tests Failed';
