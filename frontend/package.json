@@ -48,7 +48,7 @@
     "@mui/icons-material": "^5.16.7",
     "@mui/lab": "^5.0.0-alpha.176",
     "@mui/material": "^5.16.7",
-    "@mui/x-charts": "^7.22.2",
+    "@mui/x-charts": "^8.11.2",
     "@mui/x-date-pickers": "^7.22.2",
     "@spotify/web-api-ts-sdk": "^1.2.0",
     "@stomp/stompjs": "^7.1.1",
