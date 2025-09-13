@@ -1,0 +1,401 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'services/**'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'services/**'
+      - '.github/workflows/backend-tests.yml'
+
+env:
+  JAVA_VERSION: 21
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.changes.outputs.services }}
+      backend-changed: ${{ steps.changes.outputs.backend-changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect service changes
+        id: changes
+        run: |
+          # Get list of changed services
+          CHANGED_SERVICES=""
+          for service in services/*/; do
+            service_name=$(basename "$service")
+            if [ -d "$service" ] && git diff --name-only HEAD~1..HEAD | grep -q "^services/$service_name/"; then
+              CHANGED_SERVICES="$CHANGED_SERVICES $service_name"
+            fi
+          done
+          
+          # If no specific changes detected in PR, test all services
+          if [ -z "$CHANGED_SERVICES" ] && [ "${{ github.event_name }}" = "push" ]; then
+            CHANGED_SERVICES="focushive-backend identity-service music-service notification-service chat-service analytics-service forum-service buddy-service api-gateway"
+          fi
+          
+          echo "services=$CHANGED_SERVICES" >> $GITHUB_OUTPUT
+          echo "backend-changed=${{ github.event_name == 'push' || steps.changes.outputs.services != '' }}" >> $GITHUB_OUTPUT
+          echo "Changed services: $CHANGED_SERVICES"
+
+  unit-tests:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [
+          focushive-backend,
+          identity-service,
+          music-service,
+          notification-service,
+          chat-service,
+          analytics-service,
+          forum-service,
+          buddy-service,
+          api-gateway
+        ]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            services/${{ matrix.service }}/.gradle
+          key: ${{ runner.os }}-gradle-${{ matrix.service }}-${{ hashFiles('services/${{ matrix.service }}/build.gradle.kts', 'services/${{ matrix.service }}/gradle.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-${{ matrix.service }}-
+            ${{ runner.os }}-gradle-
+
+      - name: Make gradle wrapper executable
+        run: chmod +x services/${{ matrix.service }}/gradlew
+
+      - name: Run unit tests for ${{ matrix.service }}
+        run: |
+          cd services/${{ matrix.service }}
+          ./gradlew unitTest --no-daemon --parallel --continue \
+            -Dspring.profiles.active=test \
+            -DexcludeIntegrationTests=true
+        env:
+          SPRING_PROFILES_ACTIVE: test
+
+      - name: Generate test report
+        if: always()
+        run: |
+          cd services/${{ matrix.service }}
+          ./gradlew jacocoTestReport --no-daemon
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.service }}
+          path: |
+            services/${{ matrix.service }}/build/reports/tests/
+            services/${{ matrix.service }}/build/test-results/
+          retention-days: 7
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.service }}
+          path: services/${{ matrix.service }}/build/reports/jacoco/
+          retention-days: 7
+
+      - name: Check coverage threshold
+        run: |
+          cd services/${{ matrix.service }}
+          # Extract coverage percentage from JaCoCo report
+          if [ -f build/reports/jacoco/test/html/index.html ]; then
+            COVERAGE=$(grep -o 'Total[^%]*[0-9]\+%' build/reports/jacoco/test/html/index.html | tail -1 | grep -o '[0-9]\+' | tail -1)
+            echo "Coverage for ${{ matrix.service }}: ${COVERAGE}%"
+            
+            # Fail if coverage is below 80%
+            if [ "$COVERAGE" -lt 80 ]; then
+              echo "❌ Coverage ${COVERAGE}% is below minimum threshold of 80%"
+              exit 1
+            else
+              echo "✅ Coverage ${COVERAGE}% meets minimum threshold"
+            fi
+          else
+            echo "⚠️ Coverage report not found, skipping check"
+          fi
+
+  integration-tests:
+    needs: [detect-changes, unit-tests]
+    if: needs.detect-changes.outputs.backend-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [
+          focushive-backend,
+          identity-service,
+          music-service,
+          notification-service,
+          chat-service,
+          analytics-service,
+          forum-service,
+          buddy-service
+        ]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            services/${{ matrix.service }}/.gradle
+          key: ${{ runner.os }}-gradle-integration-${{ matrix.service }}-${{ hashFiles('services/${{ matrix.service }}/build.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-integration-${{ matrix.service }}-
+            ${{ runner.os }}-gradle-
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U test_user; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+      - name: Wait for Redis
+        run: |
+          until redis-cli -h localhost -p 6379 ping; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+
+      - name: Make gradle wrapper executable
+        run: chmod +x services/${{ matrix.service }}/gradlew
+
+      - name: Run integration tests for ${{ matrix.service }}
+        run: |
+          cd services/${{ matrix.service }}
+          ./gradlew test --no-daemon --parallel \
+            -Dspring.profiles.active=integration-test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/test_db \
+            -Dspring.datasource.username=test_user \
+            -Dspring.datasource.password=test_pass \
+            -Dspring.redis.host=localhost \
+            -Dspring.redis.port=6379
+        env:
+          SPRING_PROFILES_ACTIVE: integration-test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: test_db
+          DB_USER: test_user
+          DB_PASSWORD: test_pass
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results-${{ matrix.service }}
+          path: |
+            services/${{ matrix.service }}/build/reports/tests/
+            services/${{ matrix.service }}/build/test-results/
+          retention-days: 7
+
+  aggregate-results:
+    needs: [unit-tests, integration-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all test artifacts
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+
+      - name: Generate aggregated test report
+        if: always()
+        run: |
+          echo "# Backend Test Results Summary" > test-summary.md
+          echo "" >> test-summary.md
+          echo "## Services Tested" >> test-summary.md
+          
+          TOTAL_TESTS=0
+          TOTAL_FAILURES=0
+          
+          for service in focushive-backend identity-service music-service notification-service chat-service analytics-service forum-service buddy-service api-gateway; do
+            if [ -d "test-results/test-results-$service" ]; then
+              echo "- ✅ $service: Unit tests completed" >> test-summary.md
+            else
+              echo "- ❌ $service: Unit tests failed or skipped" >> test-summary.md
+            fi
+            
+            if [ -d "test-results/integration-test-results-$service" ]; then
+              echo "  - ✅ Integration tests completed" >> test-summary.md
+            else
+              echo "  - ❌ Integration tests failed or skipped" >> test-summary.md
+            fi
+          done
+          
+          echo "" >> test-summary.md
+          echo "## Coverage Reports" >> test-summary.md
+          echo "Coverage reports are available in the coverage artifacts." >> test-summary.md
+          
+          cat test-summary.md
+
+      - name: Upload aggregated results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-summary
+          path: test-summary.md
+          retention-days: 30
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const summary = fs.readFileSync('test-summary.md', 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🧪 Backend Test Results\n\n${summary}`
+              });
+            } catch (error) {
+              console.log('Could not create PR comment:', error.message);
+            }
+
+  build-images:
+    needs: [unit-tests, integration-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [
+          focushive-backend,
+          identity-service,
+          music-service,
+          notification-service,
+          chat-service,
+          analytics-service,
+          forum-service,
+          buddy-service,
+          api-gateway
+        ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-build-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-build-
+
+      - name: Build JAR for ${{ matrix.service }}
+        run: |
+          cd services/${{ matrix.service }}
+          chmod +x ./gradlew
+          ./gradlew build -x test --no-daemon
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/focushive-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: services/${{ matrix.service }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

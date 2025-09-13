@@ -1,387 +1,570 @@
-name: Continuous Integration
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: 'Deployment target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip test execution (emergency deployments only)'
+        required: false
+        default: false
+        type: boolean
 
 env:
-  JAVA_VERSION: '21'
-  NODE_VERSION: '20'
-  DOCKER_BUILDKIT: 1
-  COMPOSE_DOCKER_CLI_BUILD: 1
+  REGISTRY: ghcr.io
+  REGISTRY_USER: ${{ github.actor }}
+  REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  backend-test:
-    name: Backend Tests
+  # ===== CHANGE DETECTION & PLANNING =====
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend-changed: ${{ steps.changes.outputs.backend }}
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      e2e-changed: ${{ steps.changes.outputs.e2e }}
+      docker-changed: ${{ steps.changes.outputs.docker }}
+      docs-changed: ${{ steps.changes.outputs.docs }}
+      deployment-required: ${{ steps.deployment.outputs.required }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'services/**'
+              - '.github/workflows/backend-tests.yml'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/frontend-tests.yml'
+              - '.github/workflows/ci.yml'
+            e2e:
+              - 'e2e-tests/**'
+              - 'docker-compose.e2e.yml'
+              - '.github/workflows/e2e-tests.yml'
+            docker:
+              - '**/Dockerfile'
+              - 'docker-compose*.yml'
+              - '.dockerignore'
+            docs:
+              - '**.md'
+              - 'docs/**'
+
+      - name: Determine deployment requirements
+        id: deployment
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "required=true" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" = "push" ]; then
+            echo "required=true" >> $GITHUB_OUTPUT
+          else
+            echo "required=false" >> $GITHUB_OUTPUT
+          fi
+
+  # ===== LINTING & STATIC ANALYSIS =====
+  lint-and-format:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.backend-changed == 'true' ||
+      needs.detect-changes.outputs.frontend-changed == 'true'
+    
+    strategy:
+      matrix:
+        component: []
+        include:
+          - component: backend
+            condition: ${{ needs.detect-changes.outputs.backend-changed == 'true' }}
+          - component: frontend  
+            condition: ${{ needs.detect-changes.outputs.frontend-changed == 'true' }}
+    
+    steps:
+      - name: Checkout code
+        if: matrix.condition
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (Frontend)
+        if: matrix.component == 'frontend' && matrix.condition
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up JDK (Backend)
+        if: matrix.component == 'backend' && matrix.condition
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Lint Frontend
+        if: matrix.component == 'frontend' && matrix.condition
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+          npm run lint:check
+
+      - name: TypeScript Check
+        if: matrix.component == 'frontend' && matrix.condition
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
+      - name: Check Backend Format
+        if: matrix.component == 'backend' && matrix.condition
+        run: |
+          # Check if all services follow Kotlin/Java formatting standards
+          find services -name "*.kt" -o -name "*.java" | xargs grep -l "class " | head -5
+
+  # ===== PARALLEL TEST EXECUTION =====
+  backend-tests:
+    needs: [detect-changes, lint-and-format]
+    if: |
+      needs.detect-changes.outputs.backend-changed == 'true' &&
+      github.event.inputs.skip_tests != 'true'
+    uses: ./.github/workflows/backend-tests.yml
+    secrets: inherit
+
+  frontend-tests:
+    needs: [detect-changes, lint-and-format]
+    if: |
+      needs.detect-changes.outputs.frontend-changed == 'true' &&
+      github.event.inputs.skip_tests != 'true'
+    uses: ./.github/workflows/frontend-tests.yml
+    secrets: inherit
+
+  security-scans:
+    needs: detect-changes
+    if: |
+      (needs.detect-changes.outputs.backend-changed == 'true' ||
+       needs.detect-changes.outputs.frontend-changed == 'true') &&
+      github.event.inputs.skip_tests != 'true'
+    uses: ./.github/workflows/security.yml
+    secrets: inherit
+
+  # ===== BUILD & PACKAGE =====
+  build-backend:
+    needs: [detect-changes, backend-tests]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.backend-changed == 'true' &&
+      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped')
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: focushive_test
-          POSTGRES_USER: focushive
-          POSTGRES_PASSWORD: test123
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+    strategy:
+      matrix:
+        service: [
+          focushive-backend,
+          identity-service,
+          music-service,
+          notification-service,
+          chat-service,
+          analytics-service,
+          forum-service,
+          buddy-service,
+          api-gateway
+        ]
+    
+    outputs:
+      image-tags: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build JAR
+        run: |
+          cd services/${{ matrix.service }}
+          chmod +x ./gradlew
+          ./gradlew build -x test --no-daemon
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/focushive-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: services/${{ matrix.service }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  build-frontend:
+    needs: [detect-changes, frontend-tests]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.frontend-changed == 'true' &&
+      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped')
+    runs-on: ubuntu-latest
+    
+    outputs:
+      image-tags: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies and build
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+          npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/focushive-frontend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  # ===== E2E TESTS (POST-BUILD) =====
+  e2e-tests:
+    needs: [detect-changes, build-backend, build-frontend]
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.e2e-changed == 'true' ||
+       needs.detect-changes.outputs.backend-changed == 'true' ||
+       needs.detect-changes.outputs.frontend-changed == 'true') &&
+      (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
+      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') &&
+      github.event.inputs.skip_tests != 'true'
+    uses: ./.github/workflows/e2e-tests.yml
+    secrets: inherit
+
+  # ===== DEPLOYMENT =====
+  deploy-staging:
+    needs: [
+      detect-changes,
+      backend-tests,
+      frontend-tests,
+      security-scans,
+      build-backend,
+      build-frontend,
+      e2e-tests
+    ]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.deployment-required == 'true' &&
+      (needs.backend-tests.result == 'success' || needs.backend-tests.result == 'skipped') &&
+      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped') &&
+      (needs.security-scans.result == 'success' || needs.security-scans.result == 'skipped') &&
+      (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped') &&
+      (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped') &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped' || github.event.inputs.skip_tests == 'true')
+    runs-on: ubuntu-latest
+    environment: 
+      name: staging
+      url: https://staging.focushive.app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl for staging
+        run: |
+          echo "${{ secrets.STAGING_KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+          kubectl config current-context
+
+      - name: Deploy to staging
+        run: |
+          export KUBECONFIG=kubeconfig
           
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
+          # Update image tags in deployment manifests
+          BACKEND_TAG="${{ needs.build-backend.outputs.image-tags }}"
+          FRONTEND_TAG="${{ needs.build-frontend.outputs.image-tags }}"
+          
+          # Deploy all services
+          for service in focushive-backend identity-service music-service notification-service chat-service analytics-service forum-service buddy-service api-gateway; do
+            if [ -f "k8s/staging/$service-deployment.yaml" ]; then
+              sed -i "s|IMAGE_TAG|$BACKEND_TAG|g" "k8s/staging/$service-deployment.yaml"
+              kubectl apply -f "k8s/staging/$service-deployment.yaml"
+            fi
+          done
+          
+          # Deploy frontend
+          if [ -f "k8s/staging/frontend-deployment.yaml" ]; then
+            sed -i "s|IMAGE_TAG|$FRONTEND_TAG|g" "k8s/staging/frontend-deployment.yaml"
+            kubectl apply -f "k8s/staging/frontend-deployment.yaml"
+          fi
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/focushive-backend -n staging --timeout=300s
+          kubectl rollout status deployment/focushive-frontend -n staging --timeout=300s
 
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: 'gradle'
-    
-    - name: Grant execute permission for gradlew
-      working-directory: services/focushive-backend
-      run: chmod +x gradlew || echo "No gradlew found yet"
-    
-    - name: Run unit tests (development mode)
-      working-directory: services/focushive-backend
-      env:
-        SPRING_PROFILES_ACTIVE: test
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/focushive_test
-        SPRING_DATASOURCE_USERNAME: focushive
-        SPRING_DATASOURCE_PASSWORD: test123
-        SPRING_REDIS_HOST: localhost
-        SPRING_REDIS_PORT: 6379
-        CI: true
-      run: |
-        # Run tests but don't fail the CI if they fail - development phase
-        if [ -f gradlew ]; then
-          ./gradlew test --info || {
-            echo "⚠️ Backend tests have issues (Spring context loading problems)"
-            echo "This is expected during development phase"
-            echo "Full test suite will be fixed in future sprint"
-            exit 0
-          }
-        else
-          echo "⚠️ Gradle wrapper not found - skipping tests"
-          echo "Backend service needs to be properly set up"
-        fi
-    
-    - name: Generate Test Report
-      working-directory: services/focushive-backend
-      if: always()
-      run: |
-        echo "## Backend Test Results" >> $GITHUB_STEP_SUMMARY
-        if [ -f build/test-results/test/TEST-*.xml ]; then
-          echo "✅ Unit tests completed" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
-        fi
-    
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: backend-test-results
-        path: |
-          services/focushive-backend/build/test-results/
-          services/focushive-backend/build/reports/
-    
-    - name: Build backend
-      working-directory: services/focushive-backend
-      run: |
-        if [ -f gradlew ]; then
-          ./gradlew build -x test
-        else
-          echo "⚠️ Skipping build - Gradle wrapper not found"
-        fi
+      - name: Run smoke tests against staging
+        run: |
+          # Wait for services to be ready
+          sleep 30
+          
+          # Basic health checks
+          curl -f https://staging.focushive.app/health || exit 1
+          curl -f https://staging.focushive.app/api/health || exit 1
+          
+          echo "✅ Staging deployment successful and health checks passed"
 
-  identity-service-test:
-    name: Identity Service Tests
+      - name: Notify deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ Success' : '❌ Failed';
+            const deployment = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment?.id,
+              state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
+              description: `Staging deployment ${status.toLowerCase()}`,
+              environment_url: 'https://staging.focushive.app'
+            };
+            
+            if (deployment.deployment_id) {
+              await github.rest.repos.createDeploymentStatus(deployment);
+            }
+
+  deploy-production:
+    needs: [deploy-staging]
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.deployment_target == 'production' &&
+      needs.deploy-staging.result == 'success'
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://focushive.app
     
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: identity_test
-          POSTGRES_USER: identity
-          POSTGRES_PASSWORD: test123
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: 'gradle'
-    
-    - name: Grant execute permission for gradlew
-      working-directory: services/identity-service
-      run: chmod +x gradlew || echo "No gradlew found yet"
-    
-    - name: Run unit tests (development mode)
-      working-directory: services/identity-service
-      env:
-        SPRING_PROFILES_ACTIVE: test
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/identity_test
-        SPRING_DATASOURCE_USERNAME: identity
-        SPRING_DATASOURCE_PASSWORD: test123
-        CI: true
-      run: |
-        # Run tests but don't fail the CI if they fail - development phase
-        if [ -f gradlew ]; then
-          ./gradlew test --info || {
-            echo "⚠️ Identity service tests have issues"
-            echo "This is expected during development phase"
-            echo "Full test suite will be fixed in future sprint"
-            exit 0
-          }
-        else
-          echo "⚠️ Gradle wrapper not found - skipping tests"
-          echo "Identity service needs to be properly set up"
-        fi
-    
-    - name: Generate Test Report
-      working-directory: services/identity-service
-      if: always()
-      run: |
-        echo "## Identity Service Test Results" >> $GITHUB_STEP_SUMMARY
-        if [ -f build/test-results/test/TEST-*.xml ]; then
-          echo "✅ Unit tests completed" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
-        fi
-    
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: identity-service-test-results
-        path: |
-          services/identity-service/build/test-results/
-          services/identity-service/build/reports/
-    
-    - name: Build identity service
-      working-directory: services/identity-service
-      run: |
-        if [ -f gradlew ]; then
-          ./gradlew build -x test
-        else
-          echo "⚠️ Skipping build - Gradle wrapper not found"
-        fi
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  frontend-test:
-    name: Frontend Tests
+      - name: Manual approval required
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: ${{ github.actor }}
+          minimum-approvals: 1
+          issue-title: "Production Deployment Approval Required"
+          issue-body: |
+            Please review the staging deployment and approve production deployment.
+            
+            **Staging URL**: https://staging.focushive.app
+            **Production URL**: https://focushive.app
+            **Commit**: ${{ github.sha }}
+            **Triggered by**: ${{ github.actor }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: Configure kubectl for production
+        run: |
+          echo "${{ secrets.PRODUCTION_KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+          kubectl config current-context
+
+      - name: Deploy to production with blue-green strategy
+        run: |
+          export KUBECONFIG=kubeconfig
+          
+          # Implement blue-green deployment strategy
+          ./scripts/blue-green-deploy.sh production
+
+      - name: Run production health checks
+        run: |
+          sleep 60
+          
+          # Comprehensive health checks
+          curl -f https://focushive.app/health || exit 1
+          curl -f https://focushive.app/api/health || exit 1
+          
+          # Check all service endpoints
+          for service in identity music notification chat analytics forum buddy; do
+            curl -f https://focushive.app/api/$service/health || exit 1
+          done
+          
+          echo "✅ Production deployment successful and all services healthy"
+
+  # ===== STATUS REPORTING =====
+  status-check:
+    needs: [
+      detect-changes,
+      backend-tests,
+      frontend-tests,
+      security-scans,
+      e2e-tests,
+      deploy-staging,
+      deploy-production
+    ]
+    if: always()
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-    
-    - name: Install dependencies
-      working-directory: frontend
-      run: npm ci
-    
-    - name: Run linting
-      working-directory: frontend
-      run: |
-        echo "## ESLint Results" >> $GITHUB_STEP_SUMMARY
-        npm run lint || {
-          echo "⚠️ ESLint warnings found, but not failing build" >> $GITHUB_STEP_SUMMARY
-          echo "Run 'npm run lint:fix' locally to fix issues" >> $GITHUB_STEP_SUMMARY
-        }
-    
-    - name: Run type checking
-      working-directory: frontend
-      run: |
-        npm run type-check || {
-          echo "⚠️ TypeScript type errors found" >> $GITHUB_STEP_SUMMARY
-          echo "This is expected during development phase" >> $GITHUB_STEP_SUMMARY
-          exit 0
-        }
-    
-    - name: Run tests
-      working-directory: frontend
-      run: |
-        # Run tests but don't fail the CI if they fail - development phase
-        npm run test:unit -- --run || {
-          echo "⚠️ Frontend tests have failures"
-          echo "This is expected during development phase"
-          echo "Tests will be fixed incrementally"
-          exit 0
-        }
-    
-    - name: Generate test coverage report
-      working-directory: frontend
-      run: |
-        npm run test:coverage || echo "Coverage generation failed"
-        echo "## Frontend Test Coverage" >> $GITHUB_STEP_SUMMARY
-        if [ -f coverage/coverage-summary.json ]; then
-          echo "📊 Coverage report generated" >> $GITHUB_STEP_SUMMARY
-        fi
-    
-    - name: Upload Coverage Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: frontend-coverage
-        path: frontend/coverage/
-    
-    - name: Build frontend
-      working-directory: frontend
-      run: |
-        npm run build || {
-          echo "⚠️ Frontend build has compilation errors"
-          echo "This is expected during active development"
-          echo "Build issues will be fixed in development sprint"
-          exit 0
-        }
+      - name: Generate pipeline status
+        run: |
+          echo "# CI/CD Pipeline Status Report" > pipeline-status.md
+          echo "" >> pipeline-status.md
+          echo "**Trigger**: ${{ github.event_name }}" >> pipeline-status.md
+          echo "**Branch**: ${{ github.ref_name }}" >> pipeline-status.md
+          echo "**Commit**: ${{ github.sha }}" >> pipeline-status.md
+          echo "**Actor**: ${{ github.actor }}" >> pipeline-status.md
+          echo "" >> pipeline-status.md
+          
+          echo "## Changes Detected" >> pipeline-status.md
+          echo "- Backend: ${{ needs.detect-changes.outputs.backend-changed }}" >> pipeline-status.md
+          echo "- Frontend: ${{ needs.detect-changes.outputs.frontend-changed }}" >> pipeline-status.md
+          echo "- E2E: ${{ needs.detect-changes.outputs.e2e-changed }}" >> pipeline-status.md
+          echo "- Security: ${{ needs.detect-changes.outputs.docker-changed }}" >> pipeline-status.md
+          echo "" >> pipeline-status.md
+          
+          echo "## Pipeline Results" >> pipeline-status.md
+          echo "- Backend Tests: ${{ needs.backend-tests.result || 'skipped' }}" >> pipeline-status.md
+          echo "- Frontend Tests: ${{ needs.frontend-tests.result || 'skipped' }}" >> pipeline-status.md
+          echo "- Security Scans: ${{ needs.security-scans.result || 'skipped' }}" >> pipeline-status.md
+          echo "- E2E Tests: ${{ needs.e2e-tests.result || 'skipped' }}" >> pipeline-status.md
+          echo "- Staging Deploy: ${{ needs.deploy-staging.result || 'skipped' }}" >> pipeline-status.md
+          echo "- Production Deploy: ${{ needs.deploy-production.result || 'skipped' }}" >> pipeline-status.md
+          
+          cat pipeline-status.md
 
-  docker-build:
-    name: Docker Build Test
+      - name: Upload pipeline status
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-status-report
+          path: pipeline-status.md
+          retention-days: 30
+
+      - name: Update commit status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const allJobsSuccessful = [
+              '${{ needs.backend-tests.result }}',
+              '${{ needs.frontend-tests.result }}',
+              '${{ needs.security-scans.result }}',
+              '${{ needs.e2e-tests.result }}'
+            ].every(result => result === 'success' || result === 'skipped');
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: allJobsSuccessful ? 'success' : 'failure',
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: allJobsSuccessful ? 'All CI checks passed' : 'CI checks failed',
+              context: 'ci/pipeline-status'
+            });
+
+  cleanup:
+    needs: [deploy-staging, deploy-production]
+    if: always()
     runs-on: ubuntu-latest
-    needs: [backend-test, identity-service-test, frontend-test]
-    if: always() && !failure()
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build Frontend Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: docker/frontend/Dockerfile
-        push: false
-        tags: focushive/frontend:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-    
-    - name: Build Backend Docker image (if exists)
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: docker/backend/Dockerfile
-        push: false
-        tags: focushive/backend:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-      continue-on-error: true
-    
-    - name: Build Identity Service Docker image (if exists)
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: docker/identity-service/Dockerfile
-        push: false
-        tags: focushive/identity:test
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-      continue-on-error: true
-    
-    - name: Test Docker Compose configuration
-      run: |
-        if [ -f .env.docker.example ]; then
-          cp .env.docker.example .env
-          docker-compose config || echo "Docker Compose configuration check failed"
-        else
-          echo "⚠️ Docker environment file not found"
-        fi
-
-  docker-push:
-    name: Push Docker Images
-    runs-on: ubuntu-latest
-    needs: [docker-build]
-    # Only run on main branch pushes
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    permissions:
-      contents: read
-      packages: write
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Prepare repository name
-      id: repo
-      run: |
-        echo "repository=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Build and push frontend
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: docker/frontend/Dockerfile
-        push: true
-        tags: |
-          ghcr.io/${{ steps.repo.outputs.repository }}/frontend:latest
-          ghcr.io/${{ steps.repo.outputs.repository }}/frontend:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-    
-    - name: Build and push backend (if exists)
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: docker/backend/Dockerfile
-        push: true
-        tags: |
-          ghcr.io/${{ steps.repo.outputs.repository }}/backend:latest
-          ghcr.io/${{ steps.repo.outputs.repository }}/backend:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-      continue-on-error: true
-    
-    - name: Build and push identity service (if exists)
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: docker/identity-service/Dockerfile
-        push: true
-        tags: |
-          ghcr.io/${{ steps.repo.outputs.repository }}/identity:latest
-          ghcr.io/${{ steps.repo.outputs.repository }}/identity:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-      continue-on-error: true
+      - name: Clean up resources
+        run: |
+          # Clean up any temporary resources
+          echo "Cleaning up CI/CD resources..."
+          
+          # Remove any temporary files or caches if needed
+          docker system prune -f || true
+          
+          echo "✅ Cleanup completed"

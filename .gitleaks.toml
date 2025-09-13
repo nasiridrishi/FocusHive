@@ -1,0 +1,102 @@
+# Gitleaks configuration for FocusHive project
+title = "Gitleaks config for FocusHive"
+
+[extend]
+# Extend default config
+useDefault = true
+
+[[rules]]
+description = "AWS Access Key"
+id = "aws-access-key"
+regex = '''(?i)(aws_access_key_id|aws_secret_access_key)\s*=\s*['\"]?[A-Z0-9]{20,}['\"]?'''
+tags = ["key", "AWS"]
+keywords = ["aws_access_key_id", "aws_secret_access_key"]
+
+[[rules]]
+description = "Database URL with credentials"
+id = "database-url"
+regex = '''(?i)(jdbc:|postgres:|mysql:|mongodb:)\/\/[^:]*:[^@]*@'''
+tags = ["database", "credentials"]
+
+[[rules]]
+description = "JWT Secret"
+id = "jwt-secret"
+regex = '''(?i)(jwt_secret|jwt[_-]?secret|secret[_-]?key)\s*[=:]\s*['\"]?[A-Za-z0-9+/]{32,}['\"]?'''
+tags = ["secret", "JWT"]
+
+[[rules]]
+description = "OAuth Client Secret"
+id = "oauth-secret"
+regex = '''(?i)(client[_-]?secret|oauth[_-]?secret)\s*[=:]\s*['\"]?[A-Za-z0-9_-]{20,}['\"]?'''
+tags = ["secret", "OAuth"]
+
+[[rules]]
+description = "Redis Password"
+id = "redis-password"
+regex = '''(?i)redis[_-]?password\s*[=:]\s*['\"]?[A-Za-z0-9!@#$%^&*()_+-=]{8,}['\"]?'''
+tags = ["password", "Redis"]
+
+[[rules]]
+description = "Spotify API Keys"
+id = "spotify-api"
+regex = '''(?i)(spotify[_-]?client[_-]?id|spotify[_-]?client[_-]?secret)\s*[=:]\s*['\"]?[A-Za-z0-9]{32,}['\"]?'''
+tags = ["api-key", "Spotify"]
+
+# Allowlist for test files and examples
+[allowlist]
+description = "Allowlisted files"
+files = [
+    '''.*\.env\.example$''',
+    '''.*test.*\.yml$''',
+    '''.*test.*\.yaml$''',
+    '''.*\.example\.'''
+]
+
+commits = [
+    # Add commit SHAs that contain known false positives
+]
+
+paths = [
+    # Test directories
+    '''.*/test/.*''',
+    '''.*/tests/.*''',
+    '''.*/src/test/.*''',
+    
+    # Documentation
+    '''.*/docs/.*''',
+    '''.*README.*''',
+    '''.*\.md$''',
+    
+    # Build and config files that may contain example values
+    '''.*gradle.*''',
+    '''.*pom\.xml$''',
+    '''.*package\.json$''',
+    '''.*docker-compose.*\.yml$''',
+    
+    # Migration files (often contain example data)
+    '''.*/migration/.*''',
+    '''.*/migrations/.*''',
+    '''.*/flyway/.*'''
+]
+
+regexes = [
+    # Common false positives
+    '''password.*=.*\{\{.*\}\}''',  # Template variables
+    '''secret.*=.*\$\{.*\}''',      # Environment variable references
+    '''key.*=.*changeme''',         # Default placeholder values
+    '''password.*=.*change.*''',    # Default placeholder values
+    '''secret.*=.*example''',       # Example values
+    '''api.*key.*=.*your.*key''',   # Placeholder text
+    '''token.*=.*\<.*\>'''          # Angle bracket placeholders
+]
+
+# Global allowlist for common patterns
+[allowlist.regexes]
+# Environment variable references
+envvar = '''.*\$\{.*\}.*'''
+# Docker secrets
+docker-secret = '''/run/secrets/.*'''
+# Kubernetes secrets
+k8s-secret = '''/var/run/secrets/.*'''
+# Common test values
+test-values = '''(?i)(test|example|sample|dummy|fake|mock|placeholder)'''

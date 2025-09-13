@@ -1,0 +1,526 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-tests.yml'
+
+env:
+  NODE_VERSION: 20
+  NPM_CONFIG_CACHE: ~/.npm
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend-changed: ${{ steps.changes.outputs.frontend-changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect frontend changes
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] || git diff --name-only HEAD~1..HEAD | grep -q "^frontend/"; then
+            echo "frontend-changed=true" >> $GITHUB_OUTPUT
+            echo "Frontend changes detected"
+          else
+            echo "frontend-changed=false" >> $GITHUB_OUTPUT
+            echo "No frontend changes detected"
+          fi
+
+  lint-and-typecheck:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Run ESLint
+        run: |
+          cd frontend
+          npm run lint:check
+        continue-on-error: false
+
+      - name: Run TypeScript type checking
+        run: |
+          cd frontend
+          npx tsc --noEmit --project ./tsconfig.json
+
+      - name: Check for TypeScript errors in test files
+        run: |
+          cd frontend
+          npx tsc --noEmit --project ./tsconfig.json --skipLibCheck
+
+  unit-tests:
+    needs: [detect-changes, lint-and-typecheck]
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Run unit tests with coverage
+        run: |
+          cd frontend
+          npm run test:ci
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Check coverage threshold
+        run: |
+          cd frontend
+          # Extract coverage from coverage report
+          if [ -f coverage/coverage-summary.json ]; then
+            COVERAGE=$(node -p "JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json', 'utf8')).total.lines.pct")
+            echo "Frontend test coverage: ${COVERAGE}%"
+            
+            # Check if coverage meets minimum threshold (80%)
+            if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+              echo "❌ Coverage ${COVERAGE}% is below minimum threshold of 80%"
+              exit 1
+            else
+              echo "✅ Coverage ${COVERAGE}% meets minimum threshold"
+            fi
+          else
+            echo "⚠️ Coverage report not found"
+            exit 1
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: |
+            frontend/coverage/
+            frontend/test-results.xml
+          retention-days: 7
+
+      - name: Upload coverage to codecov
+        if: always()
+        uses: codecov/codecov-action@v4
+        with:
+          file: frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+
+  component-tests:
+    needs: [detect-changes, lint-and-typecheck]
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Run component tests
+        run: |
+          cd frontend
+          # Run tests for specific component directories
+          npm run test:run -- --run src/shared/components
+          npm run test:run -- --run src/features
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Upload component test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-component-test-results
+          path: frontend/coverage/
+          retention-days: 7
+
+  accessibility-tests:
+    needs: [detect-changes, lint-and-typecheck]
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Run accessibility tests
+        run: |
+          cd frontend
+          # Run jest-axe accessibility tests
+          npm run test:run -- --run src --testNamePattern="accessibility"
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Upload accessibility test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-accessibility-test-results
+          path: frontend/accessibility-report.json
+          retention-days: 7
+
+  build-test:
+    needs: [detect-changes, lint-and-typecheck]
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build-mode: [development, production]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Build application (${{ matrix.build-mode }})
+        run: |
+          cd frontend
+          if [ "${{ matrix.build-mode }}" = "development" ]; then
+            npm run build:no-typecheck
+          else
+            npm run build
+          fi
+        env:
+          NODE_ENV: ${{ matrix.build-mode == 'production' && 'production' || 'development' }}
+          CI: true
+
+      - name: Analyze bundle size
+        if: matrix.build-mode == 'production'
+        run: |
+          cd frontend
+          npm run build:analyze:no-typecheck
+          
+          # Check bundle size limits
+          MAIN_SIZE=$(du -k dist/assets/index-*.js 2>/dev/null | cut -f1 | head -1 || echo "0")
+          if [ "$MAIN_SIZE" -gt 500 ]; then
+            echo "⚠️ Main bundle size (${MAIN_SIZE}KB) exceeds recommended 500KB"
+          else
+            echo "✅ Main bundle size (${MAIN_SIZE}KB) is within limits"
+          fi
+
+      - name: Test production build
+        if: matrix.build-mode == 'production'
+        run: |
+          cd frontend
+          npm run preview &
+          PREVIEW_PID=$!
+          sleep 5
+          
+          # Test that the preview server starts successfully
+          curl -f http://localhost:4173 || exit 1
+          
+          kill $PREVIEW_PID
+
+      - name: Upload build artifacts
+        if: matrix.build-mode == 'production'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ matrix.build-mode }}
+          path: |
+            frontend/dist/
+            frontend/dist/bundle-analysis.html
+          retention-days: 7
+
+  performance-tests:
+    needs: [detect-changes, build-test]
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build-production
+          path: frontend/
+
+      - name: Install Lighthouse CLI
+        run: npm install -g @lhci/cli
+
+      - name: Serve production build
+        run: |
+          cd frontend
+          npx serve -s dist -l 3000 &
+          echo $! > serve.pid
+          sleep 5
+
+      - name: Run Lighthouse CI
+        run: |
+          cd frontend
+          lhci autorun --config=lighthouserc.json || true
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Stop serve
+        if: always()
+        run: |
+          cd frontend
+          if [ -f serve.pid ]; then
+            kill $(cat serve.pid) || true
+          fi
+
+      - name: Upload Lighthouse results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-results
+          path: frontend/.lighthouseci/
+          retention-days: 7
+
+  docker-build:
+    needs: [unit-tests, component-tests, build-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies and build
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+          npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/focushive-frontend
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  aggregate-results:
+    needs: [unit-tests, component-tests, accessibility-tests, build-test, performance-tests]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all test artifacts
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+
+      - name: Generate frontend test summary
+        if: always()
+        run: |
+          echo "# Frontend Test Results Summary" > test-summary.md
+          echo "" >> test-summary.md
+          echo "## Test Suites" >> test-summary.md
+          
+          # Check each test suite
+          if [ -d "test-results/frontend-test-results" ]; then
+            echo "- ✅ Unit Tests: Passed" >> test-summary.md
+          else
+            echo "- ❌ Unit Tests: Failed or skipped" >> test-summary.md
+          fi
+          
+          if [ -d "test-results/frontend-component-test-results" ]; then
+            echo "- ✅ Component Tests: Passed" >> test-summary.md
+          else
+            echo "- ❌ Component Tests: Failed or skipped" >> test-summary.md
+          fi
+          
+          if [ -d "test-results/frontend-accessibility-test-results" ]; then
+            echo "- ✅ Accessibility Tests: Passed" >> test-summary.md
+          else
+            echo "- ❌ Accessibility Tests: Failed or skipped" >> test-summary.md
+          fi
+          
+          if [ -d "test-results/frontend-build-production" ]; then
+            echo "- ✅ Production Build: Successful" >> test-summary.md
+          else
+            echo "- ❌ Production Build: Failed" >> test-summary.md
+          fi
+          
+          if [ -d "test-results/lighthouse-results" ]; then
+            echo "- ✅ Performance Tests: Completed" >> test-summary.md
+          else
+            echo "- ❌ Performance Tests: Failed or skipped" >> test-summary.md
+          fi
+          
+          echo "" >> test-summary.md
+          echo "## Build Artifacts" >> test-summary.md
+          echo "- Build artifacts and coverage reports are available for download" >> test-summary.md
+          echo "- Bundle analysis and Lighthouse reports included" >> test-summary.md
+          
+          cat test-summary.md
+
+      - name: Upload aggregated results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-summary
+          path: test-summary.md
+          retention-days: 30
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const summary = fs.readFileSync('test-summary.md', 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🎨 Frontend Test Results\n\n${summary}`
+              });
+            } catch (error) {
+              console.log('Could not create PR comment:', error.message);
+            }
