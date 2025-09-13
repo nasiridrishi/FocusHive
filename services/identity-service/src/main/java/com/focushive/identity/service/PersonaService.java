@@ -1,5 +1,6 @@
 package com.focushive.identity.service;
 
+import com.focushive.identity.config.CacheConfig;
 import com.focushive.identity.dto.PersonaDto;
 import com.focushive.identity.entity.Persona;
 import com.focushive.identity.entity.User;
@@ -8,6 +9,9 @@ import com.focushive.identity.repository.PersonaRepository;
 import com.focushive.identity.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,6 +84,7 @@ public class PersonaService {
      * Get all personas for a user, ordered by priority (active, default, creation time).
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.PERSONAS_CACHE, key = "#userId", unless = "#result.isEmpty()")
     public List<PersonaDto> getUserPersonas(UUID userId) {
         // Removed debug log to avoid logging user IDs frequently
         
@@ -95,6 +100,7 @@ public class PersonaService {
      * Get a specific persona by ID for a user.
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.PERSONAS_CACHE, key = "'persona:' + #personaId + ':' + #userId", unless = "#result == null")
     public PersonaDto getPersona(UUID userId, UUID personaId) {
         // Removed debug log to avoid logging user and persona IDs frequently
         
@@ -108,6 +114,7 @@ public class PersonaService {
     /**
      * Update a persona.
      */
+    @CacheEvict(value = CacheConfig.PERSONAS_CACHE, allEntries = true)
     public PersonaDto updatePersona(UUID userId, UUID personaId, PersonaDto personaDto) {
         // Removed debug log to avoid logging user and persona IDs frequently
         

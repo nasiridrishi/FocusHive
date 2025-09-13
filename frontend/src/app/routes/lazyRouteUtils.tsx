@@ -52,23 +52,23 @@ export const lazyRoutes: LazyRouteConfig[] = []
 // Preloader function to prefetch critical routes
 export function preloadCriticalRoutes() {
   // Critical routes are already loaded with the main bundle
-  console.log('[Routes] Critical routes preloaded')
+  // Routes preloaded successfully
 }
 
 // Export route preloading utilities
 export const routePreloaders = {
   // Preload authentication routes
   preloadAuth: () => {
-    console.log('[Routes] Auth routes ready for preload')
+    // Auth routes ready for preload
   },
   
   // Preload main app routes
   preloadMainApp: () => {
-    console.log('[Routes] Main app routes ready for preload')
+    // Main app routes ready for preload
   },
   
   // Preload heavy features on user interaction
   preloadHeavyFeatures: () => {
-    console.log('[Routes] Heavy features ready for preload')
+    // Heavy features ready for preload
   }
 }

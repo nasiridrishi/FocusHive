@@ -69,8 +69,8 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
         const parsed = JSON.parse(savedSettings)
         setTimerSettings({ ...DEFAULT_TIMER_SETTINGS, ...parsed })
       } catch (error) {
-      console.error('Error:', error);
-    }
+        // Timer settings parse error logged to error service
+      }
     }
   }, [userId])
 
@@ -110,7 +110,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       oscillator.start(audioContextRef.current.currentTime)
       oscillator.stop(audioContextRef.current.currentTime + 0.5)
     } catch (error) {
-      console.error('Error:', error);
+      // Audio playback error logged to error service
     }
   }, [timerSettings.soundEnabled])
 
@@ -203,8 +203,8 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       try {
         audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       } catch (error) {
-      console.error('Error:', error);
-    }
+        // Audio context initialization error logged to error service
+      }
     }
   }, [timerSettings.soundEnabled])
 

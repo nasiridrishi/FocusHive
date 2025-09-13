@@ -60,8 +60,12 @@ dependencies {
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux") // For WebTestClient
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("com.github.tomakehurst:wiremock-jre8:3.0.1")
+    testImplementation("org.awaitility:awaitility:4.2.0")
+    testImplementation("org.testcontainers:redis")
     testRuntimeOnly("com.h2database:h2")
 }
 

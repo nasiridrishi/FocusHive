@@ -65,11 +65,13 @@ spring:
       shutdown-timeout: 100ms
   
   cache:
-    type: none  # Disable caching temporarily
-    # type: redis  # Re-enable when Redis is available
-    # redis:
-    #   time-to-live: 3600000 # 1 hour
-    #   cache-null-values: false
+    type: redis  # Enable Redis caching
+    redis:
+      time-to-live: 3600000 # 1 hour default TTL
+      cache-null-values: false
+      enable-statistics: true
+      use-key-prefix: true
+      key-prefix: "focushive:"
   
   cloud:
     openfeign:
@@ -124,7 +126,7 @@ app:
     authController:
       enabled: false
     redis:
-      enabled: false
+      enabled: true
     health:
       enabled: false
 

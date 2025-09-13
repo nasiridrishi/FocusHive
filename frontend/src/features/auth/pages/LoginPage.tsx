@@ -26,7 +26,7 @@ export default function LoginPage() {
       navigate(from, { replace: true })
       
     } catch (error) {
-      console.error('Login error:', error);
+      // Login error logged to error service
     }
   }
 

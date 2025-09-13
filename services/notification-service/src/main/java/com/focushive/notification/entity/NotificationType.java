@@ -94,5 +94,45 @@ public enum NotificationType {
     /**
      * When hive settings are updated
      */
-    HIVE_SETTINGS_UPDATED
+    HIVE_SETTINGS_UPDATED,
+    
+    /**
+     * Welcome notification for new users
+     */
+    WELCOME,
+    
+    /**
+     * Password reset notification
+     */
+    PASSWORD_RESET,
+    
+    /**
+     * Email verification notification
+     */
+    EMAIL_VERIFICATION,
+    
+    /**
+     * When buddy matching is successful
+     */
+    BUDDY_MATCHED,
+    
+    /**
+     * General hive activity notifications
+     */
+    HIVE_ACTIVITY,
+    
+    /**
+     * Chat message notifications
+     */
+    CHAT_MESSAGE,
+    
+    /**
+     * Marketing and promotional notifications
+     */
+    MARKETING,
+    
+    /**
+     * System update notifications
+     */
+    SYSTEM_UPDATE
 }

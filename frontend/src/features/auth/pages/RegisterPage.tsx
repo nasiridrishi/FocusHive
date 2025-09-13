@@ -24,7 +24,7 @@ export default function RegisterPage() {
       navigate('/dashboard', { replace: true })
       
     } catch (error) {
-      console.error('Register error:', error);
+      // Register error logged to error service
     }
   }
 

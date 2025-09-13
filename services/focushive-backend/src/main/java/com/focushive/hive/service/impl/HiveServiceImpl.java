@@ -5,6 +5,7 @@ import com.focushive.api.dto.identity.UserDto;
 import com.focushive.common.exception.ResourceNotFoundException;
 import com.focushive.common.exception.BadRequestException;
 import com.focushive.common.exception.ForbiddenException;
+import com.focushive.config.CacheConfig;
 import com.focushive.hive.dto.CreateHiveRequest;
 import com.focushive.hive.dto.HiveResponse;
 import com.focushive.hive.dto.UpdateHiveRequest;
@@ -17,6 +18,10 @@ import com.focushive.user.entity.User;
 import com.focushive.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -40,6 +45,10 @@ public class HiveServiceImpl implements HiveService {
     private final IdentityServiceClient identityServiceClient;
     
     @Override
+    @Caching(evict = {
+        @CacheEvict(value = CacheConfig.HIVES_ACTIVE_CACHE, allEntries = true),
+        @CacheEvict(value = CacheConfig.HIVES_USER_CACHE, allEntries = true)
+    })
     public HiveResponse createHive(CreateHiveRequest request, String ownerId) {
         log.info("Creating new hive '{}' for user {}", request.getName(), ownerId);
         
@@ -80,6 +89,7 @@ public class HiveServiceImpl implements HiveService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.HIVE_DETAILS_CACHE, key = "#hiveId + ':' + #userId", unless = "#result == null")
     public HiveResponse getHive(String hiveId, String userId) {
         // Removed debug log to avoid logging user data frequently
         
@@ -195,6 +205,7 @@ public class HiveServiceImpl implements HiveService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.HIVES_ACTIVE_CACHE, key = "'public:' + #pageable.pageNumber + ':' + #pageable.pageSize", unless = "#result.isEmpty()")
     public Page<HiveResponse> listPublicHives(Pageable pageable) {
         Page<Hive> hives = hiveRepository.findPublicHives(pageable);
         return hives.map(hive -> {
@@ -205,6 +216,7 @@ public class HiveServiceImpl implements HiveService {
     
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.HIVES_USER_CACHE, key = "#userId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize", unless = "#result.isEmpty()")
     public Page<HiveResponse> listUserHives(String userId, Pageable pageable) {
         Page<HiveMember> memberships = hiveMemberRepository.findByUserId(userId, pageable);
         return memberships.map(member -> {

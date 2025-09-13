@@ -9,6 +9,9 @@ import {
   PasswordResetResponse,
   ChangePasswordRequest
 } from '@shared/types/auth';
+import { tokenManager } from '../../utils/tokenManager';
+import { apiClient, identityApi } from '../../utils/axiosConfig';
+import { API_ENDPOINTS, getServiceUrl } from '../../config/apiConfig';
 
 /**
  * Authentication API Configuration
@@ -22,8 +25,8 @@ import {
  * - Backward compatibility with localStorage
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-const IDENTITY_API_URL = import.meta.env.VITE_IDENTITY_API_URL || 'http://localhost:8081';
+// Use centralized API configuration
+const IDENTITY_SERVICE_URL = getServiceUrl('AUTH', '');
 
 // Token storage utility following security best practices
 class TokenStorage {
@@ -95,7 +98,7 @@ const tokenStorage = new TokenStorage();
 // Create axios instance for backend API
 const createBackendApiInstance = (): AxiosInstance => {
   const instance = axios.create({
-    baseURL: `${API_BASE_URL}/api`,
+    baseURL: getServiceUrl('HIVES', ''),  // Use backend service URL for non-auth endpoints
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
@@ -156,7 +159,7 @@ const backendApi = createBackendApiInstance();
 
 // Create axios instance specifically for Identity Service auth endpoints
 const identityApi = axios.create({
-  baseURL: `${IDENTITY_API_URL}/api`,
+  baseURL: IDENTITY_SERVICE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -183,7 +186,7 @@ export const authApiService = {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await identityApi.post<LoginResponse>('/v1/auth/login', credentials);
+      const response = await identityApi.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -210,7 +213,10 @@ export const authApiService = {
         throw new Error('Incomplete user data in response');
       }
       
-      // Store tokens securely
+      // Store tokens securely using enhanced token manager
+      tokenManager.saveTokens(token, refreshToken);
+      
+      // Also maintain compatibility with old token storage
       tokenStorage.setAccessToken(token);
       tokenStorage.setRefreshToken(refreshToken);
       
@@ -258,7 +264,7 @@ export const authApiService = {
         personaName: 'Personal'
       };
       
-      const response = await identityApi.post<RegisterResponse>('/v1/auth/register', registrationData);
+      const response = await identityApi.post<RegisterResponse>(API_ENDPOINTS.AUTH.REGISTER, registrationData);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -285,7 +291,10 @@ export const authApiService = {
         throw new Error('Incomplete user data in response');
       }
       
-      // Store tokens securely
+      // Store tokens securely using enhanced token manager
+      tokenManager.saveTokens(token, refreshToken);
+      
+      // Also maintain compatibility with old token storage
       tokenStorage.setAccessToken(token);
       tokenStorage.setRefreshToken(refreshToken);
       
@@ -326,7 +335,7 @@ export const authApiService = {
    */
   async logout(): Promise<void> {
     try {
-      await identityApi.post('/v1/auth/logout');
+      await identityApi.post(API_ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
       // Log error but don't throw - we want to clear local tokens regardless
       console.warn('Logout request failed - tokens cleared locally anyway:', error);
@@ -340,7 +349,7 @@ export const authApiService = {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await identityApi.get<{ user: User }>('/v1/auth/me');
+      const response = await identityApi.get<{ user: User }>(API_ENDPOINTS.AUTH.ME);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -396,7 +405,7 @@ export const authApiService = {
    */
   async updateProfile(userData: Partial<User>): Promise<User> {
     try {
-      const response = await identityApi.put<{ user: User }>('/v1/auth/profile', userData);
+      const response = await identityApi.put<{ user: User }>(API_ENDPOINTS.AUTH.PROFILE, userData);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -452,7 +461,7 @@ export const authApiService = {
    */
   async changePassword(passwordData: ChangePasswordRequest): Promise<void> {
     try {
-      await identityApi.put('/v1/auth/change-password', passwordData);
+      await identityApi.put(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, passwordData);
     } catch (error) {
       if (error instanceof AxiosError) {
         const message = error.response?.data?.message || 'Failed to change password';
@@ -467,7 +476,7 @@ export const authApiService = {
    */
   async requestPasswordReset(resetData: PasswordResetRequest): Promise<PasswordResetResponse> {
     try {
-      const response = await identityApi.post<PasswordResetResponse>('/v1/auth/forgot-password', resetData);
+      const response = await identityApi.post<PasswordResetResponse>(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, resetData);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -558,7 +567,7 @@ async function refreshToken(): Promise<{ token: string; refreshToken: string } |
 
   try {
     const response = await axios.post<{ token: string; refreshToken: string }>(
-      `${IDENTITY_API_URL}/api/v1/auth/refresh`,
+      `${IDENTITY_SERVICE_URL}${API_ENDPOINTS.AUTH.REFRESH}`,
       { refreshToken: refreshTokenValue },
       {
         headers: { 'Content-Type': 'application/json' },

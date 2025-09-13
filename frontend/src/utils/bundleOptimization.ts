@@ -215,10 +215,16 @@ export class FeaturePreloader {
         this.preloadedFeatures.add(feature)
         analytics.recordPreloadSuccess()
         
-        console.log(`[Bundle] Preloaded ${feature} in ${loadTime.toFixed(2)}ms`)
+        // Preload successful - logging only in development
+        if (import.meta.env.DEV) {
+          console.log(`[Bundle] Preloaded ${feature} in ${loadTime.toFixed(2)}ms`)
+        }
       } catch (error) {
         analytics.recordPreloadFailure()
-        console.warn(`[Bundle] Failed to preload ${feature}:`, error)
+        // Log preload failures only in development
+        if (import.meta.env.DEV) {
+          console.warn(`[Bundle] Failed to preload ${feature}:`, error)
+        }
       }
     }
   }
@@ -363,11 +369,14 @@ export function monitorBundlePerformance() {
       for (const entry of list.getEntries()) {
         if (entry.entryType === 'navigation') {
           const navEntry = entry as PerformanceNavigationTiming
-          console.log('[Bundle] Initial page load:', {
-            duration: navEntry.loadEventEnd - navEntry.fetchStart,
-            domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.fetchStart,
-            firstByte: navEntry.responseStart - navEntry.fetchStart
-          })
+          // Log performance metrics only in development
+          if (import.meta.env.DEV) {
+            console.log('[Bundle] Initial page load:', {
+              duration: navEntry.loadEventEnd - navEntry.fetchStart,
+              domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.fetchStart,
+              firstByte: navEntry.responseStart - navEntry.fetchStart
+            })
+          }
         }
       }
     })
@@ -390,7 +399,10 @@ export async function initializeBundleOptimization(options?: PreloadOptions) {
   // Initialize feature preloader
   await featurePreloader.initialize(options)
   
-  console.log('[Bundle] Optimization initialized')
+  // Log initialization only in development
+  if (import.meta.env.DEV) {
+    console.log('[Bundle] Optimization initialized')
+  }
 }
 
 /**
@@ -432,7 +444,10 @@ export const devUtils = {
           preloadCommonIcons()
           break
       }
-      console.log(`[Bundle] Triggered preload for: ${feature}`)
+      // Log preload trigger only in development
+      if (import.meta.env.DEV) {
+        console.log(`[Bundle] Triggered preload for: ${feature}`)
+      }
     }
   }
 }

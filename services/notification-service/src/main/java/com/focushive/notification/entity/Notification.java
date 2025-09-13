@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.util.Map;
     @Index(name = "idx_notifications_created", columnList = "created_at")
 })
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -46,6 +48,7 @@ public class Notification extends BaseEntity {
     private String actionUrl;
     
     @Column(columnDefinition = "jsonb", name = "data")
+    @Builder.Default
     private String data = "{}";
     
     @Enumerated(EnumType.STRING)

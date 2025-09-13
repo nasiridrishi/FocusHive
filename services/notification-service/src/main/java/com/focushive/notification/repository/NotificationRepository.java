@@ -23,6 +23,14 @@ import java.util.Optional;
 public interface NotificationRepository extends JpaRepository<Notification, String> {
 
     /**
+     * Find all notifications for a user.
+     *
+     * @param userId the user ID
+     * @return list of notifications
+     */
+    List<Notification> findByUserId(String userId);
+
+    /**
      * Find all notifications for a user, ordered by creation date descending.
      *
      * @param userId the user ID

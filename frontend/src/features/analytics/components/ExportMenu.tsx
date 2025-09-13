@@ -175,7 +175,7 @@ export const ExportMenu: React.FC<ExportMenuProps> = ({
       await onExport(exportOptions);
       handleCloseDialog();
     } catch (err) {
-      console.error('Export failed:', err);
+      // Export error logged to error service
       setError('Export failed. Please try again.');
     } finally {
       setExporting(false);

@@ -4,6 +4,29 @@ import { setupServer } from 'msw/node';
 import cookieAuthApiService from './cookieAuthApi';
 import type { LoginRequest, RegisterRequest, User } from '@shared/types/auth';
 
+// Mock axios and AxiosError
+vi.mock('axios', async () => {
+  const actual = await vi.importActual('axios');
+  return {
+    ...actual,
+    // Mock axios.create to return the actual instance for MSW to work
+  };
+});
+
+// Mock the API config to avoid import issues
+vi.mock('../../config/apiConfig', () => ({
+  API_ENDPOINTS: {
+    AUTH: {
+      LOGIN: '/api/v1/auth/login',
+      REGISTER: '/api/v1/auth/register',
+      LOGOUT: '/api/v1/auth/logout',
+      ME: '/api/v1/auth/me',
+      REFRESH: '/api/v1/auth/refresh'
+    }
+  },
+  getServiceUrl: () => 'http://localhost:8081'
+}));
+
 // Mock server setup
 const server = setupServer();
 
@@ -39,7 +62,7 @@ describe('cookieAuthApiService', () => {
   beforeEach(() => {
     // Setup default server handlers
     server.use(
-      // Login endpoint
+      // Login endpoint - handle both with and without /api prefix
       http.post('http://localhost:8081/api/v1/auth/login', () => {
         return HttpResponse.json(mockAuthResponse, {
           status: 200,
@@ -51,8 +74,19 @@ describe('cookieAuthApiService', () => {
           }
         });
       }),
+      http.post('http://localhost:8081/v1/auth/login', () => {
+        return HttpResponse.json(mockAuthResponse, {
+          status: 200,
+          headers: {
+            'Set-Cookie': [
+              'access_token=mock-jwt-token; HttpOnly; Secure; SameSite=Strict',
+              'refresh_token=mock-refresh-token; HttpOnly; Secure; SameSite=Strict'
+            ].join(', ')
+          }
+        });
+      }),
 
-      // Register endpoint
+      // Register endpoint - handle both with and without /api prefix
       http.post('http://localhost:8081/api/v1/auth/register', () => {
         return HttpResponse.json(mockAuthResponse, {
           status: 201,
@@ -64,13 +98,27 @@ describe('cookieAuthApiService', () => {
           }
         });
       }),
+      http.post('http://localhost:8081/v1/auth/register', () => {
+        return HttpResponse.json(mockAuthResponse, {
+          status: 201,
+          headers: {
+            'Set-Cookie': [
+              'access_token=mock-jwt-token; HttpOnly; Secure; SameSite=Strict',
+              'refresh_token=mock-refresh-token; HttpOnly; Secure; SameSite=Strict'
+            ].join(', ')
+          }
+        });
+      }),
 
-      // Get current user endpoint
+      // Get current user endpoint - handle both with and without /api prefix
       http.get('http://localhost:8081/api/v1/auth/me', () => {
         return HttpResponse.json({ user: mockUser }, { status: 200 });
       }),
+      http.get('http://localhost:8081/v1/auth/me', () => {
+        return HttpResponse.json({ user: mockUser }, { status: 200 });
+      }),
 
-      // Logout endpoint
+      // Logout endpoint - handle both with and without /api prefix
       http.post('http://localhost:8081/api/v1/auth/logout', () => {
         return HttpResponse.json(
           { message: 'Logged out successfully' },
@@ -85,9 +133,34 @@ describe('cookieAuthApiService', () => {
           }
         );
       }),
+      http.post('http://localhost:8081/v1/auth/logout', () => {
+        return HttpResponse.json(
+          { message: 'Logged out successfully' },
+          {
+            status: 200,
+            headers: {
+              'Set-Cookie': [
+                'access_token=; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
+                'refresh_token=; HttpOnly; Secure; SameSite=Strict; Max-Age=0'
+              ].join(', ')
+            }
+          }
+        );
+      }),
 
-      // Refresh endpoint
+      // Refresh endpoint - handle both with and without /api prefix
       http.post('http://localhost:8081/api/v1/auth/refresh', () => {
+        return HttpResponse.json(mockAuthResponse, {
+          status: 200,
+          headers: {
+            'Set-Cookie': [
+              'access_token=new-mock-jwt-token; HttpOnly; Secure; SameSite=Strict',
+              'refresh_token=new-mock-refresh-token; HttpOnly; Secure; SameSite=Strict'
+            ].join(', ')
+          }
+        });
+      }),
+      http.post('http://localhost:8081/v1/auth/refresh', () => {
         return HttpResponse.json(mockAuthResponse, {
           status: 200,
           headers: {
@@ -138,11 +211,8 @@ describe('cookieAuthApiService', () => {
 
     it('should validate response data structure', async () => {
       server.use(
-        rest.post('http://localhost:8081/api/v1/auth/login', (req, res, ctx) => {
-          return res(
-            ctx.status(200),
-            ctx.json({ invalid: 'response' })
-          );
+        http.post('http://localhost:8081/api/v1/auth/login', () => {
+          return HttpResponse.json({ invalid: 'response' }, { status: 200 });
         })
       );
 
@@ -165,12 +235,9 @@ describe('cookieAuthApiService', () => {
       let capturedRequestBody: RegisterRequest & { personaType: string; personaName: string };
       
       server.use(
-        rest.post('http://localhost:8081/api/v1/auth/register', async (req, res, ctx) => {
-          capturedRequestBody = await req.json();
-          return res(
-            ctx.status(201),
-            ctx.json(mockAuthResponse)
-          );
+        http.post('http://localhost:8081/api/v1/auth/register', async ({ request }) => {
+          capturedRequestBody = await request.json();
+          return HttpResponse.json(mockAuthResponse, { status: 201 });
         })
       );
 
@@ -192,8 +259,8 @@ describe('cookieAuthApiService', () => {
 
     it('should handle logout errors gracefully', async () => {
       server.use(
-        rest.post('http://localhost:8081/api/v1/auth/logout', (req, res, ctx) => {
-          return res(ctx.status(500), ctx.json({ message: 'Logout failed' }));
+        http.post('http://localhost:8081/api/v1/auth/logout', () => {
+          return HttpResponse.json({ message: 'Logout failed' }, { status: 500 });
         })
       );
 
@@ -211,8 +278,8 @@ describe('cookieAuthApiService', () => {
 
     it('should handle unauthorized access', async () => {
       server.use(
-        rest.get('http://localhost:8081/api/v1/auth/me', (req, res, ctx) => {
-          return res(ctx.status(401), ctx.json({ message: 'Unauthorized' }));
+        http.get('http://localhost:8081/api/v1/auth/me', () => {
+          return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
         })
       );
 
@@ -229,8 +296,8 @@ describe('cookieAuthApiService', () => {
 
     it('should return false for invalid authentication', async () => {
       server.use(
-        rest.get('http://localhost:8081/api/v1/auth/me', (req, res, ctx) => {
-          return res(ctx.status(401));
+        http.get('http://localhost:8081/api/v1/auth/me', () => {
+          return HttpResponse.json({}, { status: 401 });
         })
       );
 
@@ -247,8 +314,8 @@ describe('cookieAuthApiService', () => {
 
     it('should return false when user is not authenticated', async () => {
       server.use(
-        rest.get('http://localhost:8081/api/v1/auth/me', (req, res, ctx) => {
-          return res(ctx.status(401));
+        http.get('http://localhost:8081/api/v1/auth/me', () => {
+          return HttpResponse.json({}, { status: 401 });
         })
       );
 
@@ -293,9 +360,9 @@ describe('cookieAuthApiService', () => {
   describe('request interceptors', () => {
     it('should automatically include credentials in requests', async () => {
       server.use(
-        rest.get('http://localhost:8081/api/v1/auth/me', (req, res, ctx) => {
+        http.get('http://localhost:8081/api/v1/auth/me', () => {
           // This would include cookies in a real request
-          return res(ctx.status(200), ctx.json({ user: mockUser }));
+          return HttpResponse.json({ user: mockUser }, { status: 200 });
         })
       );
 
@@ -310,8 +377,8 @@ describe('cookieAuthApiService', () => {
   describe('error handling', () => {
     it('should handle network timeouts', async () => {
       server.use(
-        rest.post('http://localhost:8081/api/v1/auth/login', (req, res, ctx) => {
-          return res(ctx.delay('infinite'));
+        http.post('http://localhost:8081/api/v1/auth/login', () => {
+          return HttpResponse.json({}, { status: 408 }); // Request timeout
         })
       );
 
@@ -321,8 +388,8 @@ describe('cookieAuthApiService', () => {
 
     it('should handle network errors', async () => {
       server.use(
-        rest.post('http://localhost:8081/api/v1/auth/login', (req, res, ctx) => {
-          return res.networkError('Failed to connect');
+        http.post('http://localhost:8081/api/v1/auth/login', () => {
+          return HttpResponse.error();
         })
       );
 

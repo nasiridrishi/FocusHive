@@ -12,12 +12,27 @@ public enum NotificationFrequency {
     IMMEDIATE,
     
     /**
+     * Batch notifications and send hourly
+     */
+    HOURLY,
+    
+    /**
      * Batch notifications and send as a daily digest
+     */
+    DAILY,
+    
+    /**
+     * Batch notifications and send as a daily digest (alias)
      */
     DAILY_DIGEST,
     
     /**
-     * Batch notifications and send as a weekly digest
+     * Batch notifications and send weekly
+     */
+    WEEKLY,
+    
+    /**
+     * Batch notifications and send as a weekly digest (alias)
      */
     WEEKLY_DIGEST,
     

@@ -9,6 +9,7 @@ import {
   PasswordResetResponse,
   ChangePasswordRequest
 } from '@shared/types/auth';
+import { API_ENDPOINTS, getServiceUrl } from '../../config/apiConfig';
 
 /**
  * Cookie-based Authentication API Service
@@ -20,13 +21,13 @@ import {
  * - Secure cookie attributes
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-const IDENTITY_API_URL = import.meta.env.VITE_IDENTITY_API_URL || 'http://localhost:8081';
+// Use centralized API configuration
+const IDENTITY_SERVICE_URL = getServiceUrl('AUTH', '');
 
 // Create axios instance for backend API with cookie support
 const createBackendApiInstance = (): AxiosInstance => {
   const instance = axios.create({
-    baseURL: `${API_BASE_URL}/api`,
+    baseURL: getServiceUrl('HIVES', ''),  // Use backend service URL for non-auth endpoints
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
@@ -68,7 +69,7 @@ const backendApi = createBackendApiInstance();
 
 // Create axios instance specifically for Identity Service auth endpoints
 const identityApi = axios.create({
-  baseURL: `${IDENTITY_API_URL}/api`,
+  baseURL: IDENTITY_SERVICE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -84,7 +85,7 @@ export const cookieAuthApiService = {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await identityApi.post<LoginResponse>('/v1/auth/login', credentials);
+      const response = await identityApi.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -158,7 +159,7 @@ export const cookieAuthApiService = {
         personaName: 'Personal'
       };
       
-      const response = await identityApi.post<RegisterResponse>('/v1/auth/register', registrationData);
+      const response = await identityApi.post<RegisterResponse>(API_ENDPOINTS.AUTH.REGISTER, registrationData);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -224,7 +225,7 @@ export const cookieAuthApiService = {
   async logout(): Promise<void> {
     try {
       // Server will clear httpOnly cookies and blacklist tokens
-      await identityApi.post('/v1/auth/logout', {});
+      await identityApi.post(API_ENDPOINTS.AUTH.LOGOUT, {});
     } catch (error) {
       // Log error but don't throw - cookies will be cleared by server regardless
       console.warn('Logout request failed - cookies cleared by server anyway:', error);
@@ -238,7 +239,7 @@ export const cookieAuthApiService = {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await identityApi.get<{ user: User }>('/v1/auth/me');
+      const response = await identityApi.get<{ user: User }>(API_ENDPOINTS.AUTH.ME);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -294,7 +295,7 @@ export const cookieAuthApiService = {
    */
   async updateProfile(userData: Partial<User>): Promise<User> {
     try {
-      const response = await identityApi.put<{ user: User }>('/v1/auth/profile', userData);
+      const response = await identityApi.put<{ user: User }>(API_ENDPOINTS.AUTH.PROFILE, userData);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -350,7 +351,7 @@ export const cookieAuthApiService = {
    */
   async changePassword(passwordData: ChangePasswordRequest): Promise<void> {
     try {
-      await identityApi.put('/v1/auth/change-password', passwordData);
+      await identityApi.put(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, passwordData);
     } catch (error) {
       if (error instanceof AxiosError) {
         const message = error.response?.data?.message || 'Failed to change password';
@@ -365,7 +366,7 @@ export const cookieAuthApiService = {
    */
   async requestPasswordReset(resetData: PasswordResetRequest): Promise<PasswordResetResponse> {
     try {
-      const response = await identityApi.post<PasswordResetResponse>('/v1/auth/forgot-password', resetData);
+      const response = await identityApi.post<PasswordResetResponse>(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, resetData);
       
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
@@ -434,7 +435,7 @@ export const cookieAuthApiService = {
   async isAuthenticated(): Promise<boolean> {
     try {
       // Make a simple request that requires authentication
-      const response = await identityApi.get('/v1/auth/me');
+      const response = await identityApi.get(API_ENDPOINTS.AUTH.ME);
       return response.status === 200;
     } catch {
       return false;
@@ -466,7 +467,7 @@ async function refreshToken(): Promise<void> {
     // Server will use refresh token from httpOnly cookie
     // and set new tokens as httpOnly cookies
     await axios.post(
-      `${IDENTITY_API_URL}/api/v1/auth/refresh`,
+      `${IDENTITY_SERVICE_URL}${API_ENDPOINTS.AUTH.REFRESH}`,
       {}, // Empty body - refresh token is in httpOnly cookie
       {
         headers: { 'Content-Type': 'application/json' },
