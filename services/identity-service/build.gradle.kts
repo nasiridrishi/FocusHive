@@ -66,8 +66,8 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.1.1")
     
     // Rate Limiting - Bucket4j with Redis
-    implementation("com.bucket4j:bucket4j-redis:8.7.0")
-    implementation("com.bucket4j:bucket4j-core:8.7.0")
+    implementation("com.bucket4j:bucket4j-redis:8.10.1")
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
     
     // Security Enhancements
     implementation("org.springframework.boot:spring-boot-starter-mail")  // Email support
