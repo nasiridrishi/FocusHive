@@ -77,8 +77,8 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     
     // Rate Limiting with Bucket4j
-    implementation("com.bucket4j:bucket4j-redis:8.7.0")
-    implementation("com.bucket4j:bucket4j-core:8.7.0")
+    implementation("com.bucket4j:bucket4j-redis:8.10.1")
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
     
     // Redis Jedis client
     implementation("redis.clients:jedis:5.1.0")
