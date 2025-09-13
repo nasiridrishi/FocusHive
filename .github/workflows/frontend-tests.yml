@@ -349,7 +349,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: frontend-build-production
           path: frontend/
@@ -448,7 +448,7 @@ jobs:
     steps:
       - name: Download all test artifacts
         if: always()
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: test-results
 
