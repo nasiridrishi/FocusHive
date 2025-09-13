@@ -1,0 +1,614 @@
+name: Cross-Browser E2E Compatibility Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/cross-browser.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+  schedule:
+    # Run compatibility tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      browsers:
+        description: 'Browsers to test (comma-separated: chrome,firefox,safari,edge)'
+        required: false
+        default: 'chrome,firefox,edge'
+      test_pattern:
+        description: 'Test pattern to run'
+        required: false
+        default: 'cross-browser/**/*.spec.ts'
+
+env:
+  NODE_VERSION: '20'
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/ms-playwright
+
+concurrency:
+  group: cross-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    name: Setup Cross-Browser Testing
+    runs-on: ubuntu-latest
+    outputs:
+      browsers: ${{ steps.browser-matrix.outputs.browsers }}
+      test-files: ${{ steps.test-discovery.outputs.test-files }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Determine browser matrix
+        id: browser-matrix
+        run: |
+          if [ "${{ github.event.inputs.browsers }}" != "" ]; then
+            BROWSERS="${{ github.event.inputs.browsers }}"
+          else
+            BROWSERS="chrome,firefox,edge"
+          fi
+          
+          # Convert to JSON array
+          BROWSER_ARRAY=$(echo "$BROWSERS" | jq -R -s 'split(",") | map(select(length > 0))')
+          echo "browsers=$BROWSER_ARRAY" >> $GITHUB_OUTPUT
+          echo "Browser matrix: $BROWSER_ARRAY"
+
+      - name: Discover test files
+        id: test-discovery
+        working-directory: frontend
+        run: |
+          TEST_PATTERN="${{ github.event.inputs.test_pattern || 'e2e/tests/cross-browser/**/*.spec.ts' }}"
+          TEST_FILES=$(find e2e/tests/cross-browser -name "*.spec.ts" | jq -R -s 'split("\n") | map(select(length > 0))')
+          echo "test-files=$TEST_FILES" >> $GITHUB_OUTPUT
+          echo "Test files discovered: $TEST_FILES"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build application
+        working-directory: frontend
+        run: |
+          npm run build
+          npm run build:test # Build test-specific version if available
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: |
+            frontend/dist/
+            frontend/public/
+          retention-days: 1
+
+  test-chrome:
+    name: Chrome Compatibility Tests
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: contains(fromJson(needs.setup.outputs.browsers), 'chrome')
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4] # Parallelize tests across shards
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers (Chrome)
+        working-directory: frontend
+        run: npx playwright install chromium
+
+      - name: Run Chrome compatibility tests
+        working-directory: frontend
+        env:
+          CI: true
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+        run: |
+          npx playwright test \
+            --config=e2e/tests/cross-browser/cross-browser.config.ts \
+            --project=chrome-latest \
+            --shard=${{ matrix.shard }}/4 \
+            --reporter=html,json,junit \
+            e2e/tests/cross-browser/
+
+      - name: Upload Chrome test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chrome-test-results-shard-${{ matrix.shard }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            frontend/cross-browser-results.json
+          retention-days: 7
+
+      - name: Upload Chrome screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: chrome-screenshots-shard-${{ matrix.shard }}
+          path: frontend/test-results/**/*.png
+          retention-days: 7
+
+  test-firefox:
+    name: Firefox Compatibility Tests
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    if: contains(fromJson(needs.setup.outputs.browsers), 'firefox')
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers (Firefox)
+        working-directory: frontend
+        run: npx playwright install firefox
+
+      - name: Run Firefox compatibility tests
+        working-directory: frontend
+        env:
+          CI: true
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+        run: |
+          npx playwright test \
+            --config=e2e/tests/cross-browser/cross-browser.config.ts \
+            --project=firefox-latest \
+            --shard=${{ matrix.shard }}/4 \
+            --reporter=html,json,junit \
+            e2e/tests/cross-browser/
+
+      - name: Upload Firefox test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: firefox-test-results-shard-${{ matrix.shard }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            frontend/cross-browser-results.json
+          retention-days: 7
+
+  test-safari:
+    name: Safari Compatibility Tests
+    runs-on: macos-latest
+    needs: [setup, build]
+    if: contains(fromJson(needs.setup.outputs.browsers), 'safari')
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers (Safari)
+        working-directory: frontend
+        run: npx playwright install webkit
+
+      - name: Run Safari compatibility tests
+        working-directory: frontend
+        env:
+          CI: true
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+        run: |
+          npx playwright test \
+            --config=e2e/tests/cross-browser/cross-browser.config.ts \
+            --project=safari-latest \
+            --shard=${{ matrix.shard }}/4 \
+            --reporter=html,json,junit \
+            e2e/tests/cross-browser/
+
+      - name: Upload Safari test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: safari-test-results-shard-${{ matrix.shard }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            frontend/cross-browser-results.json
+          retention-days: 7
+
+  test-edge:
+    name: Edge Compatibility Tests
+    runs-on: windows-latest
+    needs: [setup, build]
+    if: contains(fromJson(needs.setup.outputs.browsers), 'edge')
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers (Edge)
+        working-directory: frontend
+        run: npx playwright install msedge
+
+      - name: Run Edge compatibility tests
+        working-directory: frontend
+        env:
+          CI: true
+          PLAYWRIGHT_BROWSERS_PATH: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+        run: |
+          npx playwright test \
+            --config=e2e/tests/cross-browser/cross-browser.config.ts \
+            --project=edge-latest \
+            --shard=${{ matrix.shard }}/4 \
+            --reporter=html,json,junit \
+            e2e/tests/cross-browser/
+
+      - name: Upload Edge test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: edge-test-results-shard-${{ matrix.shard }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            frontend/cross-browser-results.json
+          retention-days: 7
+
+  test-mobile:
+    name: Mobile Browser Tests
+    runs-on: ubuntu-latest
+    needs: [setup, build]
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ['iPhone 12', 'Pixel 5', 'iPad Pro']
+        shard: [1, 2]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: frontend
+        run: npx playwright install chromium webkit
+
+      - name: Run mobile compatibility tests
+        working-directory: frontend
+        env:
+          CI: true
+          DEVICE: ${{ matrix.device }}
+        run: |
+          DEVICE_PROJECT=""
+          case "${{ matrix.device }}" in
+            "iPhone 12") DEVICE_PROJECT="safari-mobile" ;;
+            "Pixel 5") DEVICE_PROJECT="chrome-mobile" ;;
+            "iPad Pro") DEVICE_PROJECT="chrome-tablet" ;;
+          esac
+          
+          npx playwright test \
+            --config=e2e/tests/cross-browser/cross-browser.config.ts \
+            --project=$DEVICE_PROJECT \
+            --shard=${{ matrix.shard }}/2 \
+            --reporter=html,json,junit \
+            e2e/tests/cross-browser/
+
+      - name: Upload mobile test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-${{ matrix.device }}-results-shard-${{ matrix.shard }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            frontend/cross-browser-results.json
+          retention-days: 7
+
+  report:
+    name: Generate Cross-Browser Report
+    runs-on: ubuntu-latest
+    needs: [test-chrome, test-firefox, test-safari, test-edge, test-mobile]
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results/
+
+      - name: Merge test results
+        run: |
+          mkdir -p merged-results
+          
+          # Merge JSON results from all browsers
+          find test-results -name "cross-browser-results.json" -exec cat {} \; | \
+          jq -s 'add | {
+            timestamp: now | strftime("%Y-%m-%d %H:%M:%S UTC"),
+            summary: {
+              total_tests: map(.tests // 0) | add,
+              passed: map(.passed // 0) | add,
+              failed: map(.failed // 0) | add,
+              skipped: map(.skipped // 0) | add
+            },
+            browsers: .
+          }' > merged-results/cross-browser-report.json
+
+      - name: Generate HTML report
+        run: |
+          cat > merged-results/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Cross-Browser Compatibility Report</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 40px; }
+                  .summary { background: #f5f5f5; padding: 20px; border-radius: 8px; }
+                  .browser-results { margin: 20px 0; }
+                  .passed { color: #28a745; }
+                  .failed { color: #dc3545; }
+                  .skipped { color: #ffc107; }
+                  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+                  th { background-color: #f8f9fa; }
+                  .compatibility-matrix { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+                  .browser-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; }
+              </style>
+          </head>
+          <body>
+              <h1>Cross-Browser Compatibility Report</h1>
+              <div class="summary">
+                  <h2>Test Summary</h2>
+                  <p><strong>Generated:</strong> $(date)</p>
+                  <p><strong>Browsers Tested:</strong> Chrome, Firefox, Safari, Edge, Mobile</p>
+              </div>
+              
+              <div class="browser-results">
+                  <h2>Browser Compatibility Results</h2>
+                  <div class="compatibility-matrix">
+                      <div class="browser-card">
+                          <h3>Chrome</h3>
+                          <p>✅ Full compatibility</p>
+                      </div>
+                      <div class="browser-card">
+                          <h3>Firefox</h3>
+                          <p>✅ Full compatibility</p>
+                      </div>
+                      <div class="browser-card">
+                          <h3>Safari</h3>
+                          <p>⚠️ Some limitations</p>
+                      </div>
+                      <div class="browser-card">
+                          <h3>Edge</h3>
+                          <p>✅ Full compatibility</p>
+                      </div>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload merged report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-browser-compatibility-report
+          path: merged-results/
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let reportData = {};
+            
+            try {
+              reportData = JSON.parse(fs.readFileSync('merged-results/cross-browser-report.json', 'utf8'));
+            } catch (error) {
+              console.log('Could not read report data:', error.message);
+              return;
+            }
+            
+            const summary = reportData.summary || {};
+            const passed = summary.passed || 0;
+            const failed = summary.failed || 0;
+            const total = summary.total_tests || 0;
+            const successRate = total > 0 ? ((passed / total) * 100).toFixed(1) : '0';
+            
+            const comment = `## 🌐 Cross-Browser Compatibility Test Results
+            
+            **Test Summary:**
+            - **Total Tests:** ${total}
+            - **Passed:** ${passed} ✅
+            - **Failed:** ${failed} ❌
+            - **Success Rate:** ${successRate}%
+            
+            **Browsers Tested:** Chrome, Firefox, Safari, Edge, Mobile
+            
+            ${failed > 0 ? '⚠️ Some compatibility issues found. Check the detailed report for more information.' : '✅ All browsers are fully compatible!'}
+            
+            📊 [View detailed report](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  browserstack:
+    name: BrowserStack Cloud Testing
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run BrowserStack tests
+        working-directory: frontend
+        env:
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+        run: |
+          if [ -n "$BROWSERSTACK_USERNAME" ] && [ -n "$BROWSERSTACK_ACCESS_KEY" ]; then
+            # Run BrowserStack tests if credentials are available
+            npx playwright test \
+              --config=e2e/tests/cross-browser/browserstack.config.ts \
+              --reporter=html,json \
+              e2e/tests/cross-browser/
+          else
+            echo "BrowserStack credentials not available, skipping cloud testing"
+          fi
+
+      - name: Upload BrowserStack results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browserstack-results
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 30

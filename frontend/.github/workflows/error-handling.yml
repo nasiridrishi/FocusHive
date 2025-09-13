@@ -1,0 +1,539 @@
+name: Error Handling and Resilience Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - 'services/**'
+      - '.github/workflows/error-handling.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - 'services/**'
+      - '.github/workflows/error-handling.yml'
+  schedule:
+    # Run error handling tests daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - network-errors
+          - server-errors
+          - websocket-errors
+          - validation-errors
+          - state-errors
+          - workflow-errors
+          - resource-errors
+          - recovery-scenarios
+      chaos_level:
+        description: 'Chaos testing intensity'
+        required: false
+        default: 'medium'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - extreme
+
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '21'
+  PLAYWRIGHT_VERSION: '1.40.0'
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    outputs:
+      test-matrix: ${{ steps.test-matrix.outputs.matrix }}
+      services-ready: ${{ steps.services.outputs.ready }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install chromium firefox webkit
+          npx playwright install-deps
+
+      - name: Generate test matrix
+        id: test-matrix
+        run: |
+          if [[ "${{ github.event.inputs.test_suite }}" == "all" || -z "${{ github.event.inputs.test_suite }}" ]]; then
+            echo "matrix=[\"network-errors\", \"server-errors\", \"websocket-errors\", \"validation-errors\", \"state-errors\", \"workflow-errors\", \"resource-errors\", \"recovery-scenarios\"]" >> $GITHUB_OUTPUT
+          else
+            echo "matrix=[\"${{ github.event.inputs.test_suite }}\"]" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Start backend services
+        id: services
+        run: |
+          cd services
+          docker-compose -f docker-compose.test.yml up -d --wait
+          
+          # Wait for services to be healthy
+          timeout 120s bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 5; done'
+          timeout 120s bash -c 'until curl -f http://localhost:8081/actuator/health; do sleep 5; done'
+          
+          echo "ready=true" >> $GITHUB_OUTPUT
+
+      - name: Cache test artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            frontend/e2e/results
+            frontend/e2e/reports
+            frontend/test-results
+          key: error-tests-${{ github.sha }}
+          restore-keys: |
+            error-tests-
+
+  error-handling-tests:
+    name: Error Handling Tests (${{ matrix.test-suite }})
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.services-ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        test-suite: ${{ fromJson(needs.setup.outputs.test-matrix) }}
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install ${{ matrix.browser }}
+          npx playwright install-deps
+
+      - name: Start backend services
+        run: |
+          cd services
+          docker-compose -f docker-compose.test.yml up -d --wait
+
+      - name: Configure test environment
+        working-directory: frontend
+        run: |
+          cp .env.test .env.local
+          
+          # Set chaos testing level
+          echo "CHAOS_LEVEL=${{ github.event.inputs.chaos_level || 'medium' }}" >> .env.local
+          echo "ERROR_SIMULATION_ENABLED=true" >> .env.local
+          echo "RESILIENCE_TESTING=true" >> .env.local
+
+      - name: Run error handling tests
+        working-directory: frontend
+        run: |
+          npx playwright test \
+            e2e/tests/error-handling/${{ matrix.test-suite }}.spec.ts \
+            --project=${{ matrix.browser }} \
+            --reporter=html,json,junit \
+            --output-dir=e2e/results/${{ matrix.test-suite }}/${{ matrix.browser }} \
+            --max-failures=5 \
+            --timeout=60000 \
+            --retries=2
+        env:
+          PLAYWRIGHT_HTML_REPORT: e2e/reports/${{ matrix.test-suite }}-${{ matrix.browser }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results-${{ matrix.test-suite }}-${{ matrix.browser }}.json
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: results-${{ matrix.test-suite }}-${{ matrix.browser }}.xml
+
+      - name: Collect error logs
+        if: always()
+        working-directory: frontend
+        run: |
+          mkdir -p e2e/logs/${{ matrix.test-suite }}/${{ matrix.browser }}
+          
+          # Collect browser console logs
+          find e2e/results/${{ matrix.test-suite }}/${{ matrix.browser }} -name "*.log" -exec cp {} e2e/logs/${{ matrix.test-suite }}/${{ matrix.browser }}/ \;
+          
+          # Collect error screenshots
+          find e2e/results/${{ matrix.test-suite }}/${{ matrix.browser }} -name "*.png" -exec cp {} e2e/logs/${{ matrix.test-suite }}/${{ matrix.browser }}/ \;
+          
+          # Collect trace files
+          find e2e/results/${{ matrix.test-suite }}/${{ matrix.browser }} -name "*.zip" -exec cp {} e2e/logs/${{ matrix.test-suite }}/${{ matrix.browser }}/ \;
+
+      - name: Generate error analysis report
+        if: always()
+        working-directory: frontend
+        run: |
+          npm run analyze-error-patterns -- \
+            --input e2e/results/${{ matrix.test-suite }}/${{ matrix.browser }} \
+            --output e2e/reports/error-analysis-${{ matrix.test-suite }}-${{ matrix.browser }}.json \
+            --format json,html
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-test-results-${{ matrix.test-suite }}-${{ matrix.browser }}
+          path: |
+            frontend/e2e/results/${{ matrix.test-suite }}/${{ matrix.browser }}
+            frontend/e2e/reports/${{ matrix.test-suite }}-${{ matrix.browser }}
+            frontend/e2e/logs/${{ matrix.test-suite }}/${{ matrix.browser }}
+          retention-days: 30
+
+      - name: Cleanup services
+        if: always()
+        run: |
+          cd services
+          docker-compose -f docker-compose.test.yml down -v
+
+  chaos-testing:
+    name: Chaos Engineering Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: |
+      needs.setup.outputs.services-ready == 'true' && 
+      (github.event_name == 'schedule' || github.event.inputs.chaos_level == 'high' || github.event.inputs.chaos_level == 'extreme')
+    strategy:
+      matrix:
+        chaos-scenario:
+          - network-partitions
+          - service-failures
+          - resource-exhaustion
+          - byzantine-failures
+        intensity: [high, extreme]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup chaos testing tools
+        run: |
+          # Install Chaos Toolkit
+          pip install chaostoolkit chaostoolkit-kubernetes chaostoolkit-spring
+          
+          # Install network simulation tools
+          sudo apt-get update
+          sudo apt-get install -y tc iproute2 iptables
+
+      - name: Setup Node.js and Playwright
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install chromium
+          npx playwright install-deps
+
+      - name: Start services for chaos testing
+        run: |
+          cd services
+          docker-compose -f docker-compose.chaos.yml up -d --wait
+
+      - name: Configure chaos parameters
+        run: |
+          echo "CHAOS_SCENARIO=${{ matrix.chaos-scenario }}" >> $GITHUB_ENV
+          echo "CHAOS_INTENSITY=${{ matrix.intensity }}" >> $GITHUB_ENV
+          echo "CHAOS_DURATION=300" >> $GITHUB_ENV  # 5 minutes
+
+      - name: Run chaos engineering tests
+        working-directory: frontend
+        run: |
+          npm run test:chaos -- \
+            --scenario ${{ matrix.chaos-scenario }} \
+            --intensity ${{ matrix.intensity }} \
+            --duration $CHAOS_DURATION \
+            --report-format json,html
+        timeout-minutes: 15
+
+      - name: Generate chaos test report
+        if: always()
+        working-directory: frontend
+        run: |
+          npm run generate-chaos-report -- \
+            --scenario ${{ matrix.chaos-scenario }} \
+            --intensity ${{ matrix.intensity }} \
+            --output e2e/reports/chaos-${{ matrix.chaos-scenario }}-${{ matrix.intensity }}.html
+
+      - name: Upload chaos test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaos-test-results-${{ matrix.chaos-scenario }}-${{ matrix.intensity }}
+          path: |
+            frontend/e2e/results/chaos/
+            frontend/e2e/reports/chaos-*
+          retention-days: 30
+
+      - name: Cleanup chaos environment
+        if: always()
+        run: |
+          cd services
+          docker-compose -f docker-compose.chaos.yml down -v
+          
+          # Clean up any network rules
+          sudo tc qdisc del dev lo root 2>/dev/null || true
+          sudo iptables -F 2>/dev/null || true
+
+  performance-regression:
+    name: Performance Regression Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install chromium
+          npx playwright install-deps
+
+      - name: Start services
+        run: |
+          cd services
+          docker-compose -f docker-compose.test.yml up -d --wait
+
+      - name: Run performance regression tests
+        working-directory: frontend
+        run: |
+          npm run test:performance-regression -- \
+            --baseline-file e2e/baselines/performance-baseline.json \
+            --threshold 10 \
+            --report-format json,html
+        timeout-minutes: 30
+
+      - name: Compare with baseline
+        working-directory: frontend
+        run: |
+          npm run compare-performance -- \
+            --current e2e/results/performance/current.json \
+            --baseline e2e/baselines/performance-baseline.json \
+            --output e2e/reports/performance-comparison.html
+
+      - name: Update performance baseline
+        if: success()
+        working-directory: frontend
+        run: |
+          cp e2e/results/performance/current.json e2e/baselines/performance-baseline.json
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add e2e/baselines/performance-baseline.json
+          git commit -m "Update performance baseline [skip ci]" || exit 0
+          git push
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-regression-results
+          path: |
+            frontend/e2e/results/performance/
+            frontend/e2e/reports/performance-*
+          retention-days: 30
+
+  report-generation:
+    name: Generate Comprehensive Report
+    runs-on: ubuntu-latest
+    needs: [error-handling-tests, chaos-testing, performance-regression]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-artifacts
+
+      - name: Install report generation tools
+        run: |
+          npm install -g @playwright/test junit-report-merger
+          pip install jinja2 matplotlib seaborn pandas
+
+      - name: Merge test reports
+        run: |
+          mkdir -p merged-reports
+          
+          # Merge JUnit reports
+          npx junit-report-merger \
+            -i "test-artifacts/*/results-*.xml" \
+            -o merged-reports/junit-merged.xml
+
+      - name: Generate comprehensive error handling report
+        run: |
+          python scripts/generate-error-report.py \
+            --input test-artifacts \
+            --output merged-reports/comprehensive-error-report.html \
+            --include-trends \
+            --include-metrics \
+            --include-recommendations
+
+      - name: Generate error pattern analysis
+        run: |
+          python scripts/analyze-error-patterns.py \
+            --input test-artifacts \
+            --output merged-reports/error-patterns.json \
+            --generate-visualizations
+
+      - name: Create executive summary
+        run: |
+          python scripts/create-executive-summary.py \
+            --input merged-reports \
+            --output merged-reports/executive-summary.md \
+            --format markdown,pdf
+
+      - name: Upload comprehensive report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-error-handling-report
+          path: merged-reports/
+          retention-days: 90
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let summary = '## Error Handling Test Results\\n\\n';
+            
+            try {
+              const reportPath = 'merged-reports/executive-summary.md';
+              if (fs.existsSync(reportPath)) {
+                const report = fs.readFileSync(reportPath, 'utf8');
+                summary += report;
+              } else {
+                summary += '⚠️ Executive summary not found. Check artifacts for detailed results.';
+              }
+            } catch (error) {
+              summary += `❌ Error generating summary: ${error.message}`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  notification:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [error-handling-tests, chaos-testing, performance-regression]
+    if: always()
+    
+    steps:
+      - name: Calculate test results
+        id: results
+        run: |
+          # Determine overall result
+          if [[ "${{ needs.error-handling-tests.result }}" == "success" && "${{ needs.chaos-testing.result }}" != "failure" && "${{ needs.performance-regression.result }}" != "failure" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=All error handling tests passed successfully" >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.error-handling-tests.result }}" == "failure" ]]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Error handling tests failed - immediate attention required" >> $GITHUB_OUTPUT
+          else
+            echo "status=warning" >> $GITHUB_OUTPUT
+            echo "message=Some error handling tests had issues - review required" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: github.event_name == 'schedule' || steps.results.outputs.status == 'failure'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ steps.results.outputs.status }}
+          text: |
+            ${{ steps.results.outputs.message }}
+            
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            
+            View results: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub issue for failures
+        if: steps.results.outputs.status == 'failure' && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Error Handling Tests Failed - ${new Date().toISOString().split('T')[0]}`,
+              body: `## Error Handling Test Failure
+
+**Status**: ${{ steps.results.outputs.status }}
+**Message**: ${{ steps.results.outputs.message }}
+
+**Run Details**:
+- Workflow: ${{ github.workflow }}
+- Run ID: ${{ github.run_id }}
+- Commit: ${{ github.sha }}
+- Branch: ${{ github.ref_name }}
+
+**Action Required**:
+1. Review the test results in the workflow run
+2. Identify and fix the failing error handling scenarios
+3. Ensure system resilience is not compromised
+4. Update error handling mechanisms if necessary
+
+**Links**:
+- [Workflow Run](${context.payload.repository.html_url}/actions/runs/${{ github.run_id }})
+- [Test Artifacts](${context.payload.repository.html_url}/actions/runs/${{ github.run_id }})
+
+/label bug,priority-high,error-handling`,
+              labels: ['bug', 'priority-high', 'error-handling', 'automated-test-failure']
+            });

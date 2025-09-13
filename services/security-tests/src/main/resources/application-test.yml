@@ -1,0 +1,142 @@
+spring:
+  profiles:
+    active: test
+  
+  # Database configuration for security tests
+  datasource:
+    url: jdbc:h2:mem:security_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+    
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+        
+  # Redis configuration for security tests
+  data:
+    redis:
+      host: localhost
+      port: 6370  # Different port for tests
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # Security configuration for tests
+  security:
+    oauth2:
+      authorizationserver:
+        client:
+          test-client:
+            registration:
+              client-id: test-client
+              client-secret: test-secret
+              client-authentication-methods:
+                - client_secret_basic
+                - client_secret_post
+              authorization-grant-types:
+                - authorization_code
+                - refresh_token
+                - client_credentials
+              redirect-uris:
+                - "http://localhost:3000/auth/callback"
+                - "http://127.0.0.1:3000/auth/callback"
+              scopes:
+                - openid
+                - profile
+                - email
+                - read
+                - write
+
+# Security test configuration
+security:
+  test:
+    mode: true
+    enable-attack-simulation: true
+    jwt:
+      secret: test-secret-key-for-security-testing-only-minimum-256-bits
+      expiration: 3600000  # 1 hour
+      refresh-expiration: 86400000  # 24 hours
+    cors:
+      allowed-origins: "http://localhost:3000,http://127.0.0.1:3000"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+      allowed-headers: "*"
+      allow-credentials: true
+    rate-limiting:
+      requests-per-minute: 1000  # Higher limit for tests
+      burst-capacity: 100
+    headers:
+      enabled: true
+      csp:
+        enabled: true
+        report-only: false
+        custom-directives:
+          - "base-uri 'self'"
+          - "form-action 'self'"
+      hsts:
+        enabled: false  # Disabled for HTTP tests
+        max-age: 31536000
+        include-subdomains: true
+      frame-options:
+        enabled: true
+        policy: "DENY"
+
+# OWASP security test configuration
+owasp:
+  test:
+    sql-injection:
+      enabled: true
+      payloads-file: "classpath:security/sql-injection-payloads.txt"
+    xss:
+      enabled: true
+      payloads-file: "classpath:security/xss-payloads.txt"
+    xxe:
+      enabled: true
+      payloads-file: "classpath:security/xxe-payloads.xml"
+    csrf:
+      enabled: true
+    command-injection:
+      enabled: true
+      payloads-file: "classpath:security/command-injection-payloads.txt"
+    path-traversal:
+      enabled: true
+      payloads-file: "classpath:security/path-traversal-payloads.txt"
+
+# Penetration testing configuration  
+penetration-testing:
+  enabled: true
+  concurrent-users: 10
+  attack-duration: 30s
+  brute-force:
+    enabled: true
+    max-attempts: 5
+    lockout-duration: 300s
+  timing-attacks:
+    enabled: true
+    measurement-iterations: 100
+
+# Logging configuration for security tests
+logging:
+  level:
+    com.focushive.security: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.filter: DEBUG
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.testcontainers: WARN
+    
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"
+    
+# Test containers configuration
+testcontainers:
+  reuse:
+    enable: true  # Reuse containers for faster tests

@@ -1,0 +1,189 @@
+# Integration Test Configuration for FocusHive Cross-Service Tests
+# This configuration is used by the AbstractCrossServiceIntegrationTest
+
+spring:
+  profiles:
+    active: integration-test
+
+  # Database configuration (will be overridden by TestContainers)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/focushive_integration_test
+    username: test
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  # JPA configuration for integration tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        show_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+    show-sql: false
+
+  # Redis configuration (will be overridden by TestContainers)
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000ms
+    database: 0
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  # Transaction management
+  transaction:
+    rollback-on-commit-failure: true
+
+# Logging configuration for tests
+logging:
+  level:
+    com.focushive: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type: WARN
+    org.testcontainers: WARN
+    io.restassured: WARN
+    org.awaitility: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Test-specific timeouts and performance settings
+test:
+  timeouts:
+    default: 30s
+    eventual-consistency: 10s
+    http-request: 5s
+    database-operation: 10s
+  
+  performance:
+    max-response-time: 500ms
+    concurrent-user-limit: 100
+    event-processing-rate: 50 # events per second
+  
+  retry:
+    max-attempts: 5
+    backoff-multiplier: 2
+    initial-delay: 1s
+
+# Service URLs for cross-service communication
+# These will be overridden by AbstractCrossServiceIntegrationTest
+services:
+  focushive-backend:
+    url: http://localhost:8080
+    health-endpoint: /actuator/health
+  identity-service:
+    url: http://localhost:8081
+    health-endpoint: /actuator/health
+  analytics-service:
+    url: http://localhost:8085
+    health-endpoint: /actuator/health
+  notification-service:
+    url: http://localhost:8083
+    health-endpoint: /actuator/health
+  buddy-service:
+    url: http://localhost:8087
+    health-endpoint: /actuator/health
+  chat-service:
+    url: http://localhost:8084
+    health-endpoint: /actuator/health
+  music-service:
+    url: http://localhost:8082
+    health-endpoint: /actuator/health
+
+# External service mocks (WireMock)
+external:
+  spotify:
+    api:
+      url: http://localhost:9001
+  email:
+    service:
+      url: http://localhost:9002
+  push:
+    service:
+      url: http://localhost:9003
+
+# Circuit breaker configuration for tests
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+  
+  retry:
+    instances:
+      default:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+
+# Management endpoints for testing
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Test data configuration
+testdata:
+  users:
+    default-password: "TestPassword123!"
+    cleanup-after-test: true
+  
+  hives:
+    default-max-members: 10
+    cleanup-after-test: true
+  
+  events:
+    batch-size: 100
+    processing-timeout: 30s
+    cleanup-after-test: true
+
+# Security configuration for tests
+security:
+  jwt:
+    secret: "test-jwt-secret-for-integration-tests-only-do-not-use-in-production"
+    expiration: 3600000 # 1 hour
+  
+  cors:
+    allowed-origins: "*"
+    allowed-methods: "*"
+    allowed-headers: "*"
+
+# Cache configuration for tests
+cache:
+  ttl:
+    user-profile: 300s
+    hive-members: 60s
+    analytics-data: 120s
+  
+  names:
+    - userProfiles
+    - hiveMembers
+    - analyticsData
+    - notificationPreferences
