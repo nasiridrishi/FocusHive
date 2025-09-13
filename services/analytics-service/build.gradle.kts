@@ -45,7 +45,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     
     // OpenAPI Documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
     
     // CSV Export Support
     implementation("com.opencsv:opencsv:5.8")
