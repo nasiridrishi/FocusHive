@@ -70,7 +70,7 @@ dependencies {
     // Utilities
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("com.google.guava:guava:33.2.1-jre")
+    implementation("com.google.guava:guava:33.4.8-jre")
     
     // Development Tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
