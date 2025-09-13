@@ -40,7 +40,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
     
     // Utilities
-    implementation("org.apache.commons:commons-lang3:3.13.0")
+    implementation("org.apache.commons:commons-lang3:3.18.0")
     
     // Development
     developmentOnly("org.springframework.boot:spring-boot-devtools")
