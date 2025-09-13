@@ -1,0 +1,258 @@
+version: 2
+updates:
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(frontend)"
+      prefix-development: "deps-dev(frontend)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "frontend"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    ignore:
+      - dependency-name: "@types/*"
+        update-types: ["version-update:semver-patch"]
+
+  # Backend dependencies for each service
+  - package-ecosystem: "gradle"
+    directory: "/services/focushive-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(backend)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "focushive-backend"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/identity-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(identity)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "identity-service"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/music-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(music)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "music-service"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/notification-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(notification)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "notification-service"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/chat-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(chat)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "chat-service"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/analytics-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(analytics)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "analytics-service"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/forum-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(forum)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "forum-service"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/buddy-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(buddy)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "buddy-service"
+
+  - package-ecosystem: "gradle"
+    directory: "/services/api-gateway"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "deps(gateway)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "api-gateway"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "docker(frontend)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "frontend"
+
+  - package-ecosystem: "docker"
+    directory: "/services/focushive-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "nasir"
+    assignees:
+      - "nasir"
+    commit-message:
+      prefix: "docker(backend)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "backend"

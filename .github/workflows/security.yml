@@ -1,0 +1,614 @@
+name: Security Scans
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scans weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - dependencies
+          - secrets
+          - code-quality
+          - containers
+
+env:
+  NODE_VERSION: 20
+  JAVA_VERSION: 21
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend-changed: ${{ steps.changes.outputs.backend-changed }}
+      frontend-changed: ${{ steps.changes.outputs.frontend-changed }}
+      dependencies-changed: ${{ steps.changes.outputs.dependencies-changed }}
+      docker-changed: ${{ steps.changes.outputs.docker-changed }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: changes
+        run: |
+          # Skip change detection for scheduled runs or manual dispatch
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "backend-changed=true" >> $GITHUB_OUTPUT
+            echo "frontend-changed=true" >> $GITHUB_OUTPUT
+            echo "dependencies-changed=true" >> $GITHUB_OUTPUT
+            echo "docker-changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check for backend changes
+          if git diff --name-only HEAD~1..HEAD | grep -qE '^services/.*\.(java|kt|gradle|yml|yaml)$'; then
+            echo "backend-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "backend-changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for frontend changes
+          if git diff --name-only HEAD~1..HEAD | grep -qE '^frontend/.*\.(ts|tsx|js|jsx|json)$'; then
+            echo "frontend-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend-changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for dependency changes
+          if git diff --name-only HEAD~1..HEAD | grep -qE '(package-lock\.json|build\.gradle\.kts|gradle\.properties)$'; then
+            echo "dependencies-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "dependencies-changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Check for Docker changes
+          if git diff --name-only HEAD~1..HEAD | grep -qE '(Dockerfile|docker-compose.*\.yml)$'; then
+            echo "docker-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "docker-changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  secret-scan:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' || 
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' || github.event_name == 'pull_request')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - name: Run TruffleHog secret scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Upload secret scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: secret-scan-results
+          path: |
+            gitleaks-report.json
+            trufflehog-results.json
+          retention-days: 30
+
+  dependency-scan:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.dependencies-changed == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        component: [backend, frontend]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (for frontend)
+        if: matrix.component == 'frontend'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up JDK (for backend)
+        if: matrix.component == 'backend'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Run OWASP Dependency Check (Backend)
+        if: matrix.component == 'backend'
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'focushive-backend'
+          path: './services'
+          format: 'ALL'
+          args: >
+            --enableRetired
+            --enableExperimental
+            --failOnCVSS 7
+            --exclude "**/test/**"
+            --exclude "**/node_modules/**"
+        env:
+          JAVA_HOME: /opt/java/openjdk
+
+      - name: Install frontend dependencies
+        if: matrix.component == 'frontend'
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Run npm audit (Frontend)
+        if: matrix.component == 'frontend'
+        run: |
+          cd frontend
+          npm audit --audit-level=moderate --json > npm-audit-results.json || true
+          npm audit --audit-level=moderate
+
+      - name: Run Snyk scan (${{ matrix.component }})
+        uses: snyk/actions/node@master
+        if: matrix.component == 'frontend'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium --json-file-output=snyk-results.json
+          command: test
+        continue-on-error: true
+
+      - name: Run Snyk scan (Backend services)
+        if: matrix.component == 'backend'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          npm install -g snyk
+          cd services
+          for service in */; do
+            if [ -f "$service/build.gradle.kts" ]; then
+              echo "Scanning $service..."
+              cd "$service"
+              snyk test --severity-threshold=medium --json-file-output="../../snyk-results-$service.json" || true
+              cd ..
+            fi
+          done
+
+      - name: Upload dependency scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-scan-${{ matrix.component }}
+          path: |
+            reports/
+            npm-audit-results.json
+            snyk-results*.json
+          retention-days: 30
+
+  code-quality-scan:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.backend-changed == 'true' ||
+      needs.detect-changes.outputs.frontend-changed == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Run frontend tests for coverage
+        run: |
+          cd frontend
+          npm run test:coverage
+        continue-on-error: true
+
+      - name: Run backend tests for coverage
+        run: |
+          cd services/focushive-backend
+          chmod +x ./gradlew
+          ./gradlew test jacocoTestReport --no-daemon
+        continue-on-error: true
+
+      - name: SonarQube Scan
+        uses: sonarqube-quality-gate-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          scanMetadataReportFile: .scannerwork/report-task.txt
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java, javascript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: Upload code quality results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-results
+          path: |
+            .scannerwork/
+            frontend/coverage/
+            services/*/build/reports/jacoco/
+          retention-days: 30
+
+  container-scan:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.docker-changed == 'true' ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [
+          focushive-backend,
+          identity-service,
+          music-service,
+          notification-service,
+          chat-service,
+          analytics-service,
+          forum-service,
+          buddy-service,
+          frontend
+        ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image for scanning
+        run: |
+          if [ "${{ matrix.service }}" = "frontend" ]; then
+            cd frontend
+            npm ci --prefer-offline --no-audit
+            npm run build
+            cd ..
+            docker build -t focushive-${{ matrix.service }}:scan frontend/
+          else
+            cd services/${{ matrix.service }}
+            chmod +x ./gradlew
+            ./gradlew build -x test --no-daemon
+            cd ../..
+            docker build -t focushive-${{ matrix.service }}:scan services/${{ matrix.service }}/
+          fi
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'focushive-${{ matrix.service }}:scan'
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.service }}.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@v3
+        with:
+          image: 'focushive-${{ matrix.service }}:scan'
+          format: 'json'
+          output-file: 'grype-results-${{ matrix.service }}.json'
+        continue-on-error: true
+
+      - name: Upload container scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-scan-${{ matrix.service }}
+          path: |
+            trivy-results-${{ matrix.service }}.sarif
+            grype-results-${{ matrix.service }}.json
+          retention-days: 30
+
+  security-policy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check security policy compliance
+        run: |
+          echo "# Security Policy Compliance Check" > security-policy-report.md
+          echo "" >> security-policy-report.md
+          
+          # Check for security policy file
+          if [ -f "SECURITY.md" ]; then
+            echo "✅ Security policy document exists" >> security-policy-report.md
+          else
+            echo "❌ Security policy document missing" >> security-policy-report.md
+          fi
+          
+          # Check for dependabot configuration
+          if [ -f ".github/dependabot.yml" ]; then
+            echo "✅ Dependabot configuration exists" >> security-policy-report.md
+          else
+            echo "❌ Dependabot configuration missing" >> security-policy-report.md
+          fi
+          
+          # Check for security workflow
+          if [ -f ".github/workflows/security.yml" ]; then
+            echo "✅ Security workflow exists" >> security-policy-report.md
+          else
+            echo "❌ Security workflow missing" >> security-policy-report.md
+          fi
+          
+          # Check for secrets in environment files
+          echo "" >> security-policy-report.md
+          echo "## Environment File Security" >> security-policy-report.md
+          
+          if find . -name "*.env*" -type f | grep -v ".env.example" | head -1; then
+            echo "⚠️  Environment files found - ensure they are in .gitignore" >> security-policy-report.md
+          else
+            echo "✅ No environment files found in repository" >> security-policy-report.md
+          fi
+          
+          cat security-policy-report.md
+
+      - name: Upload security policy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-policy-report
+          path: security-policy-report.md
+          retention-days: 30
+
+  aggregate-security-results:
+    needs: [secret-scan, dependency-scan, code-quality-scan, container-scan, security-policy-check]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all security artifacts
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          path: security-results
+
+      - name: Generate security summary report
+        if: always()
+        run: |
+          echo "# Security Scan Results Summary" > security-summary.md
+          echo "" >> security-summary.md
+          echo "**Scan Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> security-summary.md
+          echo "**Trigger**: ${{ github.event_name }}" >> security-summary.md
+          echo "" >> security-summary.md
+          
+          echo "## Scan Results" >> security-summary.md
+          
+          # Secret scan results
+          if [ -d "security-results/secret-scan-results" ]; then
+            echo "- ✅ Secret Scan: Completed" >> security-summary.md
+          else
+            echo "- ❌ Secret Scan: Failed or skipped" >> security-summary.md
+          fi
+          
+          # Dependency scan results
+          if [ -d "security-results/dependency-scan-backend" ] || [ -d "security-results/dependency-scan-frontend" ]; then
+            echo "- ✅ Dependency Scan: Completed" >> security-summary.md
+          else
+            echo "- ❌ Dependency Scan: Failed or skipped" >> security-summary.md
+          fi
+          
+          # Code quality scan results
+          if [ -d "security-results/code-quality-results" ]; then
+            echo "- ✅ Code Quality Scan: Completed" >> security-summary.md
+          else
+            echo "- ❌ Code Quality Scan: Failed or skipped" >> security-summary.md
+          fi
+          
+          # Container scan results
+          CONTAINER_SCANS=$(find security-results -name "container-scan-*" -type d | wc -l)
+          if [ "$CONTAINER_SCANS" -gt 0 ]; then
+            echo "- ✅ Container Scans: $CONTAINER_SCANS services scanned" >> security-summary.md
+          else
+            echo "- ❌ Container Scans: No scans completed" >> security-summary.md
+          fi
+          
+          # Security policy check
+          if [ -d "security-results/security-policy-report" ]; then
+            echo "- ✅ Security Policy Check: Completed" >> security-summary.md
+          else
+            echo "- ❌ Security Policy Check: Failed or skipped" >> security-summary.md
+          fi
+          
+          echo "" >> security-summary.md
+          echo "## Detailed Reports" >> security-summary.md
+          echo "Detailed scan results are available in the individual artifacts:" >> security-summary.md
+          echo "- Secret scan results with detection details" >> security-summary.md
+          echo "- Dependency vulnerability reports (OWASP, Snyk, npm audit)" >> security-summary.md
+          echo "- Code quality metrics and security hotspots" >> security-summary.md
+          echo "- Container vulnerability scans (Trivy, Grype)" >> security-summary.md
+          echo "- Security policy compliance status" >> security-summary.md
+          
+          echo "" >> security-summary.md
+          echo "## Recommendations" >> security-summary.md
+          echo "1. Review all HIGH and CRITICAL vulnerabilities immediately" >> security-summary.md
+          echo "2. Update dependencies with known security issues" >> security-summary.md
+          echo "3. Address any secrets detected in the codebase" >> security-summary.md
+          echo "4. Follow up on container security recommendations" >> security-summary.md
+          echo "5. Implement security policy improvements as needed" >> security-summary.md
+          
+          cat security-summary.md
+
+      - name: Upload security summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-summary-report
+          path: security-summary.md
+          retention-days: 90
+
+      - name: Comment PR with security results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const summary = fs.readFileSync('security-summary.md', 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🔒 Security Scan Results\n\n${summary}`
+              });
+            } catch (error) {
+              console.log('Could not create PR comment:', error.message);
+            }
+
+      - name: Create security issue for critical findings
+        if: github.event_name == 'schedule' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Critical Security Issues Detected',
+              body: `
+              Critical security vulnerabilities have been detected in the weekly security scan.
+              
+              **Scan Details:**
+              - Date: ${new Date().toISOString()}
+              - Workflow Run: ${context.runId}
+              - Commit: ${context.sha.substring(0, 7)}
+              
+              Please review the security scan artifacts and address critical issues immediately.
+              
+              **Action Items:**
+              1. Review all HIGH and CRITICAL severity findings
+              2. Update vulnerable dependencies
+              3. Address any exposed secrets
+              4. Fix container security issues
+              5. Update security policies as needed
+              `,
+              labels: ['security', 'critical', 'priority-high']
+            });
+
+  security-baseline-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          path: pr
+
+      - name: Compare security posture
+        run: |
+          echo "# Security Baseline Comparison" > security-comparison.md
+          echo "" >> security-comparison.md
+          
+          # Compare dependency files
+          echo "## Dependency Changes" >> security-comparison.md
+          
+          if ! diff -q base/frontend/package-lock.json pr/frontend/package-lock.json > /dev/null 2>&1; then
+            echo "⚠️ Frontend dependencies changed - security review required" >> security-comparison.md
+          else
+            echo "✅ No frontend dependency changes" >> security-comparison.md
+          fi
+          
+          # Check for new services or significant structural changes
+          BASE_SERVICES=$(find base/services -name "build.gradle.kts" | wc -l)
+          PR_SERVICES=$(find pr/services -name "build.gradle.kts" | wc -l)
+          
+          if [ "$PR_SERVICES" -gt "$BASE_SERVICES" ]; then
+            echo "⚠️ New backend services added - security review required" >> security-comparison.md
+          elif [ "$PR_SERVICES" -lt "$BASE_SERVICES" ]; then
+            echo "⚠️ Backend services removed - security review required" >> security-comparison.md
+          else
+            echo "✅ No structural changes to backend services" >> security-comparison.md
+          fi
+          
+          cat security-comparison.md
+
+      - name: Upload security comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-baseline-comparison
+          path: security-comparison.md
+          retention-days: 30

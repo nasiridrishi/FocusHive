@@ -1,0 +1,515 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run (all, smoke, critical, performance)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - smoke
+          - critical
+          - performance
+      browser:
+        description: 'Browser to test (all, chromium, firefox, webkit)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - chromium
+          - firefox
+          - webkit
+
+env:
+  NODE_VERSION: 20
+  JAVA_VERSION: 21
+
+jobs:
+  prepare-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      test-suite: ${{ steps.determine-suite.outputs.test-suite }}
+      browser-matrix: ${{ steps.determine-browsers.outputs.browser-matrix }}
+      full-system-required: ${{ steps.determine-requirements.outputs.full-system-required }}
+    
+    steps:
+      - name: Determine test suite
+        id: determine-suite
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "test-suite=${{ github.event.inputs.test_suite }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "test-suite=all" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "test-suite=smoke" >> $GITHUB_OUTPUT
+          else
+            echo "test-suite=critical" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine browser matrix
+        id: determine-browsers
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.browser }}" != "all" ]; then
+            echo "browser-matrix=[\"${{ github.event.inputs.browser }}\"]" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "browser-matrix=[\"chromium\"]" >> $GITHUB_OUTPUT
+          else
+            echo "browser-matrix=[\"chromium\", \"firefox\", \"webkit\"]" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine system requirements
+        id: determine-requirements
+        run: |
+          TEST_SUITE="${{ steps.determine-suite.outputs.test-suite }}"
+          if [ "$TEST_SUITE" = "all" ] || [ "$TEST_SUITE" = "critical" ]; then
+            echo "full-system-required=true" >> $GITHUB_OUTPUT
+          else
+            echo "full-system-required=false" >> $GITHUB_OUTPUT
+          fi
+
+  start-services:
+    needs: prepare-environment
+    if: needs.prepare-environment.outputs.full-system-required == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-e2e-${{ hashFiles('docker-compose.e2e.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-e2e-
+
+      - name: Start E2E environment
+        run: |
+          echo "Starting E2E test environment..."
+          docker-compose -f docker-compose.e2e.yml up -d --build
+          
+          echo "Waiting for services to be ready..."
+          timeout 300 bash -c 'until docker-compose -f docker-compose.e2e.yml ps | grep -q "Up.*healthy.*11"; do sleep 5; echo "Waiting for all 11 services to be healthy..."; done' || {
+            echo "❌ Services failed to start within timeout"
+            docker-compose -f docker-compose.e2e.yml ps
+            docker-compose -f docker-compose.e2e.yml logs
+            exit 1
+          }
+          
+          echo "✅ All services are ready"
+          docker-compose -f docker-compose.e2e.yml ps
+
+      - name: Verify service health
+        run: |
+          echo "Verifying service health endpoints..."
+          
+          services=(
+            "http://localhost:8080/actuator/health:focushive-backend"
+            "http://localhost:8081/actuator/health:identity-service"
+            "http://localhost:8082/actuator/health:music-service"
+            "http://localhost:8083/actuator/health:notification-service"
+            "http://localhost:8084/actuator/health:chat-service"
+            "http://localhost:8085/actuator/health:analytics-service"
+            "http://localhost:8086/actuator/health:forum-service"
+            "http://localhost:8087/actuator/health:buddy-service"
+            "http://localhost:3000:frontend"
+          )
+          
+          for service_info in "${services[@]}"; do
+            url="${service_info%:*}"
+            name="${service_info##*:}"
+            
+            echo "Checking $name at $url..."
+            if curl -f -s "$url" > /dev/null; then
+              echo "✅ $name is healthy"
+            else
+              echo "❌ $name health check failed"
+              curl -v "$url" || true
+              exit 1
+            fi
+          done
+
+      - name: Save Docker environment
+        run: |
+          docker-compose -f docker-compose.e2e.yml config > docker-environment.yml
+
+      - name: Upload environment config
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-environment
+          path: docker-environment.yml
+          retention-days: 1
+
+  e2e-tests:
+    needs: [prepare-environment, start-services]
+    if: always() && (needs.prepare-environment.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJson(needs.prepare-environment.outputs.browser-matrix) }}
+        shard: [1, 2, 3, 4] # Split tests across 4 shards for parallel execution
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+
+      - name: Install Playwright browsers
+        run: |
+          cd frontend
+          npx playwright install ${{ matrix.browser }} --with-deps
+
+      - name: Download environment config
+        if: needs.prepare-environment.outputs.full-system-required == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-environment
+          path: .
+
+      - name: Start E2E environment (if needed)
+        if: needs.prepare-environment.outputs.full-system-required == 'true'
+        run: |
+          docker-compose -f docker-compose.e2e.yml up -d
+          
+          # Wait for services to be ready
+          echo "Waiting for services to be ready..."
+          timeout 180 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
+
+      - name: Run E2E tests
+        run: |
+          cd frontend
+          
+          # Determine test command based on suite and browser
+          TEST_SUITE="${{ needs.prepare-environment.outputs.test-suite }}"
+          BROWSER="${{ matrix.browser }}"
+          SHARD="${{ matrix.shard }}"
+          
+          case "$TEST_SUITE" in
+            "smoke")
+              TEST_CMD="npx playwright test --grep '@smoke' --project=$BROWSER --shard=$SHARD/4"
+              ;;
+            "critical")
+              TEST_CMD="npx playwright test --grep '@critical|@smoke' --project=$BROWSER --shard=$SHARD/4"
+              ;;
+            "performance")
+              TEST_CMD="npx playwright test e2e/tests/performance --project=$BROWSER --shard=$SHARD/4"
+              ;;
+            *)
+              TEST_CMD="npx playwright test --project=$BROWSER --shard=$SHARD/4"
+              ;;
+          esac
+          
+          echo "Running: $TEST_CMD"
+          $TEST_CMD --retries=2 --reporter=html,github
+        env:
+          BASE_URL: http://localhost:3000
+          API_BASE_URL: http://localhost:8080
+          PLAYWRIGHT_HTML_REPORT: playwright-report-${{ matrix.browser }}-shard-${{ matrix.shard }}
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.browser }}-shard-${{ matrix.shard }}
+          path: |
+            frontend/playwright-report-${{ matrix.browser }}-shard-${{ matrix.shard }}/
+            frontend/test-results/
+          retention-days: 7
+
+      - name: Upload trace files
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-${{ matrix.browser }}-shard-${{ matrix.shard }}
+          path: frontend/test-results/
+          retention-days: 7
+
+  performance-tests:
+    needs: [prepare-environment, start-services]
+    if: always() && needs.prepare-environment.outputs.test-suite == 'all' || needs.prepare-environment.outputs.test-suite == 'performance'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        load-level: [minimal, small, medium, stress]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies and Playwright
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+          npx playwright install chromium --with-deps
+
+      - name: Start E2E environment
+        run: |
+          docker-compose -f docker-compose.e2e.yml up -d
+          timeout 180 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
+
+      - name: Run performance tests
+        run: |
+          cd frontend
+          npm run test:load:${{ matrix.load-level }}
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results-${{ matrix.load-level }}
+          path: |
+            frontend/playwright-report/
+            frontend/performance-results/
+          retention-days: 7
+
+  accessibility-tests:
+    needs: [prepare-environment, start-services]
+    if: always() && (needs.prepare-environment.outputs.test-suite == 'all' || needs.prepare-environment.outputs.test-suite == 'critical')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies and Playwright
+        run: |
+          cd frontend
+          npm ci --prefer-offline --no-audit
+          npx playwright install chromium --with-deps
+
+      - name: Start E2E environment
+        run: |
+          docker-compose -f docker-compose.e2e.yml up -d
+          timeout 180 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done'
+
+      - name: Run accessibility tests
+        run: |
+          cd frontend
+          npx playwright test e2e/tests/accessibility --project=chromium --reporter=html
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Upload accessibility results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-test-results
+          path: |
+            frontend/playwright-report/
+            frontend/accessibility-violations.json
+          retention-days: 7
+
+  cleanup:
+    needs: [e2e-tests, performance-tests, accessibility-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Stop E2E environment
+        run: |
+          docker-compose -f docker-compose.e2e.yml down -v --remove-orphans || true
+          docker system prune -f || true
+
+  aggregate-results:
+    needs: [e2e-tests, performance-tests, accessibility-tests]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all test artifacts
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+
+      - name: Generate E2E test summary
+        if: always()
+        run: |
+          echo "# E2E Test Results Summary" > test-summary.md
+          echo "" >> test-summary.md
+          echo "## Test Execution Details" >> test-summary.md
+          echo "- **Test Suite**: ${{ needs.prepare-environment.outputs.test-suite }}" >> test-summary.md
+          echo "- **Browsers**: ${{ needs.prepare-environment.outputs.browser-matrix }}" >> test-summary.md
+          echo "- **Trigger**: ${{ github.event_name }}" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          echo "## Test Results" >> test-summary.md
+          
+          # Check E2E test results
+          E2E_SUCCESS=true
+          for browser in chromium firefox webkit; do
+            for shard in 1 2 3 4; do
+              if [ -d "test-results/playwright-report-$browser-shard-$shard" ]; then
+                echo "- ✅ E2E Tests ($browser, shard $shard): Passed" >> test-summary.md
+              elif ls test-results/playwright-report-$browser-shard-$shard* 2>/dev/null; then
+                echo "- ❌ E2E Tests ($browser, shard $shard): Failed" >> test-summary.md
+                E2E_SUCCESS=false
+              fi
+            done
+          done
+          
+          # Check performance tests
+          for level in minimal small medium stress; do
+            if [ -d "test-results/performance-results-$level" ]; then
+              echo "- ✅ Performance Tests ($level): Completed" >> test-summary.md
+            fi
+          done
+          
+          # Check accessibility tests
+          if [ -d "test-results/accessibility-test-results" ]; then
+            echo "- ✅ Accessibility Tests: Passed" >> test-summary.md
+          elif ls test-results/accessibility-test-results* 2>/dev/null; then
+            echo "- ❌ Accessibility Tests: Issues found" >> test-summary.md
+          fi
+          
+          echo "" >> test-summary.md
+          echo "## Reports Available" >> test-summary.md
+          echo "- Playwright HTML reports with screenshots and videos" >> test-summary.md
+          echo "- Performance test results and metrics" >> test-summary.md
+          echo "- Accessibility violation reports" >> test-summary.md
+          echo "- Test traces for failed tests" >> test-summary.md
+          
+          # Set overall result
+          if [ "$E2E_SUCCESS" = "true" ]; then
+            echo "✅ Overall E2E Test Status: PASSED" >> test-summary.md
+          else
+            echo "❌ Overall E2E Test Status: FAILED" >> test-summary.md
+          fi
+          
+          cat test-summary.md
+
+      - name: Upload aggregated results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-summary
+          path: test-summary.md
+          retention-days: 30
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const summary = fs.readFileSync('test-summary.md', 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🎭 E2E Test Results\n\n${summary}`
+              });
+            } catch (error) {
+              console.log('Could not create PR comment:', error.message);
+            }
+
+      - name: Create test status check
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const testSuccess = '${{ needs.e2e-tests.result }}' === 'success';
+            
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: testSuccess ? 'success' : 'failure',
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: testSuccess ? 'E2E tests passed' : 'E2E tests failed',
+              context: 'ci/e2e-tests'
+            });
+
+  notify-failure:
+    needs: [e2e-tests, performance-tests, accessibility-tests]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send failure notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Nightly E2E Tests Failed';
+            const body = `
+            The nightly E2E test run has failed.
+            
+            **Run Details:**
+            - Workflow: ${context.workflow}
+            - Run ID: ${context.runId}
+            - Commit: ${context.sha.substring(0, 7)}
+            - Branch: ${context.ref.replace('refs/heads/', '')}
+            
+            Please check the workflow logs for details.
+            `;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'e2e-failure', 'priority-high']
+            });

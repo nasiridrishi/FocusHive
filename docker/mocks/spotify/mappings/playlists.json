@@ -1,0 +1,130 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPattern": "/v1/me/playlists.*"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "href": "https://api.spotify.com/v1/me/playlists",
+      "items": [
+        {
+          "collaborative": false,
+          "description": "Focus music for deep work sessions",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/playlist/test1"
+          },
+          "href": "https://api.spotify.com/v1/playlists/test1",
+          "id": "focus_playlist_test_1",
+          "images": [
+            {
+              "height": 640,
+              "url": "https://via.placeholder.com/640x640/1db954/ffffff?text=Focus+Beats",
+              "width": 640
+            }
+          ],
+          "name": "🎧 Deep Focus Beats",
+          "owner": {
+            "display_name": "FocusHive Test User",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/user/testuser"
+            },
+            "href": "https://api.spotify.com/v1/users/testuser",
+            "id": "testuser",
+            "type": "user",
+            "uri": "spotify:user:testuser"
+          },
+          "primary_color": null,
+          "public": true,
+          "snapshot_id": "test_snapshot_1",
+          "tracks": {
+            "href": "https://api.spotify.com/v1/playlists/test1/tracks",
+            "total": 25
+          },
+          "type": "playlist",
+          "uri": "spotify:playlist:focus_playlist_test_1"
+        },
+        {
+          "collaborative": true,
+          "description": "Collaborative study playlist for hive members",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/playlist/test2"
+          },
+          "href": "https://api.spotify.com/v1/playlists/test2",
+          "id": "collab_playlist_test_2",
+          "images": [
+            {
+              "height": 640,
+              "url": "https://via.placeholder.com/640x640/ff6b35/ffffff?text=Study+Vibes",
+              "width": 640
+            }
+          ],
+          "name": "📚 Study Hive Collaborative",
+          "owner": {
+            "display_name": "Alice Test",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/user/alice_test"
+            },
+            "href": "https://api.spotify.com/v1/users/alice_test",
+            "id": "alice_test",
+            "type": "user",
+            "uri": "spotify:user:alice_test"
+          },
+          "primary_color": null,
+          "public": false,
+          "snapshot_id": "test_snapshot_2",
+          "tracks": {
+            "href": "https://api.spotify.com/v1/playlists/test2/tracks",
+            "total": 18
+          },
+          "type": "playlist",
+          "uri": "spotify:playlist:collab_playlist_test_2"
+        },
+        {
+          "collaborative": false,
+          "description": "Ambient sounds for concentration",
+          "external_urls": {
+            "spotify": "https://open.spotify.com/playlist/test3"
+          },
+          "href": "https://api.spotify.com/v1/playlists/test3",
+          "id": "ambient_playlist_test_3",
+          "images": [
+            {
+              "height": 640,
+              "url": "https://via.placeholder.com/640x640/9b59b6/ffffff?text=Ambient",
+              "width": 640
+            }
+          ],
+          "name": "🌿 Ambient Focus",
+          "owner": {
+            "display_name": "Bob Test",
+            "external_urls": {
+              "spotify": "https://open.spotify.com/user/bob_test"
+            },
+            "href": "https://api.spotify.com/v1/users/bob_test",
+            "id": "bob_test",
+            "type": "user",
+            "uri": "spotify:user:bob_test"
+          },
+          "primary_color": null,
+          "public": true,
+          "snapshot_id": "test_snapshot_3",
+          "tracks": {
+            "href": "https://api.spotify.com/v1/playlists/test3/tracks",
+            "total": 32
+          },
+          "type": "playlist",
+          "uri": "spotify:playlist:ambient_playlist_test_3"
+        }
+      ],
+      "limit": 50,
+      "next": null,
+      "offset": 0,
+      "previous": null,
+      "total": 3
+    }
+  }
+}
