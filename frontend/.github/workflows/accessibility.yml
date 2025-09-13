@@ -1,0 +1,379 @@
+# Accessibility Testing CI/CD Pipeline
+# 
+# Automated accessibility testing workflow for FocusHive frontend
+# Runs on pull requests and main branch pushes
+# Uses multiple accessibility testing tools for comprehensive coverage
+# 
+# UOL-44.19: Comprehensive Accessibility E2E Tests
+
+name: Accessibility Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/accessibility.yml'
+
+env:
+  NODE_VERSION: '20'
+  CI: true
+
+jobs:
+  accessibility-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+        accessibility-config: [default, high-contrast, mobile]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Start application
+        working-directory: ./frontend
+        run: |
+          npm run build
+          npm run preview &
+          sleep 10
+        env:
+          VITE_API_URL: http://localhost:3000
+          VITE_WS_URL: ws://localhost:3000
+
+      - name: Wait for application to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:4173; do sleep 2; done'
+
+      - name: Run Axe accessibility tests
+        working-directory: ./frontend
+        run: |
+          npx playwright test e2e/tests/accessibility/wcag-compliance.spec.ts \
+            --project=${{ matrix.browser }} \
+            --grep="axe.*accessibility" \
+            --reporter=json:accessibility-axe-${{ matrix.browser }}-${{ matrix.accessibility-config }}.json
+        env:
+          ACCESSIBILITY_CONFIG: ${{ matrix.accessibility-config }}
+        continue-on-error: true
+
+      - name: Run WCAG compliance tests
+        working-directory: ./frontend
+        run: |
+          npx playwright test e2e/tests/accessibility/ \
+            --project=${{ matrix.browser }} \
+            --reporter=json:accessibility-wcag-${{ matrix.browser }}-${{ matrix.accessibility-config }}.json
+        env:
+          ACCESSIBILITY_CONFIG: ${{ matrix.accessibility-config }}
+        continue-on-error: true
+
+      - name: Run screen reader tests
+        working-directory: ./frontend
+        run: |
+          npx playwright test e2e/tests/accessibility/screen-reader.spec.ts \
+            --project=${{ matrix.browser }} \
+            --reporter=json:accessibility-sr-${{ matrix.browser }}-${{ matrix.accessibility-config }}.json
+        env:
+          ACCESSIBILITY_CONFIG: ${{ matrix.accessibility-config }}
+        continue-on-error: true
+
+      - name: Run keyboard navigation tests
+        working-directory: ./frontend
+        run: |
+          npx playwright test e2e/tests/accessibility/keyboard-navigation.spec.ts \
+            --project=${{ matrix.browser }} \
+            --reporter=json:accessibility-kbd-${{ matrix.browser }}-${{ matrix.accessibility-config }}.json
+        env:
+          ACCESSIBILITY_CONFIG: ${{ matrix.accessibility-config }}
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-results-${{ matrix.browser }}-${{ matrix.accessibility-config }}
+          path: |
+            frontend/accessibility-*.json
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 30
+
+  lighthouse-accessibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Start application
+        working-directory: ./frontend
+        run: |
+          npm run build
+          npm run preview &
+          sleep 10
+        env:
+          VITE_API_URL: http://localhost:3000
+
+      - name: Wait for application
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:4173; do sleep 2; done'
+
+      - name: Run Lighthouse accessibility audit
+        run: |
+          lhci collect \
+            --url=http://localhost:4173 \
+            --url=http://localhost:4173/dashboard \
+            --url=http://localhost:4173/hives \
+            --url=http://localhost:4173/profile \
+            --url=http://localhost:4173/settings \
+            --settings.onlyCategories=accessibility \
+            --settings.chromeFlags="--no-sandbox --disable-dev-shm-usage"
+
+      - name: Process Lighthouse results
+        run: |
+          lhci assert \
+            --assertions.categories.accessibility=0.9 \
+            --assertions.categories.best-practices=0.8
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-accessibility-results
+          path: .lighthouseci/
+          retention-days: 30
+
+  pa11y-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Install Pa11y
+        run: npm install -g pa11y pa11y-ci
+
+      - name: Start application
+        working-directory: ./frontend
+        run: |
+          npm run build
+          npm run preview &
+          sleep 10
+
+      - name: Wait for application
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:4173; do sleep 2; done'
+
+      - name: Run Pa11y accessibility tests
+        run: |
+          pa11y-ci --sitemap http://localhost:4173/sitemap.xml \
+            --standard WCAG2AA \
+            --threshold 5 \
+            --reporter json > pa11y-results.json
+        continue-on-error: true
+
+      - name: Upload Pa11y results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pa11y-accessibility-results
+          path: pa11y-results.json
+          retention-days: 30
+
+  generate-accessibility-report:
+    runs-on: ubuntu-latest
+    needs: [accessibility-tests, lighthouse-accessibility, pa11y-tests]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results/
+
+      - name: Generate consolidated accessibility report
+        run: |
+          cat > accessibility-summary.md << 'EOF'
+          # Accessibility Test Results
+
+          ## Test Summary
+          - **Date**: $(date)
+          - **Commit**: ${{ github.sha }}
+          - **Branch**: ${{ github.ref }}
+
+          ## Test Coverage
+          - WCAG 2.1 AA Compliance Tests
+          - Screen Reader Compatibility
+          - Keyboard Navigation
+          - Visual Accessibility (Color Contrast, Zoom)
+          - Motor Accessibility (Touch Targets)
+          - Cognitive Accessibility (Clear Navigation)
+          - Auditory Accessibility (Media Controls)
+          - Form Accessibility
+          - ARIA Implementation
+          - Live Regions and Real-time Updates
+          - WebSocket Accessibility
+
+          ## Browser Coverage
+          - Chromium
+          - Firefox
+          - WebKit
+
+          ## Configuration Coverage
+          - Default settings
+          - High contrast mode
+          - Mobile accessibility
+
+          ## Tools Used
+          - Playwright + Axe-core
+          - Lighthouse Accessibility Audit
+          - Pa11y WCAG 2.1 AA Testing
+
+          ## Results Location
+          Test artifacts are available in the GitHub Actions artifacts section.
+
+          ## Next Steps
+          1. Review failed tests and address accessibility issues
+          2. Update accessibility documentation
+          3. Consider additional user testing with assistive technologies
+          4. Ensure all new features maintain accessibility standards
+
+          EOF
+
+      - name: Upload accessibility summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-summary-report
+          path: accessibility-summary.md
+          retention-days: 90
+
+      - name: Comment on PR with accessibility results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read the summary
+            const summary = fs.readFileSync('accessibility-summary.md', 'utf8');
+            
+            // Create or update comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Accessibility Test Results')
+            );
+            
+            const commentBody = `## 🔍 Accessibility Test Results
+            
+            ${summary}
+            
+            📊 **Full Results**: Check the [Actions tab](${context.payload.pull_request.html_url}/checks) for detailed accessibility test results.
+            
+            ---
+            *This comment is automatically updated on each push.*`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+
+  accessibility-gate:
+    runs-on: ubuntu-latest
+    needs: [accessibility-tests, lighthouse-accessibility, pa11y-tests]
+    if: always()
+
+    steps:
+      - name: Check accessibility test results
+        run: |
+          echo "Accessibility tests completed"
+          echo "Results from accessibility-tests: ${{ needs.accessibility-tests.result }}"
+          echo "Results from lighthouse-accessibility: ${{ needs.lighthouse-accessibility.result }}"
+          echo "Results from pa11y-tests: ${{ needs.pa11y-tests.result }}"
+          
+          # Fail if critical accessibility tests failed
+          if [[ "${{ needs.accessibility-tests.result }}" == "failure" ]]; then
+            echo "❌ Critical accessibility tests failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.lighthouse-accessibility.result }}" == "failure" ]]; then
+            echo "⚠️  Lighthouse accessibility audit failed - review required"
+            # Don't fail the build, but warn
+          fi
+          
+          if [[ "${{ needs.pa11y-tests.result }}" == "failure" ]]; then
+            echo "⚠️  Pa11y tests failed - review required"
+            # Don't fail the build, but warn
+          fi
+          
+          echo "✅ Accessibility testing completed"

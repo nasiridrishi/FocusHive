@@ -1,358 +1,651 @@
 #!/bin/bash
 
 # ===================================================================
-# FOCUSHIVE E2E TEST RUNNER
+# COMPREHENSIVE E2E TEST ORCHESTRATION SCRIPT
 # 
-# Comprehensive script to start the E2E environment and run all
-# 558 E2E test scenarios with proper setup and teardown
+# Master script for E2E testing environment management and test execution
+# Integrates all components: setup, health checks, data seeding, and testing
 # ===================================================================
 
 set -e
 
-# Colors for output
-RED='\033[0;31m'
+# Colors
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
 PURPLE='\033[0;35m'
-NC='\033[0m' # No Color
+CYAN='\033[0;36m'
+NC='\033[0m'
 
 # Configuration
-COMPOSE_FILE="docker-compose.e2e.yml"
-PROJECT_NAME="focushive-e2e"
-FRONTEND_DIR="frontend"
-TIMEOUT=300  # 5 minutes timeout for services to start
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.e2e.yml}"
 
-# Function to print colored output
-print_status() {
+# Test configuration
+E2E_SUITE="${E2E_SUITE:-all}"
+E2E_BROWSER="${E2E_BROWSER:-chromium}"
+E2E_HEADLESS="${E2E_HEADLESS:-true}"
+E2E_WORKERS="${E2E_WORKERS:-4}"
+E2E_RETRIES="${E2E_RETRIES:-2}"
+E2E_TIMEOUT="${E2E_TIMEOUT:-30000}"
+
+# Flags
+SKIP_SETUP=false
+SKIP_HEALTH_CHECK=false
+SKIP_DATA_SEEDING=false
+FORCE_REBUILD=false
+KEEP_ENV_RUNNING=false
+VERBOSE=false
+DRY_RUN=false
+
+log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
 
-print_success() {
+log_success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
-print_warning() {
+log_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-print_error() {
+log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-print_header() {
-    echo -e "\n${PURPLE}═══════════════════════════════════════════════${NC}"
-    echo -e "${PURPLE} $1${NC}"
-    echo -e "${PURPLE}═══════════════════════════════════════════════${NC}\n"
+log_section() {
+    echo -e "\n${PURPLE}=== $1 ===${NC}"
 }
 
-# Function to check if Docker is running
-check_docker() {
-    print_status "Checking Docker availability..."
-    if ! docker info >/dev/null 2>&1; then
-        print_error "Docker is not running. Please start Docker first."
-        exit 1
+log_step() {
+    echo -e "${CYAN}[STEP]${NC} $1"
+}
+
+log_verbose() {
+    if [ "$VERBOSE" = true ]; then
+        echo -e "${CYAN}[VERBOSE]${NC} $1"
     fi
-    print_success "Docker is running"
 }
 
-# Function to check if required files exist
-check_prerequisites() {
-    print_status "Checking prerequisites..."
-    
-    if [ ! -f "$COMPOSE_FILE" ]; then
-        print_error "Docker Compose file not found: $COMPOSE_FILE"
-        exit 1
-    fi
-    
-    if [ ! -d "$FRONTEND_DIR" ]; then
-        print_error "Frontend directory not found: $FRONTEND_DIR"
-        exit 1
-    fi
-    
-    if [ ! -d "$FRONTEND_DIR/e2e" ]; then
-        print_error "E2E tests directory not found: $FRONTEND_DIR/e2e"
-        exit 1
-    fi
-    
-    print_success "All prerequisites met"
+# Show help
+show_help() {
+    cat << 'EOF'
+Usage: ./scripts/run-e2e-tests.sh [command] [options]
+
+Commands:
+  setup               Set up E2E environment only
+  start              Start E2E environment (quick start)
+  test               Run E2E tests (default)
+  stop               Stop E2E environment
+  clean              Clean up E2E environment
+  status             Show environment status
+  logs [service]     Show logs for service
+  shell [service]    Open shell in service container
+  help               Show this help
+
+Options:
+  --suite SUITE          Test suite to run (all, critical, smoke, integration)
+  --browser BROWSER      Browser to use (chromium, firefox, webkit)
+  --headless            Run tests in headless mode (default)
+  --headed              Run tests in headed mode
+  --workers N           Number of parallel workers (default: 4)
+  --retries N           Number of retries per test (default: 2)
+  --timeout MS          Test timeout in milliseconds (default: 30000)
+  
+  --skip-setup          Skip environment setup
+  --skip-health-check   Skip health checks
+  --skip-data-seeding   Skip test data seeding
+  --force-rebuild       Force rebuild of all images
+  --keep-running        Keep environment running after tests
+  --verbose, -v         Enable verbose logging
+  --dry-run            Show what would be done without executing
+
+Environment Variables:
+  COMPOSE_FILE          Docker Compose file (default: docker-compose.e2e.yml)
+  E2E_SUITE            Default test suite
+  E2E_BROWSER          Default browser
+  E2E_HEADLESS         Default headless mode
+  E2E_WORKERS          Default number of workers
+  E2E_RETRIES          Default number of retries
+
+Examples:
+  ./scripts/run-e2e-tests.sh                           # Run all tests
+  ./scripts/run-e2e-tests.sh test --suite smoke        # Run smoke tests only
+  ./scripts/run-e2e-tests.sh setup                     # Set up environment only
+  ./scripts/run-e2e-tests.sh test --headed --workers 1 # Run tests with UI
+  ./scripts/run-e2e-tests.sh logs focushive-backend    # Show backend logs
+  ./scripts/run-e2e-tests.sh clean --force             # Force clean environment
+
+EOF
 }
 
-# Function to clean up existing containers
-cleanup_containers() {
-    print_status "Cleaning up existing containers..."
-    docker compose -f $COMPOSE_FILE -p $PROJECT_NAME down --volumes --remove-orphans >/dev/null 2>&1 || true
+# Parse command line arguments
+parse_arguments() {
+    local command=""
     
-    # Clean up any leftover test containers
-    docker ps -a --filter "name=focushive-e2e" --format "{{.ID}}" | xargs -r docker rm -f >/dev/null 2>&1 || true
-    docker ps -a --filter "name=test-data-seeder" --format "{{.ID}}" | xargs -r docker rm -f >/dev/null 2>&1 || true
-    
-    print_success "Cleanup completed"
-}
-
-# Function to build Docker images
-build_images() {
-    print_status "Building Docker images..."
-    docker compose -f $COMPOSE_FILE build --parallel
-    print_success "Docker images built successfully"
-}
-
-# Function to start E2E environment
-start_environment() {
-    print_header "STARTING E2E ENVIRONMENT"
-    
-    print_status "Starting all services..."
-    docker compose -f $COMPOSE_FILE -p $PROJECT_NAME up -d
-    
-    # Wait for services to be healthy
-    print_status "Waiting for services to be ready (timeout: ${TIMEOUT}s)..."
-    
-    local services=("test-db" "test-redis" "identity-service" "focushive-backend" "music-service" "notification-service" "chat-service" "analytics-service" "forum-service" "buddy-service" "frontend-e2e")
-    
-    for service in "${services[@]}"; do
-        print_status "Waiting for $service..."
-        local counter=0
-        while [ $counter -lt $TIMEOUT ]; do
-            if docker compose -f $COMPOSE_FILE -p $PROJECT_NAME ps $service | grep -q "healthy\|Up"; then
-                print_success "$service is ready"
-                break
-            fi
-            sleep 2
-            ((counter+=2))
-        done
-        
-        if [ $counter -ge $TIMEOUT ]; then
-            print_error "$service failed to start within timeout"
-            print_status "Checking $service logs:"
-            docker compose -f $COMPOSE_FILE -p $PROJECT_NAME logs --tail=20 $service
-            return 1
-        fi
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            setup|start|test|stop|clean|status|logs|shell|help)
+                if [ -z "$command" ]; then
+                    command=$1
+                    shift
+                else
+                    log_error "Multiple commands specified: $command and $1"
+                    exit 1
+                fi
+                ;;
+            --suite)
+                E2E_SUITE="$2"
+                shift 2
+                ;;
+            --browser)
+                E2E_BROWSER="$2"
+                shift 2
+                ;;
+            --headless)
+                E2E_HEADLESS=true
+                shift
+                ;;
+            --headed)
+                E2E_HEADLESS=false
+                shift
+                ;;
+            --workers)
+                E2E_WORKERS="$2"
+                shift 2
+                ;;
+            --retries)
+                E2E_RETRIES="$2"
+                shift 2
+                ;;
+            --timeout)
+                E2E_TIMEOUT="$2"
+                shift 2
+                ;;
+            --skip-setup)
+                SKIP_SETUP=true
+                shift
+                ;;
+            --skip-health-check)
+                SKIP_HEALTH_CHECK=true
+                shift
+                ;;
+            --skip-data-seeding)
+                SKIP_DATA_SEEDING=true
+                shift
+                ;;
+            --force-rebuild)
+                FORCE_REBUILD=true
+                shift
+                ;;
+            --keep-running)
+                KEEP_ENV_RUNNING=true
+                shift
+                ;;
+            --verbose|-v)
+                VERBOSE=true
+                shift
+                ;;
+            --dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            *)
+                if [ -z "$command" ] && [[ ! $1 =~ ^-- ]]; then
+                    # First non-flag argument is command
+                    command=$1
+                    shift
+                else
+                    log_error "Unknown option: $1"
+                    show_help
+                    exit 1
+                fi
+                ;;
+        esac
     done
     
-    print_success "All services are ready!"
+    # Default command is test
+    COMMAND=${command:-test}
+    
+    # Validate suite
+    case $E2E_SUITE in
+        all|critical|smoke|integration|auth|hive|chat|music|analytics|forum|buddy) ;;
+        *) log_error "Invalid test suite: $E2E_SUITE"; exit 1 ;;
+    esac
+    
+    # Validate browser
+    case $E2E_BROWSER in
+        chromium|firefox|webkit) ;;
+        *) log_error "Invalid browser: $E2E_BROWSER"; exit 1 ;;
+    esac
 }
 
-# Function to verify service endpoints
-verify_endpoints() {
-    print_status "Verifying service endpoints..."
-    
-    local endpoints=(
-        "http://localhost:8080/actuator/health:FocusHive Backend"
-        "http://localhost:8081/actuator/health:Identity Service"
-        "http://localhost:8082/actuator/health:Music Service"
-        "http://localhost:8083/actuator/health:Notification Service"
-        "http://localhost:8084/actuator/health:Chat Service"
-        "http://localhost:8085/actuator/health:Analytics Service"
-        "http://localhost:8086/actuator/health:Forum Service"
-        "http://localhost:8087/actuator/health:Buddy Service"
-        "http://localhost:3000:Frontend"
-        "http://localhost:8090/__admin/health:Spotify Mock"
-        "http://localhost:8025:Email Mock"
+# Check if scripts exist
+check_scripts() {
+    local required_scripts=(
+        "setup-e2e-env.sh"
+        "health-check.sh"
+        "seed-test-data.sh"
+        "cleanup-e2e.sh"
     )
     
-    for endpoint_info in "${endpoints[@]}"; do
-        local url="${endpoint_info%:*}"
-        local name="${endpoint_info#*:}"
+    for script in "${required_scripts[@]}"; do
+        if [ ! -f "$SCRIPT_DIR/$script" ]; then
+            log_error "Required script not found: $SCRIPT_DIR/$script"
+            exit 1
+        fi
         
-        if curl -s -f "$url" >/dev/null; then
-            print_success "$name endpoint is accessible"
-        else
-            print_warning "$name endpoint is not accessible: $url"
+        if [ ! -x "$SCRIPT_DIR/$script" ]; then
+            log_warning "Making script executable: $script"
+            chmod +x "$SCRIPT_DIR/$script"
         fi
     done
 }
 
-# Function to run E2E tests
-run_tests() {
-    print_header "RUNNING E2E TESTS"
+# Set up E2E environment
+setup_environment() {
+    log_section "Setting Up E2E Environment"
     
-    cd $FRONTEND_DIR
-    
-    # Install dependencies if needed
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing frontend dependencies..."
-        npm ci
-    fi
-    
-    print_status "Running 558 E2E test scenarios..."
-    
-    # Set environment variables for tests
-    export E2E_BASE_URL="http://localhost:3000"
-    export E2E_API_URL="http://localhost:8080"
-    export E2E_IDENTITY_URL="http://localhost:8081"
-    export E2E_WEBSOCKET_URL="ws://localhost:8080/ws"
-    
-    # Run Playwright tests
-    if command -v npx >/dev/null 2>&1; then
-        print_status "Running Playwright E2E tests..."
-        if npx playwright test --config=playwright.config.ts; then
-            print_success "Playwright tests completed successfully!"
-        else
-            print_error "Some Playwright tests failed"
-            TESTS_FAILED=1
-        fi
-    fi
-    
-    # Run Cypress tests if available
-    if [ -f "cypress.config.ts" ] && command -v npx >/dev/null 2>&1; then
-        print_status "Running Cypress E2E tests..."
-        if npx cypress run --headless; then
-            print_success "Cypress tests completed successfully!"
-        else
-            print_error "Some Cypress tests failed"
-            TESTS_FAILED=1
-        fi
-    fi
-    
-    cd ..
-}
-
-# Function to generate test report
-generate_report() {
-    print_header "GENERATING TEST REPORT"
-    
-    local report_dir="test-reports/e2e-$(date +%Y%m%d-%H%M%S)"
-    mkdir -p "$report_dir"
-    
-    # Copy test results
-    if [ -d "$FRONTEND_DIR/playwright-report" ]; then
-        cp -r "$FRONTEND_DIR/playwright-report" "$report_dir/"
-        print_status "Playwright report copied to $report_dir/playwright-report"
-    fi
-    
-    if [ -d "$FRONTEND_DIR/cypress/reports" ]; then
-        cp -r "$FRONTEND_DIR/cypress/reports" "$report_dir/"
-        print_status "Cypress reports copied to $report_dir/reports"
-    fi
-    
-    # Generate service logs
-    print_status "Collecting service logs..."
-    docker compose -f $COMPOSE_FILE -p $PROJECT_NAME logs > "$report_dir/service-logs.txt"
-    
-    # Generate system info
-    cat > "$report_dir/test-environment.md" << EOF
-# E2E Test Environment Report
-
-**Date:** $(date)
-**Test Duration:** $((SECONDS / 60)) minutes
-**Docker Compose File:** $COMPOSE_FILE
-
-## Services Status
-$(docker compose -f $COMPOSE_FILE -p $PROJECT_NAME ps)
-
-## Test Results Summary
-- **Total Test Scenarios:** 558
-- **Test Framework:** Playwright + Cypress
-- **Environment:** Docker Compose E2E Stack
-- **All Services Started:** $([ ${TESTS_FAILED:-0} -eq 0 ] && echo "✅ Yes" || echo "❌ Some issues")
-
-## Service Endpoints Tested
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8080
-- Identity Service: http://localhost:8081
-- Music Service: http://localhost:8082
-- Notification Service: http://localhost:8083
-- Chat Service: http://localhost:8084
-- Analytics Service: http://localhost:8085
-- Forum Service: http://localhost:8086
-- Buddy Service: http://localhost:8087
-- Spotify Mock: http://localhost:8090
-- Email Mock: http://localhost:8025
-
-## Database Configuration
-- PostgreSQL: Multiple test databases
-- Redis: Session and real-time data
-- Test Data: Seeded with realistic scenarios
-
-$([ ${TESTS_FAILED:-0} -eq 0 ] && echo "## ✅ All tests completed successfully!" || echo "## ❌ Some tests failed - check logs for details")
-EOF
-
-    print_success "Test report generated: $report_dir"
-    echo "📊 Open $report_dir/test-environment.md to view the summary"
-    
-    if [ -f "$report_dir/playwright-report/index.html" ]; then
-        echo "🎭 Playwright report: $report_dir/playwright-report/index.html"
-    fi
-}
-
-# Function to cleanup after tests
-cleanup() {
-    print_header "CLEANING UP"
-    
-    if [ "${KEEP_RUNNING:-}" != "true" ]; then
-        print_status "Stopping E2E environment..."
-        docker compose -f $COMPOSE_FILE -p $PROJECT_NAME down --volumes
-        print_success "E2E environment stopped"
-    else
-        print_status "Keeping E2E environment running (KEEP_RUNNING=true)"
-        echo "Services are still running at:"
-        echo "  Frontend: http://localhost:3000"
-        echo "  Backend: http://localhost:8080"
-        echo "  To stop: docker compose -f $COMPOSE_FILE -p $PROJECT_NAME down --volumes"
-    fi
-}
-
-# Main execution
-main() {
-    print_header "FOCUSHIVE E2E TEST RUNNER"
-    echo "This script will run 558 E2E test scenarios across all FocusHive services"
-    echo ""
-    
-    local start_time=$(date +%s)
-    
-    # Trap cleanup on exit
-    trap cleanup EXIT
-    
-    # Run all steps
-    check_docker
-    check_prerequisites
-    cleanup_containers
-    build_images
-    start_environment
-    verify_endpoints
-    run_tests
-    generate_report
-    
-    local end_time=$(date +%s)
-    local duration=$((end_time - start_time))
-    
-    print_header "E2E TEST EXECUTION COMPLETED"
-    print_success "Total execution time: $((duration / 60))m $((duration % 60))s"
-    
-    if [ ${TESTS_FAILED:-0} -eq 0 ]; then
-        print_success "✅ All E2E tests completed successfully!"
+    if [ "$SKIP_SETUP" = true ]; then
+        log_info "Skipping environment setup (--skip-setup flag)"
         return 0
+    fi
+    
+    local setup_args=()
+    
+    if [ "$FORCE_REBUILD" = true ]; then
+        setup_args+=("rebuild")
+    fi
+    
+    if [ "$VERBOSE" = true ]; then
+        log_verbose "Running: $SCRIPT_DIR/setup-e2e-env.sh ${setup_args[*]}"
+    fi
+    
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY RUN] Would run: setup-e2e-env.sh ${setup_args[*]}"
+        return 0
+    fi
+    
+    if "$SCRIPT_DIR/setup-e2e-env.sh" "${setup_args[@]}"; then
+        log_success "Environment setup completed"
     else
-        print_error "❌ Some E2E tests failed - check the reports for details"
+        log_error "Environment setup failed"
         return 1
     fi
 }
 
-# Handle script arguments
-case "${1:-}" in
-    "start")
-        print_header "STARTING E2E ENVIRONMENT ONLY"
-        check_docker
-        check_prerequisites
-        cleanup_containers
-        build_images
-        start_environment
-        verify_endpoints
-        echo "E2E environment is running. Use 'npm run test:e2e' to run tests."
-        export KEEP_RUNNING=true
-        ;;
-    "stop")
-        print_header "STOPPING E2E ENVIRONMENT"
-        docker compose -f $COMPOSE_FILE -p $PROJECT_NAME down --volumes
-        print_success "E2E environment stopped"
-        ;;
-    "logs")
-        docker compose -f $COMPOSE_FILE -p $PROJECT_NAME logs -f "${2:-}"
-        ;;
-    "status")
-        docker compose -f $COMPOSE_FILE -p $PROJECT_NAME ps
-        ;;
-    *)
-        main
-        ;;
-esac
+# Perform health check
+check_health() {
+    log_section "Performing Health Check"
+    
+    if [ "$SKIP_HEALTH_CHECK" = true ]; then
+        log_info "Skipping health check (--skip-health-check flag)"
+        return 0
+    fi
+    
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY RUN] Would run health check"
+        return 0
+    fi
+    
+    log_step "Waiting for all services to be healthy..."
+    
+    if "$SCRIPT_DIR/health-check.sh" wait; then
+        log_success "All services are healthy"
+    else
+        log_error "Health check failed"
+        
+        # Show failing services for debugging
+        log_info "Running quick health check to identify issues..."
+        "$SCRIPT_DIR/health-check.sh" quick || true
+        
+        return 1
+    fi
+}
+
+# Seed test data
+seed_data() {
+    log_section "Seeding Test Data"
+    
+    if [ "$SKIP_DATA_SEEDING" = true ]; then
+        log_info "Skipping test data seeding (--skip-data-seeding flag)"
+        return 0
+    fi
+    
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY RUN] Would seed test data"
+        return 0
+    fi
+    
+    if "$SCRIPT_DIR/seed-test-data.sh"; then
+        log_success "Test data seeded successfully"
+    else
+        log_warning "Test data seeding had issues, but continuing with tests"
+        # Don't fail here as tests might still work with partial data
+    fi
+}
+
+# Run E2E tests
+run_tests() {
+    log_section "Running E2E Tests"
+    
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY RUN] Would run E2E tests with suite: $E2E_SUITE, browser: $E2E_BROWSER"
+        return 0
+    fi
+    
+    # Check if frontend directory exists
+    if [ ! -d "$PROJECT_ROOT/frontend" ]; then
+        log_error "Frontend directory not found: $PROJECT_ROOT/frontend"
+        return 1
+    fi
+    
+    cd "$PROJECT_ROOT/frontend"
+    
+    # Install dependencies if needed
+    if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules/.package-lock.json" ]; then
+        log_step "Installing frontend dependencies..."
+        npm install
+    fi
+    
+    # Set environment variables for tests
+    export E2E_BASE_URL="http://localhost:3000"
+    export E2E_API_URL="http://localhost:8080"
+    export E2E_BROWSER="$E2E_BROWSER"
+    export E2E_HEADLESS="$E2E_HEADLESS"
+    export E2E_WORKERS="$E2E_WORKERS"
+    export E2E_RETRIES="$E2E_RETRIES"
+    export E2E_TIMEOUT="$E2E_TIMEOUT"
+    
+    # Build test command
+    local test_cmd="npx playwright test"
+    
+    # Add suite-specific tests
+    case $E2E_SUITE in
+        critical)
+            test_cmd+=" --grep @critical"
+            ;;
+        smoke)
+            test_cmd+=" --grep @smoke"
+            ;;
+        integration)
+            test_cmd+=" --grep @integration"
+            ;;
+        auth)
+            test_cmd+=" tests/auth/"
+            ;;
+        hive)
+            test_cmd+=" tests/hive/"
+            ;;
+        chat)
+            test_cmd+=" tests/chat/"
+            ;;
+        music)
+            test_cmd+=" tests/music/"
+            ;;
+        analytics)
+            test_cmd+=" tests/analytics/"
+            ;;
+        forum)
+            test_cmd+=" tests/forum/"
+            ;;
+        buddy)
+            test_cmd+=" tests/buddy/"
+            ;;
+        all)
+            # Run all tests
+            ;;
+    esac
+    
+    # Add common options
+    test_cmd+=" --workers=$E2E_WORKERS"
+    test_cmd+=" --retries=$E2E_RETRIES"
+    test_cmd+=" --timeout=$E2E_TIMEOUT"
+    test_cmd+=" --project=$E2E_BROWSER"
+    
+    if [ "$E2E_HEADLESS" = true ]; then
+        test_cmd+=" --headed=false"
+    else
+        test_cmd+=" --headed=true"
+    fi
+    
+    if [ "$VERBOSE" = true ]; then
+        test_cmd+=" --reporter=list"
+        log_verbose "Running: $test_cmd"
+    else
+        test_cmd+=" --reporter=html"
+    fi
+    
+    log_step "Executing E2E tests..."
+    log_info "Command: $test_cmd"
+    
+    # Run tests with proper error handling
+    local test_exit_code=0
+    if ! eval "$test_cmd"; then
+        test_exit_code=$?
+        log_error "E2E tests failed with exit code: $test_exit_code"
+        
+        # Show test results location
+        if [ -d "playwright-report" ]; then
+            log_info "Test results available at: $PROJECT_ROOT/frontend/playwright-report/index.html"
+        fi
+        
+        if [ -d "test-results" ]; then
+            log_info "Test artifacts available at: $PROJECT_ROOT/frontend/test-results/"
+        fi
+        
+        return $test_exit_code
+    fi
+    
+    log_success "E2E tests completed successfully"
+    
+    # Show test results
+    if [ -d "playwright-report" ]; then
+        log_success "Test report generated: $PROJECT_ROOT/frontend/playwright-report/index.html"
+    fi
+    
+    return 0
+}
+
+# Stop environment
+stop_environment() {
+    log_section "Stopping E2E Environment"
+    
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY RUN] Would stop E2E environment"
+        return 0
+    fi
+    
+    cd "$PROJECT_ROOT"
+    
+    log_step "Stopping all services..."
+    docker compose -f "$COMPOSE_FILE" stop --timeout=30
+    
+    log_success "E2E environment stopped"
+}
+
+# Clean up environment
+cleanup_environment() {
+    log_section "Cleaning Up E2E Environment"
+    
+    if [ "$DRY_RUN" = true ]; then
+        log_info "[DRY RUN] Would clean up E2E environment"
+        return 0
+    fi
+    
+    local cleanup_args=()
+    
+    if [ "$FORCE_REBUILD" = true ]; then
+        cleanup_args+=("--force")
+    fi
+    
+    if "$SCRIPT_DIR/cleanup-e2e.sh" "${cleanup_args[@]}"; then
+        log_success "Environment cleanup completed"
+    else
+        log_error "Environment cleanup failed"
+        return 1
+    fi
+}
+
+# Show environment status
+show_status() {
+    log_section "E2E Environment Status"
+    
+    cd "$PROJECT_ROOT"
+    
+    # Show running containers
+    echo -e "${CYAN}Running Containers:${NC}"
+    docker compose -f "$COMPOSE_FILE" ps --format table
+    
+    # Quick health check
+    log_step "Quick health check..."
+    if "$SCRIPT_DIR/health-check.sh" quick; then
+        log_success "Core services are healthy"
+    else
+        log_warning "Some services may have issues"
+    fi
+}
+
+# Show logs for service
+show_logs() {
+    local service=${1:-""}
+    
+    if [ -z "$service" ]; then
+        log_info "Available services:"
+        docker compose -f "$COMPOSE_FILE" config --services | sed 's/^/  - /'
+        return 1
+    fi
+    
+    cd "$PROJECT_ROOT"
+    
+    log_info "Showing logs for service: $service"
+    docker compose -f "$COMPOSE_FILE" logs -f "$service"
+}
+
+# Open shell in service
+open_shell() {
+    local service=${1:-""}
+    
+    if [ -z "$service" ]; then
+        log_info "Available services:"
+        docker compose -f "$COMPOSE_FILE" config --services | sed 's/^/  - /'
+        return 1
+    fi
+    
+    cd "$PROJECT_ROOT"
+    
+    log_info "Opening shell in service: $service"
+    docker compose -f "$COMPOSE_FILE" exec "$service" /bin/sh
+}
+
+# Handle script interruption
+handle_interrupt() {
+    echo -e "\n\n${YELLOW}Script interrupted!${NC}"
+    
+    if [ "$KEEP_ENV_RUNNING" = false ] && [ "$COMMAND" = "test" ]; then
+        log_info "Cleaning up environment..."
+        cleanup_environment || true
+    fi
+    
+    exit 130
+}
+
+# Main function
+main() {
+    echo "═════════════════════════════════════════"
+    echo "🧪 FocusHive E2E Test Orchestration"
+    echo "═════════════════════════════════════════"
+    echo ""
+    
+    # Change to project root
+    cd "$PROJECT_ROOT"
+    
+    # Set up signal handlers
+    trap handle_interrupt INT TERM
+    
+    # Check prerequisites
+    check_scripts
+    
+    # Parse arguments first
+    parse_arguments "$@"
+    
+    # Show configuration
+    if [ "$VERBOSE" = true ]; then
+        log_section "Configuration"
+        log_verbose "Command: $COMMAND"
+        log_verbose "Project Root: $PROJECT_ROOT"
+        log_verbose "Compose File: $COMPOSE_FILE"
+        log_verbose "Test Suite: $E2E_SUITE"
+        log_verbose "Browser: $E2E_BROWSER"
+        log_verbose "Headless: $E2E_HEADLESS"
+        log_verbose "Workers: $E2E_WORKERS"
+        log_verbose "Retries: $E2E_RETRIES"
+        log_verbose "Timeout: $E2E_TIMEOUT"
+    fi
+    
+    # Execute command
+    case $COMMAND in
+        setup)
+            setup_environment
+            ;;
+        start)
+            setup_environment
+            check_health
+            seed_data
+            show_status
+            ;;
+        test)
+            setup_environment
+            check_health
+            seed_data
+            
+            # Run tests and capture exit code
+            local test_result=0
+            if ! run_tests; then
+                test_result=$?
+            fi
+            
+            # Clean up unless keeping environment
+            if [ "$KEEP_ENV_RUNNING" = false ]; then
+                cleanup_environment
+            else
+                log_info "Keeping environment running (--keep-running flag)"
+            fi
+            
+            exit $test_result
+            ;;
+        stop)
+            stop_environment
+            ;;
+        clean)
+            cleanup_environment
+            ;;
+        status)
+            show_status
+            ;;
+        logs)
+            show_logs "$2"
+            ;;
+        shell)
+            open_shell "$2"
+            ;;
+        help)
+            show_help
+            ;;
+        *)
+            log_error "Unknown command: $COMMAND"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function
+main "$@"

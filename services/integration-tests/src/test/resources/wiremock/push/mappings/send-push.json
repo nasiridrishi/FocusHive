@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/push",
+    "headers": {
+      "Content-Type": {
+        "equalTo": "application/json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "messageId": "mock_push_message_id",
+      "status": "delivered",
+      "timestamp": "{{now format='yyyy-MM-dd HH:mm:ss'}}",
+      "platform": "android",
+      "deliveryReceipt": true
+    }
+  }
+}
