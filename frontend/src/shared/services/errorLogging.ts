@@ -21,6 +21,8 @@ export interface LoggedError {
   errorBoundary?: string
   severity: 'low' | 'medium' | 'high' | 'critical'
   context?: Record<string, unknown>
+  retryCount?: number
+  synced?: boolean
 }
 
 export interface ErrorLoggerConfig {
@@ -29,21 +31,144 @@ export interface ErrorLoggerConfig {
   enableRemoteLogging: boolean
   remoteEndpoint?: string
   apiKey?: string
+  enableOfflineStorage: boolean
+  maxRetries: number
+  retryDelay: number
+  batchSize: number
+  flushInterval: number
+  enableMonitoringIntegration: boolean
 }
 
 class ErrorLoggingService {
   private config: ErrorLoggerConfig
   private errors: LoggedError[] = []
   private sessionId: string
+  private offlineQueue: LoggedError[] = []
+  private isOnline: boolean = navigator.onLine
+  private flushTimer: NodeJS.Timeout | null = null
 
   constructor(config: Partial<ErrorLoggerConfig> = {}) {
     this.config = {
       maxLogs: 100,
       enableConsoleLogging: true,
       enableRemoteLogging: false,
+      enableOfflineStorage: true,
+      maxRetries: 3,
+      retryDelay: 1000,
+      batchSize: 10,
+      flushInterval: 30000, // 30 seconds
+      enableMonitoringIntegration: true,
       ...config,
     }
     this.sessionId = this.generateSessionId()
+    this.initializeOfflineSupport()
+  }
+
+  /**
+   * Initialize offline support and event listeners
+   */
+  private initializeOfflineSupport(): void {
+    // Load offline queue from localStorage
+    this.loadOfflineQueue()
+
+    // Listen for online/offline events
+    window.addEventListener('online', this.handleOnline.bind(this))
+    window.addEventListener('offline', this.handleOffline.bind(this))
+
+    // Start periodic flush timer
+    this.startFlushTimer()
+
+    // Attempt to sync on initialization if online
+    if (this.isOnline) {
+      this.flushOfflineQueue()
+    }
+  }
+
+  private handleOnline(): void {
+    this.isOnline = true
+    console.log('📶 Network connection restored - syncing offline errors')
+    this.flushOfflineQueue()
+  }
+
+  private handleOffline(): void {
+    this.isOnline = false
+    console.log('📵 Network connection lost - errors will be queued for sync')
+  }
+
+  private startFlushTimer(): void {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer)
+    }
+    
+    this.flushTimer = setInterval(() => {
+      if (this.isOnline && this.offlineQueue.length > 0) {
+        this.flushOfflineQueue()
+      }
+    }, this.config.flushInterval)
+  }
+
+  private loadOfflineQueue(): void {
+    if (!this.config.enableOfflineStorage) return
+
+    try {
+      const stored = localStorage.getItem('focushive_offline_errors')
+      if (stored) {
+        const parsed = JSON.parse(stored) as LoggedError[]
+        // Convert timestamp strings back to Date objects
+        this.offlineQueue = parsed.map(error => ({
+          ...error,
+          timestamp: new Date(error.timestamp),
+          synced: false,
+          retryCount: error.retryCount || 0,
+        }))
+        console.log(`📋 Loaded ${this.offlineQueue.length} offline errors for sync`)
+      }
+    } catch (error) {
+      console.warn('Failed to load offline error queue:', error)
+      this.offlineQueue = []
+    }
+  }
+
+  private saveOfflineQueue(): void {
+    if (!this.config.enableOfflineStorage) return
+
+    try {
+      localStorage.setItem('focushive_offline_errors', JSON.stringify(this.offlineQueue))
+    } catch (error) {
+      console.warn('Failed to save offline error queue:', error)
+    }
+  }
+
+  private async flushOfflineQueue(): Promise<void> {
+    if (!this.isOnline || this.offlineQueue.length === 0) return
+
+    console.log(`🔄 Attempting to sync ${this.offlineQueue.length} offline errors`)
+    
+    // Process in batches
+    const batch = this.offlineQueue.splice(0, this.config.batchSize)
+    
+    for (const error of batch) {
+      try {
+        await this.logToRemoteWithRetry(error)
+        // Mark as synced (will be removed from queue)
+      } catch (syncError) {
+        // Re-add to queue if retry limit not exceeded
+        if ((error.retryCount || 0) < this.config.maxRetries) {
+          error.retryCount = (error.retryCount || 0) + 1
+          this.offlineQueue.push(error)
+        } else {
+          console.warn(`❌ Failed to sync error ${error.id} after ${this.config.maxRetries} retries`)
+        }
+      }
+    }
+
+    // Save updated queue
+    this.saveOfflineQueue()
+
+    // Continue with remaining errors if any
+    if (this.offlineQueue.length > 0) {
+      setTimeout(() => this.flushOfflineQueue(), this.config.retryDelay)
+    }
   }
 
   /**
@@ -67,6 +192,8 @@ class ErrorLoggingService {
       errorBoundary: errorInfo?.errorBoundary,
       severity,
       context,
+      retryCount: 0,
+      synced: false,
     }
 
     // Store error locally
@@ -77,9 +204,21 @@ class ErrorLoggingService {
       this.logToConsole(loggedError)
     }
 
+    // Send to monitoring services (Sentry, LogRocket)
+    if (this.config.enableMonitoringIntegration) {
+      this.logToMonitoringServices(error, errorInfo, context, severity)
+    }
+
     // Remote logging for production
     if (this.config.enableRemoteLogging) {
-      this.logToRemote(loggedError)
+      if (this.isOnline) {
+        this.logToRemoteWithRetry(loggedError).catch(remoteError => {
+          console.warn('Failed to log error remotely, adding to offline queue:', remoteError)
+          this.addToOfflineQueue(loggedError)
+        })
+      } else {
+        this.addToOfflineQueue(loggedError)
+      }
     }
   }
 
@@ -133,6 +272,51 @@ class ErrorLoggingService {
   }
 
   /**
+   * Get offline queue status
+   */
+  public getOfflineQueueStatus(): {
+    queueSize: number
+    isOnline: boolean
+    nextSyncAttempt: Date | null
+  } {
+    return {
+      queueSize: this.offlineQueue.length,
+      isOnline: this.isOnline,
+      nextSyncAttempt: this.offlineQueue.length > 0 && this.isOnline 
+        ? new Date(Date.now() + this.config.flushInterval) 
+        : null,
+    }
+  }
+
+  /**
+   * Manually trigger offline queue sync
+   */
+  public async syncOfflineErrors(): Promise<void> {
+    if (!this.isOnline) {
+      throw new Error('Cannot sync while offline')
+    }
+    await this.flushOfflineQueue()
+  }
+
+  /**
+   * Clear offline queue (for testing or manual cleanup)
+   */
+  public clearOfflineQueue(): void {
+    this.offlineQueue = []
+    this.saveOfflineQueue()
+  }
+
+  /**
+   * Get unsynced errors count by severity
+   */
+  public getUnsyncedErrorsBySeverity(): Record<LoggedError['severity'], number> {
+    return this.offlineQueue.reduce((acc, error) => {
+      acc[error.severity] = (acc[error.severity] || 0) + 1
+      return acc
+    }, {} as Record<LoggedError['severity'], number>)
+  }
+
+  /**
    * Get error statistics
    */
   public getErrorStats(): {
@@ -177,6 +361,54 @@ class ErrorLoggingService {
     }
   }
 
+  private async logToMonitoringServices(
+    error: Error,
+    errorInfo?: ErrorInfo,
+    context: Record<string, unknown> = {},
+    severity: LoggedError['severity'] = 'medium'
+  ): Promise<void> {
+    try {
+      // Dynamic import to avoid bundling monitoring services if not needed
+      const { getErrorReporting } = await import('../../services/monitoring')
+      const errorReporting = getErrorReporting()
+
+      if (errorReporting.isReady()) {
+        // Add breadcrumb for context
+        errorReporting.addBreadcrumb({
+          message: 'Error logged via ErrorLoggingService',
+          category: 'error-logging',
+          level: severity === 'critical' ? 'error' : 'warning',
+          data: {
+            errorBoundary: errorInfo?.errorBoundary,
+            url: window.location.href,
+            timestamp: new Date().toISOString(),
+          },
+        })
+
+        // Capture the error with context
+        const eventId = errorReporting.captureError(error, {
+          tags: {
+            errorBoundary: errorInfo?.errorBoundary || 'unknown',
+            severity,
+            source: 'error-logging-service',
+          },
+          extra: {
+            ...context,
+            componentStack: errorInfo?.componentStack,
+            sessionId: this.sessionId,
+            userAgent: navigator.userAgent,
+          },
+          level: severity === 'critical' ? 'error' : 'warning',
+        })
+
+        console.log(`📊 Error sent to monitoring services: ${eventId}`)
+      }
+    } catch (monitoringError) {
+      // Don't throw if monitoring fails - log silently
+      console.warn('Failed to send error to monitoring services:', monitoringError)
+    }
+  }
+
   private logToConsole(error: LoggedError): void {
     const isDevelopment = import.meta.env.DEV
     
@@ -196,6 +428,37 @@ class ErrorLoggingService {
       // Production: Simplified logging
       console.error(`Error ${error.id}: ${error.message}`)
     }
+  }
+
+  private addToOfflineQueue(error: LoggedError): void {
+    if (!this.config.enableOfflineStorage) return
+
+    this.offlineQueue.push(error)
+    this.saveOfflineQueue()
+    console.log(`📫 Added error ${error.id} to offline queue (${this.offlineQueue.length} total)`)
+  }
+
+  private async logToRemoteWithRetry(error: LoggedError): Promise<void> {
+    let lastError: Error = new Error('Unknown error')
+    
+    for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
+      try {
+        await this.logToRemote(error)
+        error.synced = true
+        return // Success
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err))
+        
+        if (attempt < this.config.maxRetries) {
+          const delay = this.config.retryDelay * Math.pow(2, attempt) // Exponential backoff
+          console.warn(`🔄 Retry ${attempt + 1}/${this.config.maxRetries} for error ${error.id} in ${delay}ms`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+    
+    // All retries failed
+    throw lastError
   }
 
   private async logToRemote(error: LoggedError): Promise<void> {
@@ -239,7 +502,13 @@ class ErrorLoggingService {
 export const errorLogger = new ErrorLoggingService({
   enableConsoleLogging: true,
   enableRemoteLogging: import.meta.env.PROD, // Enable in production
+  enableOfflineStorage: true,
+  enableMonitoringIntegration: true,
   maxLogs: 50,
+  maxRetries: 3,
+  retryDelay: 1000,
+  batchSize: 10,
+  flushInterval: 30000, // 30 seconds
   // remoteEndpoint: import.meta.env.VITE_ERROR_LOGGING_ENDPOINT,
   // apiKey: import.meta.env.VITE_ERROR_LOGGING_API_KEY,
 })

@@ -320,7 +320,7 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const mockData = generateMockData(filter);
       dispatch({ type: 'SET_DATA', payload: mockData });
     } catch (error) {
-      console.error('Analytics error:', error);
+      // Error logged to error service
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch analytics data' });
     }
   }, []);

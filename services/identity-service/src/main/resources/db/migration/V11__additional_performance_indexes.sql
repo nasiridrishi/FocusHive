@@ -1,0 +1,118 @@
+-- V11__additional_performance_indexes.sql
+-- Additional performance optimization indexes for Identity Service
+-- Complements existing indexes with advanced query patterns and audit performance
+
+-- User authentication and session management composite indexes
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_auth_composite 
+ON users(email, enabled, email_verified, last_login_at DESC);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_security_lookup 
+ON users(username, enabled, failed_login_attempts, account_locked_until);
+
+-- OAuth2 token security and cleanup performance indexes
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_oauth_tokens_security_audit 
+ON oauth_access_tokens(user_id, created_at DESC, last_used_at DESC, usage_count DESC) 
+WHERE revoked = FALSE;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_oauth_refresh_tokens_rotation 
+ON oauth_refresh_tokens(user_id, replaced_token_id, created_at DESC) 
+WHERE revoked = FALSE;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_oauth_cleanup_batch 
+ON oauth_access_tokens(expires_at, revoked) 
+WHERE expires_at < CURRENT_TIMESTAMP AND revoked = FALSE;
+
+-- Privacy and consent management advanced indexes  
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_privacy_settings_persona_lookup 
+ON privacy_settings(persona_id, category, enabled, priority_level DESC) 
+WHERE persona_id IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_data_permissions_compliance 
+ON data_permissions(user_id, legal_basis, active, expires_at, retention_period_days) 
+WHERE active = TRUE;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_consent_records_audit_trail 
+ON consent_records(user_id, consent_type, created_at DESC, active, consent_given) 
+WHERE active = TRUE;
+
+-- Persona management and activity indexes
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_user_activity 
+ON personas(user_id, is_active, last_used_at DESC, created_at DESC);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_persona_attributes_lookup 
+ON persona_attributes(persona_id, attribute_key, attribute_value);
+
+-- User audit and compliance reporting indexes
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_gdpr_export 
+ON users(id, email, username, created_at, updated_at, deleted_at);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_oauth_access_audit 
+ON oauth_access_tokens(user_id, client_id, created_at, last_used_at) 
+WHERE revoked = FALSE;
+
+-- Performance indexes for bulk operations and reporting
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_bulk_operations 
+ON users(created_at, enabled, email_verified) 
+WHERE deleted_at IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_bulk_export 
+ON personas(user_id, created_at, is_active, is_default);
+
+-- Partial indexes for common filtered queries
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_privacy_settings_user_active 
+ON privacy_settings(user_id, setting_key, setting_value) 
+WHERE enabled = TRUE AND persona_id IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_oauth_tokens_user_valid 
+ON oauth_access_tokens(user_id, expires_at DESC) 
+WHERE revoked = FALSE AND expires_at > CURRENT_TIMESTAMP;
+
+-- Composite indexes for multi-table joins
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_data_permissions_client_user 
+ON data_permissions(client_id, user_id, data_type, active) 
+WHERE is_internal = FALSE;
+
+-- Time-based indexes for analytics and monitoring
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_registration_trends 
+ON users(created_at, enabled) 
+WHERE deleted_at IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_oauth_usage_analytics 
+ON oauth_access_tokens(created_at, client_id, user_id) 
+WHERE revoked = FALSE;
+
+-- Function-based indexes for advanced searches
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_privacy_settings_json_search 
+ON privacy_settings USING GIN(to_tsvector('english', setting_key || ' ' || setting_value));
+
+-- Index for persona attribute searches (if using text search)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_persona_attributes_text_search 
+ON persona_attributes USING GIN(to_tsvector('english', attribute_key || ' ' || attribute_value));
+
+-- Cleanup and maintenance indexes for automated tasks
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_oauth_expired_cleanup 
+ON oauth_access_tokens(expires_at, revoked) 
+WHERE expires_at < CURRENT_TIMESTAMP - INTERVAL '30 days';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_consent_expired_cleanup 
+ON consent_records(expires_at, active) 
+WHERE expires_at IS NOT NULL AND expires_at < CURRENT_TIMESTAMP;
+
+-- Analyze tables after creating indexes for optimal query planning
+ANALYZE users;
+ANALYZE personas; 
+ANALYZE persona_attributes;
+ANALYZE oauth_access_tokens;
+ANALYZE oauth_refresh_tokens;
+ANALYZE oauth_authorization_codes;
+ANALYZE privacy_settings;
+ANALYZE data_permissions;
+ANALYZE consent_records;
+
+-- Comments for index purposes
+COMMENT ON INDEX idx_users_auth_composite IS 'Optimizes user authentication and login queries';
+COMMENT ON INDEX idx_oauth_tokens_security_audit IS 'Supports security auditing and token usage analysis';
+COMMENT ON INDEX idx_privacy_settings_persona_lookup IS 'Accelerates persona-specific privacy setting retrieval';
+COMMENT ON INDEX idx_data_permissions_compliance IS 'Optimizes GDPR compliance and data retention queries';
+COMMENT ON INDEX idx_consent_records_audit_trail IS 'Supports consent history and audit trail queries';
+COMMENT ON INDEX idx_personas_user_activity IS 'Optimizes persona management and activity tracking';

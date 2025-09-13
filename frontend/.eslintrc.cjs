@@ -11,8 +11,8 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh', 'jsx-a11y'],
   rules: {
-    // Console logging
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    // Console logging - warn by default, but more strict in production files
+    'no-console': ['warn'],
     
     // Strict TypeScript rules
     '@typescript-eslint/no-explicit-any': ['error', { 

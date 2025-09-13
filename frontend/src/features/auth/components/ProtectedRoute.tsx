@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { Box, CircularProgress, Typography, Alert } from '@mui/material'
 import { useAuthState } from '../hooks/useAuth'
+import { tokenManager } from '../../../utils/tokenManager'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -21,12 +22,77 @@ export default function ProtectedRoute({
   fallback
 }: ProtectedRouteProps) {
   const location = useLocation()
+  const [tokenValidation, setTokenValidation] = useState<{
+    isValidating: boolean;
+    isValid: boolean;
+    error?: string;
+  }>({ isValidating: true, isValid: false })
   
   // Use auth context if props not provided
   const authState = useAuthState()
-  const isAuthenticated = propIsAuthenticated ?? authState.isAuthenticated
-  const isLoading = propIsLoading ?? authState.isLoading
-  const error = authState.error
+  
+  // Enhanced token validation
+  useEffect(() => {
+    const validateTokens = async () => {
+      setTokenValidation({ isValidating: true, isValid: false })
+      
+      try {
+        // Check if we have valid tokens
+        const hasTokens = tokenManager.hasValidTokens()
+        
+        if (!hasTokens) {
+          setTokenValidation({ 
+            isValidating: false, 
+            isValid: false, 
+            error: 'No valid authentication tokens found' 
+          })
+          return
+        }
+
+        // Check token expiration
+        const tokenInfo = tokenManager.getTokenExpirationInfo()
+        
+        if (tokenInfo.needsRefresh) {
+          // Token needs refresh, but we have a refresh token
+          if (tokenInfo.refreshTokenExpiresAt && tokenInfo.refreshTokenExpiresAt > new Date()) {
+            setTokenValidation({ 
+              isValidating: false, 
+              isValid: true // Auth context will handle refresh
+            })
+          } else {
+            setTokenValidation({ 
+              isValidating: false, 
+              isValid: false,
+              error: 'Authentication session has expired'
+            })
+          }
+        } else {
+          setTokenValidation({ 
+            isValidating: false, 
+            isValid: true 
+          })
+        }
+      } catch (error) {
+        setTokenValidation({ 
+          isValidating: false, 
+          isValid: false,
+          error: error instanceof Error ? error.message : 'Token validation failed'
+        })
+      }
+    }
+
+    // Only validate if we're supposed to require auth
+    if (requireAuth) {
+      validateTokens()
+    } else {
+      setTokenValidation({ isValidating: false, isValid: true })
+    }
+  }, [requireAuth, authState.isAuthenticated])
+
+  // Determine final auth state
+  const isAuthenticated = propIsAuthenticated ?? (authState.isAuthenticated && tokenValidation.isValid)
+  const isLoading = propIsLoading ?? (authState.isLoading || tokenValidation.isValidating)
+  const error = authState.error || tokenValidation.error
 
   // Show custom fallback or default loading spinner while authentication status is being determined
   if (isLoading) {

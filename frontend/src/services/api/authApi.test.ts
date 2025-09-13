@@ -19,6 +19,35 @@ vi.mock('../httpInterceptors', () => ({
   clearTokens: vi.fn(),
 }));
 
+// Mock the tokenManager
+vi.mock('../../utils/tokenManager', () => ({
+  tokenManager: {
+    saveTokens: vi.fn(),
+    getAccessToken: vi.fn(),
+    getRefreshToken: vi.fn(),
+    clearTokens: vi.fn(),
+    isTokenExpired: vi.fn(),
+    parseJWT: vi.fn(),
+    validateToken: vi.fn(),
+    hasValidTokens: vi.fn(),
+    getTokenExpirationInfo: vi.fn(),
+    getUserFromToken: vi.fn(),
+    supportsHttpOnlyCookies: vi.fn().mockReturnValue(false),
+  }
+}));
+
+// Mock the axiosConfig
+vi.mock('../../utils/axiosConfig', () => ({
+  apiClient: {
+    backend: {},
+    identity: {},
+    getHealthStatus: vi.fn(),
+    retryRequest: vi.fn(),
+  },
+  backendApi: {},
+  identityApi: {},
+}));
+
 describe('authApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();

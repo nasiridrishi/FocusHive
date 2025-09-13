@@ -85,6 +85,22 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    
+    // Email Testing
+    testImplementation("com.icegreen:greenmail-junit5:2.0.0")
+    testImplementation("com.icegreen:greenmail-spring:2.0.0")
+    
+    // Template Engine Testing
+    testImplementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    
+    // WireMock for external service mocking
+    testImplementation("com.github.tomakehurst:wiremock-jre8:3.0.1")
+    
+    // JSON Path for response validation
+    testImplementation("com.jayway.jsonpath:json-path")
+    
+    // Awaitility for asynchronous testing
+    testImplementation("org.awaitility:awaitility:4.2.0")
 }
 
 dependencyManagement {

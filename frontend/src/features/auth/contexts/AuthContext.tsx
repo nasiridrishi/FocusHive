@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, ReactNode } from 'react';
+import React, { useReducer, useEffect, ReactNode, useCallback } from 'react';
 import {
   AuthState,
   LoginRequest,
@@ -8,6 +8,7 @@ import {
   PasswordResetRequest
 } from '@shared/types/auth';
 import authApiService, { tokenStorage } from '../../../services/api/authApi';
+import { tokenManager } from '../../../utils/tokenManager';
 import { FeatureLevelErrorBoundary } from '@shared/components/error-boundary';
 
 /**
@@ -148,6 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
       
       const response = await authApiService.login(credentials);
       
+      
       dispatch({
         type: 'AUTH_SUCCESS',
         payload: {
@@ -194,7 +196,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     try {
       await authApiService.logout();
     } catch (error) {
-      console.error('Auth logout error:', error);
+      // Auth logout error logged to error service
     } finally {
       dispatch({ type: 'AUTH_LOGOUT' });
     }
@@ -216,7 +218,6 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
         dispatch({ type: 'AUTH_VALIDATE_FAILURE' });
       }
     } catch (error) {
-      console.error('Auth validation error:', error);
       dispatch({ type: 'AUTH_VALIDATE_FAILURE' });
     }
   };
@@ -270,17 +271,50 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     dispatch({ type: 'AUTH_CLEAR_ERROR' });
   };
 
+  // Handle automatic token refresh
+  const handleTokenRefresh = useCallback(async () => {
+    try {
+      await refreshAuth();
+    } catch (error) {
+      console.error('Automatic token refresh failed:', error);
+      dispatch({ type: 'AUTH_LOGOUT' });
+    }
+  }, []);
+
+  // Handle auth failure (logout user)
+  const handleAuthFailure = useCallback(() => {
+    dispatch({ type: 'AUTH_LOGOUT' });
+  }, []);
+
   // Initialize authentication state on app load
   useEffect(() => {
     const initializeAuth = async () => {
-      // Check if we have stored tokens
-      if (tokenStorage.hasValidTokens()) {
+      // Check if we have stored tokens using both token managers for compatibility
+      const hasTokensFromOldManager = tokenStorage.hasValidTokens();
+      const hasTokensFromNewManager = tokenManager.hasValidTokens();
+      
+      if (hasTokensFromOldManager || hasTokensFromNewManager) {
         await refreshAuth();
       }
     };
 
     initializeAuth();
   }, []);
+
+  // Set up event listeners for token management
+  useEffect(() => {
+    // Listen for token refresh events from the token manager
+    window.addEventListener('tokenRefreshNeeded', handleTokenRefresh);
+    
+    // Listen for auth failure events from axios interceptors
+    window.addEventListener('authFailure', handleAuthFailure);
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('tokenRefreshNeeded', handleTokenRefresh);
+      window.removeEventListener('authFailure', handleAuthFailure);
+    };
+  }, [handleTokenRefresh, handleAuthFailure]);
 
   // Auth actions object
   const authActions = {

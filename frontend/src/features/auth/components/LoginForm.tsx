@@ -21,6 +21,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { LoginRequest } from '@shared/types'
 import { LoadingButton } from '@shared/components/loading'
+import { FormWithLoading } from '../../../components/Loading'
 import { loginSchema } from '@shared/validation/schemas'
 import { useTranslation } from '@shared/components/i18n'
 import ValidationSummary from '@shared/components/ValidationSummary'
@@ -64,13 +65,19 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
   }
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 4,
-        maxWidth: 400,
-        width: '100%',
-        borderRadius: 2
+    <FormWithLoading
+      loading={isLoading}
+      loadingMessage={t('login.signingIn')}
+      variant="disable"
+      disableInteraction={true}
+      containerProps={{
+        elevation: 3,
+        sx: {
+          p: 4,
+          maxWidth: 400,
+          width: '100%',
+          borderRadius: 2
+        }
       }}
     >
       <Box component="form" onSubmit={handleSubmit(onFormSubmit)} noValidate>
@@ -215,6 +222,6 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
           </Typography>
         </Box>
       </Box>
-    </Paper>
+    </FormWithLoading>
   )
 }
