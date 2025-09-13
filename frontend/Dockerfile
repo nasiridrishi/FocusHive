@@ -32,7 +32,7 @@ COPY . .
 RUN npm run build
 
 # Production stage - Use nginx alpine for smallest size
-FROM nginx:1.25-alpine AS production
+FROM nginx:1.29-alpine AS production
 
 # Install curl for health checks
 RUN apk add --no-cache curl
