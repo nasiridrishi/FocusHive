@@ -37,7 +37,7 @@ import java.util.List;
  */
 @Configuration
 @EnableCaching
-@ConditionalOnProperty(name = "app.features.redis.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "app.features.redis.enabled", havingValue = "legacy-mode", matchIfMissing = false)
 public class RedisConfiguration {
 
     @Value("${spring.data.redis.host:localhost}")

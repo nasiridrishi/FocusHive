@@ -1,5 +1,6 @@
 package com.focushive.notification.integration;
 
+import com.focushive.notification.config.RedisTestConfiguration;
 import com.focushive.notification.entity.Notification;
 import com.focushive.notification.entity.NotificationType;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -40,6 +42,7 @@ import static org.awaitility.Awaitility.await;
  * 10. Queue performance under load
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(RedisTestConfiguration.class)
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @DisplayName("Notification Queue Integration Tests")
@@ -157,9 +160,10 @@ class NotificationQueueIntegrationTest extends BaseIntegrationTest {
                 addToQueue(DEAD_LETTER_QUEUE, retryData);
             }
 
-            // Update notification in database
-            failingNotification.markDeliveryFailed("Delivery attempt " + attempt + " failed");
-            notificationRepository.save(failingNotification);
+            // Update notification in database - reload to avoid optimistic locking conflicts
+            Notification currentNotification = notificationRepository.findById(failingNotification.getId()).orElseThrow();
+            currentNotification.markDeliveryFailed("Delivery attempt " + attempt + " failed");
+            notificationRepository.save(currentNotification);
         }
 
         // Then - Verify retry logic
@@ -396,6 +400,8 @@ class NotificationQueueIntegrationTest extends BaseIntegrationTest {
 
         // When - Simulate graceful shutdown procedure
         Long pendingCount = redisTemplate.opsForList().size(NOTIFICATION_QUEUE);
+        Map<Object, Object> processingItems = redisTemplate.opsForHash().entries("notification:processing");
+        Long totalExpectedCount = pendingCount + processingItems.size(); // Count both queue and processing items
         
         // Mark system as shutting down
         redisTemplate.opsForValue().set("notification:system:shutdown", "true", 300, TimeUnit.SECONDS);
@@ -408,7 +414,6 @@ class NotificationQueueIntegrationTest extends BaseIntegrationTest {
         }
 
         // Handle in-progress notifications
-        Map<Object, Object> processingItems = redisTemplate.opsForHash().entries("notification:processing");
         if (!processingItems.isEmpty()) {
             // Move to shutdown queue for retry
             processingItems.forEach((key, value) -> {
@@ -422,7 +427,7 @@ class NotificationQueueIntegrationTest extends BaseIntegrationTest {
         Long shutdownQueueSize = redisTemplate.opsForList().size(shutdownQueue);
         
         assertThat(mainQueueAfterShutdown).isEqualTo(0);
-        assertThat(shutdownQueueSize).isEqualTo(pendingCount); // All pending notifications preserved
+        assertThat(shutdownQueueSize).isEqualTo(totalExpectedCount); // All notifications preserved (queue + processing)
         
         String shutdownFlag = (String) redisTemplate.opsForValue().get("notification:system:shutdown");
         assertThat(shutdownFlag).isEqualTo("true");
@@ -434,7 +439,7 @@ class NotificationQueueIntegrationTest extends BaseIntegrationTest {
         }
         
         Long recoveredQueueSize = redisTemplate.opsForList().size(NOTIFICATION_QUEUE);
-        assertThat(recoveredQueueSize).isEqualTo(pendingCount);
+        assertThat(recoveredQueueSize).isEqualTo(totalExpectedCount);
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.focushive.identity.entity;
 
-import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.IEncryptionService;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Configurable;
 public abstract class BaseEncryptedEntity {
     
     @Autowired
-    private transient EncryptionService encryptionService;
+    private transient IEncryptionService encryptionService;
     
     /**
      * Called before persisting or updating the entity.
@@ -66,7 +66,7 @@ public abstract class BaseEncryptedEntity {
      * 
      * @param encryptionService the encryption service to use for generating hashes
      */
-    protected abstract void updateSearchableHashes(EncryptionService encryptionService);
+    protected abstract void updateSearchableHashes(IEncryptionService encryptionService);
     
     /**
      * Abstract method to be implemented by subclasses for any post-load encryption tasks.
@@ -75,7 +75,7 @@ public abstract class BaseEncryptedEntity {
      * 
      * @param encryptionService the encryption service
      */
-    protected void performPostLoadEncryptionTasks(EncryptionService encryptionService) {
+    protected void performPostLoadEncryptionTasks(IEncryptionService encryptionService) {
         // Default implementation does nothing
     }
 }

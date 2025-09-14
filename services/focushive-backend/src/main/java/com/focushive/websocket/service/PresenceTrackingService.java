@@ -4,6 +4,7 @@ import com.focushive.websocket.dto.PresenceUpdate;
 import com.focushive.websocket.dto.WebSocketMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Profile("!test")
 public class PresenceTrackingService {
     
     private final SimpMessagingTemplate messagingTemplate;

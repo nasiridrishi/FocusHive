@@ -30,9 +30,9 @@ public class HiveIntegrationTestConfiguration {
 
     /**
      * Mock the IdentityIntegrationService to avoid dependency on IdentityServiceClient
+     * Note: Not marked as @Primary to avoid conflicts with TestMockConfig's primary bean
      */
     @Bean
-    @Primary
     public IdentityIntegrationService mockIdentityIntegrationService() {
         return Mockito.mock(IdentityIntegrationService.class);
     }

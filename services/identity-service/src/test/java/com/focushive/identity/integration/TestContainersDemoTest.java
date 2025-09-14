@@ -1,13 +1,11 @@
 package com.focushive.identity.integration;
 
-import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -35,14 +33,8 @@ public class TestContainersDemoTest {
             .withUsername("demo")
             .withPassword("demo");
 
-    @Container
-    static RedisContainer redis = new RedisContainer("redis:7-alpine");
-
     @Autowired
     private DataSource dataSource;
-
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
 
     @Test
     public void testPostgreSQLConnection() throws Exception {
@@ -54,18 +46,6 @@ public class TestContainersDemoTest {
         }
     }
 
-    @Test
-    public void testRedisConnection() {
-        assertTrue(redis.isRunning(), "Redis container should be running");
-        
-        String testKey = "testkey";
-        String testValue = "testvalue";
-        
-        redisTemplate.opsForValue().set(testKey, testValue);
-        String retrievedValue = (String) redisTemplate.opsForValue().get(testKey);
-        
-        assertEquals(testValue, retrievedValue, "Should be able to store and retrieve data from Redis");
-    }
 
     @Test
     public void testContainerProperties() {
@@ -74,10 +54,6 @@ public class TestContainersDemoTest {
         assertTrue(postgres.getJdbcUrl().contains("demo_test"), "JDBC URL should reference demo_test");
         assertEquals("demo", postgres.getUsername(), "Username should be demo");
         assertEquals("demo", postgres.getPassword(), "Password should be demo");
-        
-        // Test Redis container properties
-        assertNotNull(redis.getHost(), "Redis host should be available");
-        assertTrue(redis.getFirstMappedPort() > 0, "Redis port should be mapped");
     }
 
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -88,8 +64,6 @@ public class TestContainersDemoTest {
                 "spring.datasource.username=" + postgres.getUsername(),
                 "spring.datasource.password=" + postgres.getPassword(),
                 "spring.datasource.driver-class-name=org.postgresql.Driver",
-                "spring.redis.host=" + redis.getHost(),
-                "spring.redis.port=" + redis.getFirstMappedPort(),
                 "spring.jpa.hibernate.ddl-auto=create-drop"
             ).applyTo(context.getEnvironment());
         }

@@ -1,6 +1,6 @@
 package com.focushive.identity.entity;
 
-import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.IEncryptionService;
 import com.focushive.identity.security.encryption.converters.*;
 import jakarta.persistence.*;
 import lombok.*;
@@ -303,7 +303,7 @@ public class User extends BaseEncryptedEntity implements UserDetails {
      * Called before persisting or updating the entity.
      */
     @Override
-    protected void updateSearchableHashes(EncryptionService encryptionService) {
+    protected void updateSearchableHashes(IEncryptionService encryptionService) {
         // Update email hash for searchable encrypted email field
         if (email != null) {
             this.emailHash = encryptionService.hash(email.toLowerCase());

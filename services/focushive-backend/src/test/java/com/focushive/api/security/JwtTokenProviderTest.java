@@ -25,7 +25,7 @@ class JwtTokenProviderTest {
 
     @BeforeEach
     void setUp() {
-        tokenProvider = new JwtTokenProvider("test-secret-key-at-least-256-bits-long-for-security", 3600000L);
+        tokenProvider = new JwtTokenProvider("test-jwt-signing-key-at-least-256-bits-long-for-validation", 3600000L);
         
         testUser = new User();
         testUser.setId("test-user-id");
@@ -120,7 +120,7 @@ class JwtTokenProviderTest {
 
     @Test
     void validateToken_withExpiredToken_returnsFalse() {
-        JwtTokenProvider shortLivedProvider = new JwtTokenProvider("test-secret-key-at-least-256-bits-long-for-security", 1L);
+        JwtTokenProvider shortLivedProvider = new JwtTokenProvider("test-jwt-signing-key-at-least-256-bits-long-for-validation", 1L);
         String token = shortLivedProvider.generateToken(testUser);
 
         // Wait for token to expire
@@ -137,7 +137,7 @@ class JwtTokenProviderTest {
 
     @Test
     void isTokenExpired_withExpiredToken_returnsTrue() {
-        JwtTokenProvider shortLivedProvider = new JwtTokenProvider("test-secret-key-at-least-256-bits-long-for-security", 1L);
+        JwtTokenProvider shortLivedProvider = new JwtTokenProvider("test-jwt-signing-key-at-least-256-bits-long-for-validation", 1L);
         String token = shortLivedProvider.generateToken(testUser);
 
         // Wait for token to expire

@@ -1,4 +1,4 @@
--- V2__additional_performance_indexes.sql  
+-- V2__additional_performance_indexes.sql
 -- Additional performance optimization indexes for Music Service
 -- Enhances existing basic indexes with composite and time-based patterns
 
@@ -109,12 +109,7 @@ ON playlists(user_id, created_at, type, focus_mode);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_music_preferences_bulk_export 
 ON music_preferences(user_id, created_at, updated_at);
 
--- Analyze tables after creating indexes
-ANALYZE playlists;
-ANALYZE playlist_tracks;
-ANALYZE music_preferences;
-ANALYZE user_preferred_genres;
-ANALYZE spotify_credentials;
+-- Analysis will be performed automatically by PostgreSQL as needed
 
 -- Comments for index purposes
 COMMENT ON INDEX idx_playlists_user_type_focus IS 'Optimizes playlist filtering by user, type, and focus mode';

@@ -1,0 +1,165 @@
+> Task :checkKotlinGradlePluginConfigurationErrors
+> Task :compileKotlin NO-SOURCE
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestKotlin NO-SOURCE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+
+> Task :test
+
+BasicContextTest > contextLoads() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.context.ApplicationContextException at DefaultLifecycleProcessor.java:291
+            Caused by: java.lang.IllegalStateException at Assert.java:76
+
+FocusHiveApplicationTests > contextLoads() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.context.ApplicationContextException at DefaultLifecycleProcessor.java:291
+            Caused by: java.lang.IllegalStateException at Assert.java:76
+
+MinimalContextTest > contextLoads() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.context.ApplicationContextException at DefaultLifecycleProcessor.java:291
+            Caused by: java.lang.IllegalStateException at Assert.java:76
+
+SimpleApplicationTest > contextLoads() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.context.ApplicationContextException at DefaultLifecycleProcessor.java:291
+            Caused by: java.lang.IllegalStateException at Assert.java:76
+
+SecurityConfigTest > whenAccessAuthEndpoints_thenPermitted() FAILED
+    java.lang.AssertionError at SecurityConfigTest.java:71
+
+SimpleAuthControllerSecurityTest > SECURITY: Login should NOT log sensitive password data to console FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.beans.factory.BeanDefinitionStoreException at ConfigurationClassParser.java:179
+            Caused by: org.springframework.context.annotation.ConflictingBeanDefinitionException at ClassPathBeanDefinitionScanner.java:361
+
+SimpleAuthControllerSecurityTest > SECURITY: No hardcoded credentials should be exposed in logs FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+SimpleAuthControllerSecurityTest > SECURITY: Null password should be handled securely FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+SimpleAuthControllerSecurityTest > SECURITY: Login with email should NOT log sensitive data FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+SimpleAuthControllerSecurityTest > SECURITY: Test hash endpoint should NOT expose sensitive data FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+SimpleAuthControllerSecurityTest > SECURITY: Failed login attempts should NOT log password FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+SimpleAuthControllerSecurityTest > SECURITY: Login should use proper HTTP status codes without data leakage FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+EnvironmentConfigDefaultTest > shouldLoadValidConfigurationSuccessfully() FAILED
+    org.springframework.beans.factory.UnsatisfiedDependencyException at AutowiredAnnotationBeanPostProcessor.java:787
+        Caused by: org.springframework.beans.factory.BeanCreationException at AutowiredAnnotationBeanPostProcessor.java:514
+            Caused by: java.lang.IllegalArgumentException at PropertyPlaceholderHelper.java:147
+
+EnvironmentConfigPostgreSQLTest > shouldValidateProductionPostgreSQLConfiguration() FAILED
+    java.lang.AssertionError at EnvironmentConfigPostgreSQLTest.java:53
+
+EnvironmentConfigTest > shouldLoadValidConfigurationSuccessfully() FAILED
+    org.springframework.beans.factory.UnsatisfiedDependencyException at AutowiredAnnotationBeanPostProcessor.java:787
+        Caused by: org.springframework.beans.factory.BeanCreationException at AutowiredAnnotationBeanPostProcessor.java:514
+            Caused by: java.lang.IllegalArgumentException at PropertyPlaceholderHelper.java:147
+
+EnvironmentConfigValidationTest > shouldFailValidationForMismatchedDatabaseDriverAndUrl() FAILED
+    org.springframework.beans.factory.UnsatisfiedDependencyException at AutowiredAnnotationBeanPostProcessor.java:787
+        Caused by: org.springframework.beans.factory.BeanCreationException at InitDestroyAnnotationBeanPostProcessor.java:222
+            Caused by: java.lang.IllegalStateException at EnvironmentConfig.java:175
+                Caused by: java.lang.IllegalArgumentException at EnvironmentConfig.java:201
+
+CacheConfigTest > cacheManagerHasExpectedCaches() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.beans.factory.BeanDefinitionStoreException at ConfigurationClassParser.java:179
+            Caused by: org.springframework.context.annotation.ConflictingBeanDefinitionException at ClassPathBeanDefinitionScanner.java:361
+
+CacheConfigTest > cacheErrorHandlerIsConfigured() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+CacheConfigTest > keyGeneratorHandlesUUIDParams() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+CacheConfigTest > redisTemplateCanPerformBasicOperations() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+CacheConfigTest > timerSessionCacheIsConfigured() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+CacheConfigTest > contextLoads() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+CacheConfigTest > presenceCacheIsConfigured() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+CacheConfigTest > hiveDetailsCacheIsConfigured() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+CacheConfigTest > hivesActiveCacheIsConfigured() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+HiveCrudIntegrationTest > initializationError FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.beans.factory.BeanDefinitionStoreException at ConfigurationClassParser.java:544
+            Caused by: java.lang.IllegalStateException at SpringBootCondition.java:60
+                Caused by: java.lang.IllegalStateException at Preconditions.java:512
+
+HiveIntegrationTest > Should retrieve created hive by ID from PostgreSQL database FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.context.ApplicationContextException at ServletWebServerApplicationContext.java:165
+            Caused by: org.springframework.boot.web.server.WebServerException at TomcatWebServer.java:147
+                Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException at ConstructorResolver.java:795
+                    Caused by: org.springframework.beans.factory.BeanCreationException at FactoryBeanRegistrySupport.java:188
+                        Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException at DefaultListableBeanFactory.java:343
+
+HiveIntegrationTest > Should create a new hive and persist to PostgreSQL database FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+HiveServiceCachePerformanceTest > listPublicHives_ShowsPerformanceImprovement_WithCache() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:180
+        Caused by: org.springframework.beans.factory.BeanDefinitionStoreException at ConfigurationClassParser.java:179
+            Caused by: org.springframework.context.annotation.ConflictingBeanDefinitionException at ClassPathBeanDefinitionScanner.java:361
+
+HiveServiceCachePerformanceTest > concurrentAccess_MaintainsCacheConsistency() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+HiveServiceCachePerformanceTest > listUserHives_ShowsPerformanceImprovement_WithCache() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+HiveServiceCachePerformanceTest > getHive_ShowsPerformanceImprovement_WithCache() FAILED
+    java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:145
+
+DatabaseMigrationValidationTest > testMigrationsAreValid() FAILED
+    org.opentest4j.AssertionFailedError at DatabaseMigrationValidationTest.java:57
+        Caused by: org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:58
+
+DatabaseMigrationValidationTest > testNoDuplicateTables() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:74
+
+DatabaseMigrationValidationTest > testAllIdTypesAreUuid() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:102
+
+DatabaseMigrationValidationTest > testForeignKeyConsistency() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:135
+
+DatabaseMigrationValidationTest > testIndexImmutability() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:167
+
+DatabaseMigrationValidationTest > testRequiredTablesExist() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:193
+
+DatabaseMigrationValidationTest > testUpdatedAtTriggersExist() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:224
+
+DatabaseMigrationValidationTest > testMigrationSequencing() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:278
+
+DatabaseMigrationValidationTest > testBasicCrudOperations() FAILED
+    org.flywaydb.core.api.FlywayException at DatabaseMigrationValidationTest.java:307

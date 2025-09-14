@@ -222,12 +222,13 @@ public class TestFixtures {
         return PlaylistTrack.builder()
                 .id(UUID.randomUUID())
                 .spotifyTrackId("4iV5W9uYEdYUVa79Axb7Rh")
-                .trackName("Never Gonna Give You Up")
-                .artistName("Rick Astley")
-                .albumName("Whenever You Need Somebody")
+                .title("Never Gonna Give You Up")
+                .artist("Rick Astley")
+                .album("Whenever You Need Somebody")
                 .durationMs(213573)
-                .position(1)
-                .addedAt(LocalDateTime.now());
+                .order(1)
+                .addedBy("test-user")
+                .createdAt(LocalDateTime.now());
     }
 
     // OAuth Constants

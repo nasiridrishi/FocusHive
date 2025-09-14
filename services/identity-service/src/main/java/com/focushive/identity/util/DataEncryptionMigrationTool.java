@@ -4,7 +4,7 @@ import com.focushive.identity.entity.Persona;
 import com.focushive.identity.entity.User;
 import com.focushive.identity.repository.PersonaRepository;
 import com.focushive.identity.repository.UserRepository;
-import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.IEncryptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -50,7 +50,7 @@ public class DataEncryptionMigrationTool implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PersonaRepository personaRepository;
-    private final EncryptionService encryptionService;
+    private final IEncryptionService encryptionService;
     private final DataSource dataSource;
 
     private static final int BATCH_SIZE = 100;

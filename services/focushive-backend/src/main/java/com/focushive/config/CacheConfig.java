@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.cache.CacheMeterBinder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -48,7 +47,7 @@ import java.util.Map;
 @Slf4j
 @Configuration
 @EnableCaching
-@ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
+@ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis-legacy", matchIfMissing = false)
 public class CacheConfig implements CachingConfigurer {
 
     // Cache Names Constants
@@ -137,7 +136,7 @@ public class CacheConfig implements CachingConfigurer {
     @Primary
     @Override
     public CacheManager cacheManager() {
-        RedisCacheManager.Builder builder = RedisCacheManager.builder(redisConnectionFactory())
+        RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.builder(redisConnectionFactory())
                 .cacheDefaults(defaultCacheConfiguration())
                 .withInitialCacheConfigurations(getCacheConfigurations())
                 .transactionAware();
@@ -275,8 +274,4 @@ public class CacheConfig implements CachingConfigurer {
     /**
      * Cache metrics for monitoring performance
      */
-    @Bean
-    public CacheMeterBinder cacheMeterBinder(CacheManager cacheManager, MeterRegistry meterRegistry) {
-        return new CacheMeterBinder(cacheManager, "focushive-backend", java.util.Collections.emptyList());
-    }
 }

@@ -40,7 +40,7 @@ class FieldLevelEncryptionTest {
     private PersonaRepository personaRepository;
 
     @Autowired
-    private EncryptionService encryptionService;
+    private IEncryptionService encryptionService;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

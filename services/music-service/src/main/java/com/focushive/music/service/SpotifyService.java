@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
+import se.michaelthelin.spotify.model_objects.specification.Playlist;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import se.michaelthelin.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
@@ -172,6 +173,38 @@ public class SpotifyService {
             case "relaxation" -> 0.3f;
             default -> 0.5f;
         };
+    }
+
+    /**
+     * Create a playlist on Spotify.
+     */
+    public String createSpotifyPlaylist(String userId, String name, String description, boolean isPublic) {
+        Optional<SpotifyCredentials> credentialsOpt = credentialsRepository.findActiveCredentials(userId, LocalDateTime.now());
+
+        if (credentialsOpt.isEmpty()) {
+            log.warn("No active Spotify credentials found for user: {}", userId);
+            return null;
+        }
+
+        try {
+            SpotifyCredentials credentials = credentialsOpt.get();
+            SpotifyApi spotifyApi = new SpotifyApi.Builder()
+                .setAccessToken(credentials.getAccessToken())
+                .build();
+
+            Playlist playlist = spotifyApi.createPlaylist(credentials.getSpotifyUserId(), name)
+                .description(description)
+                .public_(isPublic)
+                .collaborative(false)
+                .build()
+                .execute();
+
+            log.info("Created Spotify playlist: {} (ID: {}) for user: {}", name, playlist.getId(), userId);
+            return playlist.getId();
+        } catch (Exception e) {
+            log.error("Error creating Spotify playlist for user {}: {}", userId, e.getMessage());
+            return null;
+        }
     }
 
     /**

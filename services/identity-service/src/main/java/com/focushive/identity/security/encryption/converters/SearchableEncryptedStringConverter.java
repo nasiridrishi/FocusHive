@@ -1,11 +1,10 @@
 package com.focushive.identity.security.encryption.converters;
 
-import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.IEncryptionService;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * JPA converter for encrypting string fields that need to be searchable.
@@ -19,12 +18,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public class SearchableEncryptedStringConverter implements AttributeConverter<String, String> {
     
-    @Autowired
-    private EncryptionService encryptionService;
-    
     @Override
     public String convertToDatabaseColumn(String attribute) {
         if (attribute == null || attribute.isEmpty()) {
+            return attribute;
+        }
+        
+        IEncryptionService encryptionService = SpringContextUtil.getEncryptionService();
+        if (encryptionService == null) {
+            log.warn("EncryptionService not available, storing plaintext (test mode)");
             return attribute;
         }
         
@@ -39,6 +41,12 @@ public class SearchableEncryptedStringConverter implements AttributeConverter<St
     @Override
     public String convertToEntityAttribute(String dbData) {
         if (dbData == null || dbData.isEmpty()) {
+            return dbData;
+        }
+        
+        IEncryptionService encryptionService = SpringContextUtil.getEncryptionService();
+        if (encryptionService == null) {
+            log.warn("EncryptionService not available, returning data as-is (test mode)");
             return dbData;
         }
         

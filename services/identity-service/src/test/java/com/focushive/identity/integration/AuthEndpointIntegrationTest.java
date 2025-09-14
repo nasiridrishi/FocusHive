@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -32,7 +33,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = AuthController.class, excludeAutoConfiguration = {
     org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
-    org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class
+    org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration.class,
+    com.focushive.identity.config.RateLimitingConfig.class,
+    com.focushive.identity.config.CacheConfig.class
+})
+@TestPropertySource(properties = {
+    "ADMIN_PASSWORD=test-admin-password",
+    "ADMIN_USERNAME=test-admin",
+    "JWT_SECRET=testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposes",
+    "JWT_ACCESS_TOKEN_EXPIRATION=3600000",
+    "JWT_REFRESH_TOKEN_EXPIRATION=86400000",
+    "DB_HOST=localhost",
+    "DB_PORT=5432",
+    "DB_NAME=testdb",
+    "DB_USER=testuser",
+    "DB_PASSWORD=testpass",
+    "REDIS_HOST=localhost",
+    "REDIS_PORT=6379",
+    "SERVER_PORT=8081",
+    "ISSUER_URI=http://localhost:8081"
 })
 class AuthEndpointIntegrationTest {
 
@@ -47,6 +70,15 @@ class AuthEndpointIntegrationTest {
     
     @MockBean
     private CookieJwtService cookieJwtService;
+
+    @MockBean
+    private com.focushive.identity.service.RedisRateLimiter redisRateLimiter;
+
+    @MockBean  
+    private org.springframework.data.redis.connection.jedis.JedisConnectionFactory jedisConnectionFactory;
+
+    @MockBean
+    private com.focushive.identity.service.TokenBlacklistService tokenBlacklistService;
 
     private LoginRequest validLoginRequest;
     private AuthenticationResponse successResponse;

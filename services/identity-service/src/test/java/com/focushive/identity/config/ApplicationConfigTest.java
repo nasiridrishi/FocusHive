@@ -1,36 +1,25 @@
 package com.focushive.identity.config;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Configuration tests for ApplicationConfig.
+ * Unit tests for password encoding functionality.
+ * Tests BCryptPasswordEncoder directly without Spring context.
  */
-@SpringBootTest
-@ActiveProfiles("test")
-@Import(TestSecurityConfig.class)
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-@EnableAutoConfiguration(exclude = {
-    org.springframework.boot.actuate.autoconfigure.tracing.BraveAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.tracing.OpenTelemetryAutoConfiguration.class,
-    org.springframework.boot.actuate.autoconfigure.tracing.MicrometerTracingAutoConfiguration.class
-})
 class ApplicationConfigTest {
 
-    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void setUp() {
+        passwordEncoder = new BCryptPasswordEncoder();
+    }
 
     @Test
     @DisplayName("Should create password encoder bean")

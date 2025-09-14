@@ -1,9 +1,7 @@
 package com.focushive.identity.integration;
 
-import com.focushive.identity.config.MinimalTestConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -14,7 +12,6 @@ import org.springframework.test.context.TestPropertySource;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(MinimalTestConfig.class)
 @TestPropertySource(properties = {
     "focushive.security.headers.enabled=false",
     "focushive.security.headers.permissions-policy.enabled=false"

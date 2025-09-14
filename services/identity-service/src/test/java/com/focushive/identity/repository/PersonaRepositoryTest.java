@@ -2,6 +2,7 @@ package com.focushive.identity.repository;
 
 import com.focushive.identity.entity.Persona;
 import com.focushive.identity.entity.User;
+import com.focushive.identity.security.encryption.TestEncryptionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.Instant;
@@ -28,10 +30,15 @@ import static org.assertj.core.api.Assertions.*;
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:h2:mem:testdb",
         "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.flyway.enabled=false"
+        "spring.flyway.enabled=false",
+        "spring.profiles.active=test"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EntityScan(basePackages = "com.focushive.identity.entity")
+@Import({
+        TestEncryptionService.class,
+        com.focushive.identity.security.encryption.converters.SpringContextUtil.class
+})
 class PersonaRepositoryTest {
 
     @Autowired

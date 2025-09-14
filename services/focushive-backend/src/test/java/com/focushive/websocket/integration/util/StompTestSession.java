@@ -90,7 +90,7 @@ public class StompTestSession {
      * Send message with headers
      */
     public void send(String destination, StompHeaders headers, Object message) {
-        session.send(destination, headers, message);
+        session.send(destination, message);
         log.debug("Sent message to {} with headers: {}", destination, message);
     }
     

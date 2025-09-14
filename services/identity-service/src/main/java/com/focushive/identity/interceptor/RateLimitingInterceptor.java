@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.focushive.identity.annotation.RateLimit;
 import com.focushive.identity.entity.User;
 import com.focushive.identity.exception.RateLimitExceededException;
-import com.focushive.identity.service.RedisRateLimiter;
+import com.focushive.identity.service.IRateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RateLimitingInterceptor implements HandlerInterceptor {
     
-    private final RedisRateLimiter rateLimiter;
+    private final IRateLimiter rateLimiter;
     private final ObjectMapper objectMapper;
     
     @Override

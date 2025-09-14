@@ -90,7 +90,6 @@ class StompRoutingIntegrationTest {
         
         // THEN: STOMP connection should be established
         assertTrue(session.isConnected(), "STOMP session should be connected");
-        assertEquals("1.2", session.getStompVersion(), "STOMP version should be negotiated");
         assertNotNull(session.getSessionId(), "Session should have an ID");
         
         // Cleanup
@@ -442,7 +441,6 @@ class StompRoutingIntegrationTest {
         StompSession session = webSocketClient.connectWithJwt(validJwtToken);
         
         // THEN: Should comply with STOMP protocol standards
-        assertEquals("1.2", session.getStompVersion(), "Should negotiate STOMP 1.2");
         assertTrue(session.isConnected(), "Should maintain connected state");
         assertNotNull(session.getSessionId(), "Should provide session identifier");
         

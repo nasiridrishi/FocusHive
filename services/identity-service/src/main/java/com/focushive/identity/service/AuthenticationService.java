@@ -8,6 +8,7 @@ import com.focushive.identity.exception.ResourceNotFoundException;
 import com.focushive.identity.repository.PersonaRepository;
 import com.focushive.identity.repository.UserRepository;
 import com.focushive.identity.security.JwtTokenProvider;
+import com.focushive.identity.service.ITokenBlacklistService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public class AuthenticationService {
     private final JwtTokenProvider tokenProvider;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-    private final TokenBlacklistService tokenBlacklistService;
+    private final ITokenBlacklistService tokenBlacklistService;
     
     /**
      * Register a new user with a default persona.

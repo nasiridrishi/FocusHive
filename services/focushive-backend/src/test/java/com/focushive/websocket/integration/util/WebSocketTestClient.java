@@ -52,7 +52,7 @@ public class WebSocketTestClient {
      */
     public StompSession connect(StompHeaders connectHeaders) throws Exception {
         StompSessionHandler sessionHandler = new TestStompSessionHandler();
-        ListenableFuture<StompSession> future = stompClient.connect(url, null, connectHeaders, sessionHandler);
+        ListenableFuture<StompSession> future = stompClient.connect(url, new WebSocketHttpHeaders(), connectHeaders, sessionHandler);
         
         try {
             return future.get(connectionTimeout.toMillis(), TimeUnit.MILLISECONDS);
@@ -118,7 +118,7 @@ public class WebSocketTestClient {
      * Send message with headers
      */
     public void sendMessage(StompSession session, String destination, StompHeaders headers, Object message) {
-        session.send(destination, headers, message);
+        session.send(destination, message);
         messageCounter.incrementAndGet();
         log.debug("Sent message to {} with headers {}: {}", destination, headers, message);
     }

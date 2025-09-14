@@ -1,0 +1,36 @@
+[submodule "services/analytics-service"]
+	path = services/analytics-service
+	url = https://github.com/nasiridrishi/focushive-analytics-service.git
+[submodule "services/api-gateway"]
+	path = services/api-gateway
+	url = https://github.com/nasiridrishi/focushive-api-gateway.git
+[submodule "services/buddy-service"]
+	path = services/buddy-service
+	url = https://github.com/nasiridrishi/focushive-buddy-service.git
+[submodule "services/chat-service"]
+	path = services/chat-service
+	url = https://github.com/nasiridrishi/focushive-chat-service.git
+[submodule "services/focushive-backend"]
+	path = services/focushive-backend
+	url = https://github.com/nasiridrishi/focushive-focushive-backend.git
+[submodule "services/forum-service"]
+	path = services/forum-service
+	url = https://github.com/nasiridrishi/focushive-forum-service.git
+[submodule "services/identity-service"]
+	path = services/identity-service
+	url = https://github.com/nasiridrishi/focushive-identity-service.git
+[submodule "services/integration-tests"]
+	path = services/integration-tests
+	url = https://github.com/nasiridrishi/focushive-integration-tests.git
+[submodule "services/music-service"]
+	path = services/music-service
+	url = https://github.com/nasiridrishi/focushive-music-service.git
+[submodule "services/notification-service"]
+	path = services/notification-service
+	url = https://github.com/nasiridrishi/focushive-notification-service.git
+[submodule "services/performance-tests"]
+	path = services/performance-tests
+	url = https://github.com/nasiridrishi/focushive-performance-tests.git
+[submodule "services/security-tests"]
+	path = services/security-tests
+	url = https://github.com/nasiridrishi/focushive-security-tests.git

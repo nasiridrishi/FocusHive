@@ -3,7 +3,9 @@ package com.focushive.identity.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.focushive.identity.config.SecurityHeadersProperties;
 import com.focushive.identity.service.RedisRateLimiter;
+import com.focushive.identity.service.TokenBlacklistService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -109,5 +111,14 @@ public class MinimalTestConfig {
     @Primary
     public StringRedisTemplate mockStringRedisTemplate() {
         return mock(StringRedisTemplate.class);
+    }
+    
+    /**
+     * Mock TokenBlacklistService for tests to break dependency chain.
+     */
+    @Bean
+    @Primary
+    public TokenBlacklistService mockTokenBlacklistService() {
+        return mock(TokenBlacklistService.class);
     }
 }
