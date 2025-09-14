@@ -35,15 +35,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = AuthController.class)
 @TestPropertySource(properties = {
-    "jwt.secret=testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposesAbcDefGhiJklMnoPqrStuVwxYz123456789AbcDef"
+    "jwt.secret=testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposesAbcDefGhiJklMnoPqrStuVwxYz123456789AbcDef",
+    "ADMIN_PASSWORD=test-admin-password",
+    "ADMIN_USERNAME=test-admin",
+    "JWT_SECRET=testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposes",
+    "JWT_ACCESS_TOKEN_EXPIRATION=3600000",
+    "JWT_REFRESH_TOKEN_EXPIRATION=86400000",
+    "DB_HOST=localhost",
+    "DB_PORT=5432",
+    "DB_NAME=testdb",
+    "DB_USER=testuser",
+    "DB_PASSWORD=testpass",
+    "REDIS_HOST=localhost",
+    "REDIS_PORT=6379",
+    "SERVER_PORT=8081",
+    "ISSUER_URI=http://localhost:8081"
 })
 @EnableAutoConfiguration(exclude = {
     com.focushive.identity.config.RateLimitingConfig.class,
     com.focushive.identity.interceptor.RateLimitingInterceptor.class,
     com.focushive.identity.service.RedisRateLimiter.class,
+    com.focushive.identity.service.TokenBlacklistService.class,
+    com.focushive.identity.config.CacheConfig.class,
     org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
     org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration.class,
-    org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class
+    org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class
 })
 class AuthControllerIntegrationTest {
 
@@ -58,6 +76,15 @@ class AuthControllerIntegrationTest {
 
     @MockBean
     private CookieJwtService cookieJwtService;
+
+    @MockBean
+    private com.focushive.identity.service.RedisRateLimiter redisRateLimiter;
+
+    @MockBean  
+    private org.springframework.data.redis.connection.jedis.JedisConnectionFactory jedisConnectionFactory;
+
+    @MockBean
+    private com.focushive.identity.service.TokenBlacklistService tokenBlacklistService;
 
     private RegisterRequest validRegisterRequest;
     private LoginRequest validLoginRequest;

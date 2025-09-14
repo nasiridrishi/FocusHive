@@ -3,10 +3,9 @@ package com.focushive.identity.config;
 import com.focushive.identity.security.JwtTokenProvider;
 import com.focushive.identity.security.JwtAuthenticationFilter;
 import com.focushive.identity.service.CustomUserDetailsService;
-import com.focushive.identity.service.TokenBlacklistService;
 import org.mockito.Mockito;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,7 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * Test security configuration that provides mock implementations
  * for JWT-related components and disables security for tests.
  */
-@TestConfiguration
+@Configuration
 @EnableWebSecurity
 @Profile("test")
 public class TestSecurityConfig {
@@ -79,14 +78,8 @@ public class TestSecurityConfig {
         return Mockito.mock(JwtAuthenticationFilter.class);
     }
 
-    /**
-     * Mock TokenBlacklistService for tests.
-     */
-    @Bean
-    @Primary
-    public TokenBlacklistService mockTokenBlacklistService() {
-        return Mockito.mock(TokenBlacklistService.class);
-    }
+    // TokenBlacklistService is now provided by TestTokenBlacklistService
+    // No need to mock it anymore
 
     /**
      * Test security filter chain that completely disables security for testing.

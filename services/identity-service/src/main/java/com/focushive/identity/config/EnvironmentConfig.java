@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -26,6 +27,7 @@ import org.springframework.validation.annotation.Validated;
  */
 @Component
 @Validated
+@Profile("!test")
 public class EnvironmentConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(EnvironmentConfig.class);

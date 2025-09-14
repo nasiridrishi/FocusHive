@@ -34,6 +34,7 @@ public class SimpleMigrationTest {
                 .dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword())
                 .locations("classpath:db/migration")
                 .cleanDisabled(false)
+                .mixed(true)  // Allow mixed transactional and non-transactional statements
                 .load();
     }
 

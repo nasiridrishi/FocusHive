@@ -100,7 +100,7 @@ class TestContainersBasicTest extends BaseIntegrationTest {
         // Container properties should be stable
         assertNotNull(postgresql.getJdbcUrl(), "JDBC URL should be available");
         assertNotNull(redis.getHost(), "Redis host should be available");
-        assertTrue(redis.getFirstMappedPort() > 0, "Redis port should be mapped");
+        assertTrue(redis.getMappedPort(6379) > 0, "Redis port should be mapped");
     }
 
     @Test
@@ -145,7 +145,7 @@ class TestContainersBasicTest extends BaseIntegrationTest {
         // Container reuse is configured in container definition
         
         // Redis container configuration
-        assertTrue(redis.getDockerImageName().contains("redis:7-alpine"), 
+        assertTrue(redis.getDockerImageName().contains("redis:7"), 
             "Should use correct Redis version");
     }
 

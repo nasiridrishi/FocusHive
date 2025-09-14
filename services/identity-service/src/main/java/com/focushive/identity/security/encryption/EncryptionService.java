@@ -24,7 +24,7 @@ import java.util.HexFormat;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EncryptionService {
+public class EncryptionService implements IEncryptionService {
     
     private static final String ENCRYPTION_ALGORITHM = "AES";
     private static final String TRANSFORMATION = "AES/GCM/NoPadding";

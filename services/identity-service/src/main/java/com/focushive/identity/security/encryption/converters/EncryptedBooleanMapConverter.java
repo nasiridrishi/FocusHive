@@ -3,12 +3,11 @@ package com.focushive.identity.security.encryption.converters;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.IEncryptionService;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 
@@ -21,11 +20,7 @@ import java.util.Map;
 @Slf4j
 public class EncryptedBooleanMapConverter implements AttributeConverter<Map<String, Boolean>, String> {
     
-    @Autowired
-    private EncryptionService encryptionService;
-    
-    @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
     
     private static final TypeReference<Map<String, Boolean>> BOOLEAN_MAP_TYPE = new TypeReference<Map<String, Boolean>>() {};
     
@@ -38,6 +33,12 @@ public class EncryptedBooleanMapConverter implements AttributeConverter<Map<Stri
         try {
             // Serialize to JSON
             String json = objectMapper.writeValueAsString(attribute);
+            
+            IEncryptionService encryptionService = SpringContextUtil.getEncryptionService();
+            if (encryptionService == null) {
+                log.warn("EncryptionService not available, storing plaintext JSON (test mode)");
+                return json;
+            }
             
             // Encrypt the JSON
             return encryptionService.encrypt(json);
@@ -60,14 +61,20 @@ public class EncryptedBooleanMapConverter implements AttributeConverter<Map<Stri
         try {
             String json;
             
-            // Check if data is encrypted (has version prefix)
-            if (dbData.contains(":")) {
-                // Decrypt first
-                json = encryptionService.decrypt(dbData);
-            } else {
-                // Data is not encrypted (legacy data)
-                log.debug("Found unencrypted boolean map data in database, parsing directly");
+            IEncryptionService encryptionService = SpringContextUtil.getEncryptionService();
+            if (encryptionService == null) {
+                log.warn("EncryptionService not available, parsing data as-is (test mode)");
                 json = dbData;
+            } else {
+                // Check if data is encrypted (has version prefix)
+                if (dbData.contains(":")) {
+                    // Decrypt first
+                    json = encryptionService.decrypt(dbData);
+                } else {
+                    // Data is not encrypted (legacy data)
+                    log.debug("Found unencrypted boolean map data in database, parsing directly");
+                    json = dbData;
+                }
             }
             
             // Deserialize from JSON

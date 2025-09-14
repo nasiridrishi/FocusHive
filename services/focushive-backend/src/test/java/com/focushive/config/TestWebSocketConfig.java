@@ -60,10 +60,12 @@ public class TestWebSocketConfig implements WebSocketMessageBrokerConfigurer {
     
     /**
      * Provide a mock SimpMessagingTemplate for testing
+     * Note: Removed this bean as it's provided by Spring Boot auto-configuration
+     * when WebSocket messaging is enabled
      */
-    @Bean
-    @Primary
-    public SimpMessagingTemplate simpMessagingTemplate() {
-        return new SimpMessagingTemplate(null);
-    }
+    // @Bean
+    // @Primary
+    // public SimpMessagingTemplate simpMessagingTemplate() {
+    //     return new SimpMessagingTemplate(null);
+    // }
 }

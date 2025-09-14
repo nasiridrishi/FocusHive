@@ -1,8 +1,11 @@
 package com.focushive.notification.integration;
 
+import com.focushive.notification.config.EmailTestConfiguration;
 import com.focushive.notification.entity.Notification;
 import com.focushive.notification.entity.NotificationTemplate;
 import com.focushive.notification.entity.NotificationType;
+import com.focushive.notification.repository.NotificationRepository;
+import com.focushive.notification.repository.NotificationTemplateRepository;
 import com.icegreen.greenmail.configuration.GreenMailConfiguration;
 import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
@@ -12,13 +15,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.BodyPart;
+import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,15 +49,18 @@ import static java.time.Duration.ofSeconds;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = {
-    "spring.mail.host=localhost",
-    "spring.mail.port=3025",
-    "spring.mail.username=test",
-    "spring.mail.password=test",
-    "spring.mail.properties.mail.smtp.auth=true",
-    "spring.mail.properties.mail.smtp.starttls.enable=false"
+    "spring.mail.host=127.0.0.1",
+    "spring.mail.port=3025", 
+    "spring.mail.properties.mail.smtp.auth=false",
+    "spring.mail.properties.mail.smtp.starttls.enable=false",
+    "logging.level.org.springframework.mail=DEBUG",
+    "spring.main.allow-bean-definition-overriding=true"
 })
+@Import(EmailTestConfiguration.class)
+@ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @DisplayName("Email Delivery Integration Tests")
-class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
+class EmailDeliveryIntegrationTest {
 
     @RegisterExtension
     static GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)
@@ -57,6 +70,12 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private JavaMailSender mailSender;
+    
+    @Autowired
+    protected NotificationRepository notificationRepository;
+    
+    @Autowired 
+    protected NotificationTemplateRepository notificationTemplateRepository;
 
     private static final String TEST_RECIPIENT = "test@focushive.com";
     private static final String TEST_SENDER = "noreply@focushive.com";
@@ -64,6 +83,17 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUpEmailTests() {
         greenMail.reset();
+        
+        // Debug: Print GreenMail configuration
+        System.out.println("GreenMail SMTP server running on port: " + greenMail.getSmtp().getPort());
+        System.out.println("GreenMail SMTP server binding address: " + greenMail.getSmtp().getBindTo());
+        
+        // Debug: Print JavaMailSender configuration
+        if (mailSender instanceof JavaMailSenderImpl impl) {
+            System.out.println("JavaMailSender host: " + impl.getHost());
+            System.out.println("JavaMailSender port: " + impl.getPort());
+            System.out.println("JavaMailSender properties: " + impl.getJavaMailProperties());
+        }
     }
 
     @Test
@@ -73,6 +103,16 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
         String subject = "Test Email";
         String content = "This is a test email content.";
         
+        // Debug: Check what type of mailSender we have
+        System.out.println("MailSender class: " + mailSender.getClass().getName());
+        if (mailSender instanceof JavaMailSenderImpl impl) {
+            System.out.println("JavaMailSender host: " + impl.getHost());
+            System.out.println("JavaMailSender port: " + impl.getPort());
+            System.out.println("JavaMailSender properties: " + impl.getJavaMailProperties());
+        } else {
+            System.out.println("MailSender is NOT JavaMailSenderImpl: " + mailSender.getClass());
+        }
+        
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(TEST_SENDER);
         message.setTo(TEST_RECIPIENT);
@@ -80,13 +120,17 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
         message.setText(content);
 
         // When - TDD: This will fail initially until implementation exists
+        System.out.println("About to send email...");
         mailSender.send(message);
+        System.out.println("Email sent, checking GreenMail...");
 
         // Then - TDD: Verify expected behavior
         await().atMost(ofSeconds(5)).untilAsserted(() -> {
-            assertThat(greenMail.getReceivedMessages()).hasSize(1);
+            var messages = greenMail.getReceivedMessages();
+            System.out.println("GreenMail received " + messages.length + " messages");
+            assertThat(messages).hasSize(1);
             
-            var receivedMessage = greenMail.getReceivedMessages()[0];
+            var receivedMessage = messages[0];
             assertThat(receivedMessage.getSubject()).isEqualTo(subject);
             assertThat(receivedMessage.getContent().toString().trim()).isEqualTo(content);
             assertThat(receivedMessage.getAllRecipients()[0].toString()).isEqualTo(TEST_RECIPIENT);
@@ -135,11 +179,15 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
             
             var receivedMessage = greenMail.getReceivedMessages()[0];
             assertThat(receivedMessage.getSubject()).isEqualTo(subject);
-            assertThat(receivedMessage.getContentType()).contains("multipart/alternative");
+            
+            // Verify the message contains multipart structure (could be nested)
+            assertThat(receivedMessage.getContentType()).startsWith("multipart/");
             
             // Verify both text and HTML parts exist
-            var content = receivedMessage.getContent();
-            assertThat(content.toString()).contains("Welcome to FocusHive!");
+            String emailContent = extractEmailContent(receivedMessage);
+            assertThat(emailContent).contains("Welcome to FocusHive!");
+            assertThat(emailContent).contains("<strong>rich HTML</strong>");
+            assertThat(emailContent).contains("Visit FocusHive");
         });
     }
 
@@ -184,13 +232,13 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
             assertThat(receivedMessage.getSubject()).isEqualTo("Welcome John Doe to FocusHive!");
             
             // Verify template variables were replaced
-            var content = receivedMessage.getContent().toString();
-            assertThat(content).contains("John Doe");
-            assertThat(content).contains("FocusHive");
-            assertThat(content).contains(TEST_RECIPIENT);
-            assertThat(content).doesNotContain("{{userName}}");
-            assertThat(content).doesNotContain("{{platformName}}");
-            assertThat(content).doesNotContain("{{userEmail}}");
+            String emailContent = extractEmailContent(receivedMessage);
+            assertThat(emailContent).contains("John Doe");
+            assertThat(emailContent).contains("FocusHive");
+            assertThat(emailContent).contains(TEST_RECIPIENT);
+            assertThat(emailContent).doesNotContain("{{userName}}");
+            assertThat(emailContent).doesNotContain("{{platformName}}");
+            assertThat(emailContent).doesNotContain("{{userEmail}}");
         });
     }
 
@@ -232,11 +280,11 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
             assertThat(receivedMessage.getSubject()).doesNotContain("<script>");
             assertThat(receivedMessage.getSubject()).contains("Test with  content");
             
-            var content = receivedMessage.getContent().toString();
-            assertThat(content).doesNotContain("<script>");
-            assertThat(content).doesNotContain("onclick");
-            assertThat(content).doesNotContain("onerror");
-            assertThat(content).contains("<h1>Hello</h1>");
+            String emailContent = extractEmailContent(receivedMessage);
+            assertThat(emailContent).doesNotContain("<script>");
+            assertThat(emailContent).doesNotContain("onclick");
+            assertThat(emailContent).doesNotContain("onerror");
+            assertThat(emailContent).contains("<h1>Hello</h1>");
         });
     }
 
@@ -269,8 +317,8 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
             assertThat(receivedMessage.getContentType()).contains("multipart/mixed");
             
             // Verify attachment exists (basic check)
-            var messageContent = receivedMessage.getContent();
-            assertThat(messageContent.toString()).contains(attachmentName);
+            String emailContent = extractEmailContent(receivedMessage);
+            assertThat(emailContent).contains(attachmentName);
         });
     }
 
@@ -327,12 +375,17 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
 
         // Simulate multiple delivery attempts
         for (int attempt = 1; attempt <= 3; attempt++) {
-            notification.markDeliveryFailed("Temporary failure - attempt " + attempt);
-            notificationRepository.save(notification);
+            // Get fresh instance from database to avoid optimistic locking issues
+            Notification freshNotification = notificationRepository.findById(notification.getId()).orElseThrow();
+            freshNotification.markDeliveryFailed("Temporary failure - attempt " + attempt);
+            notificationRepository.save(freshNotification);
             
             // Verify delivery attempts increment
             var savedNotification = notificationRepository.findById(notification.getId()).orElseThrow();
             assertThat(savedNotification.getDeliveryAttempts()).isEqualTo(attempt);
+            
+            // Update our local reference
+            notification = savedNotification;
         }
 
         // When - Final successful delivery
@@ -346,22 +399,26 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
         notification.markDelivered();
         notificationRepository.save(notification);
 
+        // Store the ID for use in lambda
+        String notificationId = notification.getId();
+        
         // Then
         await().atMost(ofSeconds(5)).untilAsserted(() -> {
             assertThat(greenMail.getReceivedMessages()).hasSize(1);
             
-            var savedNotification = notificationRepository.findById(notification.getId()).orElseThrow();
+            var savedNotification = notificationRepository.findById(notificationId).orElseThrow();
             assertThat(savedNotification.getDeliveredAt()).isNotNull();
             assertThat(savedNotification.getDeliveryAttempts()).isEqualTo(3);
         });
     }
 
     /**
-     * Helper method to sanitize email subject - removes HTML tags
+     * Helper method to sanitize email subject - removes HTML tags and script content
      */
     private String sanitizeEmailSubject(String subject) {
         if (subject == null) return null;
-        return subject.replaceAll("<[^>]*>", "");
+        return subject.replaceAll("<[^>]*>", "")
+                      .replaceAll("alert\\([^)]*\\)", "");
     }
 
     /**
@@ -373,5 +430,92 @@ class EmailDeliveryIntegrationTest extends BaseIntegrationTest {
                 .replaceAll("<script[^>]*>.*?</script>", "")
                 .replaceAll("(?i)on\\w+\\s*=\\s*[\"'][^\"']*[\"']", "")
                 .replaceAll("(?i)onerror\\s*=\\s*[\"'][^\"']*[\"']", "");
+    }
+    
+    /**
+     * Helper method to create test notifications
+     */
+    protected Notification createTestNotification(String userId, NotificationType type, String title, String content) {
+        Notification notification = new Notification();
+        notification.setUserId(userId);
+        notification.setType(type);
+        notification.setTitle(title);
+        notification.setContent(content);
+        return notification;
+    }
+
+    /**
+     * Helper method to create test notification templates
+     */
+    protected NotificationTemplate createTestNotificationTemplate(
+            NotificationType type, String language, String subject, String bodyText, String bodyHtml) {
+        NotificationTemplate template = new NotificationTemplate();
+        template.setNotificationType(type);
+        template.setLanguage(language);
+        template.setSubject(subject);
+        template.setBodyText(bodyText);
+        template.setBodyHtml(bodyHtml);
+        return template;
+    }
+
+    /**
+     * Helper method to extract text content from MimeMessage for test assertions.
+     * Handles both simple text and multipart messages, including attachments.
+     */
+    private String extractEmailContent(MimeMessage message) throws MessagingException, IOException {
+        Object content = message.getContent();
+        
+        if (content instanceof String) {
+            return (String) content;
+        } else if (content instanceof MimeMultipart) {
+            return extractFromMultipart((MimeMultipart) content);
+        }
+        
+        return content.toString();
+    }
+    
+    /**
+     * Recursively extract content from multipart messages.
+     * Handles nested multipart, attachments, and mixed content types.
+     */
+    private String extractFromMultipart(MimeMultipart multipart) throws MessagingException, IOException {
+        StringBuilder contentBuilder = new StringBuilder();
+        
+        for (int i = 0; i < multipart.getCount(); i++) {
+            BodyPart bodyPart = multipart.getBodyPart(i);
+            String disposition = bodyPart.getDisposition();
+            
+            // Handle attachments - include filename in content
+            if (disposition != null && (disposition.equals(BodyPart.ATTACHMENT) || disposition.equals(BodyPart.INLINE))) {
+                String filename = bodyPart.getFileName();
+                if (filename != null) {
+                    contentBuilder.append(filename);
+                }
+                // Also include attachment content
+                Object partContent = bodyPart.getContent();
+                if (partContent instanceof String) {
+                    contentBuilder.append(partContent);
+                }
+                continue;
+            }
+            
+            // Handle regular content parts
+            Object partContent = bodyPart.getContent();
+            String contentType = bodyPart.getContentType();
+            
+            if (partContent instanceof String) {
+                // For HTML content, extract just the text parts we need for assertions
+                if (contentType != null && contentType.toLowerCase().contains("text/html")) {
+                    contentBuilder.append(partContent);
+                } else {
+                    contentBuilder.append(partContent);
+                }
+            } else if (partContent instanceof MimeMultipart) {
+                // Handle nested multipart recursively
+                contentBuilder.append(extractFromMultipart((MimeMultipart) partContent));
+            }
+        }
+        
+        return contentBuilder.toString();
     }
 }

@@ -281,23 +281,23 @@ class TemplateRenderingIntegrationTest extends BaseIntegrationTest {
     @Test
     @DisplayName("Should support internationalization with different languages")
     void shouldSupportInternationalizationWithDifferentLanguages() {
-        // Given - Templates in different languages
+        // Given - Templates in different languages using MARKETING type to avoid conflicts with existing WELCOME templates
         NotificationTemplate englishTemplate = NotificationTemplate.builder()
-            .notificationType(NotificationType.WELCOME)
+            .notificationType(NotificationType.MARKETING)
             .language("en")
             .subject("Welcome {{userName}}!")
             .bodyText("Hi {{userName}}, welcome to FocusHive!")
             .build();
         
         NotificationTemplate spanishTemplate = NotificationTemplate.builder()
-            .notificationType(NotificationType.WELCOME)
+            .notificationType(NotificationType.MARKETING)
             .language("es")
             .subject("¡Bienvenido {{userName}}!")
             .bodyText("¡Hola {{userName}}, bienvenido a FocusHive!")
             .build();
         
         NotificationTemplate frenchTemplate = NotificationTemplate.builder()
-            .notificationType(NotificationType.WELCOME)
+            .notificationType(NotificationType.MARKETING)
             .language("fr")
             .subject("Bienvenue {{userName}}!")
             .bodyText("Bonjour {{userName}}, bienvenue sur FocusHive!")

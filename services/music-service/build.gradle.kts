@@ -63,15 +63,18 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-webflux") // For WebTestClient
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("com.github.tomakehurst:wiremock-jre8:3.0.1")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.2")
     testImplementation("org.awaitility:awaitility:4.2.0")
-    testImplementation("org.testcontainers:redis")
+    testImplementation("com.redis:testcontainers-redis:2.2.2")
+    testImplementation("org.junit.platform:junit-platform-suite-api:1.10.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-suite-engine:1.10.1")
     testRuntimeOnly("com.h2database:h2")
 }
 
 dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.0")
+        mavenBom("org.testcontainers:testcontainers-bom:1.19.3")
     }
 }
 

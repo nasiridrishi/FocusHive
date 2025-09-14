@@ -54,10 +54,16 @@ dependencies {
     
     // Utilities
     implementation("org.apache.commons:commons-lang3:3.13.0")
-    
+
+    // Lombok
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
     // Development
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-    
+
     // Configuration
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     

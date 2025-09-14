@@ -1,0 +1,88 @@
+spring:
+  application:
+    name: notification-service-test
+    
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+    
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        
+  flyway:
+    enabled: false
+    
+  # Simple cache for tests
+  cache:
+    type: simple
+    
+  # Mock email for tests (no dependencies)
+  mail:
+    host: localhost
+    port: 3025
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            
+  # Disable Redis and RabbitMQ for tests
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 1000ms
+    
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    
+  # Mock OAuth2 for tests
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8082
+          jwk-set-uri: http://localhost:8082/.well-known/jwks.json
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+        
+
+logging:
+  level:
+    com.focushive.notification: WARN
+    org.springframework: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN
+    root: WARN
+    
+# Service-specific test configuration
+notification:
+  queue:
+    name: test-notifications
+    exchange: test.focushive.notifications
+    routing-key: notification.test
+  template:
+    default-language: en
+  cleanup:
+    schedule: "-"  # Disabled for tests
+    default-retention-days: 1
+  delivery:
+    max-retries: 1
+    retry-delay-ms: 100

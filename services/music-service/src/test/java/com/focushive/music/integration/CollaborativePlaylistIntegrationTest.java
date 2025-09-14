@@ -322,12 +322,12 @@ class CollaborativePlaylistIntegrationTest extends BaseIntegrationTest {
         PlaylistTrack track1 = TestFixtures.playlistTrackBuilder()
             .playlist(testPlaylist)
             .spotifyTrackId(TestFixtures.REAL_SPOTIFY_TRACK_IDS[0])
-            .position(1)
+            .order(1)
             .build();
         PlaylistTrack track2 = TestFixtures.playlistTrackBuilder()
             .playlist(testPlaylist)
             .spotifyTrackId(TestFixtures.REAL_SPOTIFY_TRACK_IDS[1])
-            .position(2)
+            .order(2)
             .build();
         playlistTrackRepository.saveAll(List.of(track1, track2));
 
@@ -364,7 +364,7 @@ class CollaborativePlaylistIntegrationTest extends BaseIntegrationTest {
                 PlaylistTrack updatedTrack1 = playlistTrackRepository.findById(track1.getId()).orElse(null);
                 PlaylistTrack updatedTrack2 = playlistTrackRepository.findById(track2.getId()).orElse(null);
                 return updatedTrack1 != null && updatedTrack2 != null && 
-                       updatedTrack1.getPosition() == 2 && updatedTrack2.getPosition() == 1;
+                       updatedTrack1.getOrder() == 2 && updatedTrack2.getOrder() == 1;
             });
     }
 

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.cache.CacheMeterBinder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -140,7 +139,7 @@ public class CacheConfig implements CachingConfigurer {
     @Primary
     @Override
     public CacheManager cacheManager() {
-        RedisCacheManager.Builder builder = RedisCacheManager.builder(redisConnectionFactory())
+        RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.builder(redisConnectionFactory())
                 .cacheDefaults(defaultCacheConfiguration())
                 .withInitialCacheConfigurations(getCacheConfigurations())
                 .transactionAware();
@@ -259,9 +258,8 @@ public class CacheConfig implements CachingConfigurer {
 
     /**
      * Cache metrics for monitoring
+     * Note: CacheMeterBinder is abstract in newer Micrometer versions.
+     * Spring Boot auto-configures cache metrics, so we can remove this bean.
+     * Metrics will be automatically registered for all cache managers.
      */
-    @Bean
-    public CacheMeterBinder cacheMeterBinder(CacheManager cacheManager, MeterRegistry meterRegistry) {
-        return new CacheMeterBinder(cacheManager, "identity-service", java.util.Collections.emptyList());
-    }
 }

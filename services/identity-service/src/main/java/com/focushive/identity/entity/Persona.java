@@ -1,6 +1,6 @@
 package com.focushive.identity.entity;
 
-import com.focushive.identity.security.encryption.EncryptionService;
+import com.focushive.identity.security.encryption.IEncryptionService;
 import com.focushive.identity.security.encryption.converters.*;
 import jakarta.persistence.*;
 import lombok.*;
@@ -200,7 +200,7 @@ public class Persona extends BaseEncryptedEntity {
      * Called before persisting or updating the entity.
      */
     @Override
-    protected void updateSearchableHashes(EncryptionService encryptionService) {
+    protected void updateSearchableHashes(IEncryptionService encryptionService) {
         // Persona doesn't have any searchable encrypted fields
         // All PII fields use regular encryption without search capability
         // This is intentional as personas are looked up by user relationship, not by content

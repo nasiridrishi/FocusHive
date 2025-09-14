@@ -9,6 +9,7 @@ import io.github.bucket4j.EstimationProbe;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.JedisPool;
@@ -25,7 +26,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RedisRateLimiter {
+@Profile("!test")
+public class RedisRateLimiter implements IRateLimiter {
     
     private final JedisPool jedisPool;
     private final StringRedisTemplate redisTemplate;

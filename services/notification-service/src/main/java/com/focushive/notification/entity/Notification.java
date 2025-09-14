@@ -47,7 +47,7 @@ public class Notification extends BaseEntity {
     @Column(name = "action_url", length = 500)
     private String actionUrl;
     
-    @Column(columnDefinition = "jsonb", name = "data")
+    @Column(name = "data", columnDefinition = "CLOB")
     @Builder.Default
     private String data = "{}";
     

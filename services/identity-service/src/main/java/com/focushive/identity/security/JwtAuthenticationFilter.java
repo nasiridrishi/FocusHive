@@ -2,7 +2,7 @@ package com.focushive.identity.security;
 
 import com.focushive.identity.entity.User;
 import com.focushive.identity.service.CustomUserDetailsService;
-import com.focushive.identity.service.TokenBlacklistService;
+import com.focushive.identity.service.ITokenBlacklistService;
 import com.focushive.identity.service.CookieJwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final CustomUserDetailsService userDetailsService;
-    private final TokenBlacklistService tokenBlacklistService;
+    private final ITokenBlacklistService tokenBlacklistService;
     private final CookieJwtService cookieJwtService;
 
     @Override

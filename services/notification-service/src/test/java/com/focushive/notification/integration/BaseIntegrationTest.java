@@ -1,5 +1,6 @@
 package com.focushive.notification.integration;
 
+import com.focushive.notification.config.H2TestConfiguration;
 import com.focushive.notification.entity.Notification;
 import com.focushive.notification.entity.NotificationPreference;
 import com.focushive.notification.entity.NotificationTemplate;
@@ -11,40 +12,22 @@ import com.focushive.notification.repository.NotificationTemplateRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalTime;
 import java.util.Map;
 
 /**
  * Base integration test class providing common setup for all notification service integration tests.
- * Follows TDD approach with TestContainers for isolated testing environment.
+ * Follows TDD approach with H2 in-memory database for fast testing.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Transactional
+@ActiveProfiles("test")
+@Import(H2TestConfiguration.class)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public abstract class BaseIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("notification_test")
-            .withUsername("test")
-            .withPassword("test")
-            .withReuse(true);
-
-    @Container
-    static GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
-            .withExposedPorts(6379)
-            .withReuse(true);
 
     @Autowired
     protected NotificationRepository notificationRepository;
@@ -55,34 +38,6 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected NotificationTemplateRepository notificationTemplateRepository;
 
-    @DynamicPropertySource
-    static void configureTestProperties(DynamicPropertyRegistry registry) {
-        // Database configuration
-        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", postgresContainer::getUsername);
-        registry.add("spring.datasource.password", postgresContainer::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        
-        // Redis configuration
-        registry.add("spring.data.redis.host", redisContainer::getHost);
-        registry.add("spring.data.redis.port", () -> redisContainer.getMappedPort(6379).toString());
-        
-        // Email configuration for testing
-        registry.add("spring.mail.host", () -> "localhost");
-        registry.add("spring.mail.port", () -> "3025"); // GreenMail default port
-        registry.add("spring.mail.username", () -> "test");
-        registry.add("spring.mail.password", () -> "test");
-        registry.add("spring.mail.properties.mail.smtp.auth", () -> "true");
-        registry.add("spring.mail.properties.mail.smtp.starttls.enable", () -> "false");
-        
-        // Disable security for tests
-        registry.add("spring.security.enabled", () -> "false");
-        
-        // Test profile specific configurations
-        registry.add("spring.profiles.active", () -> "test");
-        registry.add("logging.level.com.focushive.notification", () -> "WARN");
-        registry.add("logging.level.org.springframework.mail", () -> "DEBUG");
-    }
 
     @BeforeEach
     void setUp() {

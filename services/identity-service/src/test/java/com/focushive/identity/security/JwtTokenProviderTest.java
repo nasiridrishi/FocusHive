@@ -31,14 +31,15 @@ class JwtTokenProviderTest {
     @BeforeEach
     void setUp() {
         // Initialize JwtTokenProvider with test configuration
-        String secret = "test-secret-key-that-is-long-enough-for-hs512-algorithm-minimum-64-bytes-required";
+        // Use a secure test JWT key that passes validation (no common weak patterns)
+        String testJwtKey = "MyTestJwtSigningKeyForUnitTestsOnly123456789012345678901234567890";
         long accessTokenExpiration = 3600000L; // 1 hour
         long refreshTokenExpiration = 2592000000L; // 30 days
         long rememberMeExpiration = 7776000000L; // 90 days
         String issuer = "test-issuer";
 
         jwtTokenProvider = new JwtTokenProvider(
-            secret, accessTokenExpiration, refreshTokenExpiration, rememberMeExpiration, issuer);
+            testJwtKey, accessTokenExpiration, refreshTokenExpiration, rememberMeExpiration, issuer);
 
         // Create test user
         UUID testUserId = UUID.randomUUID();
@@ -297,7 +298,7 @@ class JwtTokenProviderTest {
     void validateToken_WrongSignature_ShouldReturnFalse() {
         // Given - Create token with different provider (different secret)
         JwtTokenProvider wrongProvider = new JwtTokenProvider(
-            "different-secret-key-that-is-long-enough-for-hs512-algorithm-minimum-64-bytes",
+            "DifferentJwtSigningKeyForTestingWrongSignatureValidation123456789012345678",
             3600000L, 2592000000L, 7776000000L, "test-issuer");
         String tokenWithWrongSignature = wrongProvider.generateAccessToken(testUser, testPersona);
 
@@ -333,7 +334,7 @@ class JwtTokenProviderTest {
     void isTokenExpired_ExpiredToken_ShouldReturnTrue() {
         // Given - Create provider with very short expiration
         JwtTokenProvider shortExpirationProvider = new JwtTokenProvider(
-            "test-secret-key-that-is-long-enough-for-hs512-algorithm-minimum-64-bytes-required",
+            "ShortExpirationJwtSigningKeyForTestingExpiredTokens123456789012345678901",
             1L, 1L, 1L, "test-issuer"); // 1ms expiration
         String expiredToken = shortExpirationProvider.generateAccessToken(testUser, testPersona);
 
@@ -500,7 +501,7 @@ class JwtTokenProviderTest {
     void extractAllClaims_ExpiredToken_ShouldThrowExpiredJwtException() {
         // Given - Create provider with very short expiration
         JwtTokenProvider shortProvider = new JwtTokenProvider(
-            "test-secret-key-that-is-long-enough-for-hs512-algorithm-minimum-64-bytes-required",
+            "ExpiredTokenJwtSigningKeyForTestingExpirationExceptions1234567890123456789",
             1L, 1L, 1L, "test-issuer");
         String expiredToken = shortProvider.generateAccessToken(testUser, testPersona);
 
@@ -511,8 +512,8 @@ class JwtTokenProviderTest {
             Thread.currentThread().interrupt();
         }
 
-        // When & Then
-        assertThatThrownBy(() -> jwtTokenProvider.extractAllClaims(expiredToken))
+        // When & Then - Use the same provider that created the token to extract claims
+        assertThatThrownBy(() -> shortProvider.extractAllClaims(expiredToken))
                 .isInstanceOf(ExpiredJwtException.class);
     }
 

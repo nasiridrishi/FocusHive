@@ -1,37 +1,44 @@
 package com.focushive.music.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.ResponseEntity;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import java.util.Map;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
+import static org.assertj.core.api.Assertions.assertThat;
+
 class HealthControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    private HealthController healthController;
 
-    @Test
-    void healthEndpointShouldReturnOk() throws Exception {
-        mockMvc.perform(get("/api/v1/health"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
-                .andExpect(jsonPath("$.service").value("music-service"))
-                .andExpect(jsonPath("$.timestamp").exists());
+    @BeforeEach
+    void setUp() {
+        healthController = new HealthController();
     }
 
     @Test
-    void healthEndpointShouldIndicateSpotifyApiStatus() throws Exception {
-        mockMvc.perform(get("/api/v1/health"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.components.spotify").exists())
-                .andExpect(jsonPath("$.components.database").exists());
+    void healthEndpointShouldReturnOk() {
+        ResponseEntity<Map<String, Object>> response = healthController.health();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("status")).isEqualTo("UP");
+        assertThat(response.getBody().get("service")).isEqualTo("music-service");
+        assertThat(response.getBody().get("timestamp")).isNotNull();
+    }
+
+    @Test
+    void healthEndpointShouldIndicateSpotifyApiStatus() {
+        ResponseEntity<Map<String, Object>> response = healthController.health();
+
+        assertThat(response.getBody()).isNotNull();
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> components = (Map<String, String>) response.getBody().get("components");
+
+        assertThat(components).isNotNull();
+        assertThat(components.get("spotify")).isEqualTo("UP");
+        assertThat(components.get("database")).isEqualTo("UP");
     }
 }
