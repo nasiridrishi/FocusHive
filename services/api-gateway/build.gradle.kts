@@ -51,8 +51,8 @@ dependencies {
     implementation("redis.clients:jedis")
     
     // Rate Limiting - Bucket4j with Redis
-    implementation("com.bucket4j:bucket4j-redis:8.7.0")
-    implementation("com.bucket4j:bucket4j-core:8.7.0")
+    implementation("com.bucket4j:bucket4j-redis:8.10.1")
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
     
     // Spring Cloud LoadBalancer
     implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
