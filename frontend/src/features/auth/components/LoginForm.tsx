@@ -2,22 +2,28 @@ import {useEffect, useRef, useState} from 'react'
 import {Alert, Box, IconButton, InputAdornment, Link, TextField, Typography} from '@mui/material'
 import {Email, Lock, Login as LoginIcon, Visibility, VisibilityOff} from '@mui/icons-material'
 import {useNavigate} from 'react-router-dom'
-import {Controller, useForm} from 'react-hook-form'
+import {Controller, useForm, SubmitHandler} from 'react-hook-form'
 import {yupResolver} from '@hookform/resolvers/yup'
-import {LoginRequest} from '@shared/types'
+import {LoginRequest} from '@/contracts/auth'
 import {LoadingButton} from '@shared/components/loading'
 import {FormWithLoading} from '../../../components/Loading'
-import {loginSchema} from '@shared/validation/schemas'
+import {loginSchema} from '@/shared/validation/schemas'
 import {useTranslation} from '@shared/components/i18n'
 import ValidationSummary from '@shared/components/ValidationSummary'
+import {Logo} from '@shared/components/Logo'
+import * as yup from 'yup'
 
 interface LoginFormProps {
   onSubmit: (credentials: LoginRequest) => Promise<void>
   isLoading?: boolean
   error?: string | null
+  onErrorClear?: () => void
 }
 
-export default function LoginForm({onSubmit, isLoading = false, error}: LoginFormProps) {
+// Define form data type from schema
+type LoginFormData = yup.InferType<typeof loginSchema>;
+
+export default function LoginForm({onSubmit, isLoading = false, error, onErrorClear}: LoginFormProps) {
   const navigate = useNavigate()
   const {t} = useTranslation('auth')
   const [showPassword, setShowPassword] = useState(false)
@@ -27,8 +33,8 @@ export default function LoginForm({onSubmit, isLoading = false, error}: LoginFor
     control,
     handleSubmit,
     formState: {errors, isSubmitted}
-  } = useForm<LoginRequest>({
-    resolver: yupResolver(loginSchema),
+  } = useForm<LoginFormData>({
+    resolver: yupResolver(loginSchema) as any,
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -37,9 +43,14 @@ export default function LoginForm({onSubmit, isLoading = false, error}: LoginFor
     }
   })
 
-  const onFormSubmit = async (data: LoginRequest) => {
+  const onFormSubmit: SubmitHandler<LoginFormData> = async (data) => {
     try {
-      await onSubmit(data)
+      // Convert form data to LoginRequest if needed
+      const loginData: LoginRequest = {
+        email: data.email,
+        password: data.password
+      };
+      await onSubmit(loginData)
     } catch {
       // Error handling is done by parent component
       // console.error('Login form submission error:', err);
@@ -56,6 +67,14 @@ export default function LoginForm({onSubmit, isLoading = false, error}: LoginFor
       emailInputRef.current.focus()
     }
   }, [isLoading])
+
+  // Clear errors when user starts typing
+  const handleFieldChange = (onChange: any) => (event: any) => {
+    if (error && onErrorClear) {
+      onErrorClear()
+    }
+    onChange(event)
+  }
 
   return (
       <FormWithLoading
@@ -74,6 +93,11 @@ export default function LoginForm({onSubmit, isLoading = false, error}: LoginFor
           }}
       >
         <Box component="form" onSubmit={handleSubmit(onFormSubmit)} noValidate>
+          {/* Logo */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Logo variant="full" height={48} />
+          </Box>
+          
           <Typography
               variant="h4"
               component="h1"
@@ -111,6 +135,7 @@ export default function LoginForm({onSubmit, isLoading = false, error}: LoginFor
               render={({field, fieldState}) => (
                   <TextField
                       {...field}
+                      onChange={handleFieldChange(field.onChange)}
                       fullWidth
                       id="email"
                       label={t('login.email')}

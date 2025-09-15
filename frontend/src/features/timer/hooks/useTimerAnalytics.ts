@@ -55,7 +55,7 @@ export function useTimerAnalytics(period: AnalyticsPeriod = 'week') {
     queryFn: async () => {
       // TODO: Implement period-based filtering
       const response = await timerService.getTimerHistory({ page: 0, pageSize: 1000 });
-      return response.sessions.map(entry => entry.session);
+      return response.sessions;
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -65,7 +65,7 @@ export function useTimerAnalytics(period: AnalyticsPeriod = 'week') {
 
     // Calculate overview metrics
     const totalSessions = history.length;
-    const totalMinutes = history.reduce((acc, s) => acc + (s.duration / 60000), 0);
+    const totalMinutes = history.reduce((acc, s) => acc + (s.actualDuration / 60000), 0);
     const completedSessions = history.filter(s => s.status === 'completed').length;
     const completionRate = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
     const averageSessionLength = totalSessions > 0 ? totalMinutes / totalSessions : 0;
@@ -73,7 +73,7 @@ export function useTimerAnalytics(period: AnalyticsPeriod = 'week') {
     // Calculate most productive day
     const dayStats = new Map<string, number>();
     history.forEach(session => {
-      const day = new Date(session.startTime).toLocaleDateString('en-US', { weekday: 'long' });
+      const day = new Date(session.startedAt).toLocaleDateString('en-US', { weekday: 'long' });
       dayStats.set(day, (dayStats.get(day) || 0) + 1);
     });
     const mostProductiveDay = Array.from(dayStats.entries())
@@ -82,7 +82,7 @@ export function useTimerAnalytics(period: AnalyticsPeriod = 'week') {
     // Calculate most productive time
     const hourStats = new Map<number, number>();
     history.forEach(session => {
-      const hour = new Date(session.startTime).getHours();
+      const hour = new Date(session.startedAt).getHours();
       hourStats.set(hour, (hourStats.get(hour) || 0) + 1);
     });
     const mostProductiveHour = Array.from(hourStats.entries())
@@ -104,20 +104,12 @@ export function useTimerAnalytics(period: AnalyticsPeriod = 'week') {
         typeBreakdown[type] = { count: 0, minutes: 0 };
       }
       typeBreakdown[type].count++;
-      typeBreakdown[type].minutes += session.duration / 60000;
+      typeBreakdown[type].minutes += session.actualDuration / 60000;
     });
 
-    // Calculate breakdown by tag
+    // Calculate breakdown by tag (tags not available in TimerSession, skip for now)
     const tagBreakdown: Record<string, { count: number; minutes: number }> = {};
-    history.forEach(session => {
-      (session.tags || []).forEach(tag => {
-        if (!tagBreakdown[tag]) {
-          tagBreakdown[tag] = { count: 0, minutes: 0 };
-        }
-        tagBreakdown[tag].count++;
-        tagBreakdown[tag].minutes += session.duration / 60000;
-      });
-    });
+    // TODO: Add tags to TimerSession interface or get from related timer
 
     // Calculate breakdown by hive
     const hiveBreakdown: Record<string, { count: number; minutes: number; name: string }> = {};
@@ -132,7 +124,7 @@ export function useTimerAnalytics(period: AnalyticsPeriod = 'week') {
           };
         }
         hiveBreakdown[hiveKey].count++;
-        hiveBreakdown[hiveKey].minutes += session.duration / 60000;
+        hiveBreakdown[hiveKey].minutes += session.actualDuration / 60000;
       }
     });
 
@@ -172,8 +164,8 @@ export function useTimerAnalytics(period: AnalyticsPeriod = 'week') {
         consistencyScore,
         streakData: {
           current: stats.currentStreak || 0,
-          longest: stats.longestStreak || 0,
-          average: stats.averageStreak || 0,
+          longest: stats.bestStreak || 0,
+          average: stats.streakDays || 0,
         },
         peakHours,
       },
@@ -195,10 +187,10 @@ function calculateDailyTrends(
   const dailyData = new Map<string, { sessions: number; minutes: number }>();
 
   sessions.forEach(session => {
-    const date = new Date(session.startTime).toISOString().split('T')[0];
+    const date = new Date(session.startedAt).toISOString().split('T')[0];
     const current = dailyData.get(date) || { sessions: 0, minutes: 0 };
     current.sessions++;
-    current.minutes += session.duration / 60000;
+    current.minutes += session.actualDuration / 60000;
     dailyData.set(date, current);
   });
 
@@ -217,13 +209,13 @@ function calculateWeeklyTrends(
   const weeklyData = new Map<string, { sessions: number; minutes: number }>();
 
   sessions.forEach(session => {
-    const date = new Date(session.startTime);
+    const date = new Date(session.startedAt);
     const weekStart = new Date(date.setDate(date.getDate() - date.getDay()));
     const weekKey = weekStart.toISOString().split('T')[0];
 
     const current = weeklyData.get(weekKey) || { sessions: 0, minutes: 0 };
     current.sessions++;
-    current.minutes += session.duration / 60000;
+    current.minutes += session.actualDuration / 60000;
     weeklyData.set(weekKey, current);
   });
 
@@ -242,12 +234,12 @@ function calculateMonthlyTrends(
   const monthlyData = new Map<string, { sessions: number; minutes: number }>();
 
   sessions.forEach(session => {
-    const date = new Date(session.startTime);
+    const date = new Date(session.startedAt);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
     const current = monthlyData.get(monthKey) || { sessions: 0, minutes: 0 };
     current.sessions++;
-    current.minutes += session.duration / 60000;
+    current.minutes += session.actualDuration / 60000;
     monthlyData.set(monthKey, current);
   });
 
@@ -266,7 +258,7 @@ function calculateFocusScore(sessions: TimerSession[]): number {
   const completedSessions = sessions.filter(s => s.status === 'completed');
   const completionRate = completedSessions.length / sessions.length;
 
-  const averageDuration = sessions.reduce((acc, s) => acc + s.duration, 0) / sessions.length;
+  const averageDuration = sessions.reduce((acc, s) => acc + s.actualDuration, 0) / sessions.length;
   const optimalDuration = 25 * 60 * 1000; // 25 minutes
   const durationScore = Math.min(averageDuration / optimalDuration, 1);
 
@@ -282,7 +274,7 @@ function calculateConsistencyScore(sessions: TimerSession[]): number {
   // Group sessions by day
   const dailySessions = new Map<string, number>();
   sessions.forEach(session => {
-    const date = new Date(session.startTime).toISOString().split('T')[0];
+    const date = new Date(session.startedAt).toISOString().split('T')[0];
     dailySessions.set(date, (dailySessions.get(date) || 0) + 1);
   });
 

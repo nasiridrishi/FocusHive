@@ -264,6 +264,7 @@ vi.mock('@mui/material', async () => {
   return {
     ...actual,
     useMediaQuery: vi.fn(() => false), // Default to false, can be overridden in tests
+    Grid2: actual.Grid2 || actual.Grid, // Ensure Grid2 is available (fallback to Grid if needed)
   };
 });
 

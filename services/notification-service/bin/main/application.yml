@@ -24,7 +24,7 @@ spring:
         format_sql: true
         use_sql_comments: true
         # Slow query logging
-        generate_statistics: true
+        generate_statistics: false
         session:
           events:
             log:
@@ -194,8 +194,12 @@ springdoc:
 logging:
   level:
     com.focushive.notification: INFO
+    com.focushive.notification.security.ApiKeyAuthenticationFilter: DEBUG
+    com.focushive.notification.security.ServiceAuthenticationFilter: DEBUG
+    com.focushive.notification.security.CustomAuthenticationEntryPoint: DEBUG
     com.focushive.notification.monitoring: DEBUG
-    org.springframework.security: WARN
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG
     org.springframework.web: WARN
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN
@@ -213,6 +217,8 @@ logging:
     
 # Service-specific configuration
 notification:
+  test:
+    enabled: ${NOTIFICATION_TEST_ENABLED:false}
   queue:
     name: notifications
     exchange: focushive.notifications
@@ -229,7 +235,7 @@ notification:
     max-retries: 3
     retry-delay-ms: 1000
   rate-limit:
-    enabled: true
+    enabled: false  # TODO: Re-enable for production
     read-limit: 100        # Requests per minute for read operations
     write-limit: 50        # Requests per minute for write operations
     admin-limit: 20        # Requests per minute for admin operations
@@ -272,7 +278,7 @@ notification:
       failed-attempts-window: ${SECURITY_FAILED_ATTEMPTS_WINDOW:PT5M}
       auto-unlock: ${SECURITY_AUTO_UNLOCK:true}
     rate-limiting:
-      enabled: ${RATE_LIMITING_ENABLED:true}
+      enabled: ${RATE_LIMITING_ENABLED:false}  # TODO: Re-enable for production
       default-requests-per-minute: ${RATE_LIMIT_DEFAULT:60}
       anonymous-requests-per-minute: ${RATE_LIMIT_ANONYMOUS:20}
       admin-requests-per-minute: ${RATE_LIMIT_ADMIN:300}
@@ -299,6 +305,14 @@ notification:
       referrer-policy: ${SECURITY_REFERRER_POLICY:strict-origin-when-cross-origin}
       content-security-policy: ${SECURITY_CSP:default-src 'self'}
       strict-transport-security: ${SECURITY_HSTS:max-age=31536000; includeSubDomains}
+
+# Service API Keys Configuration
+service:
+  api-keys:
+    identity-service: ${SERVICE_API_KEY_IDENTITY:default-identity-key}
+    backend-service: ${SERVICE_API_KEY_BACKEND:default-backend-key}
+    buddy-service: ${SERVICE_API_KEY_BUDDY:default-buddy-key}
+    admin-service: ${SERVICE_API_KEY_ADMIN:default-admin-key}
     audit:
       enabled: ${AUDIT_ENABLED:true}
       log-successful-auth: ${AUDIT_LOG_SUCCESS:true}

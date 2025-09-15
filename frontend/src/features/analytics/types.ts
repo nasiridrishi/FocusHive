@@ -207,24 +207,6 @@ export interface TaskCompletionRateProps {
   variant?: string;
 }
 
-export interface ProductivityChartProps {
-  data: ChartDataPoint[];
-  loading?: boolean;
-  title?: string;
-  height?: number;
-  timeRange?: AnalyticsTimeRange;
-  config?: {
-    title?: string;
-    height?: number;
-    showLegend?: boolean;
-    animated?: boolean;
-    type?: string;
-    showGrid?: boolean;
-    responsive?: boolean;
-    xAxisLabel?: string;
-  };
-  error?: string;
-}
 
 export interface MemberEngagementProps {
   data: MemberEngagementData[];

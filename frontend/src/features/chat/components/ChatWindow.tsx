@@ -24,7 +24,9 @@ import {useChat} from '../../../shared/contexts/ChatContext'
 import {ConnectionState, useWebSocket} from '../../../shared/contexts/WebSocketContext'
 import {ChatMessage} from '../../../shared/types/chat'
 
-const ChatContainer = styled(Paper)<{ isFullscreen: boolean; isMinimized: boolean }>(
+const ChatContainer = styled(Paper, {
+  shouldForwardProp: (prop) => prop !== 'isFullscreen' && prop !== 'isMinimized',
+})<{ isFullscreen: boolean; isMinimized: boolean }>(
     ({theme, isFullscreen, isMinimized}) => ({
       display: 'flex',
       flexDirection: 'column',
@@ -38,15 +40,17 @@ const ChatContainer = styled(Paper)<{ isFullscreen: boolean; isMinimized: boolea
       borderRadius: isFullscreen ? 0 : theme.shape.borderRadius * 2,
       overflow: 'hidden',
       border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-      background: `linear-gradient(135deg, 
-      ${alpha(theme.palette.background.paper, 0.95)} 0%, 
+      background: `linear-gradient(135deg,
+      ${alpha(theme.palette.background.paper, 0.95)} 0%,
       ${alpha(theme.palette.background.default, 0.98)} 100%)`,
       backdropFilter: 'blur(10px)',
       transition: 'all 0.3s ease-in-out',
     })
 )
 
-const ChatHeader = styled(Box)<{ isMinimized: boolean }>(({theme, isMinimized}) => ({
+const ChatHeader = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isMinimized',
+})<{ isMinimized: boolean }>(({theme, isMinimized}) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -63,7 +67,9 @@ const HeaderControls = styled(Box)({
   gap: 4,
 })
 
-const ConnectionIndicator = styled(Chip)<{ connectionState: ConnectionState }>(
+const ConnectionIndicator = styled(Chip, {
+  shouldForwardProp: (prop) => prop !== 'connectionState',
+})<{ connectionState: ConnectionState }>(
     ({theme, connectionState}) => {
       const getColor = (): string => {
         switch (connectionState) {
@@ -336,7 +342,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                     onReplyMessage={handleReplyMessage}
                     onReaction={handleReaction}
                     onRemoveReaction={handleRemoveReaction}
-                    typingUsers={typingUsers}
+                    typingUsers={typingUsers.map(tu => ({ 
+                      userId: tu.userId, 
+                      user: { name: tu.user.name || tu.user.displayName || tu.user.username || 'User' } 
+                    }))}
                 />
 
                 <MessageInput

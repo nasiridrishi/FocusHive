@@ -34,17 +34,7 @@ export function useTimerTemplates() {
     if (Array.isArray(templatesResponse)) return templatesResponse;
 
     // Handle TimerTemplatesResponse structure
-    const allTemplates: TimerTemplate[] = [];
-    if (templatesResponse.builtIn) allTemplates.push(...templatesResponse.builtIn);
-    if (templatesResponse.custom) allTemplates.push(...templatesResponse.custom);
-    if (templatesResponse.recent) allTemplates.push(...templatesResponse.recent);
-
-    // Remove duplicates based on id
-    const uniqueTemplates = Array.from(
-      new Map(allTemplates.map(t => [t.id, t])).values()
-    );
-
-    return uniqueTemplates;
+    return templatesResponse.templates || [];
   }, [templatesResponse]);
 
   return {
@@ -179,11 +169,10 @@ export function useStartTimerFromTemplate() {
 export function useFavoriteTemplates() {
   const { templates, isLoading } = useTimerTemplates();
 
-  const favoriteTemplates = templates.filter((t: TimerTemplate) => t.isFavorite);
+  // Use isPublic as proxy for favorite/popular templates
+  const favoriteTemplates = templates.filter((t: TimerTemplate) => t.isPublic);
   const recentTemplates = [...templates]
-    .sort((a: TimerTemplate, b: TimerTemplate) =>
-      new Date(b.lastUsedAt || 0).getTime() - new Date(a.lastUsedAt || 0).getTime()
-    )
+    .sort((a: TimerTemplate, b: TimerTemplate) => (b.usageCount || 0) - (a.usageCount || 0))
     .slice(0, 5);
 
   return {
@@ -194,40 +183,40 @@ export function useFavoriteTemplates() {
 }
 
 /**
- * Hook for toggling favorite status of a template
+ * Hook for toggling public status of a template (as proxy for favorite)
  */
 export function useToggleTemplateFavorite() {
   const updateTemplate = useUpdateTimerTemplate();
 
   return useMutation({
-    mutationFn: ({ templateId, isFavorite }: { templateId: number; isFavorite: boolean }) =>
+    mutationFn: ({ templateId, isPublic }: { templateId: number; isPublic: boolean }) =>
       updateTemplate.mutateAsync({
         id: templateId,
-        updates: { isFavorite }
+        updates: { isPublic }
       }),
   });
 }
 
 /**
- * Hook for template categories
+ * Hook for template categories (using preset as category)
  */
 export function useTemplateCategories() {
   const { templates } = useTimerTemplates();
 
-  // Extract unique categories from templates
+  // Use preset as category
   const categories = Array.from(
-    new Set(templates.map((t: TimerTemplate) => t.category).filter(Boolean))
+    new Set(templates.map((t: TimerTemplate) => t.preset).filter(Boolean))
   );
 
-  const templatesByCategory = categories.reduce((acc, category) => {
-    acc[category!] = templates.filter((t: TimerTemplate) => t.category === category);
+  const templatesByCategory = categories.reduce((acc, preset) => {
+    acc[preset!] = templates.filter((t: TimerTemplate) => t.preset === preset);
     return acc;
   }, {} as Record<string, TimerTemplate[]>);
 
   return {
     categories,
     templatesByCategory,
-    uncategorized: templates.filter((t: TimerTemplate) => !t.category),
+    uncategorized: templates.filter((t: TimerTemplate) => t.preset === 'custom'),
   };
 }
 

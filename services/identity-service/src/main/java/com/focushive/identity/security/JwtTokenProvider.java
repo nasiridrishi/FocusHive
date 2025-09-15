@@ -79,8 +79,8 @@ public class JwtTokenProvider {
         claims.put("personaName", activePersona.getName());
         claims.put("personaType", activePersona.getType().name());
         claims.put("type", "access");
-        
-        return createToken(claims, user.getUsername(), accessTokenExpirationMs);
+
+        return createToken(claims, user.getId().toString(), accessTokenExpirationMs);
     }
     
     /**
@@ -90,8 +90,8 @@ public class JwtTokenProvider {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId().toString());
         claims.put("type", "refresh");
-        
-        return createToken(claims, user.getUsername(), refreshTokenExpirationMs);
+
+        return createToken(claims, user.getId().toString(), refreshTokenExpirationMs);
     }
     
     /**
@@ -102,8 +102,8 @@ public class JwtTokenProvider {
         claims.put("userId", user.getId().toString());
         claims.put("type", "refresh");
         claims.put("rememberMe", true);
-        
-        return createToken(claims, user.getUsername(), rememberMeTokenExpirationMs);
+
+        return createToken(claims, user.getId().toString(), rememberMeTokenExpirationMs);
     }
     
     /**

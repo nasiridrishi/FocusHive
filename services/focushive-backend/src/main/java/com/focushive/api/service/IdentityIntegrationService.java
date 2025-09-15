@@ -2,6 +2,7 @@ package com.focushive.api.service;
 
 import com.focushive.api.client.IdentityServiceClient;
 import com.focushive.api.dto.identity.*;
+import com.focushive.api.security.JwtValidator;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -9,6 +10,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -53,47 +55,63 @@ public class IdentityIntegrationService {
      * @param token Bearer token to validate
      * @return Token validation response
      */
+    /**
+     * Token validation is now done locally using JwtValidator.
+     * This method wraps the local validation in the same response format for compatibility.
+     */
+    @Autowired
+    private JwtValidator jwtValidator;
+
     @Cacheable(value = "identity-validation",
                key = "#token.hashCode()",
                unless = "#result == null or !#result.valid",
                condition = "#token != null and #token.startsWith('Bearer ')")
-    @CircuitBreaker(name = IDENTITY_SERVICE, fallbackMethod = "validateTokenAsyncFallback")
-    @Retry(name = IDENTITY_SERVICE)
-    @TimeLimiter(name = IDENTITY_SERVICE)
-    @RateLimiter(name = IDENTITY_SERVICE)
-    @Bulkhead(name = IDENTITY_SERVICE)
     public CompletableFuture<TokenValidationResponse> validateTokenAsync(String token) {
-        log.debug("Validating token with Identity Service (async): {}", token.substring(0, 20) + "...");
+        log.debug("Validating token locally using JwtValidator");
 
         return CompletableFuture.supplyAsync(() -> {
             long startTime = System.nanoTime();
             try {
-                TokenValidationResponse response = identityServiceClient.validateToken(token);
+                // Strip "Bearer " prefix if present
+                String actualToken = token.startsWith("Bearer ")
+                    ? token.substring(7)
+                    : token;
+
+                // Use local JWT validation
+                JwtValidator.ValidationResult result = jwtValidator.validateToken(actualToken);
+
                 long endTime = System.nanoTime();
                 long duration = (endTime - startTime) / 1_000_000; // Convert to milliseconds
 
-                log.debug("Token validation completed in {}ms, valid: {}", duration, response.isValid());
+                // Convert to expected response format
+                TokenValidationResponse response = TokenValidationResponse.builder()
+                    .valid(result.isValid())
+                    .userId(result.getUserId())
+                    .email(result.getEmail())
+                    .username(result.getSubject())  // JWT 'sub' claim maps to username
+                    .errorMessage(result.getError())
+                    .build();
+
+                log.debug("Token validation completed locally in {}ms, valid: {}", duration, response.isValid());
 
                 // Log performance metric for monitoring
-                if (duration > 50) {
-                    log.warn("Token validation exceeded 50ms threshold: {}ms", duration);
+                if (duration > 10) { // Local validation should be much faster
+                    log.warn("Local token validation exceeded 10ms threshold: {}ms", duration);
                 }
 
                 return response;
             } catch (Exception e) {
                 long endTime = System.nanoTime();
                 long duration = (endTime - startTime) / 1_000_000;
-                log.error("Token validation failed after {}ms: {}", duration, e.getMessage());
+                log.error("Local token validation failed after {}ms: {}", duration, e.getMessage());
                 throw e;
             }
         });
     }
 
     /**
-     * Synchronous token validation with caching and resilience patterns.
-     * Uses the async method internally but blocks for compatibility.
+     * Synchronous token validation using local JwtValidator.
      */
-    @CircuitBreaker(name = IDENTITY_SERVICE, fallbackMethod = "validateTokenFallback")
     public TokenValidationResponse validateToken(String token) {
         try {
             return validateTokenAsync(token).get();
@@ -221,7 +239,9 @@ public class IdentityIntegrationService {
 
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return identityServiceClient.checkHealth();
+                ActuatorHealthResponse actuatorHealth = identityServiceClient.checkHealth();
+                // Convert to simplified HealthResponse for backward compatibility
+                return actuatorHealth.toSimpleHealthResponse();
             } catch (Exception e) {
                 log.error("Identity Service health check failed: {}", e.getMessage());
                 throw e;

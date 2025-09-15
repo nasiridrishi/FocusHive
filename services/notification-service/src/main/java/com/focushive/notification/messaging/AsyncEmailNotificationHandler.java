@@ -147,14 +147,34 @@ public class AsyncEmailNotificationHandler {
         Map<String, Object> variables = message.getTemplateVariables() != null ? 
                 new HashMap<>(message.getTemplateVariables()) : null;
         
+        // Determine recipient email
+        String recipientEmail = message.getEmailTo();
+        if (recipientEmail == null && message.getData() != null) {
+            // Try to get email from message data
+            recipientEmail = (String) message.getData().get("userEmail");
+        }
+        
+        // Build email subject
+        String subject = message.getEmailSubject();
+        if (subject == null) {
+            subject = message.getTitle() != null ? message.getTitle() : "Notification from FocusHive";
+        }
+        
+        // Build email content
+        String content = message.getMessage();
+        if (content == null && message.getType() == com.focushive.notification.entity.NotificationType.PASSWORD_RESET) {
+            // Generate default password reset content
+            content = generatePasswordResetContent(variables);
+        }
+        
         return EmailRequest.builder()
-                .to(message.getEmailTo())
-                .subject(message.getEmailSubject() != null ? message.getEmailSubject() : message.getTitle())
-                .htmlContent(message.getMessage())
+                .to(recipientEmail)
+                .subject(subject)
+                .htmlContent(content)
                 .templateName(message.getTemplateId() != null ? message.getTemplateId().toString() : null)
                 .variables(variables)
                 .priority(determinePriority(message))
-                .userId(Long.parseLong(message.getUserId())) // Convert string to Long
+                .userId(convertUserIdToLong(message.getUserId())) // Safe UUID to Long conversion
                 .notificationType(message.getType() != null ? message.getType().name() : "SYSTEM_NOTIFICATION")
                 .build();
     }
@@ -210,6 +230,53 @@ public class AsyncEmailNotificationHandler {
      */
     private boolean isEmailNotification(NotificationMessage message) {
         return message.getEmailTo() != null && !message.getEmailTo().trim().isEmpty();
+    }
+
+    /**
+     * Generate default password reset email content.
+     */
+    private String generatePasswordResetContent(Map<String, Object> variables) {
+        String resetUrl = variables != null ? (String) variables.get("resetUrl") : "#";
+        String userName = variables != null ? (String) variables.get("userName") : "User";
+        
+        return String.format(
+            "<html><body>" +
+            "<h2>Password Reset Request</h2>" +
+            "<p>Hello %s,</p>" +
+            "<p>We received a request to reset your FocusHive password.</p>" +
+            "<p><a href='%s' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Reset Password</a></p>" +
+            "<p>This link will expire in 30 minutes for security reasons.</p>" +
+            "<p>If you didn't request a password reset, please ignore this email.</p>" +
+            "<p>Best regards,<br/>The FocusHive Team</p>" +
+            "</body></html>",
+            userName, resetUrl
+        );
+    }
+
+    /**
+     * Convert UUID string to Long for backwards compatibility.
+     * Uses UUID hashCode as a safe conversion method.
+     */
+    private Long convertUserIdToLong(String userId) {
+        if (userId == null) {
+            return null;
+        }
+        
+        try {
+            // First try parsing as Long (for numeric user IDs)
+            return Long.parseLong(userId);
+        } catch (NumberFormatException e) {
+            // If it's a UUID, convert using hashCode to ensure consistency
+            try {
+                java.util.UUID uuid = java.util.UUID.fromString(userId);
+                // Use the most significant bits as Long (positive value)
+                return Math.abs(uuid.getMostSignificantBits());
+            } catch (IllegalArgumentException uuidEx) {
+                // If neither numeric nor UUID, use string hashCode
+                log.warn("Unable to parse userId as Long or UUID, using hashCode: {}", userId);
+                return (long) Math.abs(userId.hashCode());
+            }
+        }
     }
 
     /**

@@ -1,16 +1,24 @@
 package com.focushive.api.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Logger;
 import feign.Request;
 import feign.RequestInterceptor;
 import feign.Retryer;
+import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.cloud.openfeign.support.SpringDecoder;
+import org.springframework.cloud.openfeign.support.SpringEncoder;
+import org.springframework.cloud.openfeign.support.ResponseEntityDecoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import feign.codec.Encoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -23,10 +31,10 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Configuration
-@Profile("!test") // Don't load this in test profile
-@RequiredArgsConstructor
 public class FeignConfiguration {
-    
+
+    private final ObjectFactory<HttpMessageConverters> messageConverters;
+
     @Value("${spring.application.name}")
     private String serviceName;
     
@@ -42,10 +50,14 @@ public class FeignConfiguration {
     @Bean
     public RequestInterceptor serviceAuthInterceptor() {
         return requestTemplate -> {
+            // CRITICAL: Add Content-Type headers to prevent 415 errors
+            requestTemplate.header("Content-Type", "application/json");
+            requestTemplate.header("Accept", "application/json");
+
             // Add service identification headers
             requestTemplate.header("X-Service-Name", serviceName);
             requestTemplate.header("X-Service-Version", serviceVersion);
-            
+
             // Add service-to-service API key if configured
             if (serviceApiKey != null && !serviceApiKey.trim().isEmpty()) {
                 requestTemplate.header("X-API-Key", serviceApiKey);
@@ -84,7 +96,30 @@ public class FeignConfiguration {
     public ErrorDecoder errorDecoder() {
         return new IdentityServiceErrorDecoder();
     }
-    
+
+    @Autowired
+    public FeignConfiguration(ObjectFactory<HttpMessageConverters> messageConverters) {
+        this.messageConverters = messageConverters;
+    }
+
+    /**
+     * Provide the standard Spring decoder.
+     * This bean is required for Feign clients to decode HTTP responses.
+     */
+    @Bean
+    public Decoder decoder() {
+        return new ResponseEntityDecoder(new SpringDecoder(messageConverters));
+    }
+
+    /**
+     * Provide the standard Spring encoder.
+     * This bean is required for Feign clients to encode HTTP requests.
+     */
+    @Bean
+    public Encoder encoder() {
+        return new SpringEncoder(messageConverters);
+    }
+
     /**
      * Custom retry configuration for Identity Service calls.
      */

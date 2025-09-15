@@ -32,9 +32,12 @@ const mockPublicHives: Hive[] = [
       allowChat: true,
       allowVoice: false,
       requireApproval: false,
-      focusMode: 'continuous',
+      focusMode: 'TIMEBLOCK',
       defaultSessionLength: 90,
       maxSessionLength: 180,
+      privacyLevel: 'PUBLIC',
+      category: 'WORK',
+      maxParticipants: 20
     },
     currentMembers: 18,
     memberCount: 18,
@@ -68,9 +71,12 @@ const mockPublicHives: Hive[] = [
       allowChat: true,
       allowVoice: false,
       requireApproval: true,
-      focusMode: 'pomodoro',
+      focusMode: 'POMODORO',
       defaultSessionLength: 25,
       maxSessionLength: 120,
+      privacyLevel: 'PRIVATE',
+      category: 'STUDY',
+      maxParticipants: 20
     },
     currentMembers: 14,
     memberCount: 14,
@@ -104,9 +110,12 @@ const mockPublicHives: Hive[] = [
       allowChat: true,
       allowVoice: true,
       requireApproval: false,
-      focusMode: 'flexible',
+      focusMode: 'FREEFORM',
       defaultSessionLength: 60,
       maxSessionLength: 240,
+      privacyLevel: 'PUBLIC',
+      category: 'SOCIAL',
+      maxParticipants: 20
     },
     currentMembers: 32,
     memberCount: 32,
@@ -140,9 +149,12 @@ const mockPublicHives: Hive[] = [
       allowChat: true,
       allowVoice: false,
       requireApproval: false,
-      focusMode: 'continuous',
+      focusMode: 'TIMEBLOCK',
       defaultSessionLength: 45,
       maxSessionLength: 150,
+      privacyLevel: 'PUBLIC',
+      category: 'WORK',
+      maxParticipants: 20
     },
     currentMembers: 22,
     memberCount: 22,
@@ -176,9 +188,12 @@ const mockPublicHives: Hive[] = [
       allowChat: true,
       allowVoice: false,
       requireApproval: true,
-      focusMode: 'flexible',
+      focusMode: 'FREEFORM',
       defaultSessionLength: 90,
       maxSessionLength: 300,
+      privacyLevel: 'PRIVATE',
+      category: 'SOCIAL',
+      maxParticipants: 20
     },
     currentMembers: 11,
     memberCount: 11,
@@ -200,9 +215,11 @@ export const DiscoverPage: React.FC = () => {
 
   // Simulate API call
   useEffect(() => {
-    setTimeout(() => {
-      setHives(mockPublicHives)
-      // Mock some members for each hive
+    let cancelled = false
+
+    const loadData = () => {
+      if (cancelled) return
+
       const mockMembersData: Record<string, HiveMember[]> = {}
       mockPublicHives.forEach(hive => {
         mockMembersData[hive.id] = [
@@ -223,28 +240,53 @@ export const DiscoverPage: React.FC = () => {
           },
         ]
       })
+
+      setHives(mockPublicHives)
       setMembers(mockMembersData)
       setIsLoading(false)
-    }, 800)
+    }
+
+    const timer = setTimeout(loadData, 800)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [])
 
   const handleJoinHive = async (hiveId: string, message?: string) => {
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    // Show success message or update UI
-    toast.success(`Successfully ${message ? 'requested to join' : 'joined'} hive!`)
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        // Show success message or update UI
+        toast.success(`Successfully ${message ? 'requested to join' : 'joined'} hive!`)
+        resolve()
+      }, 1500)
+    })
   }
 
   const handleEnterHive = (hiveId: string): void => {
-    // Navigate to hive page
-    window.location.href = `/hive/${hiveId}`
+    try {
+      // Navigate to hive page
+      if (window.location) {
+        window.location.href = `/hive/${hiveId}`
+      }
+    } catch (error) {
+      console.error('Navigation error:', error)
+    }
   }
 
-  const handleShareHive = (hiveId: string): void => {
-    // Open share dialog or copy link
-    navigator.clipboard.writeText(`${window.location.origin}/hive/${hiveId}`)
-    toast.success('Hive link copied to clipboard!')
+  const handleShareHive = async (hiveId: string): Promise<void> => {
+    try {
+      // Open share dialog or copy link
+      if (navigator.clipboard && window.location) {
+        await navigator.clipboard.writeText(`${window.location.origin}/hive/${hiveId}`)
+        toast.success('Hive link copied to clipboard!')
+      }
+    } catch (error) {
+      console.error('Clipboard error:', error)
+      // Fallback could be implemented here
+    }
   }
 
   const handleRefresh = (): void => {
@@ -256,7 +298,7 @@ export const DiscoverPage: React.FC = () => {
   }
 
   return (
-      <Box>
+      <Box data-testid="discover-page">
         {/* Header */}
         <Box sx={{mb: 4}}>
           <Box sx={{display: 'flex', alignItems: 'center', gap: 2, mb: 2}}>

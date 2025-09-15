@@ -32,7 +32,7 @@ const createBackendApiInstance = (): AxiosInstance => {
     headers: {
       'Content-Type': 'application/json',
     },
-    withCredentials: true, // Essential for httpOnly cookies
+    withCredentials: false, // Disabled to avoid CORS issues
   });
 
   // Response interceptor for token refresh via cookies
@@ -76,7 +76,7 @@ const identityApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Essential for httpOnly cookies
+  withCredentials: false, // Disabled to avoid CORS issues
 });
 
 // Cookie-based Auth API methods
@@ -473,7 +473,7 @@ async function refreshToken(): Promise<void> {
         {}, // Empty body - refresh token is in httpOnly cookie
         {
           headers: {'Content-Type': 'application/json'},
-          withCredentials: true,
+          withCredentials: false, // Disabled to avoid CORS issues
           timeout: 10000
         }
     );

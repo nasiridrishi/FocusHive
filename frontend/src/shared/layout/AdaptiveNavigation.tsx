@@ -45,6 +45,8 @@ import {
 import {useLocation, useNavigate} from 'react-router-dom'
 import {styled} from '@mui/material/styles'
 import {useResponsive, useScrollDirection} from '../hooks'
+import {PersonaSwitcher} from '../../features/identity/components/PersonaSwitcher'
+import type {Persona} from '../../features/identity/types'
 
 // Types for navigation items
 interface NavigationItem {
@@ -66,8 +68,11 @@ interface AdaptiveNavigationProps {
     avatar?: string
     email: string
   }
+  currentPersona?: Persona | null
   onItemClick?: (item: NavigationItem) => void
   onNotificationClick?: () => void
+  onPersonaSwitch?: (persona: Persona) => void
+  onCreatePersona?: () => void
   notificationCount?: number
   isConnected?: boolean
 }
@@ -175,9 +180,12 @@ const DesktopSidebar: React.FC<{
   currentPath: string
   onItemClick: (item: NavigationItem) => void
   currentUser?: AdaptiveNavigationProps['currentUser']
+  currentPersona?: Persona | null
+  onPersonaSwitch?: (persona: Persona) => void
+  onCreatePersona?: () => void
   isOpen: boolean
   onClose: () => void
-}> = ({items, currentPath, onItemClick, currentUser, isOpen, onClose}) => {
+}> = ({items, currentPath, onItemClick, currentUser, currentPersona, onPersonaSwitch, onCreatePersona, isOpen, onClose}) => {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
 
   const toggleExpanded = (itemId: string): void => {
@@ -284,6 +292,15 @@ const DesktopSidebar: React.FC<{
             <Typography variant="caption" color="text.secondary" noWrap>
               {currentUser?.email || 'user@example.com'}
             </Typography>
+            {/* Persona Switcher */}
+            <Box sx={{ mt: 1 }}>
+              <PersonaSwitcher
+                currentPersona={currentPersona}
+                onSwitch={onPersonaSwitch}
+                onCreateNew={onCreatePersona}
+                variant="compact"
+              />
+            </Box>
           </Box>
         </SidebarHeader>
 
@@ -378,8 +395,11 @@ const AdaptiveHeader: React.FC<{
 export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({
                                                                         items,
                                                                         currentUser,
+                                                                        currentPersona,
                                                                         onItemClick,
                                                                         onNotificationClick,
+                                                                        onPersonaSwitch,
+                                                                        onCreatePersona,
                                                                         notificationCount = 0,
                                                                         isConnected = true,
                                                                       }) => {
@@ -503,6 +523,9 @@ export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({
                 currentPath={location.pathname}
                 onItemClick={handleItemClick}
                 currentUser={currentUser}
+                currentPersona={currentPersona}
+                onPersonaSwitch={onPersonaSwitch}
+                onCreatePersona={onCreatePersona}
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
             />
@@ -533,6 +556,9 @@ export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({
                     currentPath={location.pathname}
                     onItemClick={handleItemClick}
                     currentUser={currentUser}
+                    currentPersona={currentPersona}
+                    onPersonaSwitch={onPersonaSwitch}
+                    onCreatePersona={onCreatePersona}
                     isOpen={true}
                     onClose={() => setSidebarOpen(false)}
                 />

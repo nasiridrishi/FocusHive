@@ -146,6 +146,7 @@ export function AuthProvider({children}: AuthProviderProps): JSX.Element {
 
       const response = await authApiService.login(credentials);
 
+      console.log('Login response:', response);
 
       dispatch({
         type: 'AUTH_SUCCESS',

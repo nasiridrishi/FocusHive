@@ -6,46 +6,82 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
-    container_name: focushive-backend
+    image: focushive-backend:latest
+    container_name: focushive-backend-app
     restart: unless-stopped
+    # Exposed ports for testing
     ports:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/focushive
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${DB_NAME:-focushive}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-focushive}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-focushive123}
+      # Fixed Redis configuration to match application properties
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      # Also provide the data.redis format for compatibility
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      # JWT Configuration for Identity Service
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-here-should-be-at-least-256-bits-long-in-production}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
-      - IDENTITY_SERVICE_URL=${IDENTITY_SERVICE_URL:-http://identity-service:8081}
+      - JWT_ISSUER_URI=${JWT_ISSUER_URI:-https://identity.focushive.app}
+      - JWT_JWK_SET_URI=${JWT_JWK_SET_URI:-https://identity.focushive.app/.well-known/jwks.json}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=${JWT_ISSUER_URI:-https://identity.focushive.app}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=${JWT_JWK_SET_URI:-https://identity.focushive.app/.well-known/jwks.json}
+      # Use JPA auto-create for demo (Flyway migrations need cleanup)
+      - FLYWAY_ENABLED=false
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Update CORS to accept cloudflared domains
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://focushive.app,https://backend.focushive.app}
+      # Services now communicate via public URLs
+      - IDENTITY_SERVICE_URL=${IDENTITY_SERVICE_URL:-https://identity.focushive.app}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-https://notification.focushive.app}
+      - BUDDY_SERVICE_URL=${BUDDY_SERVICE_URL:-https://buddy.focushive.app}
       - JAVA_OPTS=-Xmx512m -Xms256m -XX:+UseG1GC
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      cloudflared:
+        condition: service_started
     networks:
-      - focushive-shared-network
+      - backend-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 60s
+      retries: 5
+      start_period: 90s
     volumes:
       - app-logs:/app/logs
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
+
+  # Cloudflare Tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: focushive-backend-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CF_BACKEND_TOKEN}
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD", "cloudflared", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: focushive-postgres
+    container_name: focushive-backend-postgres
     restart: unless-stopped
+    # NO EXPOSED PORTS - internal only
     environment:
       - POSTGRES_DB=${DB_NAME:-focushive}
       - POSTGRES_USER=${DB_USERNAME:-focushive}
@@ -55,7 +91,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./sql/init:/docker-entrypoint-initdb.d
     networks:
-      - focushive-shared-network
+      - backend-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-focushive} -d ${DB_NAME:-focushive}"]
       interval: 10s
@@ -66,8 +102,9 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: focushive-redis
+    container_name: focushive-backend-redis
     restart: unless-stopped
+    # NO EXPOSED PORTS - internal only
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     command: >
@@ -81,60 +118,19 @@ services:
       - redis-data:/data
       - redis-conf:/usr/local/etc/redis/
     networks:
-      - focushive-shared-network
+      - backend-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
 
-  # Identity Service (if running separately)
-  identity-service:
-    image: focushive/identity-service:latest
-    container_name: focushive-identity
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/identity
-      - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-focushive}
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-focushive123}
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-here-should-be-at-least-256-bits-long-in-production}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - focushive-shared-network
-    profiles:
-      - identity
-
-  # Nginx Reverse Proxy (for production)
-  nginx:
-    image: nginx:alpine
-    container_name: focushive-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - focushive-backend
-    networks:
-      - focushive-shared-network
-    profiles:
-      - production
-
-  # Prometheus Monitoring
+  # Prometheus Monitoring (Optional - activate with --profile monitoring)
   prometheus:
     image: prom/prometheus:latest
-    container_name: focushive-prometheus
+    container_name: focushive-backend-prometheus
     restart: unless-stopped
-    ports:
-      - "9090:9090"
+    # NO EXPOSED PORTS - access via cloudflared if needed
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -146,20 +142,20 @@ services:
       - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
     networks:
-      - focushive-shared-network
+      - backend-network
     profiles:
       - monitoring
 
-  # Grafana Dashboard
+  # Grafana Dashboard (Optional - activate with --profile monitoring)
   grafana:
     image: grafana/grafana:latest
-    container_name: focushive-grafana
+    container_name: focushive-backend-grafana
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    # NO EXPOSED PORTS - access via cloudflared if needed
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=https://grafana-backend.focushive.app
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
@@ -167,7 +163,7 @@ services:
     depends_on:
       - prometheus
     networks:
-      - focushive-shared-network
+      - backend-network
     profiles:
       - monitoring
 
@@ -189,10 +185,8 @@ volumes:
   grafana-data:
     driver: local
 
+# Isolated network for backend service only
 networks:
-  focushive-shared-network:
+  backend-network:
     driver: bridge
-    name: focushive-shared-network
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    name: focushive-backend-network

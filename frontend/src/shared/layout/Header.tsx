@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material'
 import {useNavigate} from 'react-router-dom'
 import {CompactLanguageSwitcher, useTranslation} from '../components/i18n'
+import {LogoLink} from '../components/Logo'
 
 interface HeaderProps {
   drawerWidth: number
@@ -123,18 +124,15 @@ export const Header: React.FC<HeaderProps> = ({
           </IconButton>
 
           {/* Logo/Title */}
-          <Typography
-              variant="h6"
-              noWrap
-              component="div"
-              sx={{
-                fontWeight: 600,
-                color: 'primary.main',
-                display: {xs: 'none', sm: 'block'},
-              }}
-          >
-            {t('app.name')}
-          </Typography>
+          <LogoLink
+            variant="full"
+            height={32}
+            onClick={() => navigate('/dashboard')}
+            sx={{
+              display: {xs: 'none', sm: 'block'},
+              mr: 2
+            }}
+          />
 
           {/* Search Bar */}
           <Box

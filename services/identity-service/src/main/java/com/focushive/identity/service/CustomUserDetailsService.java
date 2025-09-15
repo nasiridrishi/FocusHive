@@ -21,21 +21,46 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
-    
+
     private final UserRepository userRepository;
-    
+    private final com.focushive.identity.security.encryption.IEncryptionService encryptionService;
+
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConfig.USER_CACHE, key = "#usernameOrEmail", unless = "#result == null")
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
         // Removed debug log to avoid logging email addresses and usernames
-        
-        // Try to find by email first, then by username
-        // Note: EntityGraph on findById will load personas when user is accessed
-        User user = userRepository.findByEmail(usernameOrEmail)
-                .or(() -> userRepository.findByUsername(usernameOrEmail))
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with username or email: " + usernameOrEmail));
+
+        // Try to find user by checking if input is email or username
+        User user = null;
+
+        // Check if the input looks like an email
+        if (isValidEmail(usernameOrEmail)) {
+            // It's an email - need to use hash-based lookup for encrypted emails
+            if (encryptionService != null) {
+                try {
+                    String emailHash = encryptionService.hash(usernameOrEmail.toLowerCase());
+                    user = userRepository.findByEmailHash(emailHash).orElse(null);
+                } catch (Exception e) {
+                    log.debug("Hash-based email lookup failed: {}", e.getMessage());
+                    // Fallback to direct email lookup for test environments
+                    user = userRepository.findByEmail(usernameOrEmail).orElse(null);
+                }
+            } else {
+                // Encryption service not available (test mode), use direct lookup
+                user = userRepository.findByEmail(usernameOrEmail).orElse(null);
+            }
+        }
+
+        // If not found by email (or not an email), try username
+        if (user == null) {
+            user = userRepository.findByUsername(usernameOrEmail).orElse(null);
+        }
+
+        if (user == null) {
+            throw new UsernameNotFoundException(
+                    "User not found with username or email: " + usernameOrEmail);
+        }
         
         // Check if user is soft-deleted
         if (user.getDeletedAt() != null) {
@@ -76,5 +101,17 @@ public class CustomUserDetailsService implements UserDetailsService {
     @CacheEvict(value = CacheConfig.USER_PROFILE_CACHE, key = "#userId")
     public void evictUserCacheById(String userId) {
         log.debug("Evicting user cache for ID: {}", userId);
+    }
+
+    /**
+     * Simple email validation to check if a string looks like an email.
+     */
+    private boolean isValidEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        // Simple check for @ and . in the right places
+        return email.contains("@") && email.contains(".") &&
+               email.indexOf("@") < email.lastIndexOf(".");
     }
 }

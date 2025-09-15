@@ -21,7 +21,7 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-    
+
   # JPA Configuration
   jpa:
     hibernate:
@@ -35,13 +35,13 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
-        
+
   # Flyway Configuration
   flyway:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-    
+
   # Redis Configuration (using Docker service names)
   redis:
     host: ${REDIS_HOST:redis}
@@ -58,7 +58,7 @@ spring:
       host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-      
+
   # RabbitMQ Configuration (using Docker service names)
   rabbitmq:
     host: ${RABBITMQ_HOST:rabbitmq}
@@ -77,7 +77,7 @@ spring:
         max-attempts: 3
         max-interval: 10000
         multiplier: 2
-    
+
   # Mail Configuration (using Docker service names)
   mail:
     host: ${MAIL_HOST:mailhog}
@@ -91,7 +91,7 @@ spring:
           starttls:
             enable: false
     test-connection: false
-    
+
   # Security Configuration
   security:
     oauth2:
@@ -99,14 +99,14 @@ spring:
         jwt:
           issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8081}
           jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8081/.well-known/jwks.json}
-          
+
   # Cache Configuration
   cache:
     type: redis
     redis:
       time-to-live: 600000
       cache-null-values: false
-      
+
 # Server Configuration
 server:
   port: 8083
@@ -116,7 +116,7 @@ server:
   error:
     include-message: always
     include-binding-errors: always
-    
+
 # Management & Monitoring
 management:
   endpoints:
@@ -142,7 +142,7 @@ management:
     tags:
       application: ${spring.application.name}
       environment: docker
-        
+
 # Logging Configuration
 logging:
   level:
@@ -151,11 +151,7 @@ logging:
     org.hibernate: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
-  file:
-    name: /app/logs/notification-service.log
-    max-size: 10MB
-    max-history: 30
-    
+
 # Security Configuration
 security:
   encryption:
@@ -164,8 +160,12 @@ security:
 
 # Application-specific Configuration
 notification:
+  test:
+    enabled: true # Enable test endpoints for validation
   queue:
     name: notifications-docker
+    priority-name: notifications-docker.priority
+    email-name: notifications.email
     exchange: ${NOTIFICATION_QUEUE_EXCHANGE:focushive.notifications}
     routing-key: ${NOTIFICATION_QUEUE_ROUTING_KEY:notification.created}
   template:
@@ -176,7 +176,7 @@ notification:
   delivery:
     max-retries: 3
     retry-delay-ms: 1000
-    
+
 # Circuit Breaker Configuration
 resilience4j:
   circuitbreaker:
@@ -188,7 +188,7 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 30s
         permitted-number-of-calls-in-half-open-state: 3
-        
+
 # OpenAPI Documentation
 springdoc:
   api-docs:

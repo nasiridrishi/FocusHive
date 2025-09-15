@@ -9,23 +9,44 @@
 /**
  * Timer types
  */
-export type TimerType =
-  | 'focus'      // Focus/work timer
-  | 'break'      // Break timer
-  | 'pomodoro'   // Pomodoro technique timer
-  | 'countdown'  // Generic countdown timer
-  | 'stopwatch'  // Count up timer
-  | 'custom';    // User-defined timer
+export const TimerType = {
+  FOCUS: 'focus' as const,
+  BREAK: 'break' as const,
+  SHORT_BREAK: 'short-break' as const,
+  LONG_BREAK: 'long-break' as const,
+  POMODORO: 'pomodoro' as const,
+  CUSTOM: 'custom' as const,
+} as const;
+
+export type TimerType = typeof TimerType[keyof typeof TimerType];
+
+/**
+ * Session types for Pomodoro technique
+ */
+export const SessionType = {
+  FOCUS: 'focus' as const,
+  SHORT_BREAK: 'short_break' as const,
+  LONG_BREAK: 'long_break' as const,
+} as const;
+
+export type SessionType = typeof SessionType[keyof typeof SessionType];
 
 /**
  * Timer status
  */
-export type TimerStatus =
-  | 'idle'       // Not started
-  | 'running'    // Currently running
-  | 'paused'     // Temporarily paused
-  | 'completed'  // Finished successfully
-  | 'cancelled'; // Cancelled before completion
+export const SessionStatus = {
+  IDLE: 'idle' as const,
+  RUNNING: 'running' as const,
+  ACTIVE: 'active' as const,
+  PAUSED: 'paused' as const,
+  COMPLETED: 'completed' as const,
+  CANCELLED: 'cancelled' as const,
+} as const;
+
+export type SessionStatus = typeof SessionStatus[keyof typeof SessionStatus];
+
+// Alias for backward compatibility
+export type TimerStatus = SessionStatus;
 
 /**
  * Timer preset templates
@@ -98,6 +119,8 @@ export interface TimerSession {
   userId: string;
   hiveId?: string;
   type: TimerType;
+  sessionType?: SessionType;  // For Pomodoro sessions
+  status?: SessionStatus;     // Session status
   startedAt: string;
   endedAt: string;
   plannedDuration: number;  // in milliseconds
@@ -186,16 +209,24 @@ export interface TimerGoal {
  * Create timer request
  */
 export interface CreateTimerRequest {
-  type: TimerType;
+  type?: TimerType;
+  sessionType?: SessionType;
   name?: string;
+  title?: string;  // Alias for name
   description?: string;
   duration: number;
-  hiveId?: string;
+  hiveId?: string | number | null;
   config?: TimerConfig;
   linkedTaskId?: string;
   linkedGoalId?: string;
   tags?: string[];
   startImmediately?: boolean;
+  isPomodoro?: boolean;
+  pomodoroSettings?: {
+    sessionNumber?: number;
+    totalSessions?: number;
+    autoStartNext?: boolean;
+  };
 }
 
 /**
@@ -214,6 +245,7 @@ export interface UpdateTimerRequest {
  */
 export interface TimerActionRequest {
   action: 'start' | 'pause' | 'resume' | 'stop' | 'reset' | 'skip';
+  timerId?: string;
   reason?: string;
   syncToDevices?: boolean;
 }
@@ -347,3 +379,40 @@ export interface TimerUtils {
   estimateCompletionTime: (remaining: number) => Date;
   generateTimerSound: (type: 'start' | 'pause' | 'complete' | 'warning') => void;
 }
+
+// Aliases and additional types for hooks compatibility
+export type TimerStats = TimerStatistics;
+export type TimerPreferences = {
+  defaultType: TimerType;
+  defaultDuration: number;
+  config: TimerConfig;
+  soundEnabled: boolean;
+  notificationsEnabled: boolean;
+};
+export type TimerTemplate = TimerPresetConfig;
+export type CreateTimerTemplateRequest = Omit<TimerPresetConfig, 'id' | 'usageCount' | 'rating'>;
+export type UpdateTimerTemplateRequest = Partial<CreateTimerTemplateRequest>;
+export type CreateTimerGoalRequest = Omit<TimerGoal, 'id' | 'currentMinutes' | 'completed'>;
+export type UpdateTimerGoalRequest = Partial<TimerGoal>;
+export type TimerHistoryEntry = TimerSession;
+export type TimerStartResponse = {
+  timer: Timer;
+  session: TimerSession;
+};
+export type TimerHistoryResponse = {
+  sessions: TimerSession[];
+  total: number;
+  hasMore: boolean;
+};
+export type TimerTemplatesResponse = {
+  templates: TimerTemplate[];
+  total: number;
+};
+export type TimerWebSocketEvent = {
+  type: 'timer_started' | 'timer_paused' | 'timer_completed' | 'timer_sync';
+  timerId: string;
+  data: any;
+  timestamp: string;
+};
+export type TimerCommand = TimerActionRequest;
+export type TimerSyncData = TimerSyncEvent;

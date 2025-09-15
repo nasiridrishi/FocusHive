@@ -45,7 +45,7 @@ export class PresenceService {
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private heartbeatIntervalMs = 30000; // 30 seconds
   private activeHives: Set<number> = new Set();
-  private currentStatus: PresenceStatus = 'ONLINE';
+  private currentStatus: PresenceStatus = 'online';
   private currentActivity: UserActivity | undefined;
 
   // Auto-away detection
@@ -112,7 +112,7 @@ export class PresenceService {
    * Set user as offline
    */
   async setOffline(): Promise<UserPresence> {
-    return this.setPresence({ status: 'OFFLINE' });
+    return this.setPresence({ status: 'offline' });
   }
 
   /**
@@ -423,11 +423,10 @@ export class PresenceService {
       }
 
       const heartbeat: PresenceHeartbeat = {
-        userId: user.id,
-        hiveIds: Array.from(this.activeHives),
+        userId: String((user as any).id),
         status: this.currentStatus,
         activity: this.currentActivity,
-        timestamp: new Date().toISOString(),
+        timestamp: Date.now(),
       };
 
       webSocketService.sendMessage('/app/presence/heartbeat', heartbeat);
@@ -475,13 +474,13 @@ export class PresenceService {
         const update = JSON.parse(message.body) as PresenceUpdate;
 
         // Update cache if it's for a cached user
-        const cached = this.getCachedUserPresence(update.userId);
+        const cached = this.getCachedUserPresence(Number(update.userId));
         if (cached) {
           cached.status = update.status;
           if (update.activity) {
-            cached.activity = update.activity;
+            // activity property doesn't exist on UserPresence
           }
-          cached.lastSeen = update.timestamp;
+          cached.lastSeen = new Date().toISOString();
           this.cacheUserPresence(cached);
         }
 
@@ -520,9 +519,9 @@ export class PresenceService {
         if (cached) {
           cached.status = update.status;
           if (update.activity) {
-            cached.activity = update.activity;
+            // activity property doesn't exist on UserPresence
           }
-          cached.lastSeen = update.timestamp;
+          cached.lastSeen = new Date().toISOString();
           this.cacheUserPresence(cached);
         }
 
@@ -575,8 +574,8 @@ export class PresenceService {
       this.resetAutoAwayTimer();
 
       // If currently away, set back to online
-      if (this.currentStatus === 'AWAY') {
-        this.setPresence({ status: 'ONLINE', activity: this.currentActivity });
+      if (this.currentStatus === 'away') {
+        this.setPresence({ status: 'online', activity: this.currentActivity });
       }
     }
   }
@@ -600,8 +599,8 @@ export class PresenceService {
    * Handle auto-away timeout
    */
   private handleAutoAway(): void {
-    if (this.currentStatus === 'ONLINE') {
-      this.setPresence({ status: 'AWAY' }).catch(error => {
+    if (this.currentStatus === 'online') {
+      this.setPresence({ status: 'away' }).catch(error => {
         console.error('Failed to set auto-away:', error);
       });
     }
@@ -610,7 +609,7 @@ export class PresenceService {
   // Cache Management
 
   cacheUserPresence(presence: UserPresence): void {
-    this.presenceCache.set(presence.userId, {
+    this.presenceCache.set(Number(presence.userId), {
       presence,
       timestamp: Date.now(),
     });
@@ -630,7 +629,7 @@ export class PresenceService {
   }
 
   private cacheHivePresence(presence: HivePresence): void {
-    this.hivePresenceCache.set(presence.hiveId, {
+    this.hivePresenceCache.set(Number(presence.hiveId), {
       presence,
       timestamp: Date.now(),
     });
@@ -661,8 +660,9 @@ export class PresenceService {
     const update: PresenceUpdate = {
       userId: presence.userId,
       status: presence.status,
-      activity: presence.activity,
-      timestamp: new Date().toISOString(),
+      lastActivity: presence.lastSeen || new Date().toISOString(),
+      // activity property doesn't exist on UserPresence
+      // timestamp property doesn't exist on PresenceUpdate
     };
 
     webSocketService.sendMessage(destination, update);

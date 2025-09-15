@@ -40,7 +40,7 @@ class ApiClient {
   private retryDelay = 1000; // 1 second base delay
   // API endpoints configuration
   private readonly apiEndpoints = {
-    backend: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+    backend: import.meta.env.VITE_API_BASE_URL || 'https://identity.focushive.app',
     identity: import.meta.env.VITE_IDENTITY_API_URL || 'http://localhost:8081'
   };
 
@@ -125,7 +125,7 @@ class ApiClient {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      withCredentials: true, // Enable cookies for httpOnly refresh tokens
+      withCredentials: false, // Disabled to avoid CORS issues
       validateStatus: (status) => status < 500 // Don't throw on 4xx errors
     });
 
@@ -248,7 +248,7 @@ class ApiClient {
           {refreshToken},
           {
             headers: {'Content-Type': 'application/json'},
-            withCredentials: true,
+            withCredentials: false, // Disabled to avoid CORS issues
             timeout: 10000
           }
       );

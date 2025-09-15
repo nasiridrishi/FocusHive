@@ -8,6 +8,45 @@
 
 import { ChatMessage } from './websocket';
 
+// Re-export WebSocket types
+export type { ChatMessage } from './websocket';
+
+// Create aliases for commonly expected types
+export type ChatTypingIndicator = TypingIndicator;
+export type ChatHistory = {
+  messages: ExtendedChatMessage[];
+  roomId?: string;
+  total?: number;
+  hasMore?: boolean;
+};
+export type ChatSearchParams = SearchMessagesRequest;
+export type ChatReadReceipt = {
+  messageId: string;
+  userId: string;
+  readAt: string;
+};
+export type ChatNotification = {
+  id: string;
+  type: 'message' | 'mention' | 'reaction';
+  roomId: string;
+  messageId?: string;
+  fromUserId: string;
+  toUserId: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+};
+export type ChatWebSocketEvent = {
+  type: 'message' | 'typing' | 'reaction' | 'read_receipt' | 'user_joined' | 'user_left';
+  roomId: string;
+  data: any;
+  timestamp: string;
+};
+export type BatchMarkAsReadRequest = {
+  messageIds: string[];
+  readAt?: string;
+};
+
 /**
  * Message types
  */
@@ -220,11 +259,14 @@ export interface SearchMessagesRequest {
  * Send message request
  */
 export interface SendMessageRequest {
-  roomId: string;
-  text: string;
+  roomId?: string;
+  text?: string;
+  content?: string;       // Alias for text
+  hiveId?: string;       // Optional hive context
   type?: MessageType;
   attachments?: File[] | MessageAttachment[];
   replyToId?: string;
+  parentMessageId?: string; // Alias for replyToId
   mentions?: string[];    // user IDs
   metadata?: Record<string, any>;
 }
@@ -234,6 +276,7 @@ export interface SendMessageRequest {
  */
 export interface UpdateMessageRequest {
   text?: string;
+  content?: string;       // Alias for text
   attachments?: MessageAttachment[];
 }
 

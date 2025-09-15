@@ -538,7 +538,7 @@ export class HiveService {
   // Private helper methods
 
   private cacheHive(hive: Hive): void {
-    this.cache.set(hive.id, {
+    this.cache.set(Number(hive.id), {
       hive,
       timestamp: Date.now()
     });

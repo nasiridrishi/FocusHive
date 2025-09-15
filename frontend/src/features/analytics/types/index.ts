@@ -15,7 +15,6 @@ export type {
   AnalyticsFilter,
   AnalyticsDashboardData,
   AnalyticsContextValue,
-  ProductivityChartProps,
   TaskCompletionRateProps,
   HiveActivityHeatmapProps,
   MemberEngagementProps,

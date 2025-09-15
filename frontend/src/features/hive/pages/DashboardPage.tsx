@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Box,
   Card,
@@ -8,6 +9,8 @@ import {
   Paper,
   Stack,
   Typography,
+  Alert,
+  Skeleton,
 } from '@mui/material'
 import {
   People as PeopleIcon,
@@ -18,6 +21,7 @@ import {
 } from '@mui/icons-material'
 import {HiveList} from '../components'
 import {Hive, HiveMember} from '@shared/types'
+import { useAuth } from '../../../features/auth/hooks/useAuth'
 
 // Mock data - this would come from API calls in a real app
 const mockHives: Hive[] = [
@@ -46,9 +50,12 @@ const mockHives: Hive[] = [
       allowChat: true,
       allowVoice: false,
       requireApproval: false,
-      focusMode: 'pomodoro',
+      focusMode: 'POMODORO',
       defaultSessionLength: 25,
       maxSessionLength: 120,
+      privacyLevel: 'PUBLIC',
+      category: 'STUDY',
+      maxParticipants: 20
     },
     currentMembers: 12,
     createdAt: '2024-01-15T10:00:00Z',
@@ -82,9 +89,12 @@ const mockHives: Hive[] = [
       allowChat: true,
       allowVoice: false,
       requireApproval: true,
-      focusMode: 'continuous',
+      focusMode: 'TIMEBLOCK',
       defaultSessionLength: 60,
       maxSessionLength: 180,
+      privacyLevel: 'PRIVATE',
+      category: 'WORK',
+      maxParticipants: 10
     },
     currentMembers: 8,
     createdAt: '2024-01-10T14:00:00Z',
@@ -118,9 +128,12 @@ const mockHives: Hive[] = [
       allowChat: true,
       allowVoice: false,
       requireApproval: false,
-      focusMode: 'flexible',
+      focusMode: 'FREEFORM',
       defaultSessionLength: 45,
       maxSessionLength: 240,
+      privacyLevel: 'PUBLIC',
+      category: 'SOCIAL',
+      maxParticipants: 30
     },
     currentMembers: 25,
     createdAt: '2024-01-05T16:00:00Z',
@@ -223,35 +236,146 @@ const mockMembers: Record<string, HiveMember[]> = {
 }
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate()
   const [hives, setHives] = useState<Hive[]>([])
   const [members, setMembers] = useState<Record<string, HiveMember[]>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<{
+    focusTime: number;
+    weeklyGoal: number;
+    completedSessions: number;
+    streakDays: number;
+  }>({ focusTime: 0, weeklyGoal: 200, completedSessions: 0, streakDays: 0 })
 
-  // Mock current user ID
-  const currentUserId = 'user1'
+  const { authState } = useAuth()
+  const currentUserId = authState.user?.id || 'user1'
 
-  // Simulate API call
+  // Initialize and immediately try to load real data
   useEffect(() => {
-    setTimeout(() => {
-      setHives(mockHives)
-      setMembers(mockMembers)
+    // Start with loading state
+    setIsLoading(true)
+
+    // Try to fetch real data immediately
+    fetchRealData().then(() => {
+      console.log('Initial data fetch complete')
+    }).catch(err => {
+      console.error('Initial data fetch failed:', err)
+      // Show error state, not mock data
+      setHives([])
+      setMembers({})
+      setStats({ focusTime: 0, weeklyGoal: 0, completedSessions: 0, streakDays: 0 })
+      setError('Unable to connect to backend services. Please check your connection.')
+    }).finally(() => {
       setIsLoading(false)
-    }, 1000)
+    })
   }, [])
 
+  const fetchRealData = async () => {
+    try {
+      // Import the API services directly (not through index to avoid circular deps)
+      const { default: hiveApiService } = await import('../../../services/api/hiveApi')
+      const { default: analyticsApiService } = await import('../../../services/api/analyticsApi')
+
+      // Check if services are available
+      if (!hiveApiService || !analyticsApiService) {
+        console.log('API services not yet available, using mock data')
+        return
+      }
+
+      console.log('Fetching real data from API...')
+      setError(null) // Clear any previous errors
+
+      // Fetch hives
+      const hivesResponse = await hiveApiService.getHives(0, 20)
+      console.log('Hives API response:', hivesResponse)
+
+      const hivesData = hivesResponse.content || []
+
+      if (hivesData.length > 0) {
+        // Convert API response to match our Hive type
+        const formattedHives = hivesData.map((hive: any) => ({
+          ...hive,
+          id: String(hive.id),
+          currentMembers: hive.memberCount || 0,
+          isOwner: hive.ownerId === currentUserId,
+          isMember: true,
+          owner: {
+            id: String(hive.ownerId),
+            email: 'user@example.com',
+            username: `user${hive.ownerId}`,
+            name: `User ${hive.ownerId}`,
+            profilePicture: undefined,
+            isEmailVerified: true,
+            isVerified: true,
+            createdAt: hive.createdAt,
+            updatedAt: hive.updatedAt,
+          }
+        }))
+
+        setHives(formattedHives)
+        console.log('Loaded', formattedHives.length, 'hives from API')
+      } else {
+        console.log('No hives found in API, showing empty state')
+        setHives([]) // Show empty state, not mock data
+      }
+
+      // Fetch user statistics
+      try {
+        const userStats = await analyticsApiService.getMyStats('WEEKLY')
+        setStats({
+          focusTime: Math.round(userStats.totalFocusTime / 60),
+          weeklyGoal: 200,
+          completedSessions: userStats.totalSessions,
+          streakDays: userStats.streakDays
+        })
+      } catch (err) {
+        console.log('Could not fetch user stats, using defaults')
+      }
+
+    } catch (err) {
+      console.log('Using mock data - API not available:', err)
+    }
+  }
+
+  // Define handleRefresh first since it's used by other handlers
+  const handleRefresh = async (): Promise<void> => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      await fetchRealData()
+    } catch (error) {
+      console.error('Failed to refresh data', error)
+      setError('Failed to refresh data. Using cached data.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleJoinHive = async (hiveId: string, message?: string) => {
-    // Will use hiveId and message when API is implemented
-    void hiveId;
-    void message;
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    void message; // Message parameter for future use
+    try {
+      const { default: hiveApiService } = await import('../../../services/api/hiveApi')
+      await hiveApiService.joinHive(Number(hiveId))
+      // Refresh hives after joining
+      handleRefresh()
+    } catch (error) {
+      console.error('Failed to join hive', error)
+      setError('Failed to join hive. Please try again.')
+    }
   }
 
   const handleLeaveHive = async (hiveId: string) => {
-    // Will use hiveId when API is implemented
-    void hiveId;
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const { default: hiveApiService } = await import('../../../services/api/hiveApi')
+      await hiveApiService.leaveHive(Number(hiveId))
+      // Refresh hives after leaving
+      handleRefresh()
+    } catch (error) {
+      console.error('Failed to leave hive', error)
+      setError('Failed to leave hive. Please try again.')
+    }
   }
 
   const handleEnterHive = (hiveId: string): void => {
@@ -270,35 +394,38 @@ export const DashboardPage: React.FC = () => {
     // Open share dialog
   }
 
-  const handleCreateHive = (hiveData: object): void => {
-    // Will use hiveData when API is implemented
-    void hiveData;
-    // Simulate API call and update state
-  }
-
-  const handleRefresh = (): void => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setHives(mockHives)
-      setMembers(mockMembers)
-      setIsLoading(false)
-    }, 500)
+  const handleCreateHive = async (hiveData: any): Promise<void> => {
+    try {
+      const { default: hiveApiService } = await import('../../../services/api/hiveApi')
+      await hiveApiService.createHive(hiveData)
+      // Refresh hives after creating
+      handleRefresh()
+    } catch (error) {
+      console.error('Failed to create hive', error)
+      setError('Failed to create hive. Please try again.')
+    }
   }
 
   // Calculate dashboard stats
-  const joinedHives = hives.filter(hive =>
-      members[hive.id]?.some(member => member.userId === currentUserId)
-  )
-  const totalFocusTime = 145 // Mock data - would come from API
-  const weeklyGoal = 200
-  const completedSessions = 12
+  const joinedHives = hives.filter(hive => hive.isMember)
+  const totalFocusTime = stats.focusTime
+  const weeklyGoal = stats.weeklyGoal
+  const completedSessions = stats.completedSessions
+  const streakDays = stats.streakDays
 
   return (
       <Box>
+        {/* Error Alert */}
+        {error && (
+          <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
         {/* Welcome Section */}
         <Box sx={{mb: 4}}>
           <Typography variant="h4" component="h1" fontWeight={600} gutterBottom>
-            Welcome back! 👋
+            Welcome back{authState.user?.name ? `, ${authState.user.name}` : authState.user?.displayName ? `, ${authState.user.displayName}` : ''}!
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Ready to focus and be productive? Check out your hives and start a new session.
@@ -320,7 +447,7 @@ export const DashboardPage: React.FC = () => {
                     Focus Time
                   </Typography>
                   <Typography variant="h4" component="div">
-                    {totalFocusTime}h
+                    {isLoading ? <Skeleton width={60} /> : `${totalFocusTime}h`}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     This week
@@ -349,7 +476,7 @@ export const DashboardPage: React.FC = () => {
                     My Hives
                   </Typography>
                   <Typography variant="h4" component="div">
-                    {joinedHives.length}
+                    {isLoading ? <Skeleton width={40} /> : joinedHives.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Active memberships
@@ -368,7 +495,7 @@ export const DashboardPage: React.FC = () => {
                     Sessions
                   </Typography>
                   <Typography variant="h4" component="div">
-                    {completedSessions}
+                    {isLoading ? <Skeleton width={40} /> : completedSessions}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     This week
@@ -387,7 +514,7 @@ export const DashboardPage: React.FC = () => {
                     Streak
                   </Typography>
                   <Typography variant="h4" component="div">
-                    7
+                    {isLoading ? <Skeleton width={40} /> : streakDays}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Days active
@@ -406,38 +533,114 @@ export const DashboardPage: React.FC = () => {
             <RocketIcon/>
             Quick Start
           </Typography>
-          <Stack direction={{xs: 'column', sm: 'row'}} spacing={2}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 2,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexWrap: 'wrap'
+            }}
+          >
             <Chip
                 label="Start 25min Pomodoro"
                 onClick={() => {
+                  // Start a Pomodoro session with default settings
+                  navigate('/timer', { 
+                    state: { 
+                      mode: 'pomodoro',
+                      duration: 25,
+                      autoStart: true 
+                    } 
+                  })
                 }}
                 sx={{
                   bgcolor: 'primary.contrastText',
                   color: 'primary.main',
-                  '&:hover': {bgcolor: 'grey.100'}
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  fontWeight: 500,
+                  py: { xs: 1.5, sm: 2 },
+                  px: { xs: 2, sm: 3 },
+                  height: 'auto',
+                  flex: '1 1 auto',
+                  minWidth: 0,
+                  '& .MuiChip-label': {
+                    padding: { xs: '8px 12px', sm: '12px 16px' },
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  },
+                  '&:hover': {
+                    bgcolor: 'grey.100',
+                    transform: 'translateY(-2px)',
+                    transition: 'all 0.2s ease'
+                  }
                 }}
             />
             <Chip
                 label="Join Active Hive"
                 onClick={() => {
+                  // Navigate to the first active hive or discover page
+                  const activeHive = hives.find(h => h.isMember && h.currentMembers > 0)
+                  if (activeHive) {
+                    navigate(`/hives/${activeHive.id}`)
+                  } else {
+                    navigate('/discover')
+                  }
                 }}
                 sx={{
                   bgcolor: 'primary.contrastText',
                   color: 'primary.main',
-                  '&:hover': {bgcolor: 'grey.100'}
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  fontWeight: 500,
+                  py: { xs: 1.5, sm: 2 },
+                  px: { xs: 2, sm: 3 },
+                  height: 'auto',
+                  flex: '1 1 auto',
+                  minWidth: 0,
+                  '& .MuiChip-label': {
+                    padding: { xs: '8px 12px', sm: '12px 16px' },
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  },
+                  '&:hover': {
+                    bgcolor: 'grey.100',
+                    transform: 'translateY(-2px)',
+                    transition: 'all 0.2s ease'
+                  }
                 }}
             />
             <Chip
                 label="Browse Discover"
                 onClick={() => {
+                  navigate('/discover')
                 }}
                 sx={{
                   bgcolor: 'primary.contrastText',
                   color: 'primary.main',
-                  '&:hover': {bgcolor: 'grey.100'}
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  fontWeight: 500,
+                  py: { xs: 1.5, sm: 2 },
+                  px: { xs: 2, sm: 3 },
+                  height: 'auto',
+                  flex: '1 1 auto',
+                  minWidth: 0,
+                  '& .MuiChip-label': {
+                    padding: { xs: '8px 12px', sm: '12px 16px' },
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  },
+                  '&:hover': {
+                    bgcolor: 'grey.100',
+                    transform: 'translateY(-2px)',
+                    transition: 'all 0.2s ease'
+                  }
                 }}
             />
-          </Stack>
+          </Box>
         </Paper>
 
         {/* Hives List */}

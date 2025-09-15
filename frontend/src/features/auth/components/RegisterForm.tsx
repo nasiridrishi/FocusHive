@@ -21,13 +21,15 @@ import {
   VisibilityOff
 } from '@mui/icons-material'
 import {useNavigate} from 'react-router-dom'
-import {Controller, useForm} from 'react-hook-form'
+import {Controller, useForm, SubmitHandler} from 'react-hook-form'
 import {yupResolver} from '@hookform/resolvers/yup'
-import {RegisterRequest} from '@shared/types'
-import {LoadingButton} from '@shared/components/loading'
-import {registerSchema} from '@shared/validation/schemas'
-import PasswordStrengthIndicator from '@shared/components/PasswordStrengthIndicator'
-import ValidationSummary from '@shared/components/ValidationSummary'
+import {RegisterRequest} from '@/contracts/auth'
+import {LoadingButton} from '@/shared/components/loading'
+import {registerSchema} from '@/shared/validation/schemas'
+import PasswordStrengthIndicator from '@/shared/components/PasswordStrengthIndicator'
+import ValidationSummary from '@/shared/components/ValidationSummary'
+import {Logo} from '@/shared/components/Logo'
+import * as yup from 'yup'
 
 interface RegisterFormProps {
   onSubmit: (userData: RegisterRequest) => Promise<void>
@@ -35,10 +37,8 @@ interface RegisterFormProps {
   error?: string | null
 }
 
-type RegisterFormData = RegisterRequest & {
-  confirmPassword: string
-  acceptTerms: boolean
-}
+// Define form data type from schema
+type RegisterFormData = yup.InferType<typeof registerSchema>;
 
 export default function RegisterForm({
                                        onSubmit,
@@ -55,7 +55,7 @@ export default function RegisterForm({
     watch,
     formState: {errors, isSubmitted}
   } = useForm<RegisterFormData>({
-    resolver: yupResolver(registerSchema),
+    resolver: yupResolver(registerSchema) as any,
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
@@ -71,10 +71,18 @@ export default function RegisterForm({
 
   const password = watch('password')
 
-  const onFormSubmit = async (data: RegisterFormData): Promise<void> => {
+  const onFormSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     try {
-      // Remove confirmPassword and acceptTerms before submitting
-      const {confirmPassword, acceptTerms, ...submitData} = data
+      // Create proper RegisterRequest from form data
+      const submitData: RegisterRequest = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        acceptTerms: data.acceptTerms,
+        username: data.username || undefined,
+      }
       await onSubmit(submitData)
     } catch {
       // // console.error('Register form error:', err);
@@ -95,6 +103,11 @@ export default function RegisterForm({
           }}
       >
         <Box component="form" onSubmit={handleSubmit(onFormSubmit)} noValidate>
+          {/* Logo */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <Logo variant="full" height={48} />
+          </Box>
+          
           <Typography
               variant="h4"
               component="h1"

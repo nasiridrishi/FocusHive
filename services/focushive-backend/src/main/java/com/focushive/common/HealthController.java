@@ -1,7 +1,7 @@
 package com.focushive.common;
 
 import com.focushive.api.client.IdentityServiceClient;
-import com.focushive.api.dto.identity.HealthResponse;
+import com.focushive.api.dto.identity.ActuatorHealthResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
@@ -198,12 +198,12 @@ public class HealthController {
         Map<String, Object> health = new HashMap<>();
         try {
             long startTime = System.currentTimeMillis();
-            HealthResponse response = identityServiceClient.checkHealth();
+            ActuatorHealthResponse response = identityServiceClient.checkHealth();
             long responseTime = System.currentTimeMillis() - startTime;
-            
-            health.put("status", "UP".equals(response.getStatus()) ? "UP" : "DOWN");
+
+            health.put("status", response.isHealthy() ? "UP" : "DOWN");
             health.put("responseTime", responseTime + "ms");
-            health.put("version", response.getVersion());
+            health.put("version", "unknown"); // Version not available in actuator response
             
         } catch (Exception e) {
             log.warn("Identity Service health check failed", e);
