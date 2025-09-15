@@ -41,8 +41,8 @@ dependencies {
 
     // Database
     implementation("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core:10.17.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.17.0")
+    implementation("org.flywaydb:flyway-core:11.12.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.12.0")
 
     // Redis for caching
     implementation("redis.clients:jedis")
