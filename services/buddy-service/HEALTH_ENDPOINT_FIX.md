@@ -7,9 +7,14 @@ NoResourceFoundException: No static resource actuator/health
 ```
 
 ## Root Cause
-The Spring Boot Actuator endpoints are configured to run on a **separate management port (8088)** while the main application runs on port 8087. This is a security best practice that isolates management endpoints from application endpoints.
+The Spring Boot Actuator endpoints are configured to run on a **separate management port (8088)** while the main application runs on port 8087. When requests to `/actuator/*` were made on port 8087, Spring was treating them as static resource requests, leading to the NoResourceFoundException.
 
 ## Solution
+
+### Implementation
+1. **Created ActuatorRedirectController**: A REST controller that handles `/actuator/**` requests on port 8087 and returns informative JSON responses with proper guidance
+2. **Updated ActuatorMvcConfig**: Configured MVC to not treat actuator paths as static resources
+3. **Modified SimpleSecurityConfig**: Allowed access to `/actuator/**` paths on port 8087 to return the guidance messages
 
 ### Port Configuration
 - **Application Port**: 8087 (main application endpoints)

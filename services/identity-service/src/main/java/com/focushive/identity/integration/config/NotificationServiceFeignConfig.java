@@ -47,15 +47,15 @@ public class NotificationServiceFeignConfig {
 
                 // Add authentication if enabled
                 if (authEnabled) {
-                    // Use JWT authentication for service-to-service calls
-                    if (serviceJwtTokenProvider != null) {
+                    // Prefer API Key authentication for service-to-service calls
+                    if (notificationServiceApiKey != null && !notificationServiceApiKey.isEmpty()) {
+                        template.header("X-API-Key", notificationServiceApiKey);
+                        log.debug("Added API key authentication to notification service request");
+                    } else if (serviceJwtTokenProvider != null) {
+                        // Fallback to JWT authentication if no API key configured
                         String serviceToken = getCachedOrGenerateToken();
                         template.header("Authorization", "Bearer " + serviceToken);
                         log.debug("Added JWT Bearer token authentication to notification service request");
-                    } else if (notificationServiceApiKey != null && !notificationServiceApiKey.isEmpty()) {
-                        // Fallback to API Key authentication if configured
-                        template.header("X-API-Key", notificationServiceApiKey);
-                        log.debug("Added API key authentication to notification service request");
                     } else {
                         log.warn("No authentication configured for notification service. " +
                                 "Requests may fail with 401 Unauthorized.");

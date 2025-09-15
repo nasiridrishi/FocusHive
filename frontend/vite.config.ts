@@ -16,7 +16,7 @@ const securityHeaders: Record<string, string> = {
       font-src 'self' https://fonts.gstatic.com data:;
       img-src 'self' data: https: blob:;
       media-src 'self' data: https: blob:;
-      connect-src 'self' wss://localhost:* ws://localhost:* https://api.spotify.com wss://*.focushive.app ws://*.focushive.app;
+      connect-src 'self' wss://localhost:* ws://localhost:* http://localhost:* https://localhost:* https://api.spotify.com wss://*.focushive.app ws://*.focushive.app http://*.focushive.app https://*.focushive.app;
       worker-src 'self' blob:;
       child-src 'self';
       frame-src 'none';
@@ -32,7 +32,7 @@ const securityHeaders: Record<string, string> = {
       font-src 'self' https://fonts.gstatic.com data:;
       img-src 'self' data: https: blob:;
       media-src 'self' data: https: blob:;
-      connect-src 'self' wss://localhost:* ws://localhost:* https://api.spotify.com wss://*.focushive.app ws://*.focushive.app;
+      connect-src 'self' wss://localhost:* ws://localhost:* http://localhost:* https://localhost:* https://api.spotify.com wss://*.focushive.app ws://*.focushive.app http://*.focushive.app https://*.focushive.app;
       worker-src 'self' blob:;
       child-src 'self';
       frame-src 'none';
@@ -64,7 +64,6 @@ const securityHeaders: Record<string, string> = {
     'magnetometer=()',
     'gyroscope=()',
     'accelerometer=()',
-    'ambient-light-sensor=()',
     'autoplay=(self)',
     'encrypted-media=(self)',
     'fullscreen=(self)',
@@ -345,14 +344,120 @@ export default defineConfig({
       usePolling: true, // Use polling for file changes (better for some environments)
       interval: 1000, // Check for changes every second
     },
+    middlewareMode: false, // Ensure proper MIME types
+    cors: true, // Enable CORS for dev server
     proxy: {
-      '/api': {
+      // Core Backend Service (Port 8080)
+      '/api/v1/hives': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      '/api/v1/presence': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/api/v1/timer': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+
+      // Identity Service (Port 8081)
+      '/api/v1/auth': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS';
+            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With';
+          });
+        },
+      },
+      '/api/v1/personas': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      },
+      '/api/v1/privacy': {
+        target: 'http://localhost:8081',
+        changeOrigin: true,
+      },
+
+      // Music Service (Port 8082)
+      '/api/v1/music': {
+        target: 'http://localhost:8082',
+        changeOrigin: true,
+      },
+      '/api/v1/spotify': {
+        target: 'http://localhost:8082',
+        changeOrigin: true,
+      },
+
+      // Notification Service (Port 8083)
+      '/api/v1/notifications': {
+        target: 'http://localhost:8083',
+        changeOrigin: true,
+      },
+
+      // Chat Service (Port 8084)
+      '/api/v1/chat': {
+        target: 'http://localhost:8084',
+        changeOrigin: true,
+      },
+
+      // Analytics Service (Port 8085)
+      '/api/v1/analytics': {
+        target: 'http://localhost:8085',
+        changeOrigin: true,
+      },
+
+      // Forum Service (Port 8086)
+      '/api/v1/forum': {
+        target: 'http://localhost:8086',
+        changeOrigin: true,
+      },
+
+      // Buddy Service (Port 8087)
+      '/api/v1/buddy': {
+        target: 'http://localhost:8087',
+        changeOrigin: true,
+      },
+
+      // WebSocket connections
       '/ws': {
         target: 'ws://localhost:8080',
         ws: true,
+        changeOrigin: true,
+      },
+      '/chat/ws': {
+        target: 'ws://localhost:8084',
+        ws: true,
+        changeOrigin: true,
+      },
+      '/music/ws': {
+        target: 'ws://localhost:8082',
+        ws: true,
+        changeOrigin: true,
+      },
+      '/analytics/ws': {
+        target: 'ws://localhost:8085',
+        ws: true,
+        changeOrigin: true,
+      },
+      '/forum/ws': {
+        target: 'ws://localhost:8086',
+        ws: true,
+        changeOrigin: true,
+      },
+      '/buddy/ws': {
+        target: 'ws://localhost:8087',
+        ws: true,
+        changeOrigin: true,
+      },
+
+      // Fallback for any /api requests
+      '/api': {
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
     },

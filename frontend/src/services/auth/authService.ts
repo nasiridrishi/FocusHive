@@ -94,7 +94,8 @@ export class AuthService implements TokenStorage {
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      withCredentials: false // Don't send cookies to avoid CORS credential issues
     });
 
     // Set up request interceptor to add auth token
@@ -250,9 +251,16 @@ export class AuthService implements TokenStorage {
    */
   async login(request: LoginRequest): Promise<AuthResponse> {
     try {
+      // Transform frontend LoginRequest to match backend expectations
+      const backendRequest = {
+        usernameOrEmail: request.email,
+        password: request.password,
+        rememberMe: (request as any).rememberMe || false
+      };
+
       const response = await this.axiosInstance.post<AuthResponse>(
         '/api/v1/auth/login',
-        request
+        backendRequest
       );
 
       const authResponse = response.data;
@@ -677,3 +685,14 @@ export class AuthService implements TokenStorage {
     return new Error(authError.message);
   }
 }
+
+// Export a default instance for backward compatibility
+// Note: This uses environment variables and should be configured properly
+const authServiceConfig = {
+  baseUrl: process.env.VITE_IDENTITY_SERVICE_URL || 'http://localhost:8081',
+  tokenStorage: 'localStorage' as const,
+  autoRefresh: true,
+  refreshBuffer: 60000
+};
+
+export const authService = new AuthService(authServiceConfig);

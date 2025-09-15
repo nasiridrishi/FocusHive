@@ -16,8 +16,8 @@ const QUERY_KEYS = {
   lists: () => [...QUERY_KEYS.all, 'list'] as const,
   list: (params: any) => [...QUERY_KEYS.lists(), params] as const,
   details: () => [...QUERY_KEYS.all, 'detail'] as const,
-  detail: (id: number) => [...QUERY_KEYS.details(), id] as const,
-  members: (id: number) => [...QUERY_KEYS.all, 'members', id] as const,
+  detail: (id: string | number) => [...QUERY_KEYS.details(), String(id)] as const,
+  members: (id: string | number) => [...QUERY_KEYS.all, 'members', String(id)] as const,
   search: (params: HiveSearchParams) => [...QUERY_KEYS.all, 'search', params] as const,
 };
 
@@ -39,10 +39,10 @@ export function useHives(page = 0, size = 20): UseQueryResult<PaginatedResponse<
 /**
  * Hook to fetch a specific hive by ID
  */
-export function useHive(hiveId: number | undefined): UseQueryResult<Hive, Error> {
+export function useHive(hiveId: string | number | undefined): UseQueryResult<Hive, Error> {
   return useQuery({
     queryKey: QUERY_KEYS.detail(hiveId!),
-    queryFn: () => hiveService.getHive(hiveId!),
+    queryFn: () => hiveService.getHive(Number(hiveId!)),
     enabled: !!hiveId,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
@@ -52,10 +52,10 @@ export function useHive(hiveId: number | undefined): UseQueryResult<Hive, Error>
 /**
  * Hook to fetch hive members
  */
-export function useHiveMembers(hiveId: number | undefined): UseQueryResult<PaginatedResponse<HiveMember>, Error> {
+export function useHiveMembers(hiveId: string | number | undefined): UseQueryResult<PaginatedResponse<HiveMember>, Error> {
   return useQuery({
     queryKey: QUERY_KEYS.members(hiveId!),
-    queryFn: () => hiveService.getHiveMembers(hiveId!),
+    queryFn: () => hiveService.getHiveMembers(Number(hiveId!)),
     enabled: !!hiveId,
     staleTime: 1000 * 60 * 2, // 2 minutes (members change more frequently)
     gcTime: 1000 * 60 * 5,
@@ -88,7 +88,7 @@ export function useCreateHive() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lists() });
 
       // Add the new hive to the cache
-      queryClient.setQueryData(QUERY_KEYS.detail(newHive.id), newHive);
+      queryClient.setQueryData(QUERY_KEYS.detail(String(newHive.id)), newHive);
 
       // Optimistically update lists if they exist in cache
       queryClient.setQueriesData<PaginatedResponse<Hive>>(
@@ -112,11 +112,11 @@ export function useCreateHive() {
 /**
  * Hook to update a hive
  */
-export function useUpdateHive(hiveId: number) {
+export function useUpdateHive(hiveId: string | number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: UpdateHiveRequest) => hiveService.updateHive(hiveId, request),
+    mutationFn: (request: UpdateHiveRequest) => hiveService.updateHive(Number(hiveId), request),
     onMutate: async (request) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: QUERY_KEYS.detail(hiveId) });
@@ -155,7 +155,7 @@ export function useDeleteHive() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (hiveId: number) => hiveService.deleteHive(hiveId),
+    mutationFn: (hiveId: string | number) => hiveService.deleteHive(Number(hiveId)),
     onSuccess: (_, hiveId) => {
       // Remove from cache
       queryClient.removeQueries({ queryKey: QUERY_KEYS.detail(hiveId) });
@@ -177,7 +177,7 @@ export function useJoinHive() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (hiveId: number) => hiveService.joinHive(hiveId),
+    mutationFn: (hiveId: string | number) => hiveService.joinHive(Number(hiveId)),
     onSuccess: (_, hiveId) => {
       // Invalidate hive details and members
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.detail(hiveId) });
@@ -205,7 +205,7 @@ export function useLeaveHive() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (hiveId: number) => hiveService.leaveHive(hiveId),
+    mutationFn: (hiveId: string | number) => hiveService.leaveHive(Number(hiveId)),
     onSuccess: (_, hiveId) => {
       // Invalidate hive details and members
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.detail(hiveId) });
@@ -229,13 +229,13 @@ export function useLeaveHive() {
 /**
  * Hook to subscribe to real-time hive updates
  */
-export function useHiveSubscription(hiveId: number | undefined, enabled = true) {
+export function useHiveSubscription(hiveId: string | number | undefined, enabled = true) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!hiveId || !enabled) return;
 
-    const unsubscribe = hiveService.subscribeToHiveUpdates(hiveId, (updatedHive) => {
+    const unsubscribe = hiveService.subscribeToHiveUpdates(Number(hiveId), (updatedHive) => {
       // Update cache with real-time data
       queryClient.setQueryData(QUERY_KEYS.detail(hiveId), updatedHive);
 
@@ -244,7 +244,7 @@ export function useHiveSubscription(hiveId: number | undefined, enabled = true) 
         { queryKey: QUERY_KEYS.lists() },
         (old) => {
           if (!old) return old;
-          const index = old.content.findIndex(h => h.id === hiveId);
+          const index = old.content.findIndex(h => String(h.id) === String(hiveId));
           if (index === -1) return old;
 
           const newContent = [...old.content];
@@ -265,13 +265,13 @@ export function useHiveSubscription(hiveId: number | undefined, enabled = true) 
 /**
  * Hook to subscribe to presence updates in a hive
  */
-export function useHivePresence(hiveId: number | undefined, enabled = true) {
+export function useHivePresence(hiveId: string | number | undefined, enabled = true) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!hiveId || !enabled) return;
 
-    const unsubscribe = hiveService.subscribeToPresence(hiveId, (presence) => {
+    const unsubscribe = hiveService.subscribeToPresence(Number(hiveId), (presence) => {
       // You can handle presence updates here
       // For example, update a presence state or trigger UI updates
       queryClient.setQueryData(['hive-presence', hiveId], presence);
@@ -284,11 +284,11 @@ export function useHivePresence(hiveId: number | undefined, enabled = true) {
 /**
  * Hook to update presence status
  */
-export function useUpdatePresence(hiveId: number | undefined) {
+export function useUpdatePresence(hiveId: string | number | undefined) {
   const updatePresence = useCallback(
     (status: 'active' | 'away' | 'offline') => {
       if (!hiveId) return;
-      hiveService.updatePresenceStatus(hiveId, status);
+      hiveService.updatePresenceStatus(Number(hiveId), status);
     },
     [hiveId]
   );
@@ -299,10 +299,10 @@ export function useUpdatePresence(hiveId: number | undefined) {
 /**
  * Hook to get multiple hives by IDs (batch operation)
  */
-export function useHivesByIds(ids: number[]): UseQueryResult<Hive[], Error> {
+export function useHivesByIds(ids: (string | number)[]): UseQueryResult<Hive[], Error> {
   return useQuery({
     queryKey: ['hives', 'batch', ids],
-    queryFn: () => hiveService.getHivesByIds(ids),
+    queryFn: () => hiveService.getHivesByIds(ids.map(Number)),
     enabled: ids.length > 0,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
@@ -315,10 +315,10 @@ export function useHivesByIds(ids: number[]): UseQueryResult<Hive[], Error> {
 export function usePrefetchHive() {
   const queryClient = useQueryClient();
 
-  return useCallback((hiveId: number) => {
+  return useCallback((hiveId: string | number) => {
     queryClient.prefetchQuery({
       queryKey: QUERY_KEYS.detail(hiveId),
-      queryFn: () => hiveService.getHive(hiveId),
+      queryFn: () => hiveService.getHive(Number(hiveId)),
       staleTime: 1000 * 60 * 5,
     });
   }, [queryClient]);
@@ -333,9 +333,9 @@ export function useInvalidateHives() {
   return {
     invalidateAll: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all }),
     invalidateList: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lists() }),
-    invalidateDetail: (hiveId: number) =>
+    invalidateDetail: (hiveId: string | number) =>
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.detail(hiveId) }),
-    invalidateMembers: (hiveId: number) =>
+    invalidateMembers: (hiveId: string | number) =>
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.members(hiveId) }),
   };
 }

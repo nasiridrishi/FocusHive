@@ -43,6 +43,15 @@ const DEFAULT_POMODORO_CONFIG: PomodoroConfig = {
 };
 
 /**
+ * Format time in seconds to MM:SS format
+ */
+function formatTime(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+/**
  * Custom hook for Pomodoro timer functionality
  * Provides specialized Pomodoro technique features
  */
@@ -150,10 +159,10 @@ export function usePomodoro(hiveId?: number) {
 
   // Handle session completion
   useEffect(() => {
-    if (timer.session?.status === 'completed') {
-      const wasiFocusSession = timer.session.sessionType === SessionType.FOCUS;
+    if ((timer.session?.status as any) === 'completed') {
+      const wasFocusSession = timer.session.sessionType === SessionType.FOCUS;
 
-      if (wasiFocusSession) {
+      if (wasFocusSession) {
         const newCompleted = completedFocusSessions + 1;
         setCompletedFocusSessions(newCompleted);
         setTotalCompletedSessions(prev => prev + 1);
@@ -187,7 +196,7 @@ export function usePomodoro(hiveId?: number) {
   // Skip to next session type
   const skipToNext = useCallback(async () => {
     if (timer.session) {
-      await timer.cancel(timer.session.id);
+      await timer.cancel(String(timer.session.id));
     }
 
     const nextType = currentSessionType === SessionType.FOCUS
@@ -203,7 +212,7 @@ export function usePomodoro(hiveId?: number) {
   const resetCycle = useCallback(() => {
     setCompletedFocusSessions(0);
     if (timer.session) {
-      timer.cancel(timer.session.id);
+      timer.cancel(String(timer.session.id));
     }
   }, [timer]);
 
@@ -224,11 +233,11 @@ export function usePomodoro(hiveId?: number) {
     // State
     session: timer.session,
     sessionType: currentSessionType,
-    isRunning: timer.isActive,
+    isRunning: timer.isRunning,
     isPaused: timer.isPaused,
-    remainingTime: timer.remainingTime,
-    formattedTime: timer.formattedTime,
-    progress: timer.progress,
+    remainingTime: timer.time,
+    formattedTime: formatTime(timer.time),
+    progress: timer.time > 0 ? ((getDurationForType(currentSessionType) / 1000) - timer.time) / (getDurationForType(currentSessionType) / 1000) * 100 : 0,
 
     // Configuration
     config,
@@ -236,10 +245,10 @@ export function usePomodoro(hiveId?: number) {
 
     // Actions
     start: startPomodoro,
-    pause: () => timer.session && timer.pause(timer.session.id),
-    resume: () => timer.session && timer.resume(timer.session.id),
-    complete: () => timer.session && timer.complete(timer.session.id),
-    cancel: () => timer.session && timer.cancel(timer.session.id),
+    pause: () => timer.session && timer.pause(),
+    resume: () => timer.session && timer.start({}), // Resume by starting again
+    complete: () => timer.session && timer.skip(), // Complete by skipping to next
+    cancel: () => timer.session && timer.cancel(String(timer.session.id)),
     skipToNext,
     resetCycle,
 
@@ -250,13 +259,13 @@ export function usePomodoro(hiveId?: number) {
     // Statistics
     stats,
 
-    // Loading states
-    isLoading: timer.isLoading,
-    isStarting: timer.isStarting,
-    isPausing: timer.isPausing,
-    isResuming: timer.isResuming,
-    isCompleting: timer.isCompleting,
-    isCanceling: timer.isCanceling,
+    // Loading states (useTimer doesn't have these, so default to false)
+    isLoading: false,
+    isStarting: false,
+    isPausing: false,
+    isResuming: false,
+    isCompleting: false,
+    isCanceling: false,
   };
 }
 

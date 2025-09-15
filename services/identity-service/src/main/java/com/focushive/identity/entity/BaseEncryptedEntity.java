@@ -9,12 +9,15 @@ import jakarta.persistence.PreUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
+
 /**
  * Base class for entities that have encrypted fields.
  * Provides common functionality for managing encrypted fields and their hashes.
+ * Implements Serializable for Redis caching support.
  */
 @MappedSuperclass
-public abstract class BaseEncryptedEntity {
+public abstract class BaseEncryptedEntity implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(BaseEncryptedEntity.class);
     

@@ -3,6 +3,10 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { chatService } from '../services/chatService';
 import type {
   ChatMessage,
+  ExtendedChatMessage,
+  MessageType,
+  MessageStatus,
+  MessageAttachment,
   SendMessageRequest,
   UpdateMessageRequest,
   ChatTypingIndicator,
@@ -14,19 +18,19 @@ import type { PaginatedResponse } from '@/contracts/common';
 // Query keys for cache management
 const QUERY_KEYS = {
   all: ['chat'] as const,
-  messages: (hiveId: number) => [...QUERY_KEYS.all, 'messages', hiveId] as const,
-  history: (hiveId: number) => [...QUERY_KEYS.all, 'history', hiveId] as const,
+  messages: (hiveId: string | number) => [...QUERY_KEYS.all, 'messages', hiveId] as const,
+  history: (hiveId: string | number) => [...QUERY_KEYS.all, 'history', hiveId] as const,
   search: (params: ChatSearchParams) => [...QUERY_KEYS.all, 'search', params] as const,
-  receipts: (messageId: number) => [...QUERY_KEYS.all, 'receipts', messageId] as const,
+  receipts: (messageId: string | number) => [...QUERY_KEYS.all, 'receipts', messageId] as const,
 };
 
 /**
  * Hook to manage chat messages in a hive
  */
-export function useHiveChat(hiveId: number | undefined) {
+export function useHiveChat(hiveId: string | number | undefined) {
   const queryClient = useQueryClient();
-  const [typingUsers, setTypingUsers] = useState<Map<number, ChatTypingIndicator>>(new Map());
-  const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>([]);
+  const [typingUsers, setTypingUsers] = useState<Map<string | number, ChatTypingIndicator>>(new Map());
+  const [optimisticMessages, setOptimisticMessages] = useState<ExtendedChatMessage[]>([]);
   const unsubscribeRefs = useRef<(() => void)[]>([]);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -41,22 +45,28 @@ export function useHiveChat(hiveId: number | undefined) {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: (request: Omit<SendMessageRequest, 'hiveId'>) =>
-      chatService.sendMessage({ ...request, hiveId: hiveId! }),
+    mutationFn: (request: Omit<SendMessageRequest, 'roomId'>) =>
+      chatService.sendMessage({ ...request, roomId: String(hiveId!) }),
     onMutate: async (request) => {
       // Optimistic update
-      const tempMessage: ChatMessage = {
-        id: -Date.now(),
-        hiveId: hiveId!,
-        userId: -1,
-        username: 'You',
-        content: request.content,
-        type: request.type || 'TEXT',
-        status: 'SENDING',
-        reactions: [],
-        attachments: [],
+      const tempMessage: ExtendedChatMessage = {
+        id: String(-Date.now()),
+        hiveId: String(hiveId!),
+        senderId: 'current-user',
+        senderName: 'You',
+        text: request.text || request.content || '',
+        timestamp: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        userId: 'current-user',
+        username: 'You',
+        content: request.text || request.content || '',
+        type: (request.type as MessageType) || 'text',
+        status: 'sending' as MessageStatus,
+        reactions: [],
+        attachments: (request.attachments as MessageAttachment[]) || [],
+        edited: false,
+        deleted: false,
       };
 
       setOptimisticMessages(prev => [...prev, tempMessage]);
@@ -72,9 +82,11 @@ export function useHiveChat(hiveId: number | undefined) {
         (old) => {
           if (!old) return old;
           return {
-            ...old,
-            messages: [...old.messages, data],
-          };
+            messages: [...old.messages, data as ExtendedChatMessage],
+            roomId: old.roomId,
+            total: old.total,
+            hasMore: old.hasMore,
+          } as ChatHistory;
         }
       );
     },
@@ -83,7 +95,7 @@ export function useHiveChat(hiveId: number | undefined) {
       setOptimisticMessages(prev =>
         prev.map(m =>
           m.id === context?.tempMessage.id
-            ? { ...m, status: 'FAILED' as const }
+            ? { ...m, status: 'failed' as MessageStatus }
             : m
         )
       );
@@ -92,7 +104,7 @@ export function useHiveChat(hiveId: number | undefined) {
 
   // Update message mutation
   const updateMessageMutation = useMutation({
-    mutationFn: ({ messageId, ...request }: UpdateMessageRequest & { messageId: number }) =>
+    mutationFn: ({ messageId, ...request }: UpdateMessageRequest & { messageId: string | number }) =>
       chatService.updateMessage(messageId, request),
     onSuccess: (data) => {
       // Update in cache
@@ -101,9 +113,11 @@ export function useHiveChat(hiveId: number | undefined) {
         (old) => {
           if (!old) return old;
           return {
-            ...old,
-            messages: old.messages.map(m => m.id === data.id ? data : m),
-          };
+            messages: old.messages.map(m => m.id === data.id ? data as ExtendedChatMessage : m),
+            roomId: old.roomId,
+            total: old.total,
+            hasMore: old.hasMore,
+          } as ChatHistory;
         }
       );
     },
@@ -111,7 +125,7 @@ export function useHiveChat(hiveId: number | undefined) {
 
   // Delete message mutation
   const deleteMessageMutation = useMutation({
-    mutationFn: ({ messageId, soft = true }: { messageId: number; soft?: boolean }) =>
+    mutationFn: ({ messageId, soft = true }: { messageId: string | number; soft?: boolean }) =>
       chatService.deleteMessage(messageId, { soft }),
     onSuccess: (data, variables) => {
       if (variables.soft && data) {
@@ -121,9 +135,11 @@ export function useHiveChat(hiveId: number | undefined) {
           (old) => {
             if (!old) return old;
             return {
-              ...old,
-              messages: old.messages.map(m => m.id === variables.messageId ? data : m),
-            };
+              messages: old.messages.map(m => m.id === variables.messageId ? data as ExtendedChatMessage : m),
+              roomId: old.roomId,
+              total: old.total,
+              hasMore: old.hasMore,
+            } as ChatHistory;
           }
         );
       } else {
@@ -133,9 +149,11 @@ export function useHiveChat(hiveId: number | undefined) {
           (old) => {
             if (!old) return old;
             return {
-              ...old,
               messages: old.messages.filter(m => m.id !== variables.messageId),
-            };
+              roomId: old.roomId,
+              total: old.total ? old.total - 1 : old.total,
+              hasMore: old.hasMore,
+            } as ChatHistory;
           }
         );
       }
@@ -144,7 +162,7 @@ export function useHiveChat(hiveId: number | undefined) {
 
   // Add reaction mutation
   const addReactionMutation = useMutation({
-    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
+    mutationFn: ({ messageId, emoji }: { messageId: string | number; emoji: string }) =>
       chatService.addReaction(messageId, emoji),
     onSuccess: (_, variables) => {
       // Optimistically update the message in cache
@@ -154,7 +172,7 @@ export function useHiveChat(hiveId: number | undefined) {
 
   // Remove reaction mutation
   const removeReactionMutation = useMutation({
-    mutationFn: ({ messageId, emoji }: { messageId: number; emoji: string }) =>
+    mutationFn: ({ messageId, emoji }: { messageId: string | number; emoji: string }) =>
       chatService.removeReaction(messageId, emoji),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.history(hiveId!) });
@@ -181,7 +199,7 @@ export function useHiveChat(hiveId: number | undefined) {
   }, [hiveId]);
 
   // Load more messages (pagination)
-  const loadMoreMessages = useCallback(async (beforeMessageId: number) => {
+  const loadMoreMessages = useCallback(async (beforeMessageId: string | number) => {
     if (!hiveId) return;
 
     const moreHistory = await chatService.getMessageHistory(hiveId, {
@@ -195,11 +213,11 @@ export function useHiveChat(hiveId: number | undefined) {
       (old) => {
         if (!old) return moreHistory;
         return {
-          ...old,
           messages: [...moreHistory.messages, ...old.messages],
+          roomId: old.roomId || moreHistory.roomId,
+          total: (old.total || 0) + (moreHistory.messages?.length || 0),
           hasMore: moreHistory.hasMore,
-          oldestMessageId: moreHistory.oldestMessageId,
-        };
+        } as ChatHistory;
       }
     );
 
@@ -225,9 +243,11 @@ export function useHiveChat(hiveId: number | undefined) {
             return old;
           }
           return {
-            ...old,
             messages: [...old.messages, message],
-          };
+            roomId: old.roomId,
+            total: old.total ? old.total + 1 : old.total,
+            hasMore: old.hasMore,
+          } as ChatHistory;
         }
       );
     });
@@ -239,9 +259,11 @@ export function useHiveChat(hiveId: number | undefined) {
         (old) => {
           if (!old) return old;
           return {
-            ...old,
             messages: old.messages.map(m => m.id === message.id ? message : m),
-          };
+            roomId: old.roomId,
+            total: old.total,
+            hasMore: old.hasMore,
+          } as ChatHistory;
         }
       );
     });
@@ -253,9 +275,11 @@ export function useHiveChat(hiveId: number | undefined) {
         (old) => {
           if (!old) return old;
           return {
-            ...old,
             messages: old.messages.filter(m => m.id !== messageId),
-          };
+            roomId: old.roomId,
+            total: old.total ? old.total - 1 : old.total,
+            hasMore: old.hasMore,
+          } as ChatHistory;
         }
       );
     });
@@ -347,7 +371,7 @@ export function useMarkAsRead() {
   const queryClient = useQueryClient();
 
   const markAsReadMutation = useMutation({
-    mutationFn: (messageIds: number[]) => chatService.markAsRead(messageIds),
+    mutationFn: (messageIds: (string | number)[]) => chatService.markAsRead(messageIds),
     onSuccess: () => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
@@ -363,7 +387,7 @@ export function useMarkAsRead() {
 /**
  * Hook to get read receipts for a message
  */
-export function useReadReceipts(messageId: number | undefined) {
+export function useReadReceipts(messageId: string | number | undefined) {
   const receiptsQuery = useQuery({
     queryKey: QUERY_KEYS.receipts(messageId!),
     queryFn: () => chatService.getReadReceipts(messageId!),
@@ -381,12 +405,12 @@ export function useReadReceipts(messageId: number | undefined) {
 /**
  * Hook to manage optimistic messages (for advanced usage)
  */
-export function useOptimisticMessages(hiveId: number) {
+export function useOptimisticMessages(hiveId: string | number) {
   const [optimisticMessages, setOptimisticMessages] = useState<Map<string, ChatMessage>>(new Map());
   const queryClient = useQueryClient();
 
-  const sendOptimistic = useCallback(async (request: Omit<SendMessageRequest, 'hiveId'>) => {
-    const optimisticId = await chatService.sendMessageOptimistic({ ...request, hiveId });
+  const sendOptimistic = useCallback(async (request: Omit<SendMessageRequest, 'roomId'>) => {
+    const optimisticId = await chatService.sendMessageOptimistic({ ...request, roomId: String(hiveId) });
     const optimisticMessage = chatService.getOptimisticMessage(optimisticId);
 
     if (optimisticMessage) {
@@ -410,9 +434,8 @@ export function useOptimisticMessages(hiveId: number) {
     if (message) {
       // Retry sending
       const newId = await chatService.sendMessageOptimistic({
-        hiveId: message.hiveId,
-        content: message.content,
-        type: message.type,
+        roomId: message.hiveId,
+        text: message.content,
       });
 
       // Remove old, add new

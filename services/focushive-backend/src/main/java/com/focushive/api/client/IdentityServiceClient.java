@@ -15,22 +15,23 @@ import java.util.UUID;
 @FeignClient(
     name = "identity-service",
     url = "${identity.service.url}",
-    fallback = IdentityServiceFallback.class,
-    configuration = FeignConfiguration.class
+    fallback = IdentityServiceFallback.class
 )
-@Profile("!test") // Don't create this bean in test profile
 public interface IdentityServiceClient {
     
     // Authentication endpoints
-    
-    @PostMapping("/api/v1/auth/validate")
-    TokenValidationResponse validateToken(@RequestHeader("Authorization") String token);
-    
+
+    // NOTE: /api/v1/auth/validate endpoint does not exist in Identity Service
+    // JWT validation should be done locally using JWKS endpoint
+    // @PostMapping("/api/v1/auth/validate")
+    // TokenValidationResponse validateToken(@RequestHeader("Authorization") String token);
+
     @PostMapping("/api/v1/auth/refresh")
     TokenRefreshResponse refreshToken(@RequestBody TokenRefreshRequest request);
-    
-    @PostMapping("/api/v1/auth/introspect")
-    TokenIntrospectionResponse introspectToken(@RequestBody TokenIntrospectionRequest request);
+
+    // NOTE: Introspection endpoint not implemented yet
+    // @PostMapping("/api/v1/auth/introspect")
+    // TokenIntrospectionResponse introspectToken(@RequestBody TokenIntrospectionRequest request);
     
     // User management endpoints
     
@@ -55,7 +56,7 @@ public interface IdentityServiceClient {
     PersonaDto switchPersona(@PathVariable("userId") UUID userId, @RequestBody SwitchPersonaRequest request);
     
     // Service health check
-    
+
     @GetMapping("/actuator/health")
-    HealthResponse checkHealth();
+    ActuatorHealthResponse checkHealth();
 }

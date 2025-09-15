@@ -55,7 +55,7 @@ export const API_CONFIG = {
       return getApiConfig().baseUrl;
     } catch {
       // Fallback for cases where validation hasn't run yet
-      return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+      return import.meta.env.VITE_API_BASE_URL || 'https://identity.focushive.app';
     }
   },
   timeout: TIMEOUT_CONFIG.DEFAULT,

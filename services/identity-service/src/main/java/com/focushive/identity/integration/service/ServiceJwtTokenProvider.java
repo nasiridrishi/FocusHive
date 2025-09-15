@@ -1,6 +1,6 @@
 package com.focushive.identity.integration.service;
 
-import com.focushive.identity.security.JwtTokenProvider;
+import com.focushive.identity.security.RSAJwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +19,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ServiceJwtTokenProvider {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final RSAJwtTokenProvider jwtTokenProvider;
 
     @Value("${spring.application.name:identity-service}")
     private String serviceName;

@@ -42,7 +42,9 @@ const getStatusColor = (status: PresenceStatus, theme: Theme): string => {
   }
 }
 
-const StyledBadge = styled(Badge)<{
+const StyledBadge = styled(Badge, {
+  shouldForwardProp: (prop) => prop !== 'presenceStatus' && prop !== 'showAnimation',
+})<{
   presenceStatus: PresenceStatus
   showAnimation?: boolean
 }>(({theme, presenceStatus, showAnimation}) => {

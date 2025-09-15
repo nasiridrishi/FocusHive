@@ -1,7 +1,5 @@
 package com.focushive.api.security;
 
-import com.focushive.api.client.IdentityServiceClient;
-import com.focushive.api.dto.identity.TokenValidationResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +16,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -28,33 +28,37 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile("!test") // Don't load this filter in test profile
 public class IdentityServiceAuthenticationFilter extends OncePerRequestFilter {
-    
-    private final IdentityServiceClient identityServiceClient;
-    
+
+    private final JwtValidator jwtValidator;
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                  HttpServletResponse response, 
+    protected void doFilterInternal(HttpServletRequest request,
+                                  HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = extractToken(request);
-            
+
             if (StringUtils.hasText(token)) {
-                TokenValidationResponse validation = identityServiceClient.validateToken("Bearer " + token);
+                // Use local JWT validation instead of calling Identity Service
+                JwtValidator.ValidationResult validation = jwtValidator.validateToken(token);
                 
                 if (validation.isValid()) {
-                    // Create authentication object
-                    List<SimpleGrantedAuthority> authorities = validation.getAuthorities().stream()
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
-                    
-                    // Create custom principal with user info and active persona
+                    // Extract authorities from claims (default to USER role)
+                    List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+                    authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+                    // Extract user info from claims
+                    Map<String, Object> claims = validation.getClaims();
+
+                    // Create custom principal with user info
                     IdentityPrincipal principal = IdentityPrincipal.builder()
                             .userId(validation.getUserId())
-                            .username(validation.getUsername())
+                            .username((String) claims.get("sub"))
                             .email(validation.getEmail())
-                            .activePersona(validation.getActivePersona())
+                            // activePersona would need to be fetched separately
+                            // For now, leave it null - persona details not in JWT
+                            .activePersona(null)
                             .build();
                     
                     UsernamePasswordAuthenticationToken authentication = 
@@ -70,7 +74,7 @@ public class IdentityServiceAuthenticationFilter extends OncePerRequestFilter {
                 } else {
                     // Token validation failed - detailed logging controlled by config
                     if (log.isDebugEnabled()) {
-                        log.debug("Token validation failed: {}", validation.getErrorMessage());
+                        log.debug("Token validation failed: {}", validation.getError());
                     }
                 }
             }

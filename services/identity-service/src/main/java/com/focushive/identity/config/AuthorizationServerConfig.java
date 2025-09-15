@@ -152,9 +152,17 @@ public class AuthorizationServerConfig {
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+            // Local development redirect URIs
             .redirectUri("http://localhost:3000/auth/callback")
+            .redirectUri("http://localhost:3000/callback")
             .redirectUri("http://localhost:8080/login/oauth2/code/focushive")
+            // Production redirect URIs via Cloudflare
+            .redirectUri("https://focushive.app/auth/callback")
+            .redirectUri("https://focushive.app/callback")
+            .redirectUri("https://backend.focushive.app/login/oauth2/code/focushive")
+            // Post-logout redirect URIs
             .postLogoutRedirectUri("http://localhost:3000/")
+            .postLogoutRedirectUri("https://focushive.app/")
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .scope(OidcScopes.EMAIL)
@@ -164,6 +172,7 @@ public class AuthorizationServerConfig {
             .clientName("FocusHive Web Application")
             .clientSettings(ClientSettings.builder()
                 .requireAuthorizationConsent(true)
+                .requireProofKey(false) // Make PKCE optional for web clients
                 .build())
             .tokenSettings(TokenSettings.builder()
                 .accessTokenTimeToLive(Duration.ofHours(1))
@@ -179,6 +188,7 @@ public class AuthorizationServerConfig {
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .redirectUri("focushive://auth/callback")
+            .redirectUri("com.focushive.app://auth/callback") // Custom scheme for mobile
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .scope(OidcScopes.EMAIL)
@@ -198,7 +208,40 @@ public class AuthorizationServerConfig {
                 .build())
             .build();
 
-        return new InMemoryRegisteredClientRepository(webClient, mobileClient);
+        // Test client for development and testing purposes
+        RegisteredClient testClient = RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId("test-client")
+            .clientSecret("{noop}test-secret")
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+            .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+            // Test redirect URIs - very permissive for testing
+            .redirectUri("http://localhost:3000/callback")
+            .redirectUri("http://localhost:8080/callback")
+            .redirectUri("https://oauth.pstmn.io/v1/callback") // Postman callback
+            .redirectUri("https://oidcdebugger.com/debug") // OIDC debugger
+            .postLogoutRedirectUri("http://localhost:3000/")
+            .scope(OidcScopes.OPENID)
+            .scope(OidcScopes.PROFILE)
+            .scope(OidcScopes.EMAIL)
+            .scope("read")
+            .scope("write")
+            .clientName("Test Client")
+            .clientSettings(ClientSettings.builder()
+                .requireAuthorizationConsent(false) // No consent for testing
+                .requireProofKey(false) // PKCE optional for testing
+                .build())
+            .tokenSettings(TokenSettings.builder()
+                .accessTokenTimeToLive(Duration.ofHours(2))
+                .refreshTokenTimeToLive(Duration.ofDays(7))
+                .authorizationCodeTimeToLive(Duration.ofMinutes(10))
+                .reuseRefreshTokens(false)
+                .build())
+            .build();
+
+        return new InMemoryRegisteredClientRepository(webClient, mobileClient, testClient);
     }
 
     /**

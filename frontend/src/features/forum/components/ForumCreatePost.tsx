@@ -54,7 +54,7 @@ const ForumCreatePost: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    categoryId: 0,
+    categoryId: 0 as number | string,
     tags: [] as string[],
     isPinned: false,
     isLocked: false
@@ -106,7 +106,7 @@ const ForumCreatePost: React.FC = () => {
     }))
   }
 
-  const handleCategoryChange = (categoryId: number): void => {
+  const handleCategoryChange = (categoryId: number | string): void => {
     const category = categories.find(cat => cat.id === categoryId)
     setSelectedCategory(category || null)
     setFormData(prev => ({...prev, categoryId}))
@@ -165,7 +165,7 @@ const ForumCreatePost: React.FC = () => {
       return 'Post content must be at least 10 characters long'
     }
 
-    if (!formData.categoryId) {
+    if (!formData.categoryId || formData.categoryId === 0 || formData.categoryId === '0') {
       return 'Please select a category'
     }
 
@@ -310,7 +310,12 @@ const ForumCreatePost: React.FC = () => {
                         <InputLabel>Category</InputLabel>
                         <Select
                             value={formData.categoryId}
-                            onChange={(e) => handleCategoryChange(Number(e.target.value))}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Try to convert to number if it's a numeric string, otherwise keep as string
+                              const categoryId = isNaN(Number(value)) ? value : Number(value);
+                              handleCategoryChange(categoryId);
+                            }}
                             label="Category"
                         >
                           <MenuItem value={0}>

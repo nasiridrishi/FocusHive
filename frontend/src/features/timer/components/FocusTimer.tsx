@@ -319,7 +319,7 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
 
   if (compact) {
     return (
-        <Card sx={{minWidth: 280}}>
+        <Card data-testid="focus-timer" sx={{minWidth: 280}}>
           <CardContent sx={{p: 2}}>
             <Stack direction="row" spacing={2} alignItems="center">
               <CircularTimer
@@ -366,6 +366,7 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
 
   return (
       <Card
+          data-testid="focus-timer"
           sx={{
             maxWidth: isFullscreen ? '100vw' : 500,
             height: isFullscreen ? '100vh' : 'auto',
@@ -394,7 +395,10 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
             <Stack direction="row" spacing={1}>
               {showSettings && (
                   <Tooltip title="Settings">
-                    <IconButton onClick={handleSettingsClick} size="small">
+                    <IconButton
+                        data-testid="settings-button"
+                        onClick={handleSettingsClick}
+                        size="small">
                       <Settings/>
                     </IconButton>
                   </Tooltip>
@@ -451,7 +455,9 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
           <Stack direction="row" spacing={2} justifyContent="center" sx={{mb: 3}}>
             <Tooltip title={getMainActionTooltip()}>
               <Fab
+                  data-testid={timerState.isRunning ? 'pause-button' : (timerState.isPaused ? 'resume-button' : 'start-button')}
                   color="primary"
+                  aria-label={getMainActionTooltip()}
                   onClick={handlePlayPause}
                   size={isFullscreen ? 'large' : 'medium'}
               >
@@ -463,6 +469,8 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
                 <>
                   <Tooltip title="Stop Timer">
                     <IconButton
+                        data-testid="stop-button"
+                        aria-label="Stop timer"
                         onClick={handleStop}
                         size="large"
                         sx={{
@@ -475,7 +483,10 @@ export const FocusTimer: React.FC<FocusTimerProps> = ({
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Skip Phase">
-                    <IconButton onClick={handleSkip} size="large">
+                    <IconButton
+                        data-testid="skip-break-button"
+                        onClick={handleSkip}
+                        size="large">
                       <SkipNext/>
                     </IconButton>
                   </Tooltip>

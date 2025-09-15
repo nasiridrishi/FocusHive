@@ -24,6 +24,9 @@ public class RabbitMQConfig {
     @Value("${notification.queue.name:notifications}")
     private String queueName;
 
+    @Value("${notification.queue.priority-name:}")
+    private String priorityQueueName;
+
     @Value("${notification.queue.exchange:focushive.notifications}")
     private String exchangeName;
 
@@ -123,7 +126,8 @@ public class RabbitMQConfig {
     // Priority queue for urgent notifications
     @Bean
     public Queue priorityNotificationQueue() {
-        return QueueBuilder.durable(queueName + ".priority")
+        String priorityQueue = priorityQueueName.isEmpty() ? queueName + ".priority" : priorityQueueName;
+        return QueueBuilder.durable(priorityQueue)
                 .withArgument("x-max-priority", 10)
                 .withArgument("x-dead-letter-exchange", dlxExchangeName)
                 .withArgument("x-dead-letter-routing-key", "notification.priority.failed")
@@ -155,12 +159,43 @@ public class RabbitMQConfig {
                 .with("notification.email.*");
     }
 
-    // Message converter configuration
+    // Message converter configuration with enhanced error handling
     @Bean
     public MessageConverter messageConverter() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        return new Jackson2JsonMessageConverter(objectMapper);
+
+        // Configure ObjectMapper for better error handling
+        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, false);
+
+        // Add debugging for conversion issues
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper) {
+            @Override
+            public Object fromMessage(org.springframework.amqp.core.Message message) throws org.springframework.amqp.support.converter.MessageConversionException {
+                try {
+                    String body = new String(message.getBody());
+                    System.out.println("=== Attempting to convert RabbitMQ message ===");
+                    System.out.println("Raw message body: " + body);
+                    System.out.println("Message properties: " + message.getMessageProperties());
+                    System.out.println("Content type: " + message.getMessageProperties().getContentType());
+
+                    Object result = super.fromMessage(message);
+                    System.out.println("Successfully converted to: " + (result != null ? result.getClass().getName() : "null"));
+                    return result;
+                } catch (Exception e) {
+                    System.err.println("=== Message conversion failed ===");
+                    System.err.println("Error: " + e.getMessage());
+                    if (e.getCause() != null) {
+                        System.err.println("Cause: " + e.getCause().getMessage());
+                    }
+                    throw new org.springframework.amqp.support.converter.MessageConversionException("Failed to convert message", e);
+                }
+            }
+        };
+
+        return converter;
     }
 
     @Bean
@@ -198,9 +233,36 @@ public class RabbitMQConfig {
         // Configure retry logic
         factory.setDefaultRequeueRejected(false);
         
-        // Error handler for failed messages
+        // Error handler for failed messages with detailed logging
         factory.setErrorHandler(throwable -> {
-            System.err.println("Error in listener: " + throwable.getMessage());
+            System.err.println("=== RabbitMQ Message Processing Error ===");
+            System.err.println("Error Type: " + throwable.getClass().getName());
+            System.err.println("Error Message: " + throwable.getMessage());
+
+            if (throwable.getCause() != null) {
+                System.err.println("Root Cause: " + throwable.getCause().getClass().getName());
+                System.err.println("Root Cause Message: " + throwable.getCause().getMessage());
+            }
+
+            // Print first few stack trace elements for debugging
+            StackTraceElement[] stackTrace = throwable.getStackTrace();
+            if (stackTrace != null && stackTrace.length > 0) {
+                System.err.println("Stack trace (first 5 elements):");
+                for (int i = 0; i < Math.min(5, stackTrace.length); i++) {
+                    System.err.println("  at " + stackTrace[i]);
+                }
+            }
+
+            // Log specific conversion errors
+            if (throwable.getMessage() != null && throwable.getMessage().contains("Failed to convert message")) {
+                System.err.println("Message conversion failed - possible causes:");
+                System.err.println("  1. Message format doesn't match expected DTO structure");
+                System.err.println("  2. Missing required fields in the message");
+                System.err.println("  3. Type mismatch in message fields");
+                System.err.println("  4. Serialization/deserialization issues");
+            }
+
+            System.err.println("==========================================");
         });
         
         return factory;

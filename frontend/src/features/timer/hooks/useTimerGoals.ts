@@ -41,9 +41,9 @@ export function useTimerGoals() {
   });
 
   // Separate active and completed goals
-  const activeGoals = goals.filter((g: TimerGoal) => g.status === 'active');
-  const completedGoals = goals.filter((g: TimerGoal) => g.status === 'completed');
-  const pausedGoals = goals.filter((g: TimerGoal) => g.status === 'paused');
+  const activeGoals = goals.filter((g: TimerGoal) => !g.completed && new Date(g.endDate) > new Date());
+  const completedGoals = goals.filter((g: TimerGoal) => g.completed);
+  const pausedGoals = goals.filter((g: TimerGoal) => !g.completed && new Date(g.endDate) <= new Date()); // Expired but not completed
 
   return {
     goals,
@@ -136,7 +136,7 @@ export function useDeleteTimerGoal() {
     onSuccess: (_, goalId) => {
       queryClient.setQueryData<TimerGoal[]>(
         ['timer', 'goals'],
-        (old = []) => old.filter(g => g.id !== goalId)
+        (old = []) => old.filter(g => String(g.id) !== String(goalId))
       );
       queryClient.removeQueries({ queryKey: ['timer', 'goals', goalId] });
       queryClient.invalidateQueries({ queryKey: ['timer', 'goals'] });
@@ -168,39 +168,31 @@ export function useGoalProgress(goalId: number | undefined) {
       let current = 0;
       const now = new Date();
 
-      // Calculate current progress based on goal type
-      switch (goal.goalType) {
-        case 'sessions':
-          current = goal.period === 'daily' ? stats.dailyStats?.sessionsCompleted || 0 :
-                   goal.period === 'weekly' ? stats.weeklyStats?.sessionsCompleted || 0 :
-                   stats.monthlyStats?.sessionsCompleted || 0;
+      // For now, assume all goals are focus time in minutes
+      // Since TimerGoal only has targetMinutes, we use that
+      switch (goal.type) {
+        case 'daily':
+          current = Math.floor((stats.totalTime || 0) / (1000 * 60)); // Convert ms to minutes for daily
           break;
-
-        case 'minutes':
-          const minutes = goal.period === 'daily' ? stats.dailyStats?.totalMinutes || 0 :
-                         goal.period === 'weekly' ? stats.weeklyStats?.totalMinutes || 0 :
-                         stats.monthlyStats?.totalMinutes || 0;
-          current = Math.floor(minutes);
+        case 'weekly':
+          current = Math.floor((stats.totalTime || 0) / (1000 * 60)); // Convert ms to minutes for weekly
           break;
-
-        case 'streak':
-          current = stats.currentStreak || 0;
+        case 'monthly':
+          current = Math.floor((stats.totalTime || 0) / (1000 * 60)); // Convert ms to minutes for monthly
           break;
-
-        case 'focus_time':
-          const focusMinutes = goal.period === 'daily' ? stats.dailyStats?.focusMinutes || 0 :
-                              goal.period === 'weekly' ? stats.weeklyStats?.focusMinutes || 0 :
-                              stats.monthlyStats?.focusMinutes || 0;
-          current = Math.floor(focusMinutes);
+        case 'custom':
+          current = Math.floor((stats.totalTime || 0) / (1000 * 60)); // Convert ms to minutes for custom
           break;
+        default:
+          current = goal.currentMinutes;
       }
 
-      const percentage = goal.targetValue > 0 ? (current / goal.targetValue) * 100 : 0;
-      const remaining = Math.max(0, goal.targetValue - current);
-      const isCompleted = current >= goal.targetValue;
+      const percentage = goal.targetMinutes > 0 ? (current / goal.targetMinutes) * 100 : 0;
+      const remaining = Math.max(0, goal.targetMinutes - current);
+      const isCompleted = current >= goal.targetMinutes;
 
       // Calculate projected completion based on average
-      const dailyAverage = stats.dailyStats?.averageSessionsPerDay || 0;
+      const dailyAverage = stats.averageSessionLength ? (stats.totalTime / stats.totalSessions) / (1000 * 60 * 60 * 24) : 0;
       let projectedCompletion: Date | undefined;
       if (dailyAverage > 0 && remaining > 0) {
         const daysToComplete = Math.ceil(remaining / dailyAverage);
@@ -209,7 +201,7 @@ export function useGoalProgress(goalId: number | undefined) {
 
       setProgress({
         current,
-        target: goal.targetValue,
+        target: goal.targetMinutes,
         percentage: Math.min(100, percentage),
         remaining,
         isCompleted,
@@ -275,46 +267,43 @@ export function useGoalRecommendations() {
     if (!stats) return [];
 
     const recs = [];
-    const avgDaily = stats.dailyStats?.averageSessionsPerDay || 0;
-    const avgMinutes = stats.dailyStats?.totalMinutes || 0;
+    const avgDaily = stats.totalSessions / Math.max(1, stats.streakDays || 1);
+    const avgMinutes = (stats.totalTime || 0) / (1000 * 60); // Convert ms to minutes
 
     // Recommend based on current performance
     if (avgDaily > 0) {
       recs.push({
-        type: 'sessions',
-        period: 'daily',
-        targetValue: Math.ceil(avgDaily * 1.2), // 20% increase
-        title: 'Daily Sessions Challenge',
-        description: `Increase your daily sessions to ${Math.ceil(avgDaily * 1.2)}`,
+        type: 'daily',
+        targetMinutes: Math.ceil(avgMinutes / 7 * 1.2), // 20% increase for daily
+        title: 'Daily Focus Challenge',
+        description: `Increase your daily focus to ${Math.ceil(avgMinutes / 7 * 1.2)} minutes`,
       });
     }
 
     if (avgMinutes > 0) {
       recs.push({
-        type: 'minutes',
-        period: 'weekly',
-        targetValue: Math.ceil(avgMinutes * 7 * 1.1), // 10% increase weekly
+        type: 'weekly',
+        targetMinutes: Math.ceil(avgMinutes * 1.1), // 10% increase weekly
         title: 'Weekly Focus Time',
-        description: `Aim for ${Math.ceil(avgMinutes * 7 * 1.1)} minutes per week`,
+        description: `Aim for ${Math.ceil(avgMinutes * 1.1)} minutes per week`,
       });
     }
 
     // Streak recommendation
+    // Streak-based goal (using custom type since it's not time-based)
     if (stats.currentStreak && stats.currentStreak > 0) {
       recs.push({
-        type: 'streak',
-        period: 'continuous',
-        targetValue: stats.currentStreak + 7,
+        type: 'custom',
+        targetMinutes: Math.ceil(avgMinutes), // Maintain current average
         title: 'Extend Your Streak',
-        description: `Keep your streak going for ${stats.currentStreak + 7} days`,
+        description: `Keep your ${stats.currentStreak}-day streak going`,
       });
     } else {
       recs.push({
-        type: 'streak',
-        period: 'continuous',
-        targetValue: 7,
+        type: 'daily',
+        targetMinutes: 25, // Standard Pomodoro
         title: 'Start a Streak',
-        description: 'Build a 7-day focus streak',
+        description: 'Build a daily focus habit with 25 minutes',
       });
     }
 
@@ -334,17 +323,17 @@ export function useTimerGoalActions() {
 
   const pauseGoal = useMutation({
     mutationFn: (goalId: number) =>
-      updateGoal.mutateAsync({ id: goalId, updates: { status: 'paused' } }),
+      updateGoal.mutateAsync({ id: goalId, updates: { reminderEnabled: false } }), // Disable reminders as a "pause"
   });
 
   const resumeGoal = useMutation({
     mutationFn: (goalId: number) =>
-      updateGoal.mutateAsync({ id: goalId, updates: { status: 'active' } }),
+      updateGoal.mutateAsync({ id: goalId, updates: { reminderEnabled: true } }), // Re-enable reminders as "resume"
   });
 
   const completeGoal = useMutation({
     mutationFn: (goalId: number) =>
-      updateGoal.mutateAsync({ id: goalId, updates: { status: 'completed', completedAt: new Date().toISOString() } }),
+      updateGoal.mutateAsync({ id: goalId, updates: { completed: true, completedAt: new Date().toISOString() } }),
   });
 
   return {

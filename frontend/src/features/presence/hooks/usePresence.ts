@@ -19,19 +19,19 @@ import type { PaginatedResponse } from '@/contracts/common';
 // Query keys for cache management
 const QUERY_KEYS = {
   all: ['presence'] as const,
-  user: (userId: number) => [...QUERY_KEYS.all, 'user', userId] as const,
-  hive: (hiveId: number) => [...QUERY_KEYS.all, 'hive', hiveId] as const,
-  bulk: (userIds: number[]) => [...QUERY_KEYS.all, 'bulk', userIds] as const,
+  user: (userId: string | number) => [...QUERY_KEYS.all, 'user', String(userId)] as const,
+  hive: (hiveId: string | number) => [...QUERY_KEYS.all, 'hive', String(hiveId)] as const,
+  bulk: (userIds: (string | number)[]) => [...QUERY_KEYS.all, 'bulk', userIds.map(String)] as const,
   search: (params: PresenceSearchParams) => [...QUERY_KEYS.all, 'search', params] as const,
-  history: (userId: number, date?: string) => [...QUERY_KEYS.all, 'history', userId, date] as const,
-  statistics: (userId: number, period?: string) => [...QUERY_KEYS.all, 'statistics', userId, period] as const,
+  history: (userId: string | number, date?: string) => [...QUERY_KEYS.all, 'history', String(userId), date] as const,
+  statistics: (userId: string | number, period?: string) => [...QUERY_KEYS.all, 'statistics', String(userId), period] as const,
   collaboration: (sessionId: string) => [...QUERY_KEYS.all, 'collaboration', sessionId] as const,
 };
 
 /**
  * Hook to manage user presence
  */
-export function useUserPresence(userId: number | undefined) {
+export function useUserPresence(userId: string | number | undefined) {
   const queryClient = useQueryClient();
   const [realtimePresence, setRealtimePresence] = useState<UserPresence | null>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -39,7 +39,7 @@ export function useUserPresence(userId: number | undefined) {
   // Fetch user presence
   const presenceQuery = useQuery({
     queryKey: QUERY_KEYS.user(userId!),
-    queryFn: () => presenceService.getUserPresence(userId!),
+    queryFn: () => presenceService.getUserPresence(Number(userId!)),
     enabled: !!userId,
     staleTime: 1000 * 30, // 30 seconds
     gcTime: 1000 * 60, // 1 minute
@@ -68,16 +68,19 @@ export function useUserPresence(userId: number | undefined) {
       unsubscribeRef.current = wsService.subscribe(
         `/topic/presence/${userId}`,
         (update: PresenceUpdate) => {
-          if (update.userId === userId) {
+          if (String(update.userId) === String(userId)) {
           const newPresence: UserPresence = {
-            userId: update.userId,
+            userId: String(update.userId),
             username: presenceQuery.data?.username || 'Unknown',
             avatar: presenceQuery.data?.avatar,
             status: update.status,
-            activity: update.activity,
-            lastSeen: update.timestamp,
-            lastHeartbeat: update.timestamp,
-            deviceInfo: presenceQuery.data?.deviceInfo,
+            focusLevel: 'available',
+            lastSeen: new Date().toISOString(),
+            lastActivity: new Date().toISOString(),
+            device: presenceQuery.data?.device || {
+              type: 'web',
+              id: 'browser-' + Date.now()
+            },
             metadata: presenceQuery.data?.metadata,
           };
           setRealtimePresence(newPresence);
@@ -108,15 +111,15 @@ export function useUserPresence(userId: number | undefined) {
 /**
  * Hook to manage hive presence
  */
-export function useHivePresence(hiveId: number | undefined) {
+export function useHivePresence(hiveId: string | number | undefined) {
   const queryClient = useQueryClient();
-  const [realtimeUpdates, setRealtimeUpdates] = useState<Map<number, UserPresence>>(new Map());
+  const [realtimeUpdates, setRealtimeUpdates] = useState<Map<string, UserPresence>>(new Map());
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // Fetch hive presence
   const hivePresenceQuery = useQuery({
     queryKey: QUERY_KEYS.hive(hiveId!),
-    queryFn: () => presenceService.getHivePresence(hiveId!),
+    queryFn: () => presenceService.getHivePresence(Number(hiveId!)),
     enabled: !!hiveId,
     staleTime: 1000 * 30, // 30 seconds
     gcTime: 1000 * 60, // 1 minute
@@ -137,13 +140,17 @@ export function useHivePresence(hiveId: number | undefined) {
           const updated = new Map(prev);
           const userPresence: UserPresence = {
             userId: update.userId,
-            username: 'User ' + update.userId, // Will be replaced by cache
+            username: update.username || '',
             status: update.status,
-            activity: update.activity,
-            lastSeen: update.timestamp,
-            lastHeartbeat: update.timestamp,
-          } as UserPresence;
-          updated.set(update.userId, userPresence);
+            focusLevel: 'available',
+            lastSeen: new Date().toISOString(),
+            lastActivity: new Date().toISOString(),
+            device: {
+              type: 'web',
+              id: 'browser-' + Date.now()
+            }
+          };
+          updated.set(String(update.userId), userPresence);
           return updated;
         });
 
@@ -163,7 +170,7 @@ export function useHivePresence(hiveId: number | undefined) {
     ? {
         ...hivePresenceQuery.data,
         activeUsers: hivePresenceQuery.data.activeUsers.map(user => {
-          const realtimeUser = realtimeUpdates.get(user.userId);
+          const realtimeUser = realtimeUpdates.get(String(user.userId));
           return realtimeUser || user;
         }),
       }
@@ -188,7 +195,7 @@ export function useActivity() {
   // Start activity mutation
   const startActivityMutation = useMutation({
     mutationFn: (activity: UserActivity) =>
-      presenceService.setPresence({ status: 'BUSY', activity }),
+      presenceService.setPresence({ status: 'busy', activity }),
     onSuccess: () => {
       // Invalidate presence queries to reflect new activity
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
@@ -197,7 +204,7 @@ export function useActivity() {
 
   // End activity mutation
   const endActivityMutation = useMutation({
-    mutationFn: () => presenceService.setPresence({ status: 'ONLINE' }),
+    mutationFn: () => presenceService.setPresence({ status: 'online' }),
     onSuccess: () => {
       // Invalidate presence queries
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
@@ -215,10 +222,10 @@ export function useActivity() {
 /**
  * Hook to get bulk presence
  */
-export function useBulkPresence(userIds: number[]) {
+export function useBulkPresence(userIds: (string | number)[]) {
   const bulkPresenceQuery = useQuery({
     queryKey: QUERY_KEYS.bulk(userIds),
-    queryFn: () => presenceService.getBulkPresence(userIds),
+    queryFn: () => presenceService.getBulkPresence(userIds.map(Number)),
     enabled: userIds.length > 0,
     staleTime: 1000 * 30, // 30 seconds
   });
@@ -257,13 +264,13 @@ export function usePresenceSearch(params: PresenceSearchParams) {
 /**
  * Hook to get presence history
  */
-export function usePresenceHistory(userId: number | undefined, date?: string) {
+export function usePresenceHistory(userId: string | number | undefined, date?: string) {
   const historyQuery = useQuery({
     queryKey: QUERY_KEYS.history(userId!, date),
     queryFn: () => {
       const endDate = date || new Date().toISOString();
       const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      return presenceService.getPresenceHistory(userId!, startDate, endDate);
+      return presenceService.getPresenceHistory(Number(userId!), startDate, endDate);
     },
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -279,10 +286,10 @@ export function usePresenceHistory(userId: number | undefined, date?: string) {
 /**
  * Hook to get presence statistics
  */
-export function usePresenceStatistics(userId: number | undefined, period?: string) {
+export function usePresenceStatistics(userId: string | number | undefined, period?: string) {
   const statisticsQuery = useQuery({
     queryKey: QUERY_KEYS.statistics(userId!, period),
-    queryFn: () => presenceService.getStatistics(userId!),
+    queryFn: () => presenceService.getStatistics(Number(userId!)),
     enabled: !!userId,
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
@@ -322,7 +329,7 @@ export function useCollaboration(sessionId?: string) {
       ),
     onSuccess: (data) => {
       setCurrentSession(data);
-      queryClient.setQueryData(QUERY_KEYS.collaboration(data.sessionId), data);
+      queryClient.setQueryData(QUERY_KEYS.collaboration(data.id), data);
     },
   });
 
@@ -330,11 +337,11 @@ export function useCollaboration(sessionId?: string) {
   const joinSessionMutation = useMutation({
     mutationFn: async (sessionId: string) => {
       await presenceService.joinCollaborationSession(sessionId);
-      return { sessionId } as CollaborationSession;
+      return { id: sessionId, userId: '', startedAt: new Date().toISOString(), plannedDuration: 0, focusLevel: 'available', breaks: [] } as CollaborationSession;
     },
     onSuccess: (data) => {
       setCurrentSession(data);
-      queryClient.setQueryData(QUERY_KEYS.collaboration(data.sessionId), data);
+      queryClient.setQueryData(QUERY_KEYS.collaboration(data.id), data);
     },
   });
 
@@ -367,7 +374,7 @@ export function useCollaboration(sessionId?: string) {
  * Hook to automatically manage presence
  * Handles heartbeats, page visibility, and idle detection
  */
-export function useAutoPresence(userId: number | undefined, enabled = true) {
+export function useAutoPresence(userId: string | number | undefined, enabled = true) {
   const { setPresence } = useUserPresence(userId);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout>();
   const idleTimeoutRef = useRef<NodeJS.Timeout>();
@@ -384,7 +391,7 @@ export function useAutoPresence(userId: number | undefined, enabled = true) {
 
     // Set new idle timeout (5 minutes)
     idleTimeoutRef.current = setTimeout(() => {
-      presenceService.setPresence({ status: 'AWAY' });
+      presenceService.setPresence({ status: 'away' });
     }, 5 * 60 * 1000);
   }, []);
 
@@ -394,9 +401,9 @@ export function useAutoPresence(userId: number | undefined, enabled = true) {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setPresence({ status: 'AWAY' });
+        setPresence({ status: 'away' });
       } else {
-        setPresence({ status: 'ONLINE' });
+        setPresence({ status: 'online' });
         handleActivity();
       }
     };
@@ -416,7 +423,7 @@ export function useAutoPresence(userId: number | undefined, enabled = true) {
     const sendHeartbeat = () => {
       // Heartbeat is handled automatically by the service
       // Just set online status to keep presence active
-      presenceService.setPresence({ status: 'ONLINE' }).catch(error => {
+      presenceService.setPresence({ status: 'online' }).catch(error => {
         console.error('Failed to update presence:', error);
       });
     };
@@ -446,7 +453,7 @@ export function useAutoPresence(userId: number | undefined, enabled = true) {
 /**
  * Hook for managing presence in a specific context
  */
-export function useContextPresence(context: 'hive' | 'global', contextId?: number) {
+export function useContextPresence(context: 'hive' | 'global', contextId?: string | number) {
   const queryClient = useQueryClient();
   const [onlineUsers, setOnlineUsers] = useState<UserPresence[]>([]);
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -467,15 +474,19 @@ export function useContextPresence(context: 'hive' | 'global', contextId?: numbe
           setOnlineUsers(prev => {
             const filtered = prev.filter(u => u.userId !== update.userId);
 
-            if (update.status !== 'OFFLINE') {
+            if (update.status !== 'offline') {
               const userPresence: UserPresence = {
                 userId: update.userId,
-                username: 'User ' + update.userId,
+                username: update.username || '',
                 status: update.status,
-                activity: update.activity,
-                lastSeen: update.timestamp,
-                lastHeartbeat: update.timestamp,
-              } as UserPresence;
+                focusLevel: 'available',
+                lastSeen: new Date().toISOString(),
+                lastActivity: new Date().toISOString(),
+                device: {
+                  type: 'web',
+                  id: 'browser-' + Date.now()
+                }
+              };
               return [...filtered, userPresence];
             }
 

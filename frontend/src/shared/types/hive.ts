@@ -1,31 +1,36 @@
 // Hive related types
 import {User} from './auth'
 
-export interface Hive {
+export interface HiveBase {
   id: string
   name: string
   description: string
   ownerId: string
   owner: User
-  maxMembers: number
-  isPublic: boolean
-  tags: string[]
-  settings: HiveSettings
+tags?: string[]
+  settings: HiveSettingsBase
   currentMembers: number
-  memberCount: number // Alias for currentMembers
-  isOwner: boolean
-  isMember: boolean
+  memberCount?: number // Alias for currentMembers
+  status?: 'ACTIVE' | 'INACTIVE'
   createdAt: string
   updatedAt: string
 }
 
-export interface HiveSettings {
+export interface HiveSettingsBase {
+  focusMode: string
+  maxParticipants: number
+}
+
+export interface HiveSettings extends HiveSettingsBase {
   allowChat: boolean
   allowVoice: boolean
   requireApproval: boolean
-  focusMode: 'pomodoro' | 'continuous' | 'flexible'
+  privacyLevel: 'PUBLIC' | 'PRIVATE' | 'INVITE_ONLY'
+  category: 'STUDY' | 'WORK' | 'SOCIAL' | 'CODING'
+  focusMode: 'POMODORO' | 'TIMEBLOCK' | 'FREEFORM'
   defaultSessionLength: number // in minutes
   maxSessionLength: number // in minutes
+  [key: string]: any // Allow additional custom settings
 }
 
 export interface HiveMember {
@@ -47,6 +52,24 @@ export interface HiveMemberPermissions {
 }
 
 // Response type for API operations
+export interface Hive extends HiveBase {
+  maxMembers: number
+  isPublic: boolean
+  settings: HiveSettings
+  isOwner: boolean
+  isMember: boolean
+  tags: string[]
+  members?: Array<{ userId: string; joinedAt: string }>
+  statistics?: {
+    totalSessions: number
+    totalFocusTime: number
+    averageRating: number
+    weeklyActiveUsers: number
+  }
+  nextSession?: unknown
+  imageUrl?: string
+}
+
 export type HiveResponse = Hive
 
 export interface CreateHiveRequest {

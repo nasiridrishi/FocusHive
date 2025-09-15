@@ -1,5 +1,6 @@
 package com.focushive.notification.config;
 
+import com.focushive.notification.security.ApiKeyAuthenticationFilter;
 import com.focushive.notification.security.CustomAuthenticationEntryPoint;
 import com.focushive.notification.security.RequestValidationFilter;
 import com.focushive.notification.security.ServiceAuthenticationFilter;
@@ -41,13 +42,16 @@ public class SecurityConfig {
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     private final RequestValidationFilter requestValidationFilter;
     private final ServiceAuthenticationFilter serviceAuthenticationFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
 
     public SecurityConfig(CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
                          RequestValidationFilter requestValidationFilter,
-                         ServiceAuthenticationFilter serviceAuthenticationFilter) {
+                         ServiceAuthenticationFilter serviceAuthenticationFilter,
+                         ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) {
         this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
         this.requestValidationFilter = requestValidationFilter;
         this.serviceAuthenticationFilter = serviceAuthenticationFilter;
+        this.apiKeyAuthenticationFilter = apiKeyAuthenticationFilter;
     }
 
     /**
@@ -107,8 +111,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // Add request validation filter FIRST to catch malformed JSON
             .addFilterBefore(requestValidationFilter, UsernamePasswordAuthenticationFilter.class)
-            // Add service authentication filter for service-to-service auth
-            .addFilterBefore(serviceAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            // Add API key authentication filter for service-to-service auth (checks API keys first)
+            .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            // Add service authentication filter for JWT-based service auth (fallback to JWT)
+            .addFilterAfter(serviceAuthenticationFilter, ApiKeyAuthenticationFilter.class)
             .authorizeHttpRequests(authz -> authz
                 // OPTIONS requests should be permitted for CORS
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

@@ -13,9 +13,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Configuration for Feign clients and inter-service communication.
+ * Note: @EnableFeignClients is now in the main application class to avoid conflicts
  */
 @Configuration
-@EnableFeignClients(basePackages = "com.focushive.backend.client")
 public class FeignConfig {
 
     @Value("${identity.service.token:}")

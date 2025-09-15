@@ -280,9 +280,18 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               {/* Productivity Chart */}
               {filter.metrics.includes('focus-time') && (
                   <ProductivityChart
-                      data={data.trends.focusTime}
-                      timeRange={filter.timeRange}
-                      loading={loading}
+                      data={data.trends.focusTime.map(point => ({
+                        date: point.x,
+                        focusTime: point.y,
+                        breakTime: 0,
+                        sessions: 0
+                    }))}
+                      view={filter.timeRange.period === 'day' ? 'daily' : filter.timeRange.period === 'week' ? 'weekly' : 'monthly'}
+                      onViewChange={(newView) => {
+                        const period = newView === 'daily' ? 'day' : newView === 'weekly' ? 'week' : 'month';
+                        updateFilter({ ...filter, timeRange: { ...filter.timeRange, period } });
+                      }}
+                      isLoading={loading}
                       error={error}
                   />
               )}

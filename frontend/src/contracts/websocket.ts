@@ -215,6 +215,7 @@ export interface WebSocketHeartbeat {
  */
 export interface PresenceUpdate {
   userId: string;
+  username?: string;
   hiveId?: string;
   status: PresenceStatus;
   lastActivity: string;
@@ -242,6 +243,11 @@ export interface ChatMessage {
   senderName: string;
   text: string;
   timestamp: string;
+  createdAt?: string;  // Add for compatibility with chat hooks
+  updatedAt?: string;  // Add for compatibility
+  userId?: string;     // Alias for senderId
+  username?: string;   // Alias for senderName
+  content?: string;    // Alias for text
   edited?: boolean;
   deleted?: boolean;
   reactions?: Array<{
@@ -250,13 +256,7 @@ export interface ChatMessage {
     userName: string;
   }>;
   mentions?: string[];
-  attachments?: Array<{
-    id: string;
-    name: string;
-    type: string;
-    size: number;
-    url: string;
-  }>;
+  attachments?: import('@/contracts/chat').MessageAttachment[];
   threadId?: string;
   replyToId?: string;
 }

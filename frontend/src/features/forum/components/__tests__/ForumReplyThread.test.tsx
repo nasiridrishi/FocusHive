@@ -18,6 +18,7 @@ describe('ForumReplyThread XSS Security', () => {
   const mockReply: ForumReply = {
     id: 1,
     content: '<script>alert("XSS Attack")</script><img src=x onerror="alert(\'XSS\')"><p onclick="alert(\'XSS\')">Normal text</p>',
+    authorId: 1,
     author: {
       id: 1,
       username: 'testuser',
@@ -27,7 +28,6 @@ describe('ForumReplyThread XSS Security', () => {
       postCount: 10,
       reputation: 100
     },
-    authorId: 1,
     postId: 1,
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',

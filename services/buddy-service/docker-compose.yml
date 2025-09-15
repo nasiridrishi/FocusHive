@@ -8,9 +8,9 @@ services:
   # ============================================================================
   # PostgreSQL Database
   # ============================================================================
-  focushive_buddy_service_postgres:
+  postgres:
     image: postgres:15-alpine
-    container_name: ${POSTGRES_CONTAINER_NAME:-focushive_buddy_service_postgres}
+    container_name: focushive-buddy-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -18,8 +18,7 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ${POSTGRES_VOLUME_NAME:-focushive_buddy_service_postgres_data}:/var/lib/postgresql/data
-    # Port not exposed to host - only accessible within Docker network
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - focushive-shared-network
     restart: unless-stopped
@@ -38,15 +37,14 @@ services:
   # ============================================================================
   # Redis Cache
   # ============================================================================
-  focushive_buddy_service_redis:
+  redis:
     image: redis:7-alpine
-    container_name: ${REDIS_CONTAINER_NAME:-focushive_buddy_service_redis}
+    container_name: focushive-buddy-redis
     command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
-      - ${REDIS_VOLUME_NAME:-focushive_buddy_service_redis_data}:/data
-    # Port not exposed to host - only accessible within Docker network
+      - redis-data:/data
     networks:
       - focushive-shared-network
     restart: unless-stopped
@@ -64,14 +62,14 @@ services:
   # ============================================================================
   # Buddy Service Application
   # ============================================================================
-  focushive_buddy_service_app:
+  buddy-service:
     build:
       context: .
       dockerfile: ${DOCKERFILE_NAME:-Dockerfile.production}
       args:
         - JAR_FILE=build/libs/buddy-service.jar
     image: ${SERVICE_NAME:-buddy-service}:${SERVICE_VERSION:-latest}
-    container_name: ${APP_CONTAINER_NAME:-focushive_buddy_service_app}
+    container_name: focushive-buddy-app
     environment:
       # Spring Profiles
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
@@ -81,7 +79,7 @@ services:
       MANAGEMENT_SERVER_PORT: ${MANAGEMENT_SERVER_PORT}
 
       # Database Configuration
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://focushive-buddy-postgres:${POSTGRES_PORT}/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE}
@@ -89,7 +87,7 @@ services:
       SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT}
 
       # Redis Configuration
-      SPRING_DATA_REDIS_HOST: ${REDIS_HOST}
+      SPRING_DATA_REDIS_HOST: focushive-buddy-redis
       SPRING_DATA_REDIS_PORT: ${REDIS_PORT}
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       SPRING_DATA_REDIS_DATABASE: ${REDIS_DATABASE}
@@ -98,77 +96,59 @@ services:
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
 
-      # Service URLs
-      IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL}
-      BACKEND_SERVICE_URL: ${BACKEND_SERVICE_URL}
-      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL}
+      # Logging Configuration
+      LOGGING_LEVEL_ROOT: ${LOGGING_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_FOCUSHIVE: ${LOGGING_LEVEL_COM_FOCUSHIVE}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK}
 
-      # Buddy Service Configuration
-      BUDDY_MATCHING_MAX_SUGGESTIONS: ${BUDDY_MATCHING_MAX_SUGGESTIONS}
-      BUDDY_MATCHING_COMPATIBILITY_THRESHOLD: ${BUDDY_MATCHING_COMPATIBILITY_THRESHOLD}
-      BUDDY_MATCHING_QUEUE_SIZE: ${BUDDY_MATCHING_QUEUE_SIZE}
-      BUDDY_MATCHING_INTERVAL_MS: ${BUDDY_MATCHING_INTERVAL_MS}
-
-      # Matching Weights
-      BUDDY_MATCHING_WEIGHTS_TIMEZONE: ${BUDDY_MATCHING_WEIGHTS_TIMEZONE}
-      BUDDY_MATCHING_WEIGHTS_INTERESTS: ${BUDDY_MATCHING_WEIGHTS_INTERESTS}
-      BUDDY_MATCHING_WEIGHTS_GOALS: ${BUDDY_MATCHING_WEIGHTS_GOALS}
-      BUDDY_MATCHING_WEIGHTS_ACTIVITY: ${BUDDY_MATCHING_WEIGHTS_ACTIVITY}
-      BUDDY_MATCHING_WEIGHTS_COMMUNICATION: ${BUDDY_MATCHING_WEIGHTS_COMMUNICATION}
-      BUDDY_MATCHING_WEIGHTS_PERSONALITY: ${BUDDY_MATCHING_WEIGHTS_PERSONALITY}
-
-      # Partnership Configuration
-      BUDDY_PARTNERSHIP_MAX_PER_USER: ${BUDDY_PARTNERSHIP_MAX_PER_USER}
-      BUDDY_PARTNERSHIP_MIN_DURATION_DAYS: ${BUDDY_PARTNERSHIP_MIN_DURATION_DAYS}
-      BUDDY_PARTNERSHIP_DEFAULT_DURATION_DAYS: ${BUDDY_PARTNERSHIP_DEFAULT_DURATION_DAYS}
-
-      # Check-in Configuration
-      BUDDY_CHECKIN_REMINDER_HOUR: ${BUDDY_CHECKIN_REMINDER_HOUR}
-      BUDDY_CHECKIN_GRACE_PERIOD_HOURS: ${BUDDY_CHECKIN_GRACE_PERIOD_HOURS}
-
-      # Scheduler Configuration
-      BUDDY_SCHEDULER_ENABLED: ${BUDDY_SCHEDULER_ENABLED}
-
-      # Logging
-      LOGGING_LEVEL_COM_FOCUSHIVE_BUDDY: ${LOGGING_LEVEL_COM_FOCUSHIVE_BUDDY}
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB}
-
-      # Monitoring
+      # Monitoring Configuration
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE}
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS}
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: ${MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED}
+      MANAGEMENT_METRICS_ENABLED: ${MANAGEMENT_METRICS_ENABLED}
 
-      # Swagger
-      SPRINGDOC_API_DOCS_ENABLED: ${SPRINGDOC_API_DOCS_ENABLED}
-      SPRINGDOC_SWAGGER_UI_ENABLED: ${SPRINGDOC_SWAGGER_UI_ENABLED}
+      # External Service URLs
+      IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL}
+      FOCUSHIVE_BACKEND_URL: ${FOCUSHIVE_BACKEND_URL}
 
-      # JVM Options
-      JAVA_OPTS: ${JAVA_OPTS}
+      # Feature Flags
+      BUDDY_MATCHING_ENABLED: ${BUDDY_MATCHING_ENABLED}
+      BUDDY_MATCHING_CRON: ${BUDDY_MATCHING_CRON}
+      BUDDY_MATCHING_BATCH_SIZE: ${BUDDY_MATCHING_BATCH_SIZE}
+      BUDDY_COMPATIBILITY_THRESHOLD: ${BUDDY_COMPATIBILITY_THRESHOLD}
 
-      # Flyway
-      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED}
-      SPRING_FLYWAY_LOCATIONS: ${SPRING_FLYWAY_LOCATIONS}
-      SPRING_FLYWAY_BASELINE_ON_MIGRATE: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE}
+      # Miscellaneous
+      APPLICATION_NAME: ${APPLICATION_NAME}
+      APPLICATION_VERSION: ${APPLICATION_VERSION}
+      ENVIRONMENT: ${ENVIRONMENT}
+      SERVER_SERVLET_CONTEXT_PATH: ${SERVER_SERVLET_CONTEXT_PATH}
+      API_VERSION: ${API_VERSION}
 
-      # CORS
-      BUDDY_CORS_ALLOWED_ORIGINS: ${BUDDY_CORS_ALLOWED_ORIGINS}
-      BUDDY_CORS_ALLOWED_METHODS: ${BUDDY_CORS_ALLOWED_METHODS}
-      BUDDY_CORS_ALLOWED_HEADERS: ${BUDDY_CORS_ALLOWED_HEADERS}
-      BUDDY_CORS_ALLOW_CREDENTIALS: ${BUDDY_CORS_ALLOW_CREDENTIALS}
+      # Application-specific configuration
+      BUDDY_MAX_BUDDIES_PER_USER: ${BUDDY_MAX_BUDDIES_PER_USER}
+      BUDDY_MIN_INTERACTION_SCORE: ${BUDDY_MIN_INTERACTION_SCORE}
+      BUDDY_ACTIVITY_THRESHOLD_DAYS: ${BUDDY_ACTIVITY_THRESHOLD_DAYS}
+      BUDDY_RECOMMENDATION_LIMIT: ${BUDDY_RECOMMENDATION_LIMIT}
 
+    # Ports exposed for testing
     ports:
-      - "${APP_EXTERNAL_PORT:-8087}:${SERVER_PORT:-8087}"
-      - "${MANAGEMENT_SERVER_PORT:-8088}:${MANAGEMENT_SERVER_PORT:-8088}"
+      - "8087:8087"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - focushive-shared-network
-    depends_on:
-      focushive_buddy_service_postgres:
-        condition: service_healthy
-      focushive_buddy_service_redis:
-        condition: service_healthy
     restart: unless-stopped
+    volumes:
+      - ${APP_LOGS_PATH:-./logs}:/app/logs
+      - ${APP_CONFIG_PATH:-./config}:/app/config:ro
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${SERVER_PORT}/api/v1/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${SERVER_PORT:-8087}/api/v1/health"]
       interval: ${HEALTHCHECK_INTERVAL:-30s}
       timeout: ${HEALTHCHECK_TIMEOUT:-10s}
       retries: ${HEALTHCHECK_RETRIES:-3}
@@ -176,12 +156,54 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "20m"
+        max-size: "50m"
         max-file: "5"
-    labels:
-      - "com.focushive.service=buddy"
-      - "com.focushive.version=${SERVICE_VERSION}"
-      - "com.focushive.environment=${ENVIRONMENT}"
+    deploy:
+      resources:
+        limits:
+          memory: ${APP_MEMORY_LIMIT:-1G}
+          cpus: '${APP_CPU_LIMIT:-1.0}'
+        reservations:
+          memory: ${APP_MEMORY_RESERVATION:-512M}
+          cpus: '${APP_CPU_RESERVATION:-0.5}'
+
+  # ============================================================================
+  # Cloudflare Tunnel
+  # ============================================================================
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: focushive-buddy-tunnel
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+      - TUNNEL_URL=http://buddy-service:${SERVER_PORT:-8087}
+      - TUNNEL_METRICS=0.0.0.0:2000
+      - TUNNEL_LOGLEVEL=info
+    depends_on:
+      buddy-service:
+        condition: service_healthy
+    networks:
+      - focushive-shared-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cloudflared", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
 
 # ============================================================================
 # Networks
@@ -196,15 +218,15 @@ networks:
 # Volumes
 # ============================================================================
 volumes:
-  focushive_buddy_service_postgres_data:
-    name: ${POSTGRES_VOLUME_NAME:-focushive_buddy_service_postgres_data}
+  postgres-data:
+    name: focushive-buddy-postgres-data
     driver: local
     labels:
       - "com.focushive.service=buddy"
       - "com.focushive.type=database"
 
-  focushive_buddy_service_redis_data:
-    name: ${REDIS_VOLUME_NAME:-focushive_buddy_service_redis_data}
+  redis-data:
+    name: focushive-buddy-redis-data
     driver: local
     labels:
       - "com.focushive.service=buddy"

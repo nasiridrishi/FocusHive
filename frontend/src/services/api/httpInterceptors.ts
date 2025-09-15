@@ -33,7 +33,7 @@ export function createAuthenticatedAxiosInstance(baseURL: string = API_BASE_URL)
     headers: {
       'Content-Type': 'application/json',
     },
-    withCredentials: true, // Enable cookies for future httpOnly cookie support
+    withCredentials: false, // Disabled to avoid CORS issues
   });
 
   // Request interceptor
@@ -46,10 +46,11 @@ export function createAuthenticatedAxiosInstance(baseURL: string = API_BASE_URL)
         }
 
         // Add correlation ID for request tracking
-        const correlationId = generateCorrelationId();
-        if (config.headers) {
-          config.headers['X-Correlation-ID'] = correlationId;
-        }
+        // Disabled: Backend CORS doesn't allow X-Correlation-ID header
+        // const correlationId = generateCorrelationId();
+        // if (config.headers) {
+        //   config.headers['X-Correlation-ID'] = correlationId;
+        // }
 
         // Development logging
         if (import.meta.env.DEV) {
@@ -76,7 +77,7 @@ export function createAuthenticatedAxiosInstance(baseURL: string = API_BASE_URL)
       },
       async (error: AxiosError) => {
         const originalRequest = error.config;
-        const _correlationId = originalRequest?.headers?.['X-Correlation-ID'];
+        // const _correlationId = originalRequest?.headers?.['X-Correlation-ID'];
 
         // Development logging
         if (import.meta.env.DEV) {
@@ -164,7 +165,7 @@ async function refreshTokenRequest(): Promise<{ token: string; refreshToken: str
       {
         headers: {'Content-Type': 'application/json'},
         timeout: REQUEST_TIMEOUT,
-        withCredentials: true
+        withCredentials: false // Disabled to avoid CORS issues
       }
   );
 
@@ -180,7 +181,7 @@ function standardizeError(error: AxiosError): StandardizedError {
     message: 'An unexpected error occurred',
     status: 500,
     code: 'UNKNOWN_ERROR',
-    correlationId: error.config?.headers?.['X-Correlation-ID'] as string,
+    correlationId: undefined, // Disabled: CORS issue with backend
     originalError: error
   };
 

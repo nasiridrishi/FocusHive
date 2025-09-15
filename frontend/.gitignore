@@ -85,3 +85,10 @@ workbox-*.js
 .parcel-cache
 .vercel
 .turbo
+
+# Qdrant storage
+qdrant_storage/
+# Playwright E2E Test Results
+test-results/
+playwright-report/
+playwright/.cache/

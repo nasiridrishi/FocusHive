@@ -69,7 +69,7 @@ const ForumPostList: React.FC = () => {
 
       // Load posts in this category
       const postsData = await forumApi.getPosts(
-          categoryData.id,
+          Number(categoryData.id),
           currentPage,
           postsPerPage,
           sortBy

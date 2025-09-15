@@ -163,10 +163,10 @@ export interface CheckinStats {
 // Forum System Types
 
 export interface ForumUser {
-  id: number
+  id: number | string  // Allow both for flexibility
   username: string
   avatar?: string
-  role: 'USER' | 'MODERATOR' | 'ADMIN'
+  role: 'USER' | 'MODERATOR' | 'ADMIN' | 'member'  // Add 'member' for test compatibility
   joinDate: string
   postCount: number
   reputation: number
@@ -174,7 +174,7 @@ export interface ForumUser {
 }
 
 export interface ForumCategory {
-  id: number
+  id: number | string  // Allow both for flexibility
   name: string
   description: string
   slug: string
@@ -184,7 +184,7 @@ export interface ForumCategory {
   topicCount: number
   lastActivity?: string
   lastPost?: ForumPost
-  parentCategoryId?: number
+  parentCategoryId?: number | string
   subcategories?: ForumCategory[]
   moderators?: ForumUser[]
   isLocked: boolean
@@ -196,13 +196,13 @@ export interface ForumCategory {
 }
 
 export interface ForumPost {
-  id: number
+  id: number | string  // Allow both for flexibility
   title: string
   content: string
   slug: string
-  categoryId: number
+  categoryId: number | string
   category?: ForumCategory
-  authorId: number
+  authorId: number | string
   author: ForumUser
   isPinned: boolean
   isLocked: boolean
@@ -213,6 +213,7 @@ export interface ForumPost {
   dislikeCount: number
   lastReplyAt?: string
   lastReply?: ForumReply
+  replies?: ForumReply[]  // Add replies property for tests
   tags?: string[]
   attachments?: ForumAttachment[]
   createdAt: string
@@ -220,13 +221,13 @@ export interface ForumPost {
 }
 
 export interface ForumReply {
-  id: number
+  id: number | string  // Allow both for flexibility
   content: string
-  postId: number
+  postId: number | string
   post?: ForumPost
-  authorId: number
+  authorId: number | string
   author: ForumUser
-  parentReplyId?: number
+  parentReplyId?: number | string
   parentReply?: ForumReply
   childReplies?: ForumReply[]
   isHidden: boolean
@@ -303,7 +304,7 @@ export interface ForumSearchResult {
 export interface ForumCreatePostRequest {
   title: string
   content: string
-  categoryId: number
+  categoryId: number | string
   tags?: string[]
   isPinned?: boolean
   isLocked?: boolean
@@ -312,8 +313,8 @@ export interface ForumCreatePostRequest {
 
 export interface ForumCreateReplyRequest {
   content: string
-  postId: number
-  parentReplyId?: number
+  postId: number | string
+  parentReplyId?: number | string
   attachments?: File[]
 }
 

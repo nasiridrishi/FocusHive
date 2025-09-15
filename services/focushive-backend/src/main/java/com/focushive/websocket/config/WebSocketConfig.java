@@ -1,5 +1,6 @@
 package com.focushive.websocket.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -11,7 +12,10 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final JwtWebSocketHandshakeInterceptor jwtWebSocketHandshakeInterceptor;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -39,18 +43,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Register STOMP endpoints with optimized SockJS settings
+        // Register STOMP endpoints with optimized SockJS settings and JWT authentication
         registry.addEndpoint("/ws")
             .setAllowedOriginPatterns("*")
+            .addInterceptors(jwtWebSocketHandshakeInterceptor)
             .withSockJS()
             .setTransportHandlers(/* Use default transports */)
             .setSessionCookieNeeded(false)
             .setClientLibraryUrl("https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js")
             .setHeartbeatTime(30000); // 30 seconds
-        
+
         // Register raw WebSocket endpoint with better performance for modern browsers
         registry.addEndpoint("/ws-raw")
-            .setAllowedOriginPatterns("*");
+            .setAllowedOriginPatterns("*")
+            .addInterceptors(jwtWebSocketHandshakeInterceptor);
     }
 
     @Override

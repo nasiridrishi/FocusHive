@@ -202,10 +202,13 @@ export function transformHiveDTO(dto: HiveDTO, currentUserId: string): Hive {
 
   // Create default settings
   const settings: HiveSettings = {
+    privacyLevel: dto.isPublic ? 'PUBLIC' : 'PRIVATE',
+    category: 'STUDY',
+    maxParticipants: dto.maxMembers,
     allowChat: true,
     allowVoice: false,
     requireApproval: !dto.isPublic,
-    focusMode: 'pomodoro',
+    focusMode: 'POMODORO',
     defaultSessionLength: 25,
     maxSessionLength: 120
   };

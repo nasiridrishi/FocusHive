@@ -8,6 +8,18 @@ import {CreateHiveRequest, Hive, HiveMember, User} from '@shared/types'
 
 const user = userEvent.setup()
 
+// Mock useMediaQuery for mobile tests
+let mockIsMobile = false
+
+// We need to partially mock @mui/material to override useMediaQuery
+vi.mock('@mui/material', async () => {
+  const actual = await vi.importActual('@mui/material')
+  return {
+    ...actual,
+    useMediaQuery: () => mockIsMobile
+  }
+})
+
 // Mock child components
 vi.mock('../HiveCard', () => ({
   HiveCard: ({
@@ -82,10 +94,13 @@ vi.mock('../CreateHiveForm', () => ({
         isPublic: true,
         tags: ['test'],
         settings: {
+          privacyLevel: 'PUBLIC',
+          category: 'STUDY',
+          maxParticipants: 10,
           allowChat: true,
           allowVoice: false,
           requireApproval: false,
-          focusMode: 'continuous',
+          focusMode: 'POMODORO',
           defaultSessionLength: 25,
           maxSessionLength: 120
         }
@@ -150,10 +165,13 @@ const createMockHive = (overrides: Partial<Hive> = {}): Hive => ({
   isPublic: true,
   tags: ['study', 'programming'],
   settings: {
+    privacyLevel: 'PUBLIC',
+    category: 'STUDY',
+    maxParticipants: 10,
     allowChat: true,
     allowVoice: false,
     requireApproval: false,
-    focusMode: 'continuous',
+    focusMode: 'POMODORO',
     defaultSessionLength: 25,
     maxSessionLength: 120
   },
@@ -205,12 +223,18 @@ describe('HiveList', () => {
 
   // Helper function to click on Material UI Select components
   const clickSelect = async (user: ReturnType<typeof userEvent.setup>, labelText: string) => {
-    const label = screen.getByText(labelText)
-    const formControl = label.closest('.MuiFormControl-root')
-    const selectElement = formControl?.querySelector('[role="combobox"]')
-    if (selectElement) {
-      await user.click(selectElement)
+    // Find the select element by looking for the combobox with the matching aria-label
+    const selectElements = screen.getAllByRole('combobox')
+    const selectElement = selectElements.find(el =>
+      el.getAttribute('aria-label') === labelText ||
+      el.closest('.MuiFormControl-root')?.querySelector('label')?.textContent === labelText
+    )
+
+    if (!selectElement) {
+      throw new Error(`Could not find select with label: ${labelText}`)
     }
+
+    await user.click(selectElement)
     return selectElement
   }
 
@@ -259,8 +283,16 @@ describe('HiveList', () => {
       renderWithProviders(<HiveList {...mockProps} />)
 
       expect(screen.getByPlaceholderText('Search hives...')).toBeInTheDocument()
-      expect(screen.getByText('Category')).toBeInTheDocument()
-      expect(screen.getByText('Sort by')).toBeInTheDocument()
+      // Check for select elements with these labels
+      const selectElements = screen.getAllByRole('combobox')
+      const categorySelect = selectElements.find(el =>
+        el.closest('.MuiFormControl-root')?.querySelector('label')?.textContent === 'Category'
+      )
+      const sortSelect = selectElements.find(el =>
+        el.closest('.MuiFormControl-root')?.querySelector('label')?.textContent === 'Sort by'
+      )
+      expect(categorySelect).toBeInTheDocument()
+      expect(sortSelect).toBeInTheDocument()
     })
 
     it('should not render filters when showFilters is false', () => {
@@ -778,13 +810,16 @@ describe('HiveList', () => {
     })
 
     it('should not show view toggle on mobile', () => {
-      // Mock mobile breakpoint
-      Object.defineProperty(window, 'innerWidth', {writable: true, configurable: true, value: 600})
+      // Set mock to mobile view
+      mockIsMobile = true
 
       renderWithProviders(<HiveList {...mockProps} hives={hives}/>)
 
       expect(screen.queryByRole('button', {name: /grid view/i})).not.toBeInTheDocument()
       expect(screen.queryByRole('button', {name: /list view/i})).not.toBeInTheDocument()
+
+      // Reset mock
+      mockIsMobile = false
     })
   })
 
@@ -893,7 +928,14 @@ describe('HiveList', () => {
       const createButton = screen.getByRole('button', {name: /create hive/i})
       await user.click(createButton)
 
-      const submitButton = screen.getByRole('button', {name: /create hive/i})
+      // Wait for dialog to open and find the submit button within the dialog
+      await waitFor(() => {
+        expect(screen.getByTestId('create-hive-form')).toBeInTheDocument()
+      })
+
+      // Get all buttons with "Create Hive" text and select the second one (the submit button)
+      const allCreateButtons = screen.getAllByRole('button', {name: /create hive/i})
+      const submitButton = allCreateButtons[1] // The first is the main button, second is in dialog
       await user.click(submitButton)
 
       expect(onCreateHive).toHaveBeenCalledWith({
@@ -903,10 +945,13 @@ describe('HiveList', () => {
         isPublic: true,
         tags: ['test'],
         settings: {
+          privacyLevel: 'PUBLIC',
+          category: 'STUDY',
+          maxParticipants: 10,
           allowChat: true,
           allowVoice: false,
           requireApproval: false,
-          focusMode: 'continuous',
+          focusMode: 'POMODORO',
           defaultSessionLength: 25,
           maxSessionLength: 120
         }
@@ -1002,8 +1047,16 @@ describe('HiveList', () => {
 
       expect(screen.getByRole('heading', {name: /test hives/i})).toBeInTheDocument()
       expect(screen.getByRole('textbox')).toBeInTheDocument() // Search input
-      expect(screen.getByText('Category')).toBeInTheDocument()
-      expect(screen.getByText('Sort by')).toBeInTheDocument()
+      // Check for select elements with these labels
+      const selectElements = screen.getAllByRole('combobox')
+      const categorySelect = selectElements.find(el =>
+        el.closest('.MuiFormControl-root')?.querySelector('label')?.textContent === 'Category'
+      )
+      const sortSelect = selectElements.find(el =>
+        el.closest('.MuiFormControl-root')?.querySelector('label')?.textContent === 'Sort by'
+      )
+      expect(categorySelect).toBeInTheDocument()
+      expect(sortSelect).toBeInTheDocument()
       expect(screen.queryByRole('alert')).not.toBeInTheDocument() // No error state
     })
 

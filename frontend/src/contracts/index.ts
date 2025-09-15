@@ -11,6 +11,8 @@ export * from './websocket';
 
 // Domain contracts
 export * from './hive';
-export * from './presence';
 export * from './timer';
 export * from './chat';
+
+// Presence contracts (after websocket to avoid PresenceUpdate conflict)
+export * from './presence';

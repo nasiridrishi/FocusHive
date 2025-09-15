@@ -3,71 +3,24 @@
  * Export all buddy-related React hooks for easy importing
  */
 
-// Profile hooks
+// Matching hooks - only export what exists
 export {
-  useBuddyProfile,
-  useOtherBuddyProfile,
-  useUpdateBuddyPreferences,
-  useUpdateBuddyAvailability,
-  useBuddyProfileManagement,
-  buddyProfileKeys,
-} from './useBuddyProfile';
-
-// Matching hooks
-export {
+  useBuddyMatching,
   useSearchBuddies,
   usePendingMatches,
   useBuddyMatch,
   useAcceptMatch,
   useDeclineMatch,
   useCancelMatch,
-  useBuddyMatching,
   buddyMatchingKeys,
 } from './useBuddyMatching';
 
-// Session hooks
-export {
-  useCreateSession,
-  useActiveSessions,
-  useActiveSession,
-  useSessionHistory,
-  useBuddySession,
-  useSessionActions,
-  useSessionCheckIn,
-  useBuddySessions,
-  buddySessionKeys,
-} from './useBuddySessions';
-
-// Statistics hooks
-export {
-  useBuddyStats,
-  useTopBuddies,
-  useBuddyLeaderboard,
-  useBuddyStatistics,
-  buddyStatsKeys,
-} from './useBuddyStats';
-
-// Invitation hooks
-export {
-  useReceivedInvitations,
-  useSendInvitation,
-  useAcceptInvitation,
-  useDeclineInvitation,
-  useBuddyInvitations,
-  buddyInvitationKeys,
-} from './useBuddyInvitations';
-
-// Message hooks
-export {
-  useSessionMessages,
-  useSendMessage,
-  useAddReaction,
-  useBuddyMessages,
-  buddyMessageKeys,
-} from './useBuddyMessages';
-
-// Re-export the buddy service for direct access if needed
-export { buddyService } from '../services/buddyService';
+// Other hooks - export only main hooks for now
+export { useBuddyProfile } from './useBuddyProfile';
+export { useBuddySessions } from './useBuddySessions';
+export { useBuddyStats } from './useBuddyStats';
+export { useBuddyInvitations } from './useBuddyInvitations';
+export { useBuddyMessages } from './useBuddyMessages';
 
 /**
  * Combined query keys for all buddy features

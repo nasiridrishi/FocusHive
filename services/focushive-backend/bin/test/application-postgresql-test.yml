@@ -1,0 +1,88 @@
+# PostgreSQL Test Profile Configuration
+# This configuration is used specifically for PostgreSQL configuration tests
+
+spring:
+  # Test database configuration
+  datasource:
+    url: jdbc:h2:mem:postgresql-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+    
+    # HikariCP settings for testing PostgreSQL configuration
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 30
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: "SELECT 1"
+      validation-timeout: 5000
+      pool-name: "PostgreSQL-Test-Pool"
+      
+      # Mock PostgreSQL-specific properties for testing
+      data-source-properties:
+        preparedStatementCacheSize: 256
+        preparedStatementCacheSqlLimit: 2048
+        defaultTransactionIsolation: TRANSACTION_READ_COMMITTED
+        tcpKeepAlive: true
+        socketTimeout: 0
+        ApplicationName: FocusHive-Backend-Test
+        reWriteBatchedInserts: true
+        defaultRowFetchSize: 1000
+
+  # JPA settings for PostgreSQL compatibility testing
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+        use_sql_comments: false
+        show_sql: false
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+        connection:
+          provider_disables_autocommit: true
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        generate_statistics: false
+
+  # Flyway disabled for pure unit tests
+  flyway:
+    enabled: false
+
+# Test-specific settings
+app:
+  database:
+    provider: postgresql
+    
+# Logging for tests
+logging:
+  level:
+    com.focushive: DEBUG
+    org.springframework: WARN
+    org.hibernate: WARN
+    
+# Management endpoints for testing
+management:
+  health:
+    datasource:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

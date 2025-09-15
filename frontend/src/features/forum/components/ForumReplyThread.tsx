@@ -38,7 +38,7 @@ import {sanitizeHtml, htmlToPlainText} from '@shared/utils/sanitizeHtml'
 
 interface ForumReplyThreadProps {
   replies: ForumReply[]
-  postId: number
+  postId: number | string
   onReplyUpdate?: () => void
   maxDepth?: number
   currentDepth?: number
@@ -46,7 +46,7 @@ interface ForumReplyThreadProps {
 
 interface ReplyItemProps {
   reply: ForumReply
-  postId: number
+  postId: number | string
   onReplyUpdate?: () => void
   maxDepth: number
   currentDepth: number
@@ -82,11 +82,11 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
   const handleLikeReply = async () => {
     try {
       if (userHasLiked) {
-        await forumApi.unlikeReply(reply.id)
+        await forumApi.unlikeReply(Number(reply.id))
         setUserHasLiked(false)
         setLocalLikeCount(prev => prev - 1)
       } else {
-        await forumApi.likeReply(reply.id)
+        await forumApi.likeReply(Number(reply.id))
         setUserHasLiked(true)
         if (userHasDisliked) {
           setUserHasDisliked(false)
@@ -131,7 +131,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
 
     setSubmitting(true)
     try {
-      await forumApi.updateReply(reply.id, editContent.trim())
+      await forumApi.updateReply(Number(reply.id), editContent.trim())
       setEditDialogOpen(false)
 
       if (onReplyUpdate) {

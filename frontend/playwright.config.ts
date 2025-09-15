@@ -1,103 +1,133 @@
-import {defineConfig, devices} from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 /**
- * @see https://playwright.dev/docs/test-configuration
+ * Modern Playwright E2E Testing Configuration
+ * Updated for FocusHive with clean, maintainable setup
  */
 export default defineConfig({
-  testDir: './e2e',
-  /* Run tests in files in parallel */
+  // Test directory
+  testDir: './tests/e2e',
+  
+  // Global timeout for all tests
+  timeout: 30 * 1000,
+  
+  // Timeout for each assertion
+  expect: {
+    timeout: 5 * 1000,
+  },
+  
+  // Run tests in files in parallel
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
+  
+  // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
+  
+  // Retry on CI only
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
+  
+  // Opt out of parallel tests on CI
   workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+  
+  // Reporter to use
   reporter: [
-    ['html'],
-    ['json', {outputFile: 'e2e-results.json'}],
-    ['junit', {outputFile: 'e2e-results.xml'}]
+    ['html', { outputFolder: 'test-results/html-report' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
+    ['list']
   ],
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  
+  // Shared settings for all the projects below
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:5173',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    // Base URL to use in actions like `await page.goto('/')`
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
+    
+    // Collect trace when retrying the failed test
     trace: 'on-first-retry',
-
-    /* Take screenshot when test fails */
+    
+    // Capture screenshot only when test fails
     screenshot: 'only-on-failure',
-
-    /* Record video for failed tests */
+    
+    // Record video only when retrying a test for the first time
     video: 'retain-on-failure',
-
-    /* Additional configuration for FocusHive */
+    
+    // Browser context options
+    viewport: { width: 1280, height: 720 },
     ignoreHTTPSErrors: true,
-
-    /* Wait for network idle by default for SPA */
-    waitForLoadState: 'networkidle',
-
-    /* Timeout for individual actions */
-    actionTimeout: 10000,
-
-    /* Timeout for waiting for elements */
-    expect: {
-      timeout: 5000,
-    },
+    
+    // Global test timeout
+    actionTimeout: 10 * 1000,
+    navigationTimeout: 15 * 1000,
   },
 
-  /* Global test timeout */
-  timeout: 60000,
-
-  /* Configure projects for major browsers */
+  // Configure projects for major browsers
   projects: [
     {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+    },
+    
+    {
       name: 'chromium',
-      use: {...devices['Desktop Chrome']},
+      use: { 
+        ...devices['Desktop Chrome'],
+        // Use prepared auth state
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
 
     {
       name: 'firefox',
-      use: {...devices['Desktop Firefox']},
+      use: { 
+        ...devices['Desktop Firefox'],
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
 
     {
       name: 'webkit',
-      use: {...devices['Desktop Safari']},
+      use: { 
+        ...devices['Desktop Safari'],
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
 
-    /* Test against mobile viewports. */
+    // Mobile browsers
     {
       name: 'Mobile Chrome',
-      use: {...devices['Pixel 5']},
+      use: { 
+        ...devices['Pixel 5'],
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
+    
     {
       name: 'Mobile Safari',
-      use: {...devices['iPhone 12']},
+      use: { 
+        ...devices['iPhone 12'],
+        storageState: 'test-results/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  // Global setup and teardown
+  // globalSetup: './tests/e2e/global-setup.ts',
+  // globalTeardown: './tests/e2e/global-teardown.ts',
+
+  // Run your local dev server before starting the tests
   webServer: {
     command: 'npm run dev',
-    url: 'http://127.0.0.1:5173',
+    url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000, // 2 minutes
-    env: {
-      VITE_IDENTITY_API_URL: process.env.E2E_IDENTITY_API_URL || 'http://localhost:8081',
-      VITE_API_BASE_URL: process.env.E2E_API_BASE_URL || 'http://localhost:8080',
-    },
+    timeout: 120 * 1000,
+    stdout: 'ignore',
+    stderr: 'pipe',
   },
+
+  // Output directory for test results
+  outputDir: 'test-results/',
 });

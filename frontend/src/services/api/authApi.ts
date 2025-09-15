@@ -102,7 +102,7 @@ const createBackendApiInstance = (): AxiosInstance => {
     headers: {
       'Content-Type': 'application/json',
     },
-    withCredentials: true, // Enable cookies for httpOnly refresh tokens in future
+    withCredentials: false, // Disabled to avoid CORS issues
   });
 
   // Request interceptor to add auth token
@@ -165,7 +165,7 @@ const identityApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: false, // Disabled to avoid CORS issues
 });
 
 // Add token to Identity Service requests
@@ -187,14 +187,37 @@ export const authApiService = {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await identityApi.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, credentials);
+      // Transform frontend LoginRequest to match backend expectations
+      const backendRequest = {
+        usernameOrEmail: credentials.email,
+        password: credentials.password
+      };
+      const response = await identityApi.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, backendRequest);
 
       // Validate response data contains required fields
       if (!response.data || typeof response.data !== 'object') {
         throw new Error('Invalid response format from server');
       }
 
-      const {user, token, refreshToken} = response.data;
+      // Map backend response fields to expected format
+      const user: User = {
+        id: (response.data as any).user?.id || (response.data as any).userId || (response.data as any).id,
+        email: (response.data as any).user?.email || (response.data as any).email,
+        username: (response.data as any).user?.username || (response.data as any).username || (response.data as any).displayName || 'user',
+        displayName: (response.data as any).user?.displayName || (response.data as any).displayName || (response.data as any).username,
+        firstName: (response.data as any).user?.firstName || (response.data as any).firstName,
+        lastName: (response.data as any).user?.lastName || (response.data as any).lastName,
+        name: (response.data as any).user?.name || (response.data as any).name || 
+              `${(response.data as any).user?.firstName || (response.data as any).firstName || ''} ${(response.data as any).user?.lastName || (response.data as any).lastName || ''}`.trim() ||
+              (response.data as any).user?.displayName || (response.data as any).displayName || 
+              (response.data as any).user?.username || (response.data as any).username || 'User',
+        avatar: (response.data as any).user?.avatar || (response.data as any).avatar,
+        isEmailVerified: (response.data as any).user?.isEmailVerified || (response.data as any).isEmailVerified,
+        createdAt: (response.data as any).user?.createdAt || (response.data as any).createdAt,
+        updatedAt: (response.data as any).user?.updatedAt || (response.data as any).updatedAt
+      };
+      const token = (response.data as any).accessToken || (response.data as any).token;
+      const refreshToken = response.data.refreshToken;
 
       // Validate all required fields are present and valid
       if (!user || typeof user !== 'object') {
@@ -221,7 +244,8 @@ export const authApiService = {
       tokenStorage.setAccessToken(token);
       tokenStorage.setRefreshToken(refreshToken);
 
-      return response.data;
+      // Return the mapped response with expected field names
+      return { user, token, refreshToken };
     } catch (error) {
       if (error instanceof AxiosError) {
         // Handle timeout errors
@@ -299,7 +323,8 @@ export const authApiService = {
       tokenStorage.setAccessToken(token);
       tokenStorage.setRefreshToken(refreshToken);
 
-      return response.data;
+      // Return the mapped response with expected field names
+      return { user, token, refreshToken };
     } catch (error) {
       if (error instanceof AxiosError) {
         // Handle timeout errors
@@ -491,7 +516,8 @@ export const authApiService = {
         throw new Error('Invalid response message from server');
       }
 
-      return response.data;
+      // Return the mapped response with expected field names
+      return { message };
     } catch (error) {
       if (error instanceof AxiosError) {
         // Handle timeout errors
@@ -572,7 +598,7 @@ async function refreshToken(): Promise<{ token: string; refreshToken: string } |
         {refreshToken: refreshTokenValue},
         {
           headers: {'Content-Type': 'application/json'},
-          withCredentials: true,
+          withCredentials: false, // Disabled to avoid CORS issues
           timeout: 10000
         }
     );

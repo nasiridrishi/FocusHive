@@ -13,7 +13,6 @@ import {
   Business as BusinessIcon,
   Chat as ChatIcon,
   Dashboard as DashboardIcon,
-  Home as HomeIcon,
   Search as SearchIcon
 } from '@mui/icons-material'
 import {AdaptiveNavigation} from './AdaptiveNavigation'
@@ -29,6 +28,9 @@ interface ResponsiveLayoutProps {
   }
   isConnected?: boolean
   notificationCount?: number
+  currentPersona?: any // TODO: Import proper Persona type
+  onPersonaSwitch?: (persona: any) => void
+  onCreatePersona?: () => void
 }
 
 export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
@@ -36,6 +38,9 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
                                                                     currentUser,
                                                                     isConnected = true,
                                                                     notificationCount = 0,
+                                                                    currentPersona,
+                                                                    onPersonaSwitch,
+                                                                    onCreatePersona,
                                                                   }) => {
   const theme = useTheme()
   const location = useLocation()
@@ -87,12 +92,6 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
 
   // Navigation items configuration
   const navigationItems = [
-    {
-      id: 'home',
-      label: 'Home',
-      icon: <HomeIcon/>,
-      path: '/',
-    },
     {
       id: 'dashboard',
       label: 'Dashboard',
@@ -170,8 +169,11 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
         <AdaptiveNavigation
             items={navigationItems}
             currentUser={currentUser}
+            currentPersona={currentPersona}
             isConnected={isConnected}
             notificationCount={notificationCount}
+            onPersonaSwitch={onPersonaSwitch}
+            onCreatePersona={onCreatePersona}
             onNotificationClick={() => {
             }}
         />

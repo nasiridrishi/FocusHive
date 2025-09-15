@@ -14,6 +14,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.Comparator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * User entity representing the core identity in the system.
@@ -53,7 +55,9 @@ import java.util.Comparator;
     }
 )
 public class User extends BaseEncryptedEntity implements UserDetails {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(User.class);
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
@@ -425,7 +429,21 @@ public class User extends BaseEncryptedEntity implements UserDetails {
     protected void updateSearchableHashes(IEncryptionService encryptionService) {
         // Update email hash for searchable encrypted email field
         if (email != null) {
-            this.emailHash = encryptionService.hash(email.toLowerCase());
+            // Check if email is already encrypted (contains version prefix with colon)
+            if (email.contains(":")) {
+                // Email is already encrypted, need to decrypt first to get plain text
+                try {
+                    String plainEmail = encryptionService.decrypt(email);
+                    this.emailHash = encryptionService.hash(plainEmail.toLowerCase());
+                } catch (Exception e) {
+                    log.error("Failed to decrypt email for hash generation", e);
+                    // Try to hash as-is as fallback
+                    this.emailHash = encryptionService.hash(email.toLowerCase());
+                }
+            } else {
+                // Email is still plain text, hash it directly
+                this.emailHash = encryptionService.hash(email.toLowerCase());
+            }
         }
 
         // Note: Other PII fields (firstName, lastName, etc.) don't need hashes

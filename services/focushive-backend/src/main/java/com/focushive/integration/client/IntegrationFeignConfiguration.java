@@ -6,7 +6,11 @@ import feign.Logger;
 import feign.Request;
 import feign.Retryer;
 import feign.codec.Decoder;
+import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import org.springframework.cloud.openfeign.support.SpringEncoder;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,18 +28,31 @@ import java.util.concurrent.TimeUnit;
 public class IntegrationFeignConfiguration {
 
     private final ObjectMapper objectMapper;
+    private final ObjectFactory<HttpMessageConverters> messageConverters;
 
     @Autowired
-    public IntegrationFeignConfiguration(ObjectMapper objectMapper) {
+    public IntegrationFeignConfiguration(ObjectMapper objectMapper,
+                                        ObjectFactory<HttpMessageConverters> messageConverters) {
         this.objectMapper = objectMapper;
+        this.messageConverters = messageConverters;
     }
 
     /**
      * Custom decoder that handles Spring Boot Actuator vendor JSON types.
+     * The bean MUST be named "decoder" for Spring Cloud OpenFeign to find it.
      */
     @Bean
-    public Decoder feignDecoder() {
+    public Decoder decoder() {
         return new ActuatorAwareDecoder(objectMapper);
+    }
+
+    /**
+     * Provide the standard Spring encoder.
+     * This bean is required for Feign clients to encode HTTP requests.
+     */
+    @Bean
+    public Encoder encoder() {
+        return new SpringEncoder(messageConverters);
     }
 
     @Bean

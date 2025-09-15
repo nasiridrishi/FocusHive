@@ -62,20 +62,26 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorize) -> authorize
                         // A01: Allow CORS preflight requests (OPTIONS) to pass through
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // A05: Secure actuator endpoints - only health check is public
+                        // A05: Secure actuator endpoints - health, info, and prometheus are public
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/info").permitAll()
+                        .requestMatchers("/actuator/prometheus").permitAll()
                         .requestMatchers("/actuator/**").hasRole("ADMIN")  // All other actuator endpoints require admin
                         .requestMatchers("/api-docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/refresh", "/api/auth/validate").permitAll()
-                        .requestMatchers("/api/auth/introspect").permitAll()
-                        .requestMatchers("/api/auth/jwks", "/api/auth/jwt-health").permitAll()
-                        .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
-                        .requestMatchers("/api/auth/redirect").permitAll()  // A10: Allow redirect endpoint for SSRF testing
+                        // Allow all auth endpoints without authentication
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        // OAuth2 and OIDC discovery endpoints must be public
                         .requestMatchers("/oauth2/**", "/.well-known/**").permitAll()
                         .requestMatchers("/api/oauth2/**").permitAll()
-                        .requestMatchers("/api/performance-test/**").permitAll()
+                        .requestMatchers("/api/v1/oauth2/**").permitAll()
+                        // Privacy endpoints require authentication (this is correct)
+                        .requestMatchers("/api/privacy/**").authenticated()
+                        // User management endpoints require authentication (this is correct)
+                        .requestMatchers("/api/users/**").authenticated()
+                        // Admin endpoints require admin role
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
@@ -127,7 +133,7 @@ public class SecurityConfig {
 
         // IMPORTANT: Don't set allowCredentials to true with wildcard origins
         // This is done by the custom checkOrigin method instead
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
             "Content-Type",
@@ -187,8 +193,8 @@ public class SecurityConfig {
 
         @Override
         public Boolean getAllowCredentials() {
-            // Only allow credentials for trusted origins
-            return false;
+            // Allow credentials for trusted origins - this will be controlled by the checkOrigin method
+            return true;
         }
 
     }
