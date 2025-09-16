@@ -1,10 +1,55 @@
-// Re-export all analytics feature modules
-export * from './components';
-export * from './contexts';
-export * from './pages';
-export * from './types';
+// Export analytics service
+export { analyticsService } from './services/analyticsService';
+export type { AnalyticsService } from './services/analyticsService';
 
-// Named exports for convenience
-export { AnalyticsDashboard } from './components';
-export { AnalyticsProvider, useAnalytics } from './contexts';
-export { AnalyticsDemo } from './pages';
+// Export hooks
+export {
+  useFocusSession,
+  useDailyAnalytics,
+  useWeeklyAnalytics,
+  useMonthlyAnalytics,
+  useProductivityGoals,
+  useInsights,
+  useStreaks,
+  useLeaderboard,
+  useActivityHeatmap,
+  useProductivityPatterns,
+  useBurnoutRisk,
+  useChartData,
+  useExportAnalytics,
+  useTodayStats,
+  useWeeklyComparison,
+  useAnalyticsUpdates,
+} from './hooks/useAnalytics';
+
+// Re-export types from contracts
+export type {
+  FocusSession,
+  DailyAnalytics,
+  WeeklyAnalytics,
+  MonthlyAnalytics,
+  ProductivityMetric,
+  ProductivityGoal,
+  Leaderboard,
+  LeaderboardEntry,
+  AnalyticsInsight,
+  ChartConfig,
+  ChartData,
+  HeatmapData,
+  ProductivityPattern,
+  Streak,
+  BurnoutRisk,
+  ComparativeAnalytics,
+  GetAnalyticsRequest,
+  GetAnalyticsResponse,
+  GetLeaderboardRequest,
+  ExportAnalyticsRequest,
+  ExportAnalyticsResponse,
+  AnalyticsWebSocketEvent,
+  AnalyticsPreferences,
+  MetricType,
+  AggregationPeriod,
+  ComparisonType,
+  ChartType,
+  AnalyticsData,
+} from '@/contracts/analytics';

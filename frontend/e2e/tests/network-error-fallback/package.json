@@ -1,0 +1,31 @@
+{
+  "name": "network-error-e2e-mock-backend",
+  "version": "1.0.0",
+  "description": "Mock backend service for NetworkErrorFallback E2E testing",
+  "main": "mock-backend.js",
+  "private": true,
+  "scripts": {
+    "start": "node mock-backend.js",
+    "dev": "nodemon mock-backend.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "testing",
+    "mock",
+    "backend",
+    "e2e",
+    "playwright",
+    "network-errors"
+  ]
+}

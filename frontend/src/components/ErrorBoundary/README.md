@@ -1,6 +1,8 @@
 # Error Boundary Components
 
-Comprehensive error handling infrastructure for the FocusHive React application. This system provides graceful error recovery, specialized fallback UI components, and integration with monitoring services.
+Comprehensive error handling infrastructure for the FocusHive React application. This system
+provides graceful error recovery, specialized fallback UI components, and integration with
+monitoring services.
 
 ## Overview
 
@@ -160,6 +162,7 @@ For individual component error handling.
 ### NetworkErrorFallback
 
 Handles network connectivity issues with:
+
 - Network status monitoring
 - Automatic retry with exponential backoff
 - Offline detection
@@ -180,6 +183,7 @@ Handles network connectivity issues with:
 ### PermissionErrorFallback
 
 Handles authentication and authorization errors with:
+
 - Different error type handling (auth/permission/forbidden/expired)
 - Login redirect options
 - Support contact integration
@@ -260,11 +264,13 @@ errorLogger.logAsyncError(error, { source: 'promise' }, 'critical')
 ### Setup
 
 1. **Install dependencies** (optional - dynamically imported):
+
 ```bash
 npm install @sentry/react logrocket
 ```
 
 2. **Configure environment variables**:
+
 ```env
 VITE_SENTRY_DSN=your_sentry_dsn
 VITE_LOGROCKET_APP_ID=your_logrocket_app_id
@@ -272,6 +278,7 @@ VITE_APP_VERSION=1.0.0
 ```
 
 3. **Initialize monitoring**:
+
 ```typescript
 import { initializeErrorReporting, defaultErrorReportingConfig } from '@/services/monitoring'
 
@@ -422,18 +429,18 @@ test('API error boundary catches fetch failures', async () => {
 ### Common Issues
 
 1. **Error boundaries not catching errors**
-   - Check that errors occur during render, not in event handlers
-   - Use `useErrorBoundary` hook for event handler errors
+    - Check that errors occur during render, not in event handlers
+    - Use `useErrorBoundary` hook for event handler errors
 
 2. **Monitoring services not receiving errors**
-   - Verify environment variables are set
-   - Check network connectivity
-   - Ensure services are initialized before use
+    - Verify environment variables are set
+    - Check network connectivity
+    - Ensure services are initialized before use
 
 3. **Offline errors not syncing**
-   - Check localStorage permissions
-   - Verify network status detection
-   - Monitor console for sync attempts
+    - Check localStorage permissions
+    - Verify network status detection
+    - Monitor console for sync attempts
 
 ### Debug Mode
 

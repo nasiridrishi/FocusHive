@@ -6,7 +6,8 @@ import com.focushive.identity.repository.PersonaRepository;
 import com.focushive.identity.repository.UserRepository;
 import com.focushive.identity.security.encryption.IEncryptionService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -45,8 +46,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Profile("migration")
 @ConditionalOnProperty(name = "encryption.migration.enabled", havingValue = "true")
 @RequiredArgsConstructor
-@Slf4j
 public class DataEncryptionMigrationTool implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataEncryptionMigrationTool.class);
 
     private final UserRepository userRepository;
     private final PersonaRepository personaRepository;
@@ -137,7 +139,7 @@ public class DataEncryptionMigrationTool implements CommandLineRunner {
      * Migrate user PII data to encrypted format.
      */
     @Transactional
-    private void migrateUsers() {
+    protected void migrateUsers() {
         log.info("Migrating user data...");
         
         Pageable pageable = PageRequest.of(0, BATCH_SIZE);
@@ -192,7 +194,7 @@ public class DataEncryptionMigrationTool implements CommandLineRunner {
      * Migrate persona PII data to encrypted format.
      */
     @Transactional
-    private void migratePersonas() {
+    protected void migratePersonas() {
         log.info("Migrating persona data...");
         
         Pageable pageable = PageRequest.of(0, BATCH_SIZE);

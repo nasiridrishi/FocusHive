@@ -1,6 +1,6 @@
 /**
  * Memory Usage and Leak Detection Tests
- * 
+ *
  * Comprehensive memory analysis for the FocusHive frontend:
  * - Memory leak detection over extended sessions
  * - Memory usage patterns across different workflows
@@ -11,10 +11,10 @@
  * - Timer and interval cleanup
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { PerformanceTestHelper, MemoryInfo } from './performance-helpers';
-import { performanceCollector, PerformanceMetrics } from './performance-metrics';
-import { AuthHelper } from '../../helpers/auth.helper';
+import {expect, test} from '@playwright/test';
+import {MemoryInfo, PerformanceTestHelper} from './performance-helpers';
+import {performanceCollector, PerformanceMetrics} from './performance-metrics';
+import {AuthHelper} from '../../helpers/auth.helper';
 
 // Extended performance interface for memory access
 interface ExtendedPerformance extends Performance {
@@ -43,7 +43,7 @@ const MEMORY_TEST_CONFIG = {
   memoryLeakThreshold: 2,       // MB per minute
   maxMemoryUsage: 100,          // MB
   gcTriggerThreshold: 50,       // MB
-  
+
   workflows: [
     {
       name: 'Navigation Heavy',
@@ -66,7 +66,7 @@ const MEMORY_TEST_CONFIG = {
       actions: ['websocket-connect', 'presence-updates', 'notifications', 'live-updates']
     }
   ],
-  
+
   memoryIntensiveOperations: [
     {
       name: 'Large List Rendering',
@@ -93,7 +93,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
   let authHelper: AuthHelper;
   let performanceHelper: PerformanceTestHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
     performanceHelper = new PerformanceTestHelper(page);
     await performanceHelper.initializePerformanceMonitoring();
@@ -105,7 +105,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
   });
 
   // Long-running session memory leak detection
-  test('Memory Leak Detection - Extended Session', async ({ page }) => {
+  test('Memory Leak Detection - Extended Session', async ({page}) => {
     performanceCollector.startTest('Memory - Extended Session Leak Detection');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -113,20 +113,20 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
     // Run extended memory leak detection
     const leakAnalysis = await performanceHelper.detectMemoryLeaks(
-      MEMORY_TEST_CONFIG.longSessionDuration,
-      MEMORY_TEST_CONFIG.sampleInterval
+        MEMORY_TEST_CONFIG.longSessionDuration,
+        MEMORY_TEST_CONFIG.sampleInterval
     );
 
     // Validate no significant memory leaks
     expect(leakAnalysis.hasLeak, 'No memory leaks should be detected in extended session').toBe(false);
     expect(leakAnalysis.leakRate, 'Memory leak rate should be under threshold')
-      .toBeLessThan(MEMORY_TEST_CONFIG.memoryLeakThreshold);
+    .toBeLessThan(MEMORY_TEST_CONFIG.memoryLeakThreshold);
 
     // Analyze memory usage pattern
     const initialMemory = leakAnalysis.samples[0];
     const finalMemory = leakAnalysis.samples[leakAnalysis.samples.length - 1];
-    const peakMemory = leakAnalysis.samples.reduce((max, sample) => 
-      sample.usedJSHeapSize > max.usedJSHeapSize ? sample : max
+    const peakMemory = leakAnalysis.samples.reduce((max, sample) =>
+        sample.usedJSHeapSize > max.usedJSHeapSize ? sample : max
     );
 
     const memoryGrowth = (finalMemory.usedJSHeapSize - initialMemory.usedJSHeapSize) / 1024 / 1024;
@@ -134,7 +134,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
     // Validate memory constraints
     expect(peakUsage, 'Peak memory usage should be reasonable')
-      .toBeLessThan(MEMORY_TEST_CONFIG.maxMemoryUsage);
+    .toBeLessThan(MEMORY_TEST_CONFIG.maxMemoryUsage);
 
     // Record results
     const memoryMetrics = {
@@ -151,21 +151,21 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
       memoryMetrics
     };
 
-    const result = performanceCollector.endTest('Memory - Extended Session Leak Detection', metrics);
-    
+    const _result = performanceCollector.endTest('Memory - Extended Session Leak Detection', metrics);
+
     console.log(`🧠 Extended Session Memory Analysis:`);
     console.log(`  Duration: ${MEMORY_TEST_CONFIG.longSessionDuration / 1000}s`);
-    console.log(`  Initial: ${initialMemory.usedJSHeapSize / 1024 / 1024:.2f}MB`);
-    console.log(`  Peak: ${peakUsage:.2f}MB`);
-    console.log(`  Final: ${finalMemory.usedJSHeapSize / 1024 / 1024:.2f}MB`);
-    console.log(`  Growth: ${memoryGrowth:.2f}MB`);
-    console.log(`  Leak Rate: ${leakAnalysis.leakRate:.2f}MB/min`);
+    console.log(`  Initial: ${(initialMemory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
+    console.log(`  Peak: ${peakUsage.toFixed(2)}MB`);
+    console.log(`  Final: ${(finalMemory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
+    console.log(`  Growth: ${memoryGrowth.toFixed(2)}MB`);
+    console.log(`  Leak Rate: ${leakAnalysis.leakRate.toFixed(2)}MB/min`);
     console.log(`  Leak Detected: ${leakAnalysis.hasLeak}`);
   });
 
   // Test memory usage for different workflow patterns
   for (const workflow of MEMORY_TEST_CONFIG.workflows) {
-    test(`Memory Usage - ${workflow.name} Workflow`, async ({ page }) => {
+    test(`Memory Usage - ${workflow.name} Workflow`, async ({page}) => {
       performanceCollector.startTest(`Memory - ${workflow.name} Workflow`);
 
       await page.goto('http://localhost:3000/dashboard');
@@ -173,11 +173,11 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
       const initialMemory = await performanceHelper.getMemoryUsage();
       const memorySamples: MemoryInfo[] = [initialMemory];
-      
+
       // Execute workflow actions
       for (const action of workflow.actions) {
-        const actionStart = Date.now();
-        
+        const _actionStart = Date.now();
+
         switch (action) {
           case 'dashboard':
             await page.goto('http://localhost:3000/dashboard');
@@ -201,7 +201,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
             // Simulate viewing chat messages
             await page.evaluate(() => {
               window.dispatchEvent(new CustomEvent('chat-load-messages', {
-                detail: { count: 100 }
+                detail: {count: 100}
               }));
             });
             break;
@@ -216,7 +216,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
           case 'large-list':
             await page.evaluate(() => {
               // Generate large list data
-              window.largeTestData = Array.from({ length: 1000 }, (_, i) => ({
+              window.largeTestData = Array.from({length: 1000}, (_, i) => ({
                 id: i,
                 name: `Item ${i}`,
                 data: new Array(100).fill('x').join('')
@@ -226,14 +226,14 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
           case 'filtering':
             await page.evaluate(() => {
               window.dispatchEvent(new CustomEvent('data-filter', {
-                detail: { filter: 'active' }
+                detail: {filter: 'active'}
               }));
             });
             break;
           case 'sorting':
             await page.evaluate(() => {
               window.dispatchEvent(new CustomEvent('data-sort', {
-                detail: { sortBy: 'name', order: 'asc' }
+                detail: {sortBy: 'name', order: 'asc'}
               }));
             });
             break;
@@ -248,7 +248,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
               // Simulate presence updates
               for (let i = 0; i < 50; i++) {
                 window.dispatchEvent(new CustomEvent('presence-update', {
-                  detail: { userId: `user-${i}`, status: 'online' }
+                  detail: {userId: `user-${i}`, status: 'online'}
                 }));
               }
             });
@@ -258,26 +258,26 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
               // Simulate notifications
               for (let i = 0; i < 20; i++) {
                 window.dispatchEvent(new CustomEvent('notification', {
-                  detail: { id: i, message: `Notification ${i}` }
+                  detail: {id: i, message: `Notification ${i}`}
                 }));
               }
             });
             break;
         }
-        
-        await page.waitForLoadState('networkidle', { timeout: 10000 });
+
+        await page.waitForLoadState('networkidle', {timeout: 10000});
         await page.waitForTimeout(2000);
-        
+
         // Sample memory after each action
         const currentMemory = await performanceHelper.getMemoryUsage();
         memorySamples.push(currentMemory);
-        
+
         console.log(`  ${action}: ${(currentMemory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
       }
 
       const finalMemory = memorySamples[memorySamples.length - 1];
-      const peakMemory = memorySamples.reduce((max, sample) => 
-        sample.usedJSHeapSize > max.usedJSHeapSize ? sample : max
+      const peakMemory = memorySamples.reduce((max, sample) =>
+          sample.usedJSHeapSize > max.usedJSHeapSize ? sample : max
       );
 
       const memoryGrowth = (finalMemory.usedJSHeapSize - initialMemory.usedJSHeapSize) / 1024 / 1024;
@@ -285,14 +285,14 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
       // Validate workflow memory usage
       expect(peakUsage, `${workflow.name} peak memory should be reasonable`)
-        .toBeLessThan(MEMORY_TEST_CONFIG.maxMemoryUsage);
+      .toBeLessThan(MEMORY_TEST_CONFIG.maxMemoryUsage);
 
       // Calculate approximate leak rate (simplified)
       const workflowDuration = workflow.actions.length * 3; // ~3 seconds per action
       const leakRate = (memoryGrowth / workflowDuration) * 60; // MB per minute
 
       expect(leakRate, `${workflow.name} should not have significant memory leaks`)
-        .toBeLessThan(MEMORY_TEST_CONFIG.memoryLeakThreshold);
+      .toBeLessThan(MEMORY_TEST_CONFIG.memoryLeakThreshold);
 
       // Record results
       const memoryMetrics = {
@@ -309,8 +309,8 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
         memoryMetrics
       };
 
-      const result = performanceCollector.endTest(`Memory - ${workflow.name} Workflow`, metrics);
-      
+      const _result = performanceCollector.endTest(`Memory - ${workflow.name} Workflow`, metrics);
+
       console.log(`🔄 ${workflow.name} Workflow Memory:`);
       console.log(`  Actions: ${workflow.actions.length}`);
       console.log(`  Initial: ${(initialMemory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
@@ -323,7 +323,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
   // Test memory usage for memory-intensive operations
   for (const operation of MEMORY_TEST_CONFIG.memoryIntensiveOperations) {
-    test(`Memory Usage - ${operation.name}`, async ({ page }) => {
+    test(`Memory Usage - ${operation.name}`, async ({page}) => {
       performanceCollector.startTest(`Memory - ${operation.name}`);
 
       await page.goto('http://localhost:3000/dashboard');
@@ -335,7 +335,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
       await page.evaluate((config) => {
         // Generate test data based on operation type
         if (config.name.includes('List')) {
-          window.largeTestData = Array.from({ length: config.itemCount }, (_, i) => ({
+          window.largeTestData = Array.from({length: config.itemCount}, (_, i) => ({
             id: i,
             name: `Item ${i}`,
             description: `Description for item ${i} with lots of text data`,
@@ -347,17 +347,17 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
           }));
         } else if (config.name.includes('Image')) {
           // Simulate image data
-          window.imageTestData = Array.from({ length: config.itemCount }, (_, i) => ({
+          window.imageTestData = Array.from({length: config.itemCount}, (_, i) => ({
             id: i,
             url: `data:image/png;base64,${'A'.repeat(1000)}`, // Simulated base64 image
             thumbnail: `data:image/png;base64,${'B'.repeat(500)}`,
-            metadata: { size: 1024 * 1024, type: 'image/png' }
+            metadata: {size: 1024 * 1024, type: 'image/png'}
           }));
         } else if (config.name.includes('Chart')) {
           // Simulate chart data
-          window.chartTestData = Array.from({ length: config.itemCount }, (_, i) => ({
+          window.chartTestData = Array.from({length: config.itemCount}, (_, i) => ({
             id: i,
-            data: Array.from({ length: 100 }, (_, j) => ({
+            data: Array.from({length: 100}, (_, j) => ({
               x: j,
               y: Math.random() * 1000,
               label: `Data point ${j}`
@@ -374,7 +374,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
       // Validate memory increase is within expected range
       expect(memoryIncrease, `${operation.name} memory increase should be reasonable`)
-        .toBeLessThan(operation.expectedMemoryGrowth);
+      .toBeLessThan(operation.expectedMemoryGrowth);
 
       // Test memory cleanup after operation
       await page.evaluate(() => {
@@ -382,7 +382,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
         delete window.largeTestData;
         delete window.imageTestData;
         delete window.chartTestData;
-        
+
         // Force garbage collection if available
         if (window.gc) {
           window.gc();
@@ -409,8 +409,8 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
         memoryMetrics
       };
 
-      const result = performanceCollector.endTest(`Memory - ${operation.name}`, metrics);
-      
+      const _result = performanceCollector.endTest(`Memory - ${operation.name}`, metrics);
+
       console.log(`💾 ${operation.name} Memory Impact:`);
       console.log(`  Before: ${(beforeMemory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
       console.log(`  Peak: ${(afterMemory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
@@ -422,7 +422,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
   }
 
   // Test component cleanup and event listener removal
-  test('Memory Usage - Component Cleanup Validation', async ({ page }) => {
+  test('Memory Usage - Component Cleanup Validation', async ({page}) => {
     performanceCollector.startTest('Memory - Component Cleanup');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -438,24 +438,24 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
         intervals: number;
         memoryLeaks: number;
       }>((resolve) => {
-        let eventListenerCount = 0;
-        let timerCount = 0;
-        let intervalCount = 0;
-        
+        const _eventListenerCount = 0;
+        const _timerCount = 0;
+        const _intervalCount = 0;
+
         // Override addEventListener to count listeners
         const originalAddEventListener = EventTarget.prototype.addEventListener;
         const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
-        
+
         const listeners = new Set();
-        
-        EventTarget.prototype.addEventListener = function(type, listener, options) {
+
+        EventTarget.prototype.addEventListener = function (type, listener, options) {
           const key = `${this.constructor.name}-${type}-${listener.toString()}`;
           listeners.add(key);
           eventListenerCount++;
           return originalAddEventListener.call(this, type, listener, options);
         };
-        
-        EventTarget.prototype.removeEventListener = function(type, listener, options) {
+
+        EventTarget.prototype.removeEventListener = function (type, listener, options) {
           const key = `${this.constructor.name}-${type}-${listener.toString()}`;
           if (listeners.has(key)) {
             listeners.delete(key);
@@ -463,76 +463,81 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
           }
           return originalRemoveEventListener.call(this, type, listener, options);
         };
-        
+
         // Override timer functions
         const originalSetTimeout = window.setTimeout;
         const originalSetInterval = window.setInterval;
         const originalClearTimeout = window.clearTimeout;
         const originalClearInterval = window.clearInterval;
-        
+
         const timers = new Set();
         const intervals = new Set();
-        
-        window.setTimeout = function(callback, delay, ...args) {
+
+        window.setTimeout = function (callback, delay, ...args) {
           const id = originalSetTimeout.call(this, callback, delay, ...args);
           timers.add(id);
           timerCount++;
           return id;
         };
-        
-        window.setInterval = function(callback, delay, ...args) {
+
+        window.setInterval = function (callback, delay, ...args) {
           const id = originalSetInterval.call(this, callback, delay, ...args);
           intervals.add(id);
           intervalCount++;
           return id;
         };
-        
-        window.clearTimeout = function(id) {
+
+        window.clearTimeout = function (id) {
           if (timers.has(id)) {
             timers.delete(id);
             timerCount--;
           }
           return originalClearTimeout.call(this, id);
         };
-        
-        window.clearInterval = function(id) {
+
+        window.clearInterval = function (id) {
           if (intervals.has(id)) {
             intervals.delete(id);
             intervalCount--;
           }
           return originalClearInterval.call(this, id);
         };
-        
+
         // Simulate component lifecycle
         setTimeout(() => {
           // Create components with event listeners and timers
           for (let i = 0; i < 10; i++) {
             const element = document.createElement('div');
-            element.addEventListener('click', () => {});
-            element.addEventListener('hover', () => {});
-            
-            setTimeout(() => {}, 1000);
-            const interval = setInterval(() => {}, 5000);
-            
+            element.addEventListener('click', () => {
+            });
+            element.addEventListener('hover', () => {
+            });
+
+            setTimeout(() => {
+            }, 1000);
+            const interval = setInterval(() => {
+            }, 5000);
+
             // Simulate component unmounting
             setTimeout(() => {
               // Should clean up listeners and timers
-              element.removeEventListener('click', () => {});
+              element.removeEventListener('click', () => {
+              });
               clearInterval(interval);
             }, 500);
           }
-          
+
           // Check for leaks after some time
           setTimeout(() => {
             const memoryLeaks = listeners.size + timers.size + intervals.size;
-            
+
             resolve({
               eventListeners: listeners.size,
               timers: timers.size,
               intervals: intervals.size,
               memoryLeaks
             });
-            
+
             // Restore original functions
             EventTarget.prototype.addEventListener = originalAddEventListener;
             EventTarget.prototype.removeEventListener = originalRemoveEventListener;
@@ -550,13 +555,13 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
     // Validate proper cleanup
     expect(cleanupTest.memoryLeaks, 'No memory leaks from uncleaned resources')
-      .toBeLessThan(5); // Allow some tolerance
-    
+    .toBeLessThan(5); // Allow some tolerance
+
     expect(cleanupTest.eventListeners, 'Event listeners should be cleaned up')
-      .toBeLessThan(10);
-    
+    .toBeLessThan(10);
+
     expect(cleanupTest.timers + cleanupTest.intervals, 'Timers should be cleaned up')
-      .toBeLessThan(5);
+    .toBeLessThan(5);
 
     // Record results
     const memoryMetrics = {
@@ -573,8 +578,8 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
       memoryMetrics
     };
 
-    const result = performanceCollector.endTest('Memory - Component Cleanup', metrics);
-    
+    const _result = performanceCollector.endTest('Memory - Component Cleanup', metrics);
+
     console.log(`🧹 Component Cleanup Validation:`);
     console.log(`  Event Listeners: ${cleanupTest.eventListeners}`);
     console.log(`  Timers: ${cleanupTest.timers}`);
@@ -584,7 +589,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
   });
 
   // Test garbage collection effectiveness
-  test('Memory Usage - Garbage Collection Analysis', async ({ page }) => {
+  test('Memory Usage - Garbage Collection Analysis', async ({page}) => {
     performanceCollector.startTest('Memory - Garbage Collection Analysis');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -603,24 +608,24 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
         for (let i = 0; i < 1000; i++) {
           largeData.push(new Array(1000).fill('memory-pressure-data'));
         }
-        
+
         const beforeGC = (performance as ExtendedPerformance).memory?.usedJSHeapSize || 0;
         const gcStart = performance.now();
-        
+
         // Force garbage collection if available
         if (window.gc) {
           window.gc();
         }
-        
+
         const gcTime = performance.now() - gcStart;
-        
+
         // Clear references
         largeData.length = 0;
-        
+
         setTimeout(() => {
           const afterGC = (performance as ExtendedPerformance).memory?.usedJSHeapSize || beforeGC;
           const gcEffectiveness = ((beforeGC - afterGC) / beforeGC) * 100;
-          
+
           resolve({
             beforeGC: beforeGC / 1024 / 1024,
             afterGC: afterGC / 1024 / 1024,
@@ -633,7 +638,7 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
 
     // Validate GC effectiveness
     expect(gcAnalysis.gcEffectiveness, 'GC should be reasonably effective')
-      .toBeGreaterThan(10); // At least 10% memory recovered
+    .toBeGreaterThan(10); // At least 10% memory recovered
 
     // Record results
     const memoryMetrics = {
@@ -650,8 +655,8 @@ test.describe('Memory Usage and Leak Detection Tests', () => {
       memoryMetrics
     };
 
-    const result = performanceCollector.endTest('Memory - Garbage Collection Analysis', metrics);
-    
+    const _result = performanceCollector.endTest('Memory - Garbage Collection Analysis', metrics);
+
     console.log(`🗑️ Garbage Collection Analysis:`);
     console.log(`  Before GC: ${gcAnalysis.beforeGC.toFixed(2)}MB`);
     console.log(`  After GC: ${gcAnalysis.afterGC.toFixed(2)}MB`);

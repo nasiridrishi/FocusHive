@@ -2,6 +2,10 @@
 # This profile can be used for development-specific overrides
 
 spring:
+  # Cache configuration for development (no Redis)
+  cache:
+    type: simple  # Use simple in-memory cache instead of Redis
+
   # Development-specific JPA settings
   jpa:
     hibernate:
@@ -32,6 +36,9 @@ management:
   endpoint:
     health:
       show-details: always
+      group:
+        startup:
+          include: db,hiveService  # Remove migration since flyway is disabled
 
 # Application features - enable more in development
 app:

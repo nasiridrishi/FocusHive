@@ -3,14 +3,14 @@
  * Safe, scalable load testing with resource monitoring
  */
 
-import { test, expect, Page, BrowserContext } from '@playwright/test';
+import {BrowserContext, Page, test} from '@playwright/test';
 import * as os from 'os';
-import { 
-  getLoadTestConfig, 
+import {
   calculateResourceRequirements,
+  getLoadTestConfig,
+  LoadTestConfig,
   performanceThresholds,
-  scenarios,
-  LoadTestConfig 
+  scenarios
 } from './load-testing-config';
 
 // Type definitions
@@ -75,7 +75,7 @@ class ResourceMonitor {
     this.initialMemory = os.freemem();
   }
 
-  measure() {
+  measure(): Record<string, unknown> {
     const currentMemory = os.freemem();
     const totalMemory = os.totalmem();
     const memoryUsage = ((totalMemory - currentMemory) / totalMemory) * 100;
@@ -90,15 +90,15 @@ class ResourceMonitor {
     this.maxMemoryUsage = Math.max(this.maxMemoryUsage, memoryUsage);
     this.maxCpuUsage = Math.max(this.maxCpuUsage, cpuUsage);
 
-    return { memoryUsage, cpuUsage };
+    return {memoryUsage, cpuUsage};
   }
 
   shouldThrottle(): boolean {
-    const { memoryUsage, cpuUsage } = this.measure();
+    const {memoryUsage, cpuUsage} = this.measure();
     return memoryUsage > 85 || cpuUsage > 90;
   }
 
-  getReport() {
+  getReport(): unknown {
     return {
       maxMemoryUsage: this.maxMemoryUsage,
       maxCpuUsage: this.maxCpuUsage,
@@ -131,7 +131,7 @@ class VirtualUser {
     };
   }
 
-  async executeScenario(scenarioName: string) {
+  async executeScenario(scenarioName: string): Promise<void> {
     const scenario = scenarios[scenarioName];
     if (!scenario) {
       throw new Error(`Scenario '${scenarioName}' not found`);
@@ -150,10 +150,23 @@ class VirtualUser {
     }
   }
 
-  private async executeStep(step: StepAction) {
+  getMetrics(): unknown {
+    return {
+      userId: this.userId,
+      ...this.metrics,
+      avgResponseTime: this.metrics.responseTimes.length > 0
+          ? this.metrics.responseTimes.reduce((a, b) => a + b, 0) / this.metrics.responseTimes.length
+          : 0,
+      errorRate: this.metrics.requestCount > 0
+          ? this.metrics.errorCount / this.metrics.requestCount
+          : 0,
+    };
+  }
+
+  private async executeStep(step: StepAction): Promise<void> {
     switch (step.action) {
       case 'navigate':
-        await this.page.goto(step.url, { waitUntil: 'networkidle' });
+        await this.page.goto(step.url, {waitUntil: 'networkidle'});
         break;
       case 'login':
         await this.page.goto('/login');
@@ -200,30 +213,17 @@ class VirtualUser {
         console.warn(`Unknown action: ${step.action}`);
     }
   }
-
-  getMetrics() {
-    return {
-      userId: this.userId,
-      ...this.metrics,
-      avgResponseTime: this.metrics.responseTimes.length > 0
-        ? this.metrics.responseTimes.reduce((a, b) => a + b, 0) / this.metrics.responseTimes.length
-        : 0,
-      errorRate: this.metrics.requestCount > 0
-        ? this.metrics.errorCount / this.metrics.requestCount
-        : 0,
-    };
-  }
 }
 
 // Main load test suite
 test.describe('Load Testing Suite', () => {
-  test.describe.configure({ mode: 'parallel' });
+  test.describe.configure({mode: 'parallel'});
 
   const runLoadTest = async (profileName: string) => {
     const config = getLoadTestConfig(profileName);
     const requirements = calculateResourceRequirements(config);
     const monitor = new ResourceMonitor();
-    
+
     console.log(`
     ╔══════════════════════════════════════════════════════════╗
     ║                    LOAD TEST STARTING                     ║
@@ -242,7 +242,7 @@ test.describe('Load Testing Suite', () => {
     }
 
     // Check system resources before starting
-    const { memoryUsage, cpuUsage } = monitor.measure();
+    const {memoryUsage, cpuUsage} = monitor.measure();
     if (config.safeMode && (memoryUsage > 70 || cpuUsage > 70)) {
       console.error('❌ System resources too high to start load test safely');
       console.log(`   Memory: ${memoryUsage.toFixed(1)}%, CPU: ${cpuUsage.toFixed(1)}%`);
@@ -269,18 +269,18 @@ test.describe('Load Testing Suite', () => {
     const userBatches: number[][] = [];
     for (let i = 0; i < config.users; i += config.maxConcurrentBrowsers) {
       userBatches.push(
-        Array.from(
-          { length: Math.min(config.maxConcurrentBrowsers, config.users - i) },
-          (_, j) => i + j
-        )
+          Array.from(
+              {length: Math.min(config.maxConcurrentBrowsers, config.users - i)},
+              (_, j) => i + j
+          )
       );
     }
 
     // Monitoring interval
     const monitoringInterval = setInterval(() => {
-      const { memoryUsage, cpuUsage } = monitor.measure();
+      const {memoryUsage, cpuUsage} = monitor.measure();
       console.log(`📊 Resources - Memory: ${memoryUsage.toFixed(1)}%, CPU: ${cpuUsage.toFixed(1)}%`);
-      
+
       if (config.safeMode && monitor.shouldThrottle()) {
         console.warn('⚠️  Resource throttling activated - high system usage detected');
       }
@@ -290,7 +290,7 @@ test.describe('Load Testing Suite', () => {
       // Execute load test in batches
       for (const [batchIndex, batch] of userBatches.entries()) {
         console.log(`\n🚀 Starting batch ${batchIndex + 1}/${userBatches.length} with ${batch.length} users`);
-        
+
         // Check for throttling
         if (config.safeMode && monitor.shouldThrottle()) {
           console.warn('⏸️  Pausing for resource recovery...');
@@ -299,8 +299,8 @@ test.describe('Load Testing Suite', () => {
 
         // Run users in parallel within batch
         const batchPromises = batch.map(async (userId) => {
-          const browser = await test.playwright.chromium.launch({ 
-            headless: config.headless 
+          const browser = await test.playwright.chromium.launch({
+            headless: config.headless
           });
           const context = await browser.newContext();
           const page = await context.newPage();
@@ -320,7 +320,7 @@ test.describe('Load Testing Suite', () => {
         });
 
         await Promise.all(batchPromises);
-        
+
         // Ramp-up delay between batches
         if (batchIndex < userBatches.length - 1) {
           const delay = (config.rampUpTime * 1000) / userBatches.length;
@@ -338,15 +338,15 @@ test.describe('Load Testing Suite', () => {
     generateLoadTestReport(config, results);
   };
 
-  const generateLoadTestReport = (config: LoadTestConfig, results: LoadTestResults) => {
+  const generateLoadTestReport = (config: LoadTestConfig, results: LoadTestResults): void => {
     const duration = (results.endTime - results.startTime) / 1000;
     const successRate = (results.successfulUsers / results.totalUsers) * 100;
-    
+
     // Calculate percentiles
     const allResponseTimes = results.metrics.flatMap((m: UserMetrics) => m.responseTimes);
     allResponseTimes.sort((a: number, b: number) => a - b);
-    
-    const getPercentile = (p: number) => {
+
+    const getPercentile = (p: number): void => {
       const index = Math.ceil((p / 100) * allResponseTimes.length) - 1;
       return allResponseTimes[index] || 0;
     };
@@ -387,16 +387,16 @@ test.describe('Load Testing Suite', () => {
     `;
 
     console.log(report);
-    
+
     // Save detailed report to file
-    const fs = require('fs');
+    const fs = await import('fs');
     const reportPath = `./test-results/load-test-${config.name.toLowerCase().replace(/ /g, '-')}-${Date.now()}.json`;
     fs.writeFileSync(reportPath, JSON.stringify({
       config,
       results,
       report: report.trim(),
     }, null, 2));
-    
+
     console.log(`\n📄 Detailed report saved to: ${reportPath}`);
   };
 

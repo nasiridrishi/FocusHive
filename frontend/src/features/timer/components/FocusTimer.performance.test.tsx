@@ -1,28 +1,23 @@
 import React from 'react'
-import { 
-  renderWithProviders, 
-  screen, 
-  userEvent, 
-  waitFor,
-  act 
-} from '../../../test-utils/test-utils'
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { FocusTimer } from './FocusTimer'
-import { TimerProvider } from '../contexts/TimerContext'
-import type { User } from '../../../shared/types/auth'
+import {act, renderWithProviders, screen, userEvent, waitFor} from '../../../test-utils/test-utils'
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
+import {FocusTimer} from './FocusTimer'
+import {TimerProvider} from '../contexts/TimerContext'
+import type {User} from '../../../shared/types/auth'
 
 // Mock dependencies
 vi.mock('../../../shared/contexts/WebSocketContext', () => ({
   useWebSocket: () => ({
     isConnected: true,
     emit: vi.fn(),
-    on: vi.fn(() => () => {}),
+    on: vi.fn(() => () => {
+    }),
   }),
 }))
 
 vi.mock('../../../shared/contexts/PresenceContext', () => ({
   usePresence: () => ({
-    currentPresence: { hiveId: 'test-hive-123' },
+    currentPresence: {hiveId: 'test-hive-123'},
     updatePresence: vi.fn(),
   }),
 }))
@@ -32,7 +27,7 @@ Object.defineProperty(window, 'AudioContext', {
   value: vi.fn(() => ({
     createOscillator: vi.fn(() => ({
       connect: vi.fn(),
-      frequency: { setValueAtTime: vi.fn() },
+      frequency: {setValueAtTime: vi.fn()},
       start: vi.fn(),
       stop: vi.fn(),
     })),
@@ -60,8 +55,8 @@ Object.defineProperty(Notification, 'permission', {
   configurable: true,
 })
 
-// Use real timers for performance tests
-vi.useRealTimers()
+// Use fake timers for performance tests to prevent hanging
+vi.useFakeTimers({shouldAdvanceTime: true})
 
 const mockUser: User = {
   id: 'user-123',
@@ -75,11 +70,11 @@ const mockUser: User = {
   updatedAt: '2024-01-01T00:00:00Z',
 }
 
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({children}) => {
   return (
-    <TimerProvider userId={mockUser.id}>
-      {children}
-    </TimerProvider>
+      <TimerProvider userId={mockUser.id}>
+        {children}
+      </TimerProvider>
   )
 }
 
@@ -87,7 +82,7 @@ describe('FocusTimer Performance Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    
+
     // Mock performance APIs
     if (!global.performance) {
       global.performance = {
@@ -97,6 +92,7 @@ describe('FocusTimer Performance Tests', () => {
         getEntriesByType: vi.fn(() => []),
         clearMarks: vi.fn(),
         clearMeasures: vi.fn(),
+        eventCounts: new Map(),
         navigation: {} as PerformanceNavigation,
         timing: {} as PerformanceTiming,
         addEventListener: vi.fn(),
@@ -123,13 +119,13 @@ describe('FocusTimer Performance Tests', () => {
       const user = userEvent.setup()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -146,20 +142,20 @@ describe('FocusTimer Performance Tests', () => {
       const user = userEvent.setup()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
 
       // Pause timer
-      const pauseButton = screen.getByRole('button', { name: /pause timer/i })
+      const pauseButton = screen.getByRole('button', {name: /pause timer/i})
       await act(async () => {
         await user.click(pauseButton)
       })
@@ -175,20 +171,20 @@ describe('FocusTimer Performance Tests', () => {
       const user = userEvent.setup()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
 
       // Stop timer
-      const stopButton = screen.getByRole('button', { name: /stop timer/i })
+      const stopButton = screen.getByRole('button', {name: /stop timer/i})
       await act(async () => {
         await user.click(stopButton)
       })
@@ -202,11 +198,11 @@ describe('FocusTimer Performance Tests', () => {
     it('should clear intervals on component unmount', () => {
       const clearIntervalSpy = vi.spyOn(window, 'clearInterval')
 
-      const { unmount } = renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+      const {unmount} = renderWithProviders(
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       unmount()
@@ -223,13 +219,13 @@ describe('FocusTimer Performance Tests', () => {
       const user = userEvent.setup()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
 
       // Rapid start/pause cycles
       for (let i = 0; i < 5; i++) {
@@ -237,7 +233,7 @@ describe('FocusTimer Performance Tests', () => {
           await user.click(playButton)
         })
 
-        const pauseButton = screen.getByRole('button', { name: /pause timer/i })
+        const pauseButton = screen.getByRole('button', {name: /pause timer/i})
         await act(async () => {
           await user.click(pauseButton)
         })
@@ -266,11 +262,11 @@ describe('FocusTimer Performance Tests', () => {
         configurable: true,
       })
 
-      const { unmount } = renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+      const {unmount} = renderWithProviders(
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       unmount()
@@ -286,33 +282,33 @@ describe('FocusTimer Performance Tests', () => {
       const TrackingTimerWrapper: React.FC = () => {
         renderCount++
         return (
-          <TestWrapper>
-            <FocusTimer hiveId="test-hive-123" />
-          </TestWrapper>
+            <TestWrapper>
+              <FocusTimer hiveId="test-hive-123"/>
+            </TestWrapper>
         )
       }
 
-      const { rerender } = renderWithProviders(
-        <TrackingTimerWrapper />,
-        { withAuth: false, user: mockUser }
+      const {rerender} = renderWithProviders(
+          <TrackingTimerWrapper/>,
+          {withAuth: false, user: mockUser}
       )
 
       const initialRenderCount = renderCount
 
       // Start and stop timer multiple times
       for (let i = 0; i < 3; i++) {
-        const playButton = screen.getByRole('button', { name: /start focus session/i })
+        const playButton = screen.getByRole('button', {name: /start focus session/i})
         await act(async () => {
           await user.click(playButton)
         })
 
-        const stopButton = screen.getByRole('button', { name: /stop timer/i })
+        const stopButton = screen.getByRole('button', {name: /stop timer/i})
         await act(async () => {
           await user.click(stopButton)
         })
 
         // Force re-render
-        rerender(<TrackingTimerWrapper />)
+        rerender(<TrackingTimerWrapper/>)
       }
 
       // Renders should be minimal and not exponentially increasing
@@ -322,15 +318,16 @@ describe('FocusTimer Performance Tests', () => {
     })
 
     it('should handle rapid component mount/unmount cycles', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      })
 
       // Mount and unmount rapidly
       for (let i = 0; i < 10; i++) {
-        const { unmount } = renderWithProviders(
-          <TestWrapper>
-            <FocusTimer hiveId="test-hive-123" />
-          </TestWrapper>,
-          { withAuth: false, user: mockUser }
+        const {unmount} = renderWithProviders(
+            <TestWrapper>
+              <FocusTimer hiveId="test-hive-123"/>
+            </TestWrapper>,
+            {withAuth: false, user: mockUser}
         )
 
         unmount()
@@ -338,7 +335,7 @@ describe('FocusTimer Performance Tests', () => {
 
       // Should not produce memory leak errors
       expect(consoleSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('memory leak')
+          expect.stringContaining('memory leak')
       )
 
       consoleSpy.mockRestore()
@@ -347,11 +344,11 @@ describe('FocusTimer Performance Tests', () => {
     it('should properly clean up event listeners', () => {
       const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener')
 
-      const { unmount } = renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+      const {unmount} = renderWithProviders(
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       unmount()
@@ -369,10 +366,10 @@ describe('FocusTimer Performance Tests', () => {
       const startTime = performance.now()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       const endTime = performance.now()
@@ -383,18 +380,17 @@ describe('FocusTimer Performance Tests', () => {
     })
 
     it('should handle timer updates efficiently', async () => {
-      vi.useFakeTimers()
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -413,21 +409,19 @@ describe('FocusTimer Performance Tests', () => {
 
       // Should handle updates efficiently (within 50ms for 60 updates)
       expect(updateTime).toBeLessThan(50)
-
-      vi.useRealTimers()
     })
 
     it('should handle fullscreen toggle without performance degradation', async () => {
       const user = userEvent.setup()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const fullscreenButton = screen.getByRole('button', { name: /fullscreen/i })
+      const fullscreenButton = screen.getByRole('button', {name: /fullscreen/i})
 
       const startTime = performance.now()
 
@@ -438,7 +432,7 @@ describe('FocusTimer Performance Tests', () => {
         })
 
         // Find the exit fullscreen button and click it
-        const exitButton = screen.getByRole('button', { name: /exit fullscreen/i })
+        const exitButton = screen.getByRole('button', {name: /exit fullscreen/i})
         await act(async () => {
           await user.click(exitButton)
         })
@@ -455,17 +449,17 @@ describe('FocusTimer Performance Tests', () => {
       const user = userEvent.setup()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" showSettings={true} />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123" showSettings={true}/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       const startTime = performance.now()
 
       // Open and close settings menu multiple times
       for (let i = 0; i < 10; i++) {
-        const settingsButton = screen.getByRole('button', { name: /settings/i })
+        const settingsButton = screen.getByRole('button', {name: /settings/i})
         await act(async () => {
           await user.click(settingsButton)
         })
@@ -486,18 +480,17 @@ describe('FocusTimer Performance Tests', () => {
 
   describe('Timer Accuracy', () => {
     it('should maintain accurate timing over extended periods', async () => {
-      vi.useFakeTimers()
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -532,23 +525,20 @@ describe('FocusTimer Performance Tests', () => {
       await waitFor(() => {
         expect(screen.getByText('00:00')).toBeInTheDocument()
       })
-
-      vi.useRealTimers()
     })
 
     it('should handle pause/resume without time drift', async () => {
-      vi.useFakeTimers()
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -563,7 +553,7 @@ describe('FocusTimer Performance Tests', () => {
       })
 
       // Pause timer
-      const pauseButton = screen.getByRole('button', { name: /pause timer/i })
+      const pauseButton = screen.getByRole('button', {name: /pause timer/i})
       await act(async () => {
         await user.click(pauseButton)
       })
@@ -577,7 +567,7 @@ describe('FocusTimer Performance Tests', () => {
       expect(screen.getByText('23:00')).toBeInTheDocument()
 
       // Resume timer
-      const resumeButton = screen.getByRole('button', { name: /resume timer/i })
+      const resumeButton = screen.getByRole('button', {name: /resume timer/i})
       await act(async () => {
         await user.click(resumeButton)
       })
@@ -590,27 +580,24 @@ describe('FocusTimer Performance Tests', () => {
       await waitFor(() => {
         expect(screen.getByText('20:00')).toBeInTheDocument()
       })
-
-      vi.useRealTimers()
     })
 
     it('should handle rapid start/stop cycles without accumulating errors', async () => {
-      vi.useFakeTimers()
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      let expectedTime = 1500 // 25 minutes in seconds
+      let _expectedTime = 1500 // 25 minutes in seconds
 
       // Perform 5 cycles of start/run/stop
       for (let i = 0; i < 5; i++) {
         // Start timer
-        const playButton = screen.getByRole('button', { name: /start focus session/i })
+        const playButton = screen.getByRole('button', {name: /start focus session/i})
         await act(async () => {
           await user.click(playButton)
         })
@@ -620,10 +607,10 @@ describe('FocusTimer Performance Tests', () => {
           vi.advanceTimersByTime(30000)
         })
 
-        expectedTime -= 30
+        _expectedTime -= 30
 
         // Stop timer (should reset)
-        const stopButton = screen.getByRole('button', { name: /stop timer/i })
+        const stopButton = screen.getByRole('button', {name: /stop timer/i})
         await act(async () => {
           await user.click(stopButton)
         })
@@ -633,10 +620,8 @@ describe('FocusTimer Performance Tests', () => {
           expect(screen.getByText('Ready to Focus')).toBeInTheDocument()
         })
 
-        expectedTime = 1500 // Reset for next cycle
+        _expectedTime = 1500 // Reset for next cycle
       }
-
-      vi.useRealTimers()
     })
   })
 
@@ -644,11 +629,11 @@ describe('FocusTimer Performance Tests', () => {
     it('should not exceed reasonable DOM node count', async () => {
       const initialNodeCount = document.querySelectorAll('*').length
 
-      const { unmount } = renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+      const {unmount} = renderWithProviders(
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123"/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       const withComponentNodeCount = document.querySelectorAll('*').length
@@ -671,10 +656,10 @@ describe('FocusTimer Performance Tests', () => {
       const instances = []
       for (let i = 0; i < 5; i++) {
         const instance = renderWithProviders(
-          <TestWrapper>
-            <FocusTimer hiveId={`test-hive-${i}`} />
-          </TestWrapper>,
-          { withAuth: false, user: mockUser }
+            <TestWrapper>
+              <FocusTimer hiveId={`test-hive-${i}`}/>
+            </TestWrapper>,
+            {withAuth: false, user: mockUser}
         )
         instances.push(instance)
       }
@@ -699,15 +684,15 @@ describe('FocusTimer Performance Tests', () => {
       const startTime = performance.now()
 
       renderWithProviders(
-        <TestWrapper>
-          <FocusTimer hiveId="test-hive-123" showSettings={true} />
-        </TestWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestWrapper>
+            <FocusTimer hiveId="test-hive-123" showSettings={true}/>
+          </TestWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Change settings multiple times
       for (let i = 0; i < 10; i++) {
-        const settingsButton = screen.getByRole('button', { name: /settings/i })
+        const settingsButton = screen.getByRole('button', {name: /settings/i})
         await act(async () => {
           await user.click(settingsButton)
         })

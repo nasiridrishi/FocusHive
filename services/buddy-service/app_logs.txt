@@ -1,0 +1,27 @@
+> Task :compileJava UP-TO-DATE
+> Task :processResources
+> Task :classes
+> Task :resolveMainClassName
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.0)
+
+{"timestamp":"2025-09-17T14:37:29.185+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.BuddyServiceApplication","message":"Starting BuddyServiceApplication using Java 21.0.8 with PID 43379 (/Users/nasir/uol/focushive/services/buddy-service/build/classes/java/main started by nasir in /Users/nasir/uol/focushive/services/buddy-service)","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"restartedMain"}
+{"timestamp":"2025-09-17T14:37:29.185+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.BuddyServiceApplication","message":"The following 1 profile is active: \"prod\"","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"restartedMain"}
+{"timestamp":"2025-09-17T14:37:32.377+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.config.CacheMetricsConfig","message":"Registering cache metrics for buddy-service","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"restartedMain"}
+{"timestamp":"2025-09-17T14:37:32.380+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.config.CacheMetricsConfig","message":"Registered 8 custom cache metrics","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"restartedMain"}
+{"timestamp":"2025-09-17T14:37:33.798+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.config.SchedulingConfig","message":"Configured TaskScheduler with thread pool size: 5","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"restartedMain"}
+{"timestamp":"2025-09-17T14:37:33.933+0530","@version":"1","level":"WARN","logger":"org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration$JpaWebConfiguration","message":"spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"restartedMain"}
+{"timestamp":"2025-09-17T14:37:35.337+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.BuddyServiceApplication","message":"Started BuddyServiceApplication in 6.525 seconds (process running for 6.713)","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"restartedMain"}
+{"timestamp":"2025-09-17T14:37:35.350+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.scheduler.BuddyScheduledTasks","traceId":"12be7bfe530315e3a34b130f1ae261ad","spanId":"5172677f36788dbe","message":"Starting goal deadline reminder process","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"buddy-scheduler-4"}
+{"timestamp":"2025-09-17T14:37:35.350+0530","@version":"1","level":"INFO","logger":"com.focushive.buddy.scheduler.BuddyScheduledTasks","traceId":"12be7bfe530315e3a34b130f1ae261ad","spanId":"5172677f36788dbe","message":"Goal deadline reminders completed - Sent: 0, Errors: 0, Time: 0ms","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"buddy-scheduler-4"}
+{"timestamp":"2025-09-17T14:38:04.924+0530","@version":"1","level":"INFO","logger":"org.springframework.web.servlet.DispatcherServlet","message":"Initializing Servlet 'dispatcherServlet'","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"http-nio-8090-exec-1"}
+{"timestamp":"2025-09-17T14:38:04.925+0530","@version":"1","level":"INFO","logger":"org.springframework.web.servlet.DispatcherServlet","message":"Completed initialization in 1 ms","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"http-nio-8090-exec-1"}
+{"timestamp":"2025-09-17T14:38:04.937+0530","@version":"1","level":"WARN","logger":"org.springframework.web.servlet.handler.HandlerMappingIntrospector","traceId":"fbaad034f3e3f3aab6b8f238675723c1","spanId":"b472a7b625e54cec","message":"Cache miss for REQUEST dispatch to '/actuator/health' (previous null). Performing MatchableHandlerMapping lookup. This is logged once only at WARN level, and every time at TRACE.","service":"buddy-service","environment":"prod","version":"unknown","hostname":"mac14.local","thread":"http-nio-8090-exec-1"}

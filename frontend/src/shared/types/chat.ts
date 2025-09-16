@@ -1,5 +1,5 @@
 // Chat related types
-import { User } from './auth'
+import {User} from './auth'
 
 export interface ChatMessage {
   id: string

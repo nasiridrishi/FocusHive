@@ -60,4 +60,28 @@ public class NotificationResponse {
      * Whether the page is empty
      */
     private boolean empty;
+    
+    /**
+     * Whether there is a next page
+     */
+    private boolean hasNext;
+    
+    /**
+     * Whether there is a previous page
+     */
+    private boolean hasPrevious;
+    
+    /**
+     * Current page number (alias for page)
+     */
+    public int getCurrentPage() {
+        return page;
+    }
+    
+    /**
+     * Page size (alias for size)
+     */
+    public int getPageSize() {
+        return size;
+    }
 }

@@ -10,18 +10,18 @@ export const featurePreloaders = {
   preloadHiveActivityHeatmap: () => import('@features/analytics/components/HiveActivityHeatmap'),
   preloadMemberEngagement: () => import('@features/analytics/components/MemberEngagement'),
   preloadGoalProgress: () => import('@features/analytics/components/GoalProgress'),
-  
+
   // Gamification preloaders
   preloadGamificationDemo: () => import('@features/gamification/pages/GamificationDemo'),
   preloadLeaderboardCard: () => import('@features/gamification/components/LeaderboardCard'),
   preloadAchievementBadge: () => import('@features/gamification/components/AchievementBadge'),
   preloadStreakCounter: () => import('@features/gamification/components/StreakCounter'),
   preloadPointsDisplay: () => import('@features/gamification/components/PointsDisplay'),
-  
+
   // Music preloaders
   preloadMusicPlayer: () => import('@features/music/components/music-player/MusicPlayer'),
   preloadSpotifyConnect: () => import('@features/music/components/spotify-connect/SpotifyConnectButton'),
-  
+
   // Communication preloaders
   preloadChatWindow: () => import('@features/chat/components/ChatWindow'),
   preloadForumHome: () => import('@features/forum/components/ForumHome'),
@@ -29,10 +29,12 @@ export const featurePreloaders = {
 }
 
 // Batch preloader for heavy features
-export const preloadHeavyFeatures = () => {
+export const preloadHeavyFeatures = (): void => {
   // Only preload on good connections
   if ('connection' in navigator) {
-    const connection = (navigator as { connection?: { effectiveType?: string; saveData?: boolean } }).connection
+    const connection = (navigator as {
+      connection?: { effectiveType?: string; saveData?: boolean }
+    }).connection
     if (connection?.effectiveType === '4g' && !connection.saveData) {
       setTimeout(() => {
         // Preload most commonly used heavy features
@@ -41,8 +43,8 @@ export const preloadHeavyFeatures = () => {
       }, 5000)
     }
   }
-  
-  console.log('[Features] Heavy features preload scheduled')
+
+  // console.log('[Features] Heavy features preload scheduled')
 }
 
 // Feature bundle information for monitoring

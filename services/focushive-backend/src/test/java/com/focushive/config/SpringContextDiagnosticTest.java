@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.ConflictingBeanDefinitionException;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.TestPropertySource;
@@ -30,14 +30,14 @@ public class SpringContextDiagnosticTest {
     @DisplayName("TDD: Should identify conflicting bean definitions - EXPECTED TO FAIL")
     void shouldIdentifyConflictingBeans() {
         // This test should FAIL and help us identify which beans are conflicting
-        assertThrows(ConflictingBeanDefinitionException.class, () -> {
+        assertThrows(BeanCreationException.class, () -> {
             // This will fail because we have conflicting beans
             // between CacheConfig and RedisConfiguration
             new org.springframework.context.annotation.AnnotationConfigApplicationContext(
                 CacheConfig.class,
                 RedisConfiguration.class
             );
-        }, "Expected ConflictingBeanDefinitionException due to duplicate @Primary beans");
+        }, "Expected BeanCreationException due to duplicate @Primary beans");
     }
 
     @Test
@@ -88,7 +88,7 @@ public class SpringContextDiagnosticTest {
         String message = exception.getMessage();
         assertTrue(message.contains("redisConnectionFactory") ||
                    message.contains("redisTemplate") ||
-                   message.contains("ConflictingBeanDefinitionException"),
+                   message.contains("BeanCreationException"),
                    "Expected specific bean conflicts: " + message);
     }
 

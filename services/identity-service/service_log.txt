@@ -1,0 +1,245 @@
+[0;34m
+=========================================
+    IDENTITY SERVICE LOCAL DEVELOPMENT
+=========================================
+[0m
+[0;34mℹ️  Checking dependencies...[0m
+[0;32m✅ All dependencies are available[0m
+[0;34mℹ️  Checking local services...[0m
+[0;32m✅ All services are accessible[0m
+[0;34mℹ️  Setting up database...[0m
+[0;34mℹ️  Database already exists: focushive_identity[0m
+[0;34mℹ️  Starting Identity Service on http://localhost:8081[0m
+[0;34mℹ️  Swagger UI will be available at: http://localhost:8081/swagger-ui.html[0m
+[0;34mℹ️  Health check: http://localhost:8081/actuator/health[0m
+[0;34mℹ️  Press Ctrl+C to stop the service[0m
+
+Starting a Gradle Daemon, 1 busy and 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
+> Task :checkKotlinGradlePluginConfigurationErrors
+> Task :compileKotlin NO-SOURCE
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :resolveMainClassName UP-TO-DATE
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.1)
+
+2025-09-20T17:21:12.145+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.IdentityServiceApplication  : Starting IdentityServiceApplication using Java 21.0.8 with PID 18902 (/Users/nasir/uol/focushive/services/identity-service/build/classes/java/main started by nasir in /Users/nasir/uol/focushive/services/identity-service)
+2025-09-20T17:21:12.146+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.IdentityServiceApplication  : Running with Spring Boot v3.3.1, Spring v6.1.10
+2025-09-20T17:21:12.147+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.IdentityServiceApplication  : The following 1 profile is active: "local"
+2025-09-20T17:21:12.167+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-09-20T17:21:12.167+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-09-20T17:21:12.974+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-20T17:21:12.975+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-09-20T17:21:13.088+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 107 ms. Found 16 JPA repository interfaces.
+2025-09-20T17:21:13.096+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2025-09-20T17:21:13.097+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.AuditLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.ConsentRecordRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.DataExportRequestRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.DataPermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.OAuth2AuditEventRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.OAuth2ConsentRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.OAuth2SessionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.OAuthAccessTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.OAuthAuthorizationCodeRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.110+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.OAuthClientRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.111+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.OAuthRefreshTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.111+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.PersonaActivityRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.111+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.PersonaProfileRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.111+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.PersonaRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.111+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.PrivacySettingRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.112+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.focushive.identity.repository.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-09-20T17:21:13.112+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 10 ms. Found 0 Redis repository interfaces.
+2025-09-20T17:21:13.258+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.cloud.context.scope.GenericScope     : BeanFactory id=6e4dcef2-4c2d-338b-8430-b5b42661d742
+2025-09-20T17:21:13.785+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8081 (http)
+2025-09-20T17:21:13.792+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-09-20T17:21:13.792+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.25]
+2025-09-20T17:21:13.815+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-09-20T17:21:13.816+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1648 ms
+2025-09-20T17:21:14.131+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-09-20T17:21:14.174+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1c743f6b
+2025-09-20T17:21:14.175+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-09-20T17:21:14.180+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:postgresql://localhost:5432/focushive_identity'
+2025-09-20T17:21:14.247+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.security.JwtTokenProvider   : JWT secret validation passed - length: 44 characters
+2025-09-20T17:21:14.250+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.security.RSAJwtTokenProvider       : Loaded RSA keys from files: classpath:keys/jwt-private.pem and classpath:keys/jwt-public.pem
+2025-09-20T17:21:14.251+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.security.RSAJwtTokenProvider       : JWT Provider initialized with RSA signing (Algorithm: RS256)
+2025-09-20T17:21:14.251+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.security.RSAJwtTokenProvider       : Active key ID: focushive-2025-01
+2025-09-20T17:21:14.530+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:5432/focushive_identity (PostgreSQL 17.6)
+2025-09-20T17:21:14.537+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 17.6 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 16.
+2025-09-20T17:21:14.563+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.f.core.internal.command.DbValidate     : Successfully validated 21 migrations (execution time 00:00.021s)
+2025-09-20T17:21:14.571+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 20241212.1
+2025-09-20T17:21:14.571+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] o.f.core.internal.command.DbMigrate      : outOfOrder mode is active. Migration of schema "public" may not be reproducible.
+2025-09-20T17:21:14.572+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2025-09-20T17:21:14.648+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-09-20T17:21:14.670+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-09-20T17:21:14.684+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-09-20T17:21:14.819+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-09-20T17:21:14.843+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-20T17:21:15.677+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-20T17:21:15.678+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-09-20T17:21:15.900+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-09-20T17:21:16.355+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.SecurityHeadersConfig       : Filter 'securityHeadersConfig' configured for use
+2025-09-20T17:21:16.355+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2025-09-20T17:21:16.355+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] utValidationConfig$InputValidationFilter : Filter 'inputValidationFilter' configured for use
+2025-09-20T17:21:16.356+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.s.ContentTypeValidationFilter      : Filter 'contentTypeValidationFilter' configured for use
+2025-09-20T17:21:16.356+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.s.PathTraversalPreventionFilter    : Filter 'pathTraversalPreventionFilter' configured for use
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    : 🔍 Validating Identity Service environment configuration...
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    : 📋 Identity Service Configuration Summary:
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Database: localhost:5432/focushive_identity
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Redis: localhost:6379
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Server Port: 8081
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Issuer URI: http://localhost:8081
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   JWT Access Token Expiration: 3600000ms
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   JWT Refresh Token Expiration: 2592000000ms
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Rate Limiting: Enabled
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Security Headers: Enabled
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Log Level: INFO
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   CORS Origins: http://localhost:3000,http://localhost:8080,http://localhost:8081
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Security Configuration: ✅ All secrets configured
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   JWT Secret: ✅ 44 characters
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    :   Encryption Key: ✅ 34 characters
+2025-09-20T17:21:16.440+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.EnvironmentConfig    : ✅ Environment validation successful - Identity Service ready to start
+2025-09-20T17:21:16.509+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.RateLimitingRedisConfig     : Rate limiting JedisPool created - Host: localhost:6379, Database: 0
+2025-09-20T17:21:16.560+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.RateLimitingRedisConfig     : Bucket4j JedisBasedProxyManager created successfully
+2025-09-20T17:21:16.761+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-09-20T17:21:16.826+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2025-09-20T17:21:16.982+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-09-20T17:21:17.631+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.config.RateLimitingConfig   : Rate limiting interceptor registered for authentication endpoints
+2025-09-20T17:21:17.952+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2025-09-20T17:21:18.038+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.AuthorizationServerConfig   : Configuring Authorization Server with issuer: http://localhost:8081
+2025-09-20T17:21:18.835+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.s.web.DefaultSecurityFilterChain     : Will secure com.focushive.identity.config.AuthorizationServerConfig$$Lambda/0x000000d001eb6118@76f19733 with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, AuthorizationServerContextFilter, HeaderWriterFilter, CsrfFilter, OidcLogoutEndpointFilter, LogoutFilter, OAuth2AuthorizationServerMetadataEndpointFilter, OAuth2AuthorizationEndpointFilter, OAuth2DeviceVerificationEndpointFilter, OidcProviderConfigurationEndpointFilter, NimbusJwkSetEndpointFilter, OAuth2ClientAuthenticationFilter, BearerTokenAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, ExceptionTranslationFilter, AuthorizationFilter, OAuth2TokenEndpointFilter, OAuth2TokenIntrospectionEndpointFilter, OAuth2TokenRevocationEndpointFilter, OAuth2DeviceAuthorizationEndpointFilter, OidcUserInfoEndpointFilter
+2025-09-20T17:21:18.905+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.s.web.DefaultSecurityFilterChain     : Will secure com.focushive.identity.config.AuthorizationServerConfig$$Lambda/0x000000d001eb7010@42dd818b with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CsrfFilter, LogoutFilter, UsernamePasswordAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, ExceptionTranslationFilter, AuthorizationFilter
+2025-09-20T17:21:18.960+05:30 DEBUG 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.s.web.DefaultSecurityFilterChain     : Will secure com.focushive.identity.config.SecurityConfig$$Lambda/0x000000d001eb7ac0@7d327d13 with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, OWASPCompliantCorsFilter, CorsFilter, CsrfFilter, LogoutFilter, PathTraversalPreventionFilter, JwtAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2025-09-20T17:21:19.022+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.RedisMessagingConfig        : Configured Redis message listener for topic: token-revocation-events
+2025-09-20T17:21:19.033+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.SecretsManagerConfig        : Initializing secret provider: environment
+2025-09-20T17:21:20.163+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8081 (http) with context path '/'
+2025-09-20T17:21:20.400+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.identity.IdentityServiceApplication  : Started IdentityServiceApplication in 8.426 seconds (process running for 8.627)
+2025-09-20T17:21:20.403+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : 🔍 Starting environment variable validation...
+2025-09-20T17:21:20.404+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : =============================================================
+2025-09-20T17:21:20.404+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : ENVIRONMENT VALIDATION RESULTS
+2025-09-20T17:21:20.404+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : =============================================================
+2025-09-20T17:21:20.404+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : Profile: local
+2025-09-20T17:21:20.404+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : Validation: ENABLED
+2025-09-20T17:21:20.404+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : Fail-Fast: ENABLED
+2025-09-20T17:21:20.404+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : -------------------------------------------------------------
+2025-09-20T17:21:20.404+05:30 ERROR 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : ❌ CRITICAL ERRORS (1):
+2025-09-20T17:21:20.404+05:30 ERROR 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Database: Required variable 'DB_USERNAME' is not set
+2025-09-20T17:21:20.404+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : ⚠️ WARNINGS (3):
+2025-09-20T17:21:20.405+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Security: Variable 'ADMIN_USERNAME' uses weak value
+2025-09-20T17:21:20.405+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Security: Variable 'ADMIN_PASSWORD' uses weak value
+2025-09-20T17:21:20.405+05:30  WARN 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Variable 'ADMIN_PASSWORD' is too short. Minimum length: 12, Current: 8
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : 💡 RECOMMENDATIONS (12):
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • OAuth2: Recommended variable 'OAUTH2_CLIENT_ID' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • OAuth2: Recommended variable 'OAUTH2_CLIENT_SECRET' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Monitoring: Recommended variable 'METRICS_ENABLED' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Monitoring: Recommended variable 'TRACING_ENABLED' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Monitoring: Recommended variable 'ZIPKIN_ENDPOINT' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Redis Cluster: Recommended variable 'REDIS_PASSWORD' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Redis Cluster: Recommended variable 'REDIS_CLUSTER_NODES' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • SSL: Recommended variable 'SSL_ENABLED' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • SSL: Recommended variable 'SSL_KEY_STORE' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • SSL: Recommended variable 'SSL_KEY_STORE_PASSWORD' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Rate Limiting: Recommended variable 'AUTH_RATE_LIMIT_RPM' is not set
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        :   • Rate Limiting: Recommended variable 'API_RATE_LIMIT_RPM' is not set
+2025-09-20T17:21:20.405+05:30 ERROR 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : ❌ Environment validation failed with 1 critical errors
+2025-09-20T17:21:20.405+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.config.EnvironmentValidator        : =============================================================
+2025-09-20T17:21:20.406+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.s.encryption.EncryptionKeyService  : Initializing encryption key service
+2025-09-20T17:21:20.406+05:30 ERROR 18902 --- [identity-service] [  restartedMain] [                                                 ] c.f.i.s.encryption.EncryptionKeyService  : Failed to initialize encryption key service
+
+java.lang.IllegalArgumentException: Illegal base64 character 2d
+	at java.base/java.util.Base64$Decoder.decode0(Base64.java:852) ~[na:na]
+	at java.base/java.util.Base64$Decoder.decode(Base64.java:570) ~[na:na]
+	at java.base/java.util.Base64$Decoder.decode(Base64.java:593) ~[na:na]
+	at com.focushive.identity.security.encryption.EncryptionKeyService.validateMasterKey(EncryptionKeyService.java:343) ~[main/:na]
+	at com.focushive.identity.security.encryption.EncryptionKeyService.initialize(EncryptionKeyService.java:64) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.context.event.ApplicationListenerMethodAdapter.doInvoke(ApplicationListenerMethodAdapter.java:365) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.ApplicationListenerMethodAdapter.processEvent(ApplicationListenerMethodAdapter.java:237) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.ApplicationListenerMethodAdapter.onApplicationEvent(ApplicationListenerMethodAdapter.java:168) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:185) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:178) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:156) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:451) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:384) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.boot.context.event.EventPublishingRunListener.ready(EventPublishingRunListener.java:109) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$ready$6(SpringApplicationRunListeners.java:80) ~[spring-boot-3.3.1.jar:3.3.1]
+	at java.base/java.lang.Iterable.forEach(Iterable.java:75) ~[na:na]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:118) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:112) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplicationRunListeners.ready(SpringApplicationRunListeners.java:80) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:349) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1363) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1352) ~[spring-boot-3.3.1.jar:3.3.1]
+	at com.focushive.identity.IdentityServiceApplication.main(IdentityServiceApplication.java:16) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.3.1.jar:3.3.1]
+
+2025-09-20T17:21:20.415+05:30 ERROR 18902 --- [identity-service] [  restartedMain] [                                                 ] o.s.boot.SpringApplication               : Application run failed
+
+java.lang.IllegalStateException: Encryption key service initialization failed
+	at com.focushive.identity.security.encryption.EncryptionKeyService.initialize(EncryptionKeyService.java:79) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.context.event.ApplicationListenerMethodAdapter.doInvoke(ApplicationListenerMethodAdapter.java:365) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.ApplicationListenerMethodAdapter.processEvent(ApplicationListenerMethodAdapter.java:237) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.ApplicationListenerMethodAdapter.onApplicationEvent(ApplicationListenerMethodAdapter.java:168) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.doInvokeListener(SimpleApplicationEventMulticaster.java:185) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.invokeListener(SimpleApplicationEventMulticaster.java:178) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.event.SimpleApplicationEventMulticaster.multicastEvent(SimpleApplicationEventMulticaster.java:156) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:451) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.support.AbstractApplicationContext.publishEvent(AbstractApplicationContext.java:384) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.boot.context.event.EventPublishingRunListener.ready(EventPublishingRunListener.java:109) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplicationRunListeners.lambda$ready$6(SpringApplicationRunListeners.java:80) ~[spring-boot-3.3.1.jar:3.3.1]
+	at java.base/java.lang.Iterable.forEach(Iterable.java:75) ~[na:na]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:118) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplicationRunListeners.doWithListeners(SpringApplicationRunListeners.java:112) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplicationRunListeners.ready(SpringApplicationRunListeners.java:80) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:349) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1363) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1352) ~[spring-boot-3.3.1.jar:3.3.1]
+	at com.focushive.identity.IdentityServiceApplication.main(IdentityServiceApplication.java:16) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.3.1.jar:3.3.1]
+Caused by: java.lang.IllegalArgumentException: Illegal base64 character 2d
+	at java.base/java.util.Base64$Decoder.decode0(Base64.java:852) ~[na:na]
+	at java.base/java.util.Base64$Decoder.decode(Base64.java:570) ~[na:na]
+	at java.base/java.util.Base64$Decoder.decode(Base64.java:593) ~[na:na]
+	at com.focushive.identity.security.encryption.EncryptionKeyService.validateMasterKey(EncryptionKeyService.java:343) ~[main/:na]
+	at com.focushive.identity.security.encryption.EncryptionKeyService.initialize(EncryptionKeyService.java:64) ~[main/:na]
+	... 23 common frames omitted
+
+2025-09-20T17:21:20.537+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-09-20T17:21:20.541+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-09-20T17:21:20.544+05:30  INFO 18902 --- [identity-service] [  restartedMain] [                                                 ] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+BUILD SUCCESSFUL in 14s
+5 actionable tasks: 2 executed, 3 up-to-date
+Exception in thread "Thread-3" org.gradle.api.UncheckedIOException: java.io.IOException: Input/output error
+	at org.gradle.internal.UncheckedException.throwAsUncheckedException(UncheckedException.java:63)
+	at org.gradle.internal.UncheckedException.throwAsUncheckedException(UncheckedException.java:42)
+	at org.gradle.internal.daemon.client.clientinput.DaemonClientInputForwarder$ForwardingUserInput.lambda$readAndForwardStdin$0(DaemonClientInputForwarder.java:99)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.IOException: Input/output error
+	at java.base/java.io.FileInputStream.readBytes(Native Method)
+	at java.base/java.io.FileInputStream.read(FileInputStream.java:287)
+	at java.base/java.io.BufferedInputStream.read1(BufferedInputStream.java:345)
+	at java.base/java.io.BufferedInputStream.implRead(BufferedInputStream.java:420)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:399)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:350)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:393)
+	at java.base/sun.nio.cs.StreamDecoder.lockedRead(StreamDecoder.java:217)

@@ -3,7 +3,6 @@ package com.focushive.timer.scheduler;
 import com.focushive.timer.dto.TimerStateDto;
 import com.focushive.timer.entity.HiveTimer;
 import com.focushive.timer.repository.HiveTimerRepository;
-import com.focushive.timer.service.TimerService;
 import com.focushive.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

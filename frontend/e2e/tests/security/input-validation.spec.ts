@@ -1,8 +1,8 @@
 /**
  * Input Validation Security Tests (UOL-44.15)
- * 
+ *
  * Comprehensive client-side input validation security testing for FocusHive
- * 
+ *
  * Test Categories:
  * 1. Form Input Validation
  * 2. Data Type Validation
@@ -16,10 +16,9 @@
  * 10. Path Traversal Prevention
  */
 
-import { test, expect } from '@playwright/test';
-import { Page } from '@playwright/test';
+import {expect, Page, test} from '@playwright/test';
 
-interface ValidationTest {
+interface _ValidationTest {
   input: string;
   shouldPass: boolean;
   description: string;
@@ -36,7 +35,8 @@ interface FieldTestConfig {
 }
 
 class InputValidationHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   async testFieldValidation(config: FieldTestConfig): Promise<{
     validInputsPassed: boolean[];
@@ -52,12 +52,12 @@ class InputValidationHelper {
       await this.page.fill(config.selector, '');
       await this.page.fill(config.selector, validInput);
       await this.page.press(config.selector, 'Tab');
-      
+
       await this.page.waitForTimeout(500);
-      
+
       const isValid = await this.checkFieldValidity(config.selector);
       const errorMessage = await this.getValidationMessage(config.selector);
-      
+
       validResults.push(isValid);
       if (errorMessage) {
         messages.push(`Valid input "${validInput}": ${errorMessage}`);
@@ -69,12 +69,12 @@ class InputValidationHelper {
       await this.page.fill(config.selector, '');
       await this.page.fill(config.selector, invalidInput);
       await this.page.press(config.selector, 'Tab');
-      
+
       await this.page.waitForTimeout(500);
-      
+
       const isInvalid = !(await this.checkFieldValidity(config.selector));
       const errorMessage = await this.getValidationMessage(config.selector);
-      
+
       invalidResults.push(isInvalid);
       if (errorMessage) {
         messages.push(`Invalid input "${invalidInput}": ${errorMessage}`);
@@ -117,20 +117,20 @@ class InputValidationHelper {
       await this.page.fill(selector, '');
       await this.page.fill(selector, payload);
       await this.page.press(selector, 'Tab');
-      
+
       await this.page.waitForTimeout(300);
-      
+
       const actualValue = await this.page.inputValue(selector);
       const isBlocked = actualValue === '';
       const isSanitized = actualValue !== payload && actualValue !== '';
-      
+
       blocked.push(isBlocked);
       sanitized.push(isSanitized);
       originalValues.push(payload);
       actualValues.push(actualValue);
     }
 
-    return { blocked, sanitized, originalValues, actualValues };
+    return {blocked, sanitized, originalValues, actualValues};
   }
 
   async testFileSizeValidation(fileSelector: string, maxSizeMB: number): Promise<boolean> {
@@ -150,7 +150,7 @@ class InputValidationHelper {
       // Check for validation error
       const errorMessage = await this.page.textContent('[data-testid="file-size-error"]');
       return errorMessage !== null && errorMessage.includes('size');
-    } catch (error) {
+    } catch {
       // If file selection failed, validation worked
       return true;
     }
@@ -182,7 +182,7 @@ class InputValidationHelper {
         await this.page.waitForTimeout(500);
         const errorMessage = await this.page.textContent('[data-testid="file-type-error"]');
         allowedResults.push(errorMessage === null || errorMessage === '');
-      } catch (error) {
+      } catch {
         allowedResults.push(false);
       }
     }
@@ -200,7 +200,7 @@ class InputValidationHelper {
         await this.page.waitForTimeout(500);
         const errorMessage = await this.page.textContent('[data-testid="file-type-error"]');
         forbiddenResults.push(errorMessage !== null && errorMessage.includes('type'));
-      } catch (error) {
+      } catch {
         // If file selection failed, validation worked
         forbiddenResults.push(true);
       }
@@ -212,33 +212,13 @@ class InputValidationHelper {
     };
   }
 
-  private getExtensionFromMimeType(mimeType: string): string {
-    const mimeToExt: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/gif': 'gif',
-      'image/svg+xml': 'svg',
-      'text/plain': 'txt',
-      'text/html': 'html',
-      'application/javascript': 'js',
-      'text/javascript': 'js',
-      'application/pdf': 'pdf',
-      'application/x-executable': 'exe',
-      'application/x-msdownload': 'exe',
-      'application/x-sh': 'sh',
-      'application/x-python-code': 'py'
-    };
-
-    return mimeToExt[mimeType] || 'bin';
-  }
-
   async simulateBypassAttempt(selector: string, payload: string): Promise<{
     bypassSuccessful: boolean;
     method: string;
   }> {
     const bypassMethods = [
       'direct_js_manipulation',
-      'form_data_manipulation', 
+      'form_data_manipulation',
       'attribute_modification',
       'event_prevention'
     ];
@@ -253,8 +233,8 @@ class InputValidationHelper {
               const element = document.querySelector(sel) as HTMLInputElement;
               if (element) {
                 element.value = val;
-                element.dispatchEvent(new Event('input', { bubbles: true }));
-                element.dispatchEvent(new Event('change', { bubbles: true }));
+                element.dispatchEvent(new Event('input', {bubbles: true}));
+                element.dispatchEvent(new Event('change', {bubbles: true}));
               }
             }, selector, payload);
             break;
@@ -297,25 +277,45 @@ class InputValidationHelper {
         bypassSuccessful = actualValue === payload;
 
         if (bypassSuccessful) {
-          return { bypassSuccessful: true, method };
+          return {bypassSuccessful: true, method};
         }
-      } catch (error) {
+      } catch {
         // Method failed, continue to next
       }
     }
 
-    return { bypassSuccessful: false, method: 'none' };
+    return {bypassSuccessful: false, method: 'none'};
+  }
+
+  private getExtensionFromMimeType(mimeType: string): string {
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/svg+xml': 'svg',
+      'text/plain': 'txt',
+      'text/html': 'html',
+      'application/javascript': 'js',
+      'text/javascript': 'js',
+      'application/pdf': 'pdf',
+      'application/x-executable': 'exe',
+      'application/x-msdownload': 'exe',
+      'application/x-sh': 'sh',
+      'application/x-python-code': 'py'
+    };
+
+    return mimeToExt[mimeType] || 'bin';
   }
 }
 
 test.describe('Input Validation Security Tests', () => {
   let validationHelper: InputValidationHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     validationHelper = new InputValidationHelper(page);
-    
+
     await page.goto('/');
-    
+
     // Login for authenticated forms
     await page.click('[data-testid="login-button"]');
     await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -325,7 +325,7 @@ test.describe('Input Validation Security Tests', () => {
   });
 
   test.describe('Form Input Validation', () => {
-    test('should validate hive name input', async ({ page }) => {
+    test('should validate hive name input', async ({page}) => {
       await page.goto('/create-hive');
 
       const hiveNameConfig: FieldTestConfig = {
@@ -352,17 +352,17 @@ test.describe('Input Validation Security Tests', () => {
       const results = await validationHelper.testFieldValidation(hiveNameConfig);
 
       // All valid inputs should pass
-      results.validInputsPassed.forEach((passed, index) => {
+      results.validInputsPassed.forEach((passed, _index) => {
         expect(passed).toBe(true);
       });
 
       // All invalid inputs should be blocked
-      results.invalidInputsBlocked.forEach((blocked, index) => {
+      results.invalidInputsBlocked.forEach((blocked, _index) => {
         expect(blocked).toBe(true);
       });
     });
 
-    test('should validate email format', async ({ page }) => {
+    test('should validate email format', async ({page}) => {
       await page.goto('/profile');
 
       const emailConfig: FieldTestConfig = {
@@ -394,7 +394,7 @@ test.describe('Input Validation Security Tests', () => {
       });
     });
 
-    test('should validate password strength', async ({ page }) => {
+    test('should validate password strength', async ({page}) => {
       await page.goto('/register');
 
       const passwordConfig: FieldTestConfig = {
@@ -427,7 +427,7 @@ test.describe('Input Validation Security Tests', () => {
       });
     });
 
-    test('should validate URL format', async ({ page }) => {
+    test('should validate URL format', async ({page}) => {
       await page.goto('/profile');
 
       // Assuming there's a website URL field
@@ -463,7 +463,7 @@ test.describe('Input Validation Security Tests', () => {
   });
 
   test.describe('Injection Prevention', () => {
-    test('should prevent SQL injection in text inputs', async ({ page }) => {
+    test('should prevent SQL injection in text inputs', async ({page}) => {
       await page.goto('/create-hive');
 
       const sqlInjectionPayloads = [
@@ -477,8 +477,8 @@ test.describe('Input Validation Security Tests', () => {
       ];
 
       const results = await validationHelper.testInjectionPayloads(
-        '[data-testid="hive-name-input"]',
-        sqlInjectionPayloads
+          '[data-testid="hive-name-input"]',
+          sqlInjectionPayloads
       );
 
       // All SQL injection attempts should be blocked or sanitized
@@ -487,7 +487,7 @@ test.describe('Input Validation Security Tests', () => {
       });
     });
 
-    test('should prevent NoSQL injection in text inputs', async ({ page }) => {
+    test('should prevent NoSQL injection in text inputs', async ({page}) => {
       await page.goto('/create-hive');
 
       const noSQLInjectionPayloads = [
@@ -500,8 +500,8 @@ test.describe('Input Validation Security Tests', () => {
       ];
 
       const results = await validationHelper.testInjectionPayloads(
-        '[data-testid="hive-description-input"]',
-        noSQLInjectionPayloads
+          '[data-testid="hive-description-input"]',
+          noSQLInjectionPayloads
       );
 
       results.blocked.concat(results.sanitized).forEach((prevented) => {
@@ -509,7 +509,7 @@ test.describe('Input Validation Security Tests', () => {
       });
     });
 
-    test('should prevent command injection', async ({ page }) => {
+    test('should prevent command injection', async ({page}) => {
       await page.goto('/create-hive');
 
       const commandInjectionPayloads = [
@@ -523,8 +523,8 @@ test.describe('Input Validation Security Tests', () => {
       ];
 
       const results = await validationHelper.testInjectionPayloads(
-        '[data-testid="hive-name-input"]',
-        commandInjectionPayloads
+          '[data-testid="hive-name-input"]',
+          commandInjectionPayloads
       );
 
       results.blocked.concat(results.sanitized).forEach((prevented) => {
@@ -532,7 +532,7 @@ test.describe('Input Validation Security Tests', () => {
       });
     });
 
-    test('should prevent path traversal attacks', async ({ page }) => {
+    test('should prevent path traversal attacks', async ({page}) => {
       await page.goto('/profile');
 
       // Assuming there's a file path input
@@ -548,8 +548,8 @@ test.describe('Input Validation Security Tests', () => {
         ];
 
         const results = await validationHelper.testInjectionPayloads(
-          '[data-testid="avatar-path-input"]',
-          pathTraversalPayloads
+            '[data-testid="avatar-path-input"]',
+            pathTraversalPayloads
         );
 
         results.blocked.concat(results.sanitized).forEach((prevented) => {
@@ -560,33 +560,33 @@ test.describe('Input Validation Security Tests', () => {
   });
 
   test.describe('File Upload Validation', () => {
-    test('should validate file size limits', async ({ page }) => {
+    test('should validate file size limits', async ({page}) => {
       await page.goto('/profile');
 
       const fileUploadSelector = '[data-testid="avatar-upload"]';
-      
+
       if (await page.locator(fileUploadSelector).count() > 0) {
         const maxFileSizeMB = 5; // Assuming 5MB limit
         const fileSizeValid = await validationHelper.testFileSizeValidation(
-          fileUploadSelector,
-          maxFileSizeMB
+            fileUploadSelector,
+            maxFileSizeMB
         );
 
         expect(fileSizeValid).toBe(true);
       }
     });
 
-    test('should validate file types', async ({ page }) => {
+    test('should validate file types', async ({page}) => {
       await page.goto('/profile');
 
       const fileUploadSelector = '[data-testid="avatar-upload"]';
-      
+
       if (await page.locator(fileUploadSelector).count() > 0) {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        
+
         const results = await validationHelper.testFileTypeValidation(
-          fileUploadSelector,
-          allowedTypes
+            fileUploadSelector,
+            allowedTypes
         );
 
         // Allowed types should be accepted
@@ -601,15 +601,15 @@ test.describe('Input Validation Security Tests', () => {
       }
     });
 
-    test('should validate file content, not just extension', async ({ page }) => {
+    test('should validate file content, not just extension', async ({page}) => {
       await page.goto('/profile');
 
       const fileUploadSelector = '[data-testid="avatar-upload"]';
-      
+
       if (await page.locator(fileUploadSelector).count() > 0) {
         // Create a malicious file with image extension but HTML content
         const maliciousContent = '<script>alert("XSS")</script>';
-        
+
         try {
           await page.setInputFiles(fileUploadSelector, {
             name: 'malicious.png',
@@ -631,21 +631,21 @@ test.describe('Input Validation Security Tests', () => {
   });
 
   test.describe('Client-side Validation Bypass Prevention', () => {
-    test('should prevent validation bypass through DOM manipulation', async ({ page }) => {
+    test('should prevent validation bypass through DOM manipulation', async ({page}) => {
       await page.goto('/create-hive');
 
       const maliciousPayload = '<script>alert("bypassed")</script>';
-      
+
       const bypassResult = await validationHelper.simulateBypassAttempt(
-        '[data-testid="hive-name-input"]',
-        maliciousPayload
+          '[data-testid="hive-name-input"]',
+          maliciousPayload
       );
 
       // Validation bypass should not succeed
       expect(bypassResult.bypassSuccessful).toBe(false);
     });
 
-    test('should prevent form attribute manipulation', async ({ page }) => {
+    test('should prevent form attribute manipulation', async ({page}) => {
       await page.goto('/create-hive');
 
       // Try to manipulate form validation attributes
@@ -657,10 +657,10 @@ test.describe('Input Validation Security Tests', () => {
           input.removeAttribute('pattern');
           input.removeAttribute('maxlength');
           input.setAttribute('type', 'hidden');
-          
+
           // Set malicious value
           input.value = '<script>alert("manipulated")</script>';
-          
+
           // Check if validation still works
           return input.validity.valid;
         }
@@ -671,7 +671,7 @@ test.describe('Input Validation Security Tests', () => {
       expect(manipulationSuccess).toBe(false);
     });
 
-    test('should maintain validation on dynamic form updates', async ({ page }) => {
+    test('should maintain validation on dynamic form updates', async ({page}) => {
       await page.goto('/create-hive');
 
       // Test dynamic field addition/removal
@@ -689,8 +689,8 @@ test.describe('Input Validation Security Tests', () => {
       // Dynamic fields should still be validated
       if (await page.locator('[data-testid="dynamic-input"]').count() > 0) {
         const dynamicValidation = await validationHelper.testInjectionPayloads(
-          '[data-testid="dynamic-input"]',
-          ['<script>alert("dynamic")</script>']
+            '[data-testid="dynamic-input"]',
+            ['<script>alert("dynamic")</script>']
         );
 
         dynamicValidation.blocked.concat(dynamicValidation.sanitized).forEach((prevented) => {
@@ -701,15 +701,15 @@ test.describe('Input Validation Security Tests', () => {
   });
 
   test.describe('Real-time Validation', () => {
-    test('should provide immediate feedback on invalid input', async ({ page }) => {
+    test('should provide immediate feedback on invalid input', async ({page}) => {
       await page.goto('/register');
 
       const passwordField = '[data-testid="password-input"]';
-      
+
       // Type invalid password
       await page.type(passwordField, 'weak');
       await page.press(passwordField, 'Tab');
-      
+
       await page.waitForTimeout(500);
 
       // Should show validation error immediately
@@ -718,11 +718,11 @@ test.describe('Input Validation Security Tests', () => {
       expect(errorMessage.length).toBeGreaterThan(0);
     });
 
-    test('should validate as user types', async ({ page }) => {
+    test('should validate as user types', async ({page}) => {
       await page.goto('/create-hive');
 
       const nameField = '[data-testid="hive-name-input"]';
-      
+
       // Type invalid characters one by one
       const invalidChars = '<>{}[]';
       let validationTriggered = false;
@@ -730,7 +730,7 @@ test.describe('Input Validation Security Tests', () => {
       for (const char of invalidChars) {
         await page.type(nameField, char);
         await page.waitForTimeout(200);
-        
+
         const isValid = await validationHelper.checkFieldValidity(nameField);
         if (!isValid) {
           validationTriggered = true;
@@ -741,12 +741,12 @@ test.describe('Input Validation Security Tests', () => {
       expect(validationTriggered).toBe(true);
     });
 
-    test('should show strength meter for password fields', async ({ page }) => {
+    test('should show strength meter for password fields', async ({page}) => {
       await page.goto('/register');
 
       const passwordField = '[data-testid="password-input"]';
       const strengthIndicator = '[data-testid="password-strength"]';
-      
+
       if (await page.locator(strengthIndicator).count() > 0) {
         // Test weak password
         await page.fill(passwordField, 'weak');
@@ -762,7 +762,7 @@ test.describe('Input Validation Security Tests', () => {
   });
 
   test.describe('Internationalization Input Validation', () => {
-    test('should handle Unicode characters properly', async ({ page }) => {
+    test('should handle Unicode characters properly', async ({page}) => {
       await page.goto('/create-hive');
 
       const unicodeInputs = [
@@ -779,19 +779,19 @@ test.describe('Input Validation Security Tests', () => {
       for (const unicodeInput of unicodeInputs) {
         await page.fill(nameField, unicodeInput);
         await page.press(nameField, 'Tab');
-        
+
         await page.waitForTimeout(300);
-        
+
         const isValid = await validationHelper.checkFieldValidity(nameField);
         const actualValue = await page.inputValue(nameField);
-        
+
         // Unicode input should be accepted and preserved
         expect(isValid).toBe(true);
         expect(actualValue).toBe(unicodeInput);
       }
     });
 
-    test('should prevent Unicode-based attacks', async ({ page }) => {
+    test('should prevent Unicode-based attacks', async ({page}) => {
       await page.goto('/create-hive');
 
       const unicodeAttacks = [
@@ -803,8 +803,8 @@ test.describe('Input Validation Security Tests', () => {
       ];
 
       const results = await validationHelper.testInjectionPayloads(
-        '[data-testid="hive-name-input"]',
-        unicodeAttacks
+          '[data-testid="hive-name-input"]',
+          unicodeAttacks
       );
 
       results.blocked.concat(results.sanitized).forEach((prevented) => {

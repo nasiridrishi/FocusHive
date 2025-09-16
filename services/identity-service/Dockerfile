@@ -1,57 +1,89 @@
-# Build stage
+# FocusHive Identity Service - Production-Ready Dockerfile
+# Multi-stage build for optimal size and security
+
+# Stage 1: Build stage
 FROM gradle:8.8-jdk21-alpine AS build
 WORKDIR /app
 
-# Copy dependency management files first for better caching
-COPY build.gradle.kts settings.gradle.kts ./
+# Copy Gradle configuration files for dependency caching
+COPY build.gradle.kts settings.gradle.kts gradle.properties* ./
 COPY gradle ./gradle
-COPY gradlew ./
+COPY gradlew* ./
 
-# Download dependencies (cached layer)
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
+# Download dependencies (this layer will be cached)
+RUN chmod +x ./gradlew 2>/dev/null || true && \
+    ./gradlew dependencies --no-daemon --parallel
 
-# Copy source code and build
+# Copy source code
 COPY src ./src
-RUN ./gradlew build -x test --no-daemon
 
-# Extract layers for Spring Boot optimization
-RUN java -Djarmode=tools -jar build/libs/*.jar extract --layers
+# Build the application JAR (skip tests for faster builds in Docker)
+RUN ./gradlew clean bootJar -x test --no-daemon --parallel
 
-# Production runtime stage
-FROM eclipse-temurin:21-jre-alpine AS production
+# Stage 2: Runtime stage
+FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
 
-# Install curl for health checks and dumb-init for proper signal handling
-RUN apk add --no-cache curl dumb-init
+# Install necessary packages for production
+RUN apk add --no-cache \
+    curl \
+    bash \
+    tzdata \
+    tini && \
+    rm -rf /var/cache/apk/*
 
-# Create non-root user
-RUN addgroup -g 1001 -S spring && \
-    adduser -S spring -u 1001 -G spring && \
-    mkdir -p /app/logs && \
-    chown -R spring:spring /app
+# Set timezone
+ENV TZ=UTC
 
-# Copy Spring Boot layers for optimal caching
-COPY --from=build --chown=spring:spring /app/dependencies/ ./
-COPY --from=build --chown=spring:spring /app/spring-boot-loader/ ./
-COPY --from=build --chown=spring:spring /app/snapshot-dependencies/ ./
-COPY --from=build --chown=spring:spring /app/application/ ./
+# Create non-root user for security
+RUN addgroup -g 1001 -S focushive && \
+    adduser -S focushive -u 1001 -G focushive && \
+    mkdir -p /app/logs /app/tmp && \
+    chown -R focushive:focushive /app
+
+# Copy the JAR file from build stage
+COPY --from=build --chown=focushive:focushive /app/build/libs/identity-service.jar app.jar
 
 # Switch to non-root user
-USER spring:spring
+USER focushive:focushive
 
+# Expose application port
 EXPOSE 8081
+
+# JVM configuration for containers
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:InitialRAMPercentage=50.0 \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:+UseStringDeduplication \
+    -XX:+OptimizeStringConcat \
+    -Djava.security.egd=file:/dev/./urandom \
+    -Djava.awt.headless=true \
+    -Dfile.encoding=UTF-8 \
+    -Duser.timezone=UTC \
+    -Dspring.backgroundpreinitializer.ignore=true"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8081/api/v1/health || exit 1
 
-# Use dumb-init for proper signal handling and optimized JVM flags for identity service
-ENTRYPOINT ["dumb-init", "--", "java", \
-    "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-XX:+UseG1GC", \
-    "-XX:+UseStringDeduplication", \
-    "-XX:+OptimizeStringConcat", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-Dspring.backgroundpreinitializer.ignore=true", \
-    "org.springframework.boot.loader.launch.JarLauncher"]
+# Use tini for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start the application with explicit JVM options
+CMD ["java", \
+     "-XX:+UseContainerSupport", \
+     "-XX:MaxRAMPercentage=75.0", \
+     "-XX:InitialRAMPercentage=50.0", \
+     "-XX:+UseG1GC", \
+     "-XX:MaxGCPauseMillis=200", \
+     "-XX:+UseStringDeduplication", \
+     "-XX:+OptimizeStringConcat", \
+     "-Djava.security.egd=file:/dev/./urandom", \
+     "-Djava.awt.headless=true", \
+     "-Dfile.encoding=UTF-8", \
+     "-Duser.timezone=UTC", \
+     "-Dspring.backgroundpreinitializer.ignore=true", \
+     "-jar", \
+     "app.jar"]

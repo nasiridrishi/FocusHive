@@ -1,12 +1,12 @@
 /**
  * Live Region Hook
- * 
+ *
  * Provides a hook for creating and managing ARIA live regions
  * for dynamic content announcements.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import type { LiveRegionProps } from '../types/accessibility';
+import {useEffect, useRef, useState} from 'react';
+import type {LiveRegionProps} from '../types/accessibility';
 
 export interface UseLiveRegionOptions {
   level?: 'polite' | 'assertive' | 'off';
@@ -29,7 +29,7 @@ export interface UseLiveRegionReturn {
  * Hook for creating and managing an ARIA live region
  */
 export function useLiveRegion(
-  options: UseLiveRegionOptions = {}
+    options: UseLiveRegionOptions = {}
 ): UseLiveRegionReturn {
   const {
     level = 'polite',
@@ -43,7 +43,7 @@ export function useLiveRegion(
   const [isBusy, setIsBusy] = useState(initialBusy);
   const clearTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const announce = (newMessage: string) => {
+  const announce = (newMessage: string): void => {
     // Clear any pending clear timeout
     if (clearTimeoutRef.current) {
       clearTimeout(clearTimeoutRef.current);
@@ -57,14 +57,14 @@ export function useLiveRegion(
     }, 1000);
   };
 
-  const clear = () => {
+  const clear = (): void => {
     if (clearTimeoutRef.current) {
       clearTimeout(clearTimeoutRef.current);
     }
     setMessage('');
   };
 
-  const setBusy = (busy: boolean) => {
+  const setBusy = (busy: boolean): void => {
     setIsBusy(busy);
   };
 
@@ -81,8 +81,8 @@ export function useLiveRegion(
     'aria-live': level,
     'aria-atomic': atomic,
     'aria-relevant': relevant,
-    ...(label && { 'aria-label': label }),
-    ...(isBusy && { 'aria-busy': true })
+    ...(label && {'aria-label': label}),
+    ...(isBusy && {'aria-busy': true})
   };
 
   return {
@@ -98,7 +98,7 @@ export function useLiveRegion(
 /**
  * Hook for status live region (role="status")
  */
-export function useStatusLiveRegion(label?: string) {
+export function useStatusLiveRegion(label?: string): void {
   const liveRegion = useLiveRegion({
     level: 'polite',
     atomic: true,
@@ -120,7 +120,7 @@ export function useStatusLiveRegion(label?: string) {
 /**
  * Hook for alert live region (role="alert")
  */
-export function useAlertLiveRegion(label?: string) {
+export function useAlertLiveRegion(label?: string): void {
   const liveRegion = useLiveRegion({
     level: 'assertive',
     atomic: true,
@@ -142,7 +142,7 @@ export function useAlertLiveRegion(label?: string) {
 /**
  * Hook for log live region (role="log")
  */
-export function useLogLiveRegion(label?: string) {
+export function useLogLiveRegion(label?: string): void {
   const [messages, setMessages] = useState<string[]>([]);
   const maxMessages = 10;
 
@@ -153,7 +153,7 @@ export function useLogLiveRegion(label?: string) {
     label
   });
 
-  const addMessage = (message: string) => {
+  const addMessage = (message: string): void => {
     setMessages(prev => {
       const newMessages = [...prev, message];
       return newMessages.slice(-maxMessages);
@@ -161,7 +161,7 @@ export function useLogLiveRegion(label?: string) {
     liveRegion.announce(message);
   };
 
-  const clearMessages = () => {
+  const clearMessages = (): void => {
     setMessages([]);
     liveRegion.clear();
   };
@@ -183,11 +183,11 @@ export function useLogLiveRegion(label?: string) {
 /**
  * Hook for progress announcements
  */
-export function useProgressLiveRegion(label?: string) {
+export function useProgressLiveRegion(label?: string): void {
   const [progress, setProgress] = useState(0);
   const [progressText, setProgressText] = useState('');
   const lastAnnouncedRef = useRef<number>(-1);
-  
+
   const liveRegion = useLiveRegion({
     level: 'polite',
     atomic: true,
@@ -196,36 +196,36 @@ export function useProgressLiveRegion(label?: string) {
   });
 
   const updateProgress = (
-    value: number, 
-    total: number = 100, 
-    description?: string
+      value: number,
+      total: number = 100,
+      description?: string
   ) => {
     const percentage = Math.round((value / total) * 100);
     setProgress(percentage);
 
     // Only announce at certain intervals to avoid spam
-    const shouldAnnounce = percentage !== lastAnnouncedRef.current && 
-                          (percentage % 10 === 0 || percentage === 100);
+    const shouldAnnounce = percentage !== lastAnnouncedRef.current &&
+        (percentage % 10 === 0 || percentage === 100);
 
     if (shouldAnnounce) {
-      const message = description 
-        ? `${description}: ${percentage}% complete`
-        : `${percentage}% complete`;
-      
+      const message = description
+          ? `${description}: ${percentage}% complete`
+          : `${percentage}% complete`;
+
       setProgressText(message);
       liveRegion.announce(message);
       lastAnnouncedRef.current = percentage;
     }
   };
 
-  const completeProgress = (message: string = 'Task completed') => {
+  const completeProgress = (message: string = 'Task completed'): void => {
     setProgress(100);
     setProgressText(message);
     liveRegion.announce(message);
     lastAnnouncedRef.current = 100;
   };
 
-  const resetProgress = () => {
+  const resetProgress = (): void => {
     setProgress(0);
     setProgressText('');
     lastAnnouncedRef.current = -1;
@@ -245,27 +245,27 @@ export function useProgressLiveRegion(label?: string) {
 /**
  * Hook for form validation live regions
  */
-export function useValidationLiveRegion() {
+export function useValidationLiveRegion(): void {
   const errorRegion = useAlertLiveRegion('Form errors');
   const successRegion = useStatusLiveRegion('Form status');
-  
-  const announceError = (message: string) => {
+
+  const announceError = (message: string): void => {
     errorRegion.announce(message);
   };
 
-  const announceSuccess = (message: string) => {
+  const announceSuccess = (message: string): void => {
     successRegion.announce(message);
   };
 
-  const clearErrors = () => {
+  const clearErrors = (): void => {
     errorRegion.clear();
   };
 
-  const clearSuccess = () => {
+  const clearSuccess = (): void => {
     successRegion.clear();
   };
 
-  const clearAll = () => {
+  const clearAll = (): void => {
     errorRegion.clear();
     successRegion.clear();
   };
@@ -290,16 +290,16 @@ export function useValidationLiveRegion() {
 /**
  * Hook for search results live region
  */
-export function useSearchLiveRegion() {
+export function useSearchLiveRegion(): void {
   const liveRegion = useStatusLiveRegion('Search results');
-  
+
   const announceResults = (
-    resultCount: number, 
-    query: string, 
-    category?: string
+      resultCount: number,
+      query: string,
+      category?: string
   ) => {
     let message;
-    
+
     if (resultCount === 0) {
       message = `No results found for "${query}"`;
     } else if (resultCount === 1) {
@@ -307,19 +307,19 @@ export function useSearchLiveRegion() {
     } else {
       message = `${resultCount} results found for "${query}"`;
     }
-    
+
     if (category) {
       message += ` in ${category}`;
     }
-    
+
     liveRegion.announce(message);
   };
 
-  const announceSearching = (query: string) => {
+  const announceSearching = (query: string): void => {
     liveRegion.announce(`Searching for "${query}"`);
   };
 
-  const announceFilterChange = (filterName: string, filterValue: string) => {
+  const announceFilterChange = (filterName: string, filterValue: string): void => {
     liveRegion.announce(`Filter applied: ${filterName} set to ${filterValue}`);
   };
 

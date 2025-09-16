@@ -1,0 +1,81 @@
+spring:
+  # Allow bean overriding for test configurations
+  main:
+    allow-bean-definition-overriding: true
+    
+  # Database configuration for performance testing
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      max-lifetime: 300000  # 5 minutes
+      connection-timeout: 10000
+      idle-timeout: 300000
+      pool-name: "PerformanceTestPool"
+  
+  # JPA configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+  
+  # Redis configuration
+  data:
+    redis:
+      timeout: 2000ms
+      jedis:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+  
+  # Disable flyway for performance tests
+  flyway:
+    enabled: false
+
+# Application-specific property overrides
+app:
+  jwt:
+    secret: "performance_test_jwt_secret_key_that_is_long_enough_for_hmac_256_algorithm_requirements"
+    access-token-expiration: 3600000  # 1 hour
+    refresh-token-expiration: 2592000000  # 30 days
+    issuer: "http://localhost:8081/identity"
+    use-rsa: false  # Disable RSA for performance tests to avoid key loading issues
+  
+  encryption:
+    master-key: "YjM5NzQwMTEyM2Q5NGE5ZDNkNWE3YjMwZjZkNGM3MmNhMjI0YzRjOGI4ZDFmZWNlMzI2NDY5OTEzMWQwZjU="
+    key-rotation-days: 90
+    key-retention-days: 365
+    auto-rotation-enabled: false  # Disable auto rotation in tests
+  
+# Logging configuration for performance tests
+logging:
+  level:
+    com.focushive.identity: WARN
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.zaxxer.hikari: WARN
+    org.testcontainers: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Performance test specific settings
+performance-test:
+  memory:
+    max-heap-growth-mb: 500
+    max-heap-utilization-percent: 80
+    gc-efficiency-threshold: 90
+  
+  load:
+    max-requests-per-second: 200
+    test-duration-minutes: 10
+    concurrent-users: 50

@@ -8,4 +8,4 @@ export type {
 } from './types/music'
 
 // Deprecated - use exports from './types/music' instead
-export type { AudioFeatures } from './types/music'
+export type {AudioFeatures} from './types/music'

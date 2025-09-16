@@ -34,6 +34,56 @@ public interface PrivacyService {
     void downloadDataExport(UUID userId, UUID exportId, HttpServletResponse response) throws IOException;
 
     /**
+     * Get data export history.
+     */
+    DataExportHistoryResponse getDataExportHistory(UUID userId);
+
+    /**
+     * Request account deletion (GDPR Article 17 - Right to Erasure).
+     */
+    DataDeletionResponse requestAccountDeletion(UUID userId, DataDeletionRequest request);
+
+    /**
+     * Cancel pending account deletion request.
+     */
+    void cancelAccountDeletion(UUID userId);
+
+    /**
+     * Get data access log (GDPR Article 15).
+     */
+    DataAccessLogResponse getDataAccessLog(UUID userId, int page, int size);
+
+    /**
+     * Grant consent for data processing.
+     */
+    ConsentResponse grantConsent(UUID userId, GrantConsentRequest request);
+
+    /**
+     * Revoke previously granted consent.
+     */
+    ConsentResponse revokeConsent(UUID userId, RevokeConsentRequest request);
+
+    /**
+     * Get consent history.
+     */
+    ConsentHistoryResponse getConsentHistory(UUID userId, int page, int size);
+
+    /**
+     * Request data rectification (GDPR Article 16).
+     */
+    DataRectificationResponse requestDataRectification(UUID userId, DataRectificationRequest request);
+
+    /**
+     * Get data processing activities (GDPR Articles 13-14).
+     */
+    DataProcessingResponse getDataProcessingActivities(UUID userId);
+
+    /**
+     * Object to data processing (GDPR Article 21).
+     */
+    DataProcessingObjectionResponse objectToDataProcessing(UUID userId, DataProcessingObjectionRequest request);
+
+    /**
      * Check if user has given consent for specific processing.
      */
     boolean hasConsent(UUID userId, String consentType);
@@ -57,9 +107,4 @@ public interface PrivacyService {
      * Generate data export file for user.
      */
     void generateDataExportFile(UUID userId, DataExportRequest request, UUID exportId);
-
-    /**
-     * Cancel pending account deletion request.
-     */
-    void cancelAccountDeletion(UUID userId);
 }

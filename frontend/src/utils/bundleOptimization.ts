@@ -1,58 +1,56 @@
 /**
  * Bundle Optimization Utilities
- * 
+ *
  * Centralized utilities for managing code splitting, preloading, and bundle optimization
  */
 
 // Import preloader functions
-import { preloadCriticalRoutes, routePreloaders } from '@app/routes/lazyRouteUtils'
-import { preloadCommonIcons } from '@shared/components/dynamic-icon'
-import { preloadChartLibrary } from '@shared/components/lazy-charts'
-import { preloadDatePickers } from '@shared/components/lazy-date-pickers/datePickerUtils'
-import { preloadHeavyFeatures as _preloadHeavyFeatures, featurePreloaders as _featurePreloaders } from '@shared/components/lazy-features/featureUtils'
-import { libraryPreloader as _libraryPreloader, smartPreloader as _smartPreloader } from '@shared/utils/dynamicImports'
+import {preloadCriticalRoutes, routePreloaders} from '@app/routes/lazyRouteUtils'
+import {preloadCommonIcons} from '@shared/components/dynamic-icon'
+import {preloadChartLibrary} from '@shared/components/lazy-charts'
+import {preloadDatePickers} from '@shared/components/lazy-date-pickers/datePickerUtils'
 
 export interface PreloadOptions {
   /**
    * Delay before starting preloading (to not interfere with critical rendering)
    */
   delay?: number
-  
+
   /**
    * Preload critical routes immediately
    */
   criticalRoutes?: boolean
-  
+
   /**
    * Preload common icons
    */
   commonIcons?: boolean
-  
+
   /**
    * Preload chart library
    */
   charts?: boolean
-  
+
   /**
    * Preload date pickers
    */
   datePickers?: boolean
-  
+
   /**
    * Preload based on user navigation patterns
    */
   adaptive?: boolean
-  
+
   /**
    * Preload heavy features
    */
   heavyFeatures?: boolean
-  
+
   /**
    * Preload utility libraries
    */
   utilityLibs?: boolean
-  
+
   /**
    * Use smart preloading based on connection
    */
@@ -89,38 +87,38 @@ class BundleAnalyticsTracker {
     return BundleAnalyticsTracker.instance
   }
 
-  recordChunkLoad(chunkName: string, size: number, loadTime: number) {
+  recordChunkLoad(chunkName: string, size: number, loadTime: number): void {
     this.analytics.chunkSizes[chunkName] = size
     this.analytics.loadTimes[chunkName] = loadTime
     this.analytics.totalChunks++
   }
 
-  recordCacheHit() {
+  recordCacheHit(): void {
     this.analytics.cacheHits++
   }
 
-  recordCacheMiss() {
+  recordCacheMiss(): void {
     this.analytics.cacheMisses++
   }
 
-  recordPreloadSuccess() {
+  recordPreloadSuccess(): void {
     this.analytics.preloadSuccess++
   }
 
-  recordPreloadFailure() {
+  recordPreloadFailure(): void {
     this.analytics.preloadFailures++
   }
 
-  getAnalytics() {
-    return { ...this.analytics }
+  getAnalytics(): Record<string, unknown> {
+    return {...this.analytics}
   }
 
-  getCacheEfficiency() {
+  getCacheEfficiency(): number {
     const total = this.analytics.cacheHits + this.analytics.cacheMisses
     return total > 0 ? (this.analytics.cacheHits / total) * 100 : 0
   }
 
-  getPreloadEfficiency() {
+  getPreloadEfficiency(): number {
     const total = this.analytics.preloadSuccess + this.analytics.preloadFailures
     return total > 0 ? (this.analytics.preloadSuccess / total) * 100 : 0
   }
@@ -134,12 +132,16 @@ const analytics = BundleAnalyticsTracker.getInstance()
 export class FeaturePreloader {
   private preloadedFeatures = new Set<string>()
   private userInteractions: string[] = []
-  private preloadQueue: Array<{ feature: string; priority: number; loader: () => Promise<unknown> }> = []
+  private preloadQueue: Array<{
+    feature: string;
+    priority: number;
+    loader: () => Promise<unknown>
+  }> = []
 
   /**
    * Initialize the preloader with user-defined options
    */
-  async initialize(options: PreloadOptions = {}) {
+  async initialize(options: PreloadOptions = {}): Promise<void> {
     const {
       delay = 2000,
       criticalRoutes = true,
@@ -162,25 +164,25 @@ export class FeaturePreloader {
           return Promise.resolve()
         })
       }
-      
+
       if (charts) {
         this.queuePreload('charts', 2, () => {
           preloadChartLibrary()
           return Promise.resolve()
         })
       }
-      
+
       if (datePickers) {
         this.queuePreload('datePickers', 3, () => {
           preloadDatePickers()
           return Promise.resolve()
         })
       }
-      
+
       if (adaptive) {
         this.startAdaptivePreloading()
       }
-      
+
       // Process the preload queue
       this.processPreloadQueue()
     }, delay)
@@ -189,52 +191,21 @@ export class FeaturePreloader {
   /**
    * Queue a feature for preloading
    */
-  queuePreload(feature: string, priority: number, loader: () => Promise<unknown>) {
+  queuePreload(feature: string, priority: number, loader: () => Promise<unknown>): void {
     if (this.preloadedFeatures.has(feature)) {
       return
     }
 
-    this.preloadQueue.push({ feature, priority, loader })
+    this.preloadQueue.push({feature, priority, loader})
     this.preloadQueue.sort((a, b) => a.priority - b.priority)
-  }
-
-  /**
-   * Process the preload queue
-   */
-  private async processPreloadQueue() {
-    for (const { feature, loader } of this.preloadQueue) {
-      if (this.preloadedFeatures.has(feature)) {
-        continue
-      }
-
-      try {
-        const startTime = performance.now()
-        await loader()
-        const loadTime = performance.now() - startTime
-        
-        this.preloadedFeatures.add(feature)
-        analytics.recordPreloadSuccess()
-        
-        // Preload successful - logging only in development
-        if (import.meta.env.DEV) {
-          console.log(`[Bundle] Preloaded ${feature} in ${loadTime.toFixed(2)}ms`)
-        }
-      } catch (error) {
-        analytics.recordPreloadFailure()
-        // Log preload failures only in development
-        if (import.meta.env.DEV) {
-          console.warn(`[Bundle] Failed to preload ${feature}:`, error)
-        }
-      }
-    }
   }
 
   /**
    * Track user interactions for adaptive preloading
    */
-  trackUserInteraction(interaction: string) {
+  trackUserInteraction(interaction: string): void {
     this.userInteractions.push(interaction)
-    
+
     // Keep only last 20 interactions
     if (this.userInteractions.length > 20) {
       this.userInteractions.shift()
@@ -245,9 +216,57 @@ export class FeaturePreloader {
   }
 
   /**
+   * Get preloading statistics
+   */
+  getPreloadStats(): {
+    preloadedFeatures: string[];
+    queueLength: number;
+    userInteractions: string[];
+    analytics: Record<string, unknown>;
+  } {
+    return {
+      preloadedFeatures: Array.from(this.preloadedFeatures),
+      queueLength: this.preloadQueue.length,
+      userInteractions: this.userInteractions.slice(-10), // Last 10 interactions
+      analytics: analytics.getAnalytics()
+    }
+  }
+
+  /**
+   * Process the preload queue
+   */
+  private async processPreloadQueue(): Promise<void> {
+    for (const {feature, loader} of this.preloadQueue) {
+      if (this.preloadedFeatures.has(feature)) {
+        continue
+      }
+
+      try {
+        const startTime = performance.now()
+        await loader()
+        const _loadTime = performance.now() - startTime
+
+        this.preloadedFeatures.add(feature)
+        analytics.recordPreloadSuccess()
+
+        // Preload successful - logging only in development
+        if (import.meta.env.DEV) {
+          // console.log(`[Bundle] Preloaded ${feature} in ${_loadTime.toFixed(2)}ms`)
+        }
+      } catch {
+        analytics.recordPreloadFailure()
+        // Log preload failures only in development
+        if (import.meta.env.DEV) {
+          // Debug statement removed
+        }
+      }
+    }
+  }
+
+  /**
    * Adaptive preloading based on user behavior patterns
    */
-  private adaptivePreload(currentInteraction: string) {
+  private adaptivePreload(currentInteraction: string): void {
     // Preload authentication routes if user is on home page
     if (currentInteraction === 'home-page-visit' && !this.preloadedFeatures.has('auth-routes')) {
       this.queuePreload('auth-routes', 1, () => {
@@ -255,7 +274,7 @@ export class FeaturePreloader {
         return Promise.resolve()
       })
     }
-    
+
     // Preload main app if user logged in
     if (currentInteraction === 'login-success' && !this.preloadedFeatures.has('main-app')) {
       this.queuePreload('main-app', 1, () => {
@@ -263,11 +282,11 @@ export class FeaturePreloader {
         return Promise.resolve()
       })
     }
-    
+
     // Preload heavy features if user is exploring the app
     if (
-      (currentInteraction === 'dashboard-visit' || currentInteraction === 'menu-open') && 
-      !this.preloadedFeatures.has('heavy-features')
+        (currentInteraction === 'dashboard-visit' || currentInteraction === 'menu-open') &&
+        !this.preloadedFeatures.has('heavy-features')
     ) {
       this.queuePreload('heavy-features', 2, () => {
         routePreloaders.preloadHeavyFeatures()
@@ -279,10 +298,12 @@ export class FeaturePreloader {
   /**
    * Start adaptive preloading based on connection and device capabilities
    */
-  private startAdaptivePreloading() {
+  private startAdaptivePreloading(): void {
     // Check connection quality
     if ('connection' in navigator) {
-      const connection = (navigator as { connection?: { effectiveType?: string; saveData?: boolean } }).connection
+      const connection = (navigator as {
+        connection?: { effectiveType?: string; saveData?: boolean }
+      }).connection
       if (connection) {
         // Only preload on good connections
         if (connection.effectiveType === '4g' && !connection.saveData) {
@@ -310,18 +331,6 @@ export class FeaturePreloader {
       }
     }
   }
-
-  /**
-   * Get preloading statistics
-   */
-  getPreloadStats() {
-    return {
-      preloadedFeatures: Array.from(this.preloadedFeatures),
-      queueLength: this.preloadQueue.length,
-      userInteractions: this.userInteractions.slice(-10), // Last 10 interactions
-      analytics: analytics.getAnalytics()
-    }
-  }
 }
 
 // Global preloader instance
@@ -330,7 +339,7 @@ export const featurePreloader = new FeaturePreloader()
 /**
  * Resource hints for modern browsers
  */
-export function addResourceHints() {
+export function addResourceHints(): void {
   // Add DNS prefetch for external resources
   const dnsPrefetch = [
     '//fonts.googleapis.com',
@@ -362,26 +371,22 @@ export function addResourceHints() {
 /**
  * Bundle size monitoring utility
  */
-export function monitorBundlePerformance() {
+export function monitorBundlePerformance(): void {
   if ('performance' in window && 'navigation' in performance) {
     // Monitor loading performance
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         if (entry.entryType === 'navigation') {
-          const navEntry = entry as PerformanceNavigationTiming
+          const _navEntry = entry as PerformanceNavigationTiming
           // Log performance metrics only in development
           if (import.meta.env.DEV) {
-            console.log('[Bundle] Initial page load:', {
-              duration: navEntry.loadEventEnd - navEntry.fetchStart,
-              domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.fetchStart,
-              firstByte: navEntry.responseStart - navEntry.fetchStart
-            })
+            // Debug statement removed
           }
         }
       }
     })
-    
-    observer.observe({ entryTypes: ['navigation'] })
+
+    observer.observe({entryTypes: ['navigation']})
   }
 }
 
@@ -389,19 +394,19 @@ export function monitorBundlePerformance() {
  * Initialize bundle optimization
  * Call this in your main App component
  */
-export async function initializeBundleOptimization(options?: PreloadOptions) {
+export async function initializeBundleOptimization(options?: PreloadOptions): Promise<void> {
   // Add resource hints
   addResourceHints()
-  
+
   // Monitor performance
   monitorBundlePerformance()
-  
+
   // Initialize feature preloader
   await featurePreloader.initialize(options)
-  
+
   // Log initialization only in development
   if (import.meta.env.DEV) {
-    console.log('[Bundle] Optimization initialized')
+    // Debug statement removed
   }
 }
 
@@ -414,11 +419,11 @@ export const devUtils = {
    */
   logBundleStats() {
     if (import.meta.env.DEV) {
-      console.group('[Bundle Stats]')
-      console.log('Preloader Stats:', featurePreloader.getPreloadStats())
-      console.log('Cache Efficiency:', analytics.getCacheEfficiency().toFixed(2) + '%')
-      console.log('Preload Efficiency:', analytics.getPreloadEfficiency().toFixed(2) + '%')
-      console.groupEnd()
+      // console.group('[Bundle Stats]')
+      // console.log('Preloader Stats:', featurePreloader.getPreloadStats())
+      // console.log('Cache Efficiency:', analytics.getCacheEfficiency().toFixed(2) + '%')
+      // console.log('Preload Efficiency:', analytics.getPreloadEfficiency().toFixed(2) + '%')
+      // console.groupEnd()
     }
   },
 
@@ -446,7 +451,7 @@ export const devUtils = {
       }
       // Log preload trigger only in development
       if (import.meta.env.DEV) {
-        console.log(`[Bundle] Triggered preload for: ${feature}`)
+        // Debug statement removed
       }
     }
   }

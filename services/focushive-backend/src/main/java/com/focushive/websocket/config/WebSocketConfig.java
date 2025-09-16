@@ -11,7 +11,6 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 
 @Configuration
 @EnableWebSocketMessageBroker
-@Profile("!test")  // Exclude this configuration from test profile
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override

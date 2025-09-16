@@ -1,5 +1,5 @@
-import { configureAxe, toHaveNoViolations } from 'jest-axe';
-import { RenderResult } from '@testing-library/react';
+import {configureAxe, toHaveNoViolations} from 'jest-axe';
+import {RenderResult} from '@testing-library/react';
 
 // Extend expect with jest-axe matchers
 expect.extend(toHaveNoViolations);
@@ -8,17 +8,17 @@ expect.extend(toHaveNoViolations);
 export const axe = configureAxe({
   rules: {
     // Enable stricter color contrast checking
-    'color-contrast': { enabled: true },
+    'color-contrast': {enabled: true},
     // Enable ARIA usage checks
-    'aria-roles': { enabled: true },
-    'aria-valid-attr': { enabled: true },
-    'aria-required-attr': { enabled: true },
+    'aria-roles': {enabled: true},
+    'aria-valid-attr': {enabled: true},
+    'aria-required-attr': {enabled: true},
     // Enable semantic markup checks
-    'landmark-one-main': { enabled: true },
-    'page-has-heading-one': { enabled: true },
+    'landmark-one-main': {enabled: true},
+    'page-has-heading-one': {enabled: true},
     // Enable form accessibility checks
-    'label': { enabled: true },
-    'form-field-multiple-labels': { enabled: true },
+    'label': {enabled: true},
+    'form-field-multiple-labels': {enabled: true},
   }
 });
 
@@ -35,13 +35,13 @@ export const testA11y = async (container: Element, axeOptions?: object) => {
  * Test component accessibility with custom configuration
  */
 export const testA11yWithConfig = async (
-  container: Element,
-  config: {
-    rules?: Record<string, { enabled: boolean }>;
-    tags?: string[];
-    exclude?: string[];
-    include?: string[];
-  }
+    container: Element,
+    config: {
+      rules?: Record<string, { enabled: boolean }>;
+      tags?: string[];
+      exclude?: string[];
+      include?: string[];
+    }
 ) => {
   const customAxe = configureAxe({
     rules: config.rules || {}
@@ -64,16 +64,16 @@ export const testA11yWithConfig = async (
  * Test keyboard navigation for a component
  */
 export const testKeyboardNavigation = async (
-  renderResult: RenderResult,
-  expectedFocusableElements: string[]
+    renderResult: RenderResult,
+    expectedFocusableElements: string[]
 ) => {
-  const { container } = renderResult;
-  const { default: userEvent } = await import('@testing-library/user-event');
+  const {container} = renderResult;
+  const {default: userEvent} = await import('@testing-library/user-event');
   const user = userEvent.setup();
 
   // Get all focusable elements
   const focusableElements = container.querySelectorAll(
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
 
   expect(focusableElements).toHaveLength(expectedFocusableElements.length);
@@ -86,7 +86,7 @@ export const testKeyboardNavigation = async (
 
   // Test shift+tab navigation
   for (let i = focusableElements.length - 2; i >= 0; i--) {
-    await user.tab({ shift: true });
+    await user.tab({shift: true});
     expect(focusableElements[i]).toHaveFocus();
   }
 };
@@ -95,12 +95,12 @@ export const testKeyboardNavigation = async (
  * Test focus management for modals and dialogs
  */
 export const testFocusTrap = async (
-  renderResult: RenderResult,
-  triggerElement: Element,
-  modalSelector: string
+    renderResult: RenderResult,
+    triggerElement: Element,
+    modalSelector: string
 ) => {
-  const { container } = renderResult;
-  const { default: userEvent } = await import('@testing-library/user-event');
+  const {container} = renderResult;
+  const {default: userEvent} = await import('@testing-library/user-event');
   const user = userEvent.setup();
 
   // Focus should be trapped within the modal
@@ -108,7 +108,7 @@ export const testFocusTrap = async (
   expect(modal).toBeInTheDocument();
 
   const focusableInModal = modal?.querySelectorAll(
-    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   ) || [];
 
   if (focusableInModal.length > 0) {
@@ -126,7 +126,7 @@ export const testFocusTrap = async (
     expect(focusableInModal[0]).toHaveFocus();
 
     // Shift+tab from first element should go to last
-    await user.tab({ shift: true });
+    await user.tab({shift: true});
     expect(focusableInModal[focusableInModal.length - 1]).toHaveFocus();
   }
 };
@@ -135,9 +135,9 @@ export const testFocusTrap = async (
  * Test ARIA live regions for dynamic content announcements
  */
 export const testLiveRegion = async (
-  container: Element,
-  expectedText: string,
-  liveRegionSelector = '[aria-live]'
+    container: Element,
+    expectedText: string,
+    liveRegionSelector = '[aria-live]'
 ) => {
   const liveRegion = container.querySelector(liveRegionSelector);
   expect(liveRegion).toBeInTheDocument();
@@ -149,17 +149,17 @@ export const testLiveRegion = async (
  * Test form accessibility
  */
 export const testFormA11y = async (renderResult: RenderResult) => {
-  const { container } = renderResult;
+  const {container} = renderResult;
 
   // All form inputs should have labels
   const inputs = container.querySelectorAll('input, select, textarea');
   inputs.forEach((input) => {
-    const hasLabel = 
-      input.hasAttribute('aria-label') ||
-      input.hasAttribute('aria-labelledby') ||
-      container.querySelector(`label[for="${input.id}"]`) ||
-      input.closest('label');
-    
+    const hasLabel =
+        input.hasAttribute('aria-label') ||
+        input.hasAttribute('aria-labelledby') ||
+        container.querySelector(`label[for="${input.id}"]`) ||
+        input.closest('label');
+
     expect(hasLabel).toBeTruthy();
   });
 
@@ -167,8 +167,8 @@ export const testFormA11y = async (renderResult: RenderResult) => {
   const requiredInputs = container.querySelectorAll('[required]');
   requiredInputs.forEach((input) => {
     expect(
-      input.hasAttribute('aria-required') ||
-      input.hasAttribute('required')
+        input.hasAttribute('aria-required') ||
+        input.hasAttribute('required')
     ).toBeTruthy();
   });
 
@@ -189,11 +189,11 @@ export const testFormA11y = async (renderResult: RenderResult) => {
 export const testColorContrast = async (container: Element) => {
   const results = await axe(container, {
     rules: {
-      'color-contrast': { enabled: true },
-      'color-contrast-enhanced': { enabled: true },
+      'color-contrast': {enabled: true},
+      'color-contrast-enhanced': {enabled: true},
     },
   });
-  
+
   expect(results).toHaveNoViolations();
   return results;
 };
@@ -201,9 +201,9 @@ export const testColorContrast = async (container: Element) => {
 /**
  * Test heading structure
  */
-export const testHeadingStructure = (container: Element) => {
+export const testHeadingStructure = (container: Element): void => {
   const headings = Array.from(container.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-  
+
   if (headings.length > 0) {
     // Should start with h1 or have only one h1
     const h1Elements = headings.filter(h => h.tagName === 'H1');
@@ -214,7 +214,7 @@ export const testHeadingStructure = (container: Element) => {
     for (let i = 1; i < headingLevels.length; i++) {
       const current = headingLevels[i];
       const previous = headingLevels[i - 1];
-      
+
       // Allow same level, next level, or going back to any previous level
       expect(current - previous).toBeLessThanOrEqual(1);
     }
@@ -224,9 +224,9 @@ export const testHeadingStructure = (container: Element) => {
 /**
  * Test landmark roles
  */
-export const testLandmarks = (container: Element) => {
+export const testLandmarks = (container: Element): void => {
   const _landmarks = container.querySelectorAll(
-    'main, nav, header, footer, aside, section[aria-label], [role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"]'
+      'main, nav, header, footer, aside, section[aria-label], [role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"]'
   );
 
   // Should have at least a main landmark
@@ -238,19 +238,19 @@ export const testLandmarks = (container: Element) => {
  * Helper to create accessibility test suite
  */
 export const createA11yTestSuite = (
-  componentName: string,
-  renderComponent: () => RenderResult,
-  options: {
-    skipKeyboardNavigation?: boolean;
-    skipColorContrast?: boolean;
-    skipHeadingStructure?: boolean;
-    skipLandmarks?: boolean;
-    customAxeRules?: Record<string, { enabled: boolean }>;
-  } = {}
+    componentName: string,
+    renderComponent: () => RenderResult,
+    options: {
+      skipKeyboardNavigation?: boolean;
+      skipColorContrast?: boolean;
+      skipHeadingStructure?: boolean;
+      skipLandmarks?: boolean;
+      customAxeRules?: Record<string, { enabled: boolean }>;
+    } = {}
 ) => {
   describe(`${componentName} Accessibility`, () => {
     it('should have no accessibility violations', async () => {
-      const { container } = renderComponent();
+      const {container} = renderComponent();
       await testA11y(container, {
         rules: options.customAxeRules,
       });
@@ -258,21 +258,21 @@ export const createA11yTestSuite = (
 
     if (!options.skipColorContrast) {
       it('should meet color contrast requirements', async () => {
-        const { container } = renderComponent();
+        const {container} = renderComponent();
         await testColorContrast(container);
       });
     }
 
     if (!options.skipHeadingStructure) {
       it('should have proper heading structure', () => {
-        const { container } = renderComponent();
+        const {container} = renderComponent();
         testHeadingStructure(container);
       });
     }
 
     if (!options.skipLandmarks) {
       it('should have proper landmark structure', () => {
-        const { container } = renderComponent();
+        const {container} = renderComponent();
         testLandmarks(container);
       });
     }

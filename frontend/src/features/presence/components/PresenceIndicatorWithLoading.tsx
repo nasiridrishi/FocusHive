@@ -1,6 +1,6 @@
 import React from 'react'
-import { Avatar, Badge, Skeleton } from '@mui/material'
-import { PresenceStatus } from '@shared/types/presence'
+import {Avatar, Badge, Skeleton} from '@mui/material'
+import {PresenceStatus} from '@shared/types/presence'
 import PresenceIndicator from './PresenceIndicator'
 
 interface PresenceIndicatorWithLoadingProps {
@@ -22,25 +22,29 @@ interface PresenceIndicatorWithLoadingProps {
 
 /**
  * Enhanced PresenceIndicator with loading state support
- * 
+ *
  * Shows skeleton loading while presence data is being fetched,
  * then displays the actual presence indicator when loaded.
  */
 const PresenceIndicatorWithLoading: React.FC<PresenceIndicatorWithLoadingProps> = ({
-  avatarSrc,
-  displayName,
-  status = 'offline',
-  isLoading = false,
-  size = 'medium',
-  showAnimation = true,
-  onClick
-}) => {
-  const getAvatarSize = () => {
+                                                                                     avatarSrc,
+                                                                                     displayName,
+                                                                                     status = 'offline',
+                                                                                     isLoading = false,
+                                                                                     size = 'medium',
+                                                                                     showAnimation = true,
+                                                                                     onClick
+                                                                                   }) => {
+  const getAvatarSize = (): number => {
     switch (size) {
-      case 'small': return 32
-      case 'medium': return 40
-      case 'large': return 56
-      default: return 40
+      case 'small':
+        return 32
+      case 'medium':
+        return 40
+      case 'large':
+        return 56
+      default:
+        return 40
     }
   }
 
@@ -48,43 +52,43 @@ const PresenceIndicatorWithLoading: React.FC<PresenceIndicatorWithLoadingProps> 
 
   if (isLoading) {
     return (
-      <Badge
-        overlap="circular"
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        badgeContent={
-          <Skeleton 
-            variant="circular" 
-            width={12} 
-            height={12} 
-            animation="pulse"
+        <Badge
+            overlap="circular"
+            anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
+            badgeContent={
+              <Skeleton
+                  variant="circular"
+                  width={12}
+                  height={12}
+                  animation="pulse"
+              />
+            }
+        >
+          <Skeleton
+              variant="circular"
+              width={avatarSize}
+              height={avatarSize}
+              animation="pulse"
           />
-        }
-      >
-        <Skeleton 
-          variant="circular" 
-          width={avatarSize} 
-          height={avatarSize}
-          animation="pulse"
-        />
-      </Badge>
+        </Badge>
     )
   }
 
   return (
-    <PresenceIndicator
-      status={status}
-      size={size}
-      showAnimation={showAnimation}
-    >
-      <Avatar 
-        src={avatarSrc} 
-        alt={displayName}
-        onClick={onClick}
-        sx={{ cursor: onClick ? 'pointer' : 'default' }}
+      <PresenceIndicator
+          status={status}
+          size={size}
+          showAnimation={showAnimation}
       >
-        {displayName?.charAt(0).toUpperCase()}
-      </Avatar>
-    </PresenceIndicator>
+        <Avatar
+            src={avatarSrc}
+            alt={displayName}
+            onClick={onClick}
+            sx={{cursor: onClick ? 'pointer' : 'default'}}
+        >
+          {displayName?.charAt(0).toUpperCase()}
+        </Avatar>
+      </PresenceIndicator>
   )
 }
 

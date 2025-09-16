@@ -1,28 +1,32 @@
-import { describe, it, expect } from 'vitest';
+import {describe, expect, it} from 'vitest';
 import {
-} from '@mui/icons-material';
-import {
-  formatPoints,
-  formatStreakType,
+  calculateDaysActive,
+  calculateEfficiencyScore,
   calculateLevel,
-  calculateProgress,
-  getRarityColor,
-  getCategoryIcon,
-  isAchievementUnlocked,
-  getAchievementProgress,
-  calculateTimeUntilStreakBreaks,
-  formatRankChange,
-  getLeaderboardPosition,
   calculatePointsForLevel,
+  calculateProgress,
+  calculateTimeUntilStreakBreaks,
+  formatPoints,
+  formatRankChange,
+  formatStreakType,
+  getAchievementProgress,
   getAchievementsByCategory,
   getActiveStreaks,
-  sortAchievementsByRarity,
-  calculateDaysActive,
-  isStreakAboutToBreak,
+  getCategoryIcon,
+  getLeaderboardPosition,
   getNextAchievement,
-  calculateEfficiencyScore,
+  getRarityColor,
+  isAchievementUnlocked,
+  isStreakAboutToBreak,
+  sortAchievementsByRarity,
 } from './gamificationUtils';
-import type { Achievement, Streak, StreakType, AchievementRarity, AchievementCategory } from '../types/gamification';
+import type {
+  Achievement,
+  AchievementCategory,
+  AchievementRarity,
+  Streak,
+  StreakType
+} from '../types/gamification';
 
 const mockAchievements: Achievement[] = [
   {
@@ -247,7 +251,7 @@ describe('gamificationUtils', () => {
         ...mockStreaks[0],
         lastActivity: new Date('2024-01-15T10:30:00Z'),
       };
-      
+
       const hoursUntilBreak = calculateTimeUntilStreakBreaks(streak, now);
       expect(hoursUntilBreak).toBe(20); // Should be within 24h cycle
     });
@@ -264,7 +268,7 @@ describe('gamificationUtils', () => {
         ...mockStreaks[0],
         lastActivity: new Date('2024-01-15T22:30:00Z'),
       };
-      
+
       const hoursUntilBreak = calculateTimeUntilStreakBreaks(streak, now);
       expect(hoursUntilBreak).toBe(23); // 23 hours left in cycle
     });
@@ -292,9 +296,9 @@ describe('gamificationUtils', () => {
 
   describe('getLeaderboardPosition', () => {
     const mockEntries = [
-      { user: { id: '1', name: 'Alice' }, points: 1000, rank: 1 },
-      { user: { id: '2', name: 'Bob' }, points: 800, rank: 2 },
-      { user: { id: '3', name: 'Carol' }, points: 600, rank: 3 },
+      {user: {id: '1', name: 'Alice'}, points: 1000, rank: 1},
+      {user: {id: '2', name: 'Bob'}, points: 800, rank: 2},
+      {user: {id: '3', name: 'Carol'}, points: 600, rank: 3},
     ];
 
     it('finds user position correctly', () => {
@@ -351,7 +355,7 @@ describe('gamificationUtils', () => {
     });
 
     it('handles all inactive streaks', () => {
-      const inactiveStreaks = mockStreaks.map(s => ({ ...s, isActive: false }));
+      const inactiveStreaks = mockStreaks.map(s => ({...s, isActive: false}));
       const activeStreaks = getActiveStreaks(inactiveStreaks);
       expect(activeStreaks).toHaveLength(0);
     });
@@ -365,7 +369,7 @@ describe('gamificationUtils', () => {
   describe('sortAchievementsByRarity', () => {
     it('sorts achievements by rarity correctly', () => {
       const sorted = sortAchievementsByRarity(mockAchievements);
-      
+
       expect(sorted[0].rarity).toBe('legendary');
       expect(sorted[1].rarity).toBe('epic');
       expect(sorted[2].rarity).toBe('uncommon');
@@ -374,10 +378,10 @@ describe('gamificationUtils', () => {
 
     it('maintains stable sort for same rarity', () => {
       const duplicateRarities = [
-        { ...mockAchievements[0], id: 'common1' },
-        { ...mockAchievements[0], id: 'common2' },
+        {...mockAchievements[0], id: 'common1'},
+        {...mockAchievements[0], id: 'common2'},
       ];
-      
+
       const sorted = sortAchievementsByRarity(duplicateRarities);
       expect(sorted[0].id).toBe('common1');
       expect(sorted[1].id).toBe('common2');
@@ -393,21 +397,21 @@ describe('gamificationUtils', () => {
     it('calculates days correctly for recent activity', () => {
       const now = new Date('2024-01-16T10:30:00Z');
       const lastActivity = new Date('2024-01-15T10:30:00Z');
-      
+
       expect(calculateDaysActive(lastActivity, now)).toBe(1);
     });
 
     it('calculates days correctly for same day activity', () => {
       const now = new Date('2024-01-15T15:30:00Z');
       const lastActivity = new Date('2024-01-15T10:30:00Z');
-      
+
       expect(calculateDaysActive(lastActivity, now)).toBe(0);
     });
 
     it('handles week-old activity', () => {
       const now = new Date('2024-01-22T10:30:00Z');
       const lastActivity = new Date('2024-01-15T10:30:00Z');
-      
+
       expect(calculateDaysActive(lastActivity, now)).toBe(7);
     });
   });
@@ -419,7 +423,7 @@ describe('gamificationUtils', () => {
         ...mockStreaks[0],
         lastActivity: new Date('2024-01-15T14:00:00Z'), // 22 hours ago
       };
-      
+
       expect(isStreakAboutToBreak(streak, now)).toBe(true);
     });
 
@@ -429,7 +433,7 @@ describe('gamificationUtils', () => {
         ...mockStreaks[0],
         lastActivity: new Date('2024-01-16T08:00:00Z'),
       };
-      
+
       expect(isStreakAboutToBreak(streak, now)).toBe(false);
     });
 
@@ -452,7 +456,7 @@ describe('gamificationUtils', () => {
     });
 
     it('returns null when all achievements are unlocked', () => {
-      const allUnlocked = mockAchievements.map(a => ({ ...a, isUnlocked: true }));
+      const allUnlocked = mockAchievements.map(a => ({...a, isUnlocked: true}));
       const next = getNextAchievement(allUnlocked);
       expect(next).toBeNull();
     });
@@ -466,14 +470,14 @@ describe('gamificationUtils', () => {
   describe('calculateEfficiencyScore', () => {
     it('calculates efficiency score correctly', () => {
       const stats = {
-        points: { current: 1000, total: 1000, todayEarned: 100, weekEarned: 500 },
+        points: {current: 1000, total: 1000, todayEarned: 100, weekEarned: 500},
         achievements: mockAchievements,
         streaks: mockStreaks,
         level: 5,
         rank: 100,
         totalUsers: 1000,
       };
-      
+
       const score = calculateEfficiencyScore(stats);
       expect(score).toBeGreaterThan(0);
       expect(score).toBeLessThanOrEqual(100);
@@ -481,28 +485,28 @@ describe('gamificationUtils', () => {
 
     it('handles perfect efficiency', () => {
       const perfectStats = {
-        points: { current: 10000, total: 10000, todayEarned: 1000, weekEarned: 5000 },
-        achievements: mockAchievements.map(a => ({ ...a, isUnlocked: true })),
-        streaks: mockStreaks.map(s => ({ ...s, current: s.best, isActive: true })),
+        points: {current: 10000, total: 10000, todayEarned: 1000, weekEarned: 5000},
+        achievements: mockAchievements.map(a => ({...a, isUnlocked: true})),
+        streaks: mockStreaks.map(s => ({...s, current: s.best, isActive: true})),
         level: 20,
         rank: 1,
         totalUsers: 1000,
       };
-      
+
       const score = calculateEfficiencyScore(perfectStats);
       expect(score).toBeGreaterThan(80); // Allow for reasonable efficiency score
     });
 
     it('handles low efficiency', () => {
       const lowStats = {
-        points: { current: 100, total: 100, todayEarned: 0, weekEarned: 10 },
+        points: {current: 100, total: 100, todayEarned: 0, weekEarned: 10},
         achievements: [],
-        streaks: mockStreaks.map(s => ({ ...s, isActive: false, current: 0 })),
+        streaks: mockStreaks.map(s => ({...s, isActive: false, current: 0})),
         level: 1,
         rank: 1000,
         totalUsers: 1000,
       };
-      
+
       const score = calculateEfficiencyScore(lowStats);
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThan(30);
@@ -527,7 +531,7 @@ describe('gamificationUtils', () => {
         isUnlocked: false,
         rarity: 'common'
       } as Achievement;
-      
+
       expect(() => isAchievementUnlocked(malformedAchievement)).not.toThrow();
       expect(() => getAchievementProgress(malformedAchievement)).not.toThrow();
     });

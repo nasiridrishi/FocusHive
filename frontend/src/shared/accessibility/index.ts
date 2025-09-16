@@ -1,6 +1,6 @@
 /**
  * FocusHive Accessibility System
- * 
+ *
  * Comprehensive WCAG 2.1 AA compliant accessibility system
  * providing components, hooks, utilities, and testing tools.
  */
@@ -35,5 +35,5 @@ export * from './patterns/KeyboardPatterns';
 export * from './testing/accessibilityTestUtils';
 
 // Default exports for convenience
-export { default as AccessibilityTester } from './testing/accessibilityTestUtils';
-export { default as KeyboardPatterns } from './patterns/KeyboardPatterns';
+export {default as AccessibilityTester} from './testing/accessibilityTestUtils';
+export {default as KeyboardPatterns} from './patterns/KeyboardPatterns';

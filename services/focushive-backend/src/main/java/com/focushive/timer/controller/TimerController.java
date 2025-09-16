@@ -1,7 +1,10 @@
 package com.focushive.timer.controller;
 
 import com.focushive.timer.dto.*;
-import com.focushive.timer.service.TimerService;
+import com.focushive.timer.entity.TimerTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import com.focushive.timer.service.FocusTimerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,20 +30,21 @@ import java.util.List;
 @Tag(name = "Timer", description = "Timer and productivity tracking operations")
 public class TimerController {
     
-    private final TimerService timerService;
+    private final FocusTimerService timerService;
     
     /**
      * Start a new focus/work/study session.
      */
     @PostMapping("/sessions/start")
-    @Operation(summary = "Start a new session", 
+    @Operation(summary = "Start a new session",
                description = "Start a new focus, work, study, or break session")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<FocusSessionDto> startSession(
-            @Valid @RequestBody StartSessionRequest request,
+    public ResponseEntity<FocusSessionResponse> startSession(
+            @Valid @RequestBody StartTimerRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        FocusSessionDto session = timerService.startSession(userDetails.getUsername(), request);
+
+        request.setUserId(userDetails.getUsername());
+        FocusSessionResponse session = timerService.startTimer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(session);
     }
     
@@ -48,14 +52,15 @@ public class TimerController {
      * End the current active session.
      */
     @PostMapping("/sessions/{sessionId}/end")
-    @Operation(summary = "End a session", 
+    @Operation(summary = "End a session",
                description = "End the specified session and calculate productivity stats")
     @PreAuthorize("isAuthenticated() and @securityService.hasAccessToTimer(T(java.util.UUID).fromString(#sessionId))")
-    public ResponseEntity<FocusSessionDto> endSession(
+    public ResponseEntity<FocusSessionResponse> endSession(
             @PathVariable String sessionId,
+            @RequestParam(required = false) Integer productivityScore,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        FocusSessionDto session = timerService.endSession(userDetails.getUsername(), sessionId);
+
+        FocusSessionResponse session = timerService.completeTimer(sessionId, userDetails.getUsername(), productivityScore);
         return ResponseEntity.ok(session);
     }
     
@@ -63,14 +68,14 @@ public class TimerController {
      * Pause the current active session.
      */
     @PostMapping("/sessions/{sessionId}/pause")
-    @Operation(summary = "Pause a session", 
+    @Operation(summary = "Pause a session",
                description = "Pause the specified session (counts as interruption)")
     @PreAuthorize("isAuthenticated() and @securityService.hasAccessToTimer(T(java.util.UUID).fromString(#sessionId))")
-    public ResponseEntity<FocusSessionDto> pauseSession(
+    public ResponseEntity<FocusSessionResponse> pauseSession(
             @PathVariable String sessionId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        FocusSessionDto session = timerService.pauseSession(userDetails.getUsername(), sessionId);
+
+        FocusSessionResponse session = timerService.pauseTimer(sessionId, userDetails.getUsername());
         return ResponseEntity.ok(session);
     }
     
@@ -78,80 +83,82 @@ public class TimerController {
      * Get current active session.
      */
     @GetMapping("/sessions/current")
-    @Operation(summary = "Get current session", 
+    @Operation(summary = "Get current session",
                description = "Get the user's current active session if any")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<FocusSessionDto> getCurrentSession(
+    public ResponseEntity<FocusSessionResponse> getCurrentSession(
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        FocusSessionDto session = timerService.getCurrentSession(userDetails.getUsername());
+
+        FocusSessionResponse session = timerService.getActiveSession(userDetails.getUsername());
         return session != null ? ResponseEntity.ok(session) : ResponseEntity.noContent().build();
     }
     
     /**
+     * Resume a paused session.
+     */
+    @PostMapping("/sessions/{sessionId}/resume")
+    @Operation(summary = "Resume a session",
+               description = "Resume a paused session")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<FocusSessionResponse> resumeSession(
+            @PathVariable String sessionId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        FocusSessionResponse session = timerService.resumeTimer(sessionId, userDetails.getUsername());
+        return ResponseEntity.ok(session);
+    }
+
+    /**
+     * Cancel a session.
+     */
+    @PostMapping("/sessions/{sessionId}/cancel")
+    @Operation(summary = "Cancel a session",
+               description = "Cancel an active or paused session")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<FocusSessionResponse> cancelSession(
+            @PathVariable String sessionId,
+            @RequestParam(required = false, defaultValue = "User cancelled") String reason,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        FocusSessionResponse session = timerService.cancelTimer(sessionId, userDetails.getUsername(), reason);
+        return ResponseEntity.ok(session);
+    }
+
+    /**
      * Get session history.
      */
     @GetMapping("/sessions/history")
-    @Operation(summary = "Get session history", 
+    @Operation(summary = "Get session history",
                description = "Get paginated history of user's sessions")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<FocusSessionDto>> getSessionHistory(
+    public ResponseEntity<Page<FocusSessionResponse>> getSessionHistory(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        List<FocusSessionDto> sessions = timerService.getSessionHistory(
-                userDetails.getUsername(), page, size);
+
+        Page<FocusSessionResponse> sessions = timerService.getUserSessions(
+                userDetails.getUsername(), PageRequest.of(page, size));
         return ResponseEntity.ok(sessions);
     }
     
     /**
-     * Get daily productivity stats.
+     * Get user statistics.
      */
-    @GetMapping("/stats/daily")
-    @Operation(summary = "Get daily stats", 
-               description = "Get productivity statistics for a specific date")
+    @GetMapping("/stats")
+    @Operation(summary = "Get user statistics",
+               description = "Get timer statistics for date range")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ProductivityStatsDto> getDailyStats(
-            @Parameter(description = "Date (YYYY-MM-DD)") 
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        ProductivityStatsDto stats = timerService.getDailyStats(userDetails.getUsername(), date);
-        return ResponseEntity.ok(stats);
-    }
-    
-    /**
-     * Get weekly productivity stats.
-     */
-    @GetMapping("/stats/weekly")
-    @Operation(summary = "Get weekly stats", 
-               description = "Get productivity statistics for a week starting from specified date")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ProductivityStatsDto>> getWeeklyStats(
-            @Parameter(description = "Start date (YYYY-MM-DD)") 
+    public ResponseEntity<TimerStatisticsResponse> getUserStats(
+            @Parameter(description = "Start date")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @Parameter(description = "End date")
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        List<ProductivityStatsDto> stats = timerService.getWeeklyStats(
-                userDetails.getUsername(), startDate);
-        return ResponseEntity.ok(stats);
-    }
-    
-    /**
-     * Get monthly productivity stats.
-     */
-    @GetMapping("/stats/monthly")
-    @Operation(summary = "Get monthly stats", 
-               description = "Get productivity statistics for a specific month")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ProductivityStatsDto>> getMonthlyStats(
-            @Parameter(description = "Year") @RequestParam int year,
-            @Parameter(description = "Month (1-12)") @RequestParam int month,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        List<ProductivityStatsDto> stats = timerService.getMonthlyStats(
-                userDetails.getUsername(), year, month);
+
+        TimerStatisticsResponse stats = timerService.getUserStatistics(
+                userDetails.getUsername(),
+                startDate.atStartOfDay(),
+                endDate.plusDays(1).atStartOfDay());
         return ResponseEntity.ok(stats);
     }
     
@@ -159,43 +166,54 @@ public class TimerController {
      * Get current streak.
      */
     @GetMapping("/stats/streak")
-    @Operation(summary = "Get current streak", 
+    @Operation(summary = "Get current streak",
                description = "Get the number of consecutive days with completed sessions")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Integer> getCurrentStreak(
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        Integer streak = timerService.getCurrentStreak(userDetails.getUsername());
+
+        Integer streak = timerService.calculateUserStreak(userDetails.getUsername());
         return ResponseEntity.ok(streak);
     }
-    
+
     /**
-     * Get Pomodoro settings.
+     * Get user templates.
      */
-    @GetMapping("/pomodoro/settings")
-    @Operation(summary = "Get Pomodoro settings", 
-               description = "Get user's Pomodoro timer preferences")
+    @GetMapping("/templates")
+    @Operation(summary = "Get user templates",
+               description = "Get all timer templates for the user")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PomodoroSettingsDto> getPomodoroSettings(
+    public ResponseEntity<List<TimerTemplate>> getUserTemplates(
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        PomodoroSettingsDto settings = timerService.getPomodoroSettings(userDetails.getUsername());
-        return ResponseEntity.ok(settings);
+
+        List<TimerTemplate> templates = timerService.getUserTemplates(userDetails.getUsername());
+        return ResponseEntity.ok(templates);
     }
-    
+
     /**
-     * Update Pomodoro settings.
+     * Get system templates.
      */
-    @PutMapping("/pomodoro/settings")
-    @Operation(summary = "Update Pomodoro settings", 
-               description = "Update user's Pomodoro timer preferences")
+    @GetMapping("/templates/system")
+    @Operation(summary = "Get system templates",
+               description = "Get predefined system timer templates")
+    public ResponseEntity<List<TimerTemplate>> getSystemTemplates() {
+        List<TimerTemplate> templates = timerService.getSystemTemplates();
+        return ResponseEntity.ok(templates);
+    }
+
+    /**
+     * Create template.
+     */
+    @PostMapping("/templates")
+    @Operation(summary = "Create template",
+               description = "Create a new timer template")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PomodoroSettingsDto> updatePomodoroSettings(
-            @Valid @RequestBody PomodoroSettingsDto settings,
+    public ResponseEntity<TimerTemplate> createTemplate(
+            @Valid @RequestBody CreateTemplateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
-        PomodoroSettingsDto updated = timerService.updatePomodoroSettings(
-                userDetails.getUsername(), settings);
-        return ResponseEntity.ok(updated);
+
+        request.setUserId(userDetails.getUsername());
+        TimerTemplate template = timerService.createTemplate(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(template);
     }
 }

@@ -31,7 +31,7 @@ FocusHive is a digital co-working and co-studying platform creating virtual "hiv
 - 🎮 **Gamification**: Points, achievements, and leaderboards
 - 🤝 **Buddy System**: Accountability partner matching
 - 💬 **Integrated Chat**: Real-time messaging within hives
-- 🎵 **Music Integration**: Spotify-powered collaborative playlists
+- 🎵 **Music Integration**: (Planned for Phase 2)
 
 ### Technology Stack
 | Layer | Technology | Version |
@@ -50,7 +50,7 @@ FocusHive is a digital co-working and co-studying platform creating virtual "hiv
 
 ## 🏗️ Architecture
 
-### Microservices Architecture
+### Microservices Architecture (Current: 4 Active Services)
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Frontend (React)                      │
@@ -58,29 +58,38 @@ FocusHive is a digital co-working and co-studying platform creating virtual "hiv
 └────────────────────────┬────────────────────────────────┘
                          │
 ┌────────────────────────┴────────────────────────────────┐
-│                   API Gateway (NGINX)                    │
-│                     Port: 8080                          │
+│                   API Gateway (Optional)                 │
+│                                                         │
 └────────────────────────┬────────────────────────────────┘
                          │
-        ┌────────────────┼────────────────┐
-        │                │                │
-┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
-│   FocusHive  │ │  Identity   │ │    Music    │
-│   Backend    │ │   Service   │ │   Service   │
-│   Port: 8080 │ │  Port: 8081 │ │  Port: 8082 │
-└──────────────┘ └─────────────┘ └─────────────┘
-        │                │                │
-┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
-│ Notification │ │     Chat    │ │  Analytics  │
-│   Service    │ │   Service   │ │   Service   │
-│  Port: 8083  │ │  Port: 8084 │ │  Port: 8085 │
-└──────────────┘ └─────────────┘ └─────────────┘
-        │                │                │
-┌───────▼──────┐ ┌──────▼──────┐ ┌──────▼──────┐
-│    Forum     │ │    Buddy    │ │  PostgreSQL │
-│   Service    │ │   Service   │ │    Redis    │
-│  Port: 8086  │ │  Port: 8087 │ │             │
-└──────────────┘ └─────────────┘ └─────────────┘
+     ┌───────────────────┼───────────────────┐
+     │                   │                   │
+┌────▼──────────────────────────────────┐ ┌──▼──────────┐
+│   FocusHive Backend (Monolith)        │ │  Identity   │
+│           Port: 8080                  │ │   Service   │
+│                                       │ │  Port: 8081 │
+│  ┌──────────────────────────────────┐ │ └─────────────┘
+│  │ Core: Hive, Timer, Presence     │ │         │
+│  ├──────────────────────────────────┤ │         │
+│  │ Module: Chat (integrated)       │ │ ┌───────▼──────┐
+│  ├──────────────────────────────────┤ │ │ Notification │
+│  │ Module: Analytics (integrated)  │ │ │   Service    │
+│  ├──────────────────────────────────┤ │ │  Port: 8083  │
+│  │ Module: Forum (integrated)      │ │ └──────────────┘
+│  └──────────────────────────────────┘ │         │
+└───────────────┬───────────────────────┘         │
+                │                         ┌───────▼──────┐
+                │                         │    Buddy     │
+                │                         │   Service    │
+                │                         │  Port: 8087  │
+                │                         └──────────────┘
+                │                                 │
+    ┌───────────┴───────────┐           ┌────────┴────────┐
+    │                       │           │                 │
+┌───▼───┐              ┌────▼────┐     │ [Music Service] │
+│ Redis │              │PostgreSQL│     │   (SHELVED)     │
+└───────┘              └─────────┘      │  Future: 8082   │
+                                        └─────────────────┘
 ```
 
 ### Service Communication
@@ -95,19 +104,26 @@ FocusHive is a digital co-working and co-studying platform creating virtual "hiv
 
 ### Core Services
 
-#### 1. FocusHive Backend (Primary Service)
+#### 1. FocusHive Backend (Primary Service + Integrated Modules)
 - **Location**: `/services/focushive-backend/`
 - **Port**: 8080
-- **Responsibilities**:
+- **Core Responsibilities**:
   - User management
   - Hive creation and management
   - Real-time presence tracking
   - Timer synchronization
   - WebSocket coordination
+- **Integrated Modules**:
+  - **Chat Module**: Real-time messaging within hives
+  - **Analytics Module**: Productivity tracking and insights
+  - **Forum Module**: Community discussions and knowledge sharing
 - **Key Endpoints**:
   - `/api/hives` - Hive management
   - `/api/presence` - Real-time presence
   - `/api/timer` - Timer operations
+  - `/api/chat` - Chat messaging (integrated)
+  - `/api/analytics` - Analytics & productivity (integrated)
+  - `/api/forum` - Forum discussions (integrated)
   - `/ws` - WebSocket connection
 
 #### 2. Identity Service
@@ -125,40 +141,70 @@ FocusHive is a digital co-working and co-studying platform creating virtual "hiv
   - `/api/personas` - Persona management
   - `/api/users` - User profiles
 
-#### 3. Music Service
-- **Location**: `/services/music-service/`
-- **Port**: 8082
+#### 3. Notification Service
+- **Location**: `/services/notification-service/`
+- **Port**: 8083
 - **Responsibilities**:
-  - Spotify integration
+  - Email notifications
+  - Push notifications
+  - In-app notifications
+  - Template management
+- **Key Endpoints**:
+  - `/api/notifications/send` - Send notification
+  - `/api/notifications/templates` - Template management
+  - `/api/notifications/preferences` - User preferences
+
+#### 4. Buddy Service
+- **Location**: `/services/buddy-service/`
+- **Port**: 8087
+- **Responsibilities**:
+  - Accountability partner matching
+  - Buddy request management
+  - Compatibility scoring
+  - Activity tracking
+- **Key Endpoints**:
+  - `/api/buddies` - Buddy management
+  - `/api/buddies/requests` - Request handling
+  - `/api/buddies/matches` - Finding matches
+
+### Shelved Services
+
+#### Music Service (Phase 2)
+- **Status**: Deferred for future development
+- **Location**: `/.shelves/music-service/`
+- **Planned Port**: 8082
+- **Future Features**: Spotify integration, collaborative playlists
   - Collaborative playlists
   - Music recommendations
   - Mood-based selections
-- **Key Endpoints**:
-  - `/api/spotify/auth` - Spotify OAuth
-  - `/api/playlists` - Playlist management
-  - `/api/recommendations` - Music suggestions
+- **Reactivation**: Post-MVP launch based on user feedback
+- **Details**: See `.shelves/SHELVED.md` for rationale and reactivation plan
 
-#### 4. Analytics Service
-- **Location**: `/services/analytics-service/`
-- **Port**: 8085
+#### 4. Notification Service
+- **Location**: `/services/notification-service/`
+- **Port**: 8083
 - **Responsibilities**:
-  - Productivity tracking
-  - Performance metrics
-  - Achievement calculations
-  - Report generation
+  - Multi-channel notifications (email, push, in-app)
+  - Notification templates
+  - Delivery scheduling
+  - User preferences
 - **Key Endpoints**:
-  - `/api/analytics/sessions` - Session analytics
-  - `/api/analytics/productivity` - Productivity metrics
-  - `/api/analytics/achievements` - Achievement tracking
+  - `/api/notifications` - Notification management
+  - `/api/notifications/preferences` - User preferences
+  - `/api/notifications/templates` - Template management
 
-### Supporting Services
-
-| Service | Port | Purpose |
-|---------|------|---------|
-| Notification Service | 8083 | Multi-channel notifications |
-| Chat Service | 8084 | Real-time messaging |
-| Forum Service | 8086 | Community discussions |
-| Buddy Service | 8087 | Accountability partners |
+#### 5. Buddy Service
+- **Location**: `/services/buddy-service/`
+- **Port**: 8087
+- **Responsibilities**:
+  - Accountability partner matching
+  - Buddy recommendations
+  - Partner performance tracking
+  - Mutual goal setting
+- **Key Endpoints**:
+  - `/api/buddies` - Buddy management
+  - `/api/buddies/match` - Partner matching
+  - `/api/buddies/goals` - Shared goals
 
 ---
 

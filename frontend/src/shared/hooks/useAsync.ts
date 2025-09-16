@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
-import { useAsyncError } from './useAsyncError'
+import {useCallback, useEffect, useRef, useState} from 'react'
+import {useAsyncError} from './useAsyncError'
 
 /**
  * State for async operations
@@ -60,7 +60,7 @@ export interface UseAsyncReturn<T> extends AsyncState<T> {
 
 /**
  * Hook for managing async operations with loading, error, and data states
- * 
+ *
  * Features:
  * - Automatic loading state management
  * - Error handling with useAsyncError integration
@@ -68,7 +68,7 @@ export interface UseAsyncReturn<T> extends AsyncState<T> {
  * - Success/error callbacks
  * - Manual state setters
  * - TypeScript support
- * 
+ *
  * @example
  * ```tsx
  * const { data, isLoading, error, execute } = useAsync(
@@ -77,11 +77,11 @@ export interface UseAsyncReturn<T> extends AsyncState<T> {
  *     return response.data
  *   },
  *   {
- *     onSuccess: (user) => console.log('User loaded:', user),
- *     onError: (error) => console.error('Failed to load user:', error)
+ *     onSuccess: (user) => // console.log('User loaded:', user),
+ *     onError: (error) => // console.error('Failed to load user:', error)
  *   }
  * )
- * 
+ *
  * // Execute the function
  * useEffect(() => {
  *   execute('user123')
@@ -89,8 +89,8 @@ export interface UseAsyncReturn<T> extends AsyncState<T> {
  * ```
  */
 export function useAsync<T, Args extends unknown[] = unknown[]>(
-  asyncFunction: (...args: Args) => Promise<T>,
-  options: UseAsyncOptions<T> = {}
+    asyncFunction: (...args: Args) => Promise<T>,
+    options: UseAsyncOptions<T> = {}
 ): UseAsyncReturn<T> {
   const {
     initialData = null,
@@ -102,7 +102,7 @@ export function useAsync<T, Args extends unknown[] = unknown[]>(
     onLoadingChange
   } = options
 
-  const { captureError } = useAsyncError()
+  const {captureError} = useAsyncError()
   const abortControllerRef = useRef<AbortController | null>(null)
   const immediateExecutedRef = useRef(false)
 
@@ -119,13 +119,13 @@ export function useAsync<T, Args extends unknown[] = unknown[]>(
   // Update derived states when main state changes
   const updateState = useCallback((updates: Partial<AsyncState<T>>) => {
     setState(prevState => {
-      const newState = { ...prevState, ...updates }
-      
+      const newState = {...prevState, ...updates}
+
       // Update derived states
       newState.isIdle = !newState.isLoading && !newState.error && !newState.data
       newState.isSuccess = !newState.isLoading && !newState.error && !!newState.data
       newState.isError = !newState.isLoading && !!newState.error
-      
+
       return newState
     })
   }, [])
@@ -145,97 +145,97 @@ export function useAsync<T, Args extends unknown[] = unknown[]>(
 
   // Execute the async function
   const execute = useCallback(
-    async (...args: Args): Promise<T | null> => {
-      // Cancel any pending request
-      cancel()
+      async (...args: Args): Promise<T | null> => {
+        // Cancel any pending request
+        cancel()
 
-      // Create new abort controller
-      abortControllerRef.current = new AbortController()
-      const { signal } = abortControllerRef.current
+        // Create new abort controller
+        abortControllerRef.current = new AbortController()
+        const {signal} = abortControllerRef.current
 
-      try {
-        // Reset data if requested
-        if (resetOnExecute) {
-          updateState({
-            data: null,
-            error: null,
-            isLoading: true
-          })
-        } else {
-          updateState({
-            error: null,
-            isLoading: true
-          })
-        }
-
-        // Execute the async function
-        const result = await asyncFunction(...args)
-
-        // Check if request was cancelled
-        if (signal.aborted) {
-          return null
-        }
-
-        // Success
-        updateState({
-          data: result,
-          error: null,
-          isLoading: false
-        })
-
-        onSuccess?.(result)
-        return result
-
-      } catch (error) {
-        // Check if request was cancelled
-        if (signal.aborted) {
-          return null
-        }
-
-        const errorMessage = error instanceof Error ? error.message : String(error)
-
-        // Update state
-        updateState({
-          error: errorMessage,
-          isLoading: false
-        })
-
-        // Handle error with useAsyncError
-        captureError(error, {
-          severity: 'medium',
-          logOnly: true,
-          ...errorOptions,
-          context: {
-            function: asyncFunction.name,
-            args: args.length > 0 ? args : undefined,
-            ...errorOptions.context
+        try {
+          // Reset data if requested
+          if (resetOnExecute) {
+            updateState({
+              data: null,
+              error: null,
+              isLoading: true
+            })
+          } else {
+            updateState({
+              error: null,
+              isLoading: true
+            })
           }
-        })
 
-        onError?.(errorMessage)
-        return null
+          // Execute the async function
+          const result = await asyncFunction(...args)
 
-      } finally {
-        // Clear abort controller if it's the current one
-        if (abortControllerRef.current?.signal === signal) {
-          abortControllerRef.current = null
+          // Check if request was cancelled
+          if (signal.aborted) {
+            return null
+          }
+
+          // Success
+          updateState({
+            data: result,
+            error: null,
+            isLoading: false
+          })
+
+          onSuccess?.(result)
+          return result
+
+        } catch (error) {
+          // Check if request was cancelled
+          if (signal.aborted) {
+            return null
+          }
+
+          const errorMessage = error instanceof Error ? error.message : String(error)
+
+          // Update state
+          updateState({
+            error: errorMessage,
+            isLoading: false
+          })
+
+          // Handle error with useAsyncError
+          captureError(error, {
+            severity: 'medium',
+            logOnly: true,
+            ...errorOptions,
+            context: {
+              function: asyncFunction.name,
+              args: args.length > 0 ? args : undefined,
+              ...errorOptions.context
+            }
+          })
+
+          onError?.(errorMessage)
+          return null
+
+        } finally {
+          // Clear abort controller if it's the current one
+          if (abortControllerRef.current?.signal === signal) {
+            abortControllerRef.current = null
+          }
         }
-      }
-    },
-    [asyncFunction, resetOnExecute, updateState, cancel, captureError, errorOptions, onSuccess, onError]
+      },
+      [asyncFunction, resetOnExecute, updateState, cancel, captureError, errorOptions, onSuccess, onError]
   )
 
   // Manual state setters
   const setData = useCallback((data: T | null) => {
-    updateState({ data })
+    updateState({data})
   }, [updateState])
 
   const setError = useCallback((error: string | null) => {
-    updateState({ error })
+    updateState({error})
   }, [updateState])
 
   const setLoading = useCallback((isLoading: boolean) => {
-    updateState({ isLoading })
+    updateState({isLoading})
   }, [updateState])
 
   // Reset state
@@ -281,7 +281,7 @@ export function useAsync<T, Args extends unknown[] = unknown[]>(
 
 /**
  * Simplified version of useAsync for basic API calls
- * 
+ *
  * @example
  * ```tsx
  * const { data, loading, error, refetch } = useAsyncData(
@@ -290,10 +290,10 @@ export function useAsync<T, Args extends unknown[] = unknown[]>(
  * ```
  */
 export function useAsyncData<T>(
-  asyncFunction: () => Promise<T>,
-  immediate = true
+    asyncFunction: () => Promise<T>,
+    immediate = true
 ) {
-  const { data, isLoading, error, execute, reset } = useAsync(asyncFunction, {
+  const {data, isLoading, error, execute, reset} = useAsync(asyncFunction, {
     immediate
   })
 
@@ -308,7 +308,7 @@ export function useAsyncData<T>(
 
 /**
  * Hook for form submissions with loading and error states
- * 
+ *
  * @example
  * ```tsx
  * const { loading, error, submit } = useAsyncSubmit(
@@ -323,10 +323,10 @@ export function useAsyncData<T>(
  * ```
  */
 export function useAsyncSubmit<Args extends unknown[] = unknown[]>(
-  submitFunction: (...args: Args) => Promise<unknown>,
-  options: Omit<UseAsyncOptions<unknown>, 'immediate' | 'initialData'> = {}
+    submitFunction: (...args: Args) => Promise<unknown>,
+    options: Omit<UseAsyncOptions<unknown>, 'immediate' | 'initialData'> = {}
 ) {
-  const { isLoading, error, execute, reset } = useAsync(submitFunction, {
+  const {isLoading, error, execute, reset} = useAsync(submitFunction, {
     immediate: false,
     resetOnExecute: true,
     ...options

@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.time.Duration
 
 plugins {
     id("org.springframework.boot") version "3.3.1"
@@ -7,6 +8,8 @@ plugins {
     kotlin("plugin.spring") version "1.9.24"
     kotlin("plugin.jpa") version "1.9.24"
     jacoco
+    id("org.owasp.dependencycheck") version "9.0.10"
+    id("me.champeau.jmh") version "0.7.2"
 }
 
 group = "com.focushive"
@@ -64,6 +67,11 @@ dependencies {
     
     // Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.1.1")
+    // Add explicit Resilience4j Bulkhead support for tests referencing Bulkhead/BulkheadRegistry
+    testImplementation("io.github.resilience4j:resilience4j-bulkhead")
+
+    // OpenFeign for inter-service communication (notification-service integration)
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     
     // Rate Limiting - Bucket4j with Redis
     implementation("com.bucket4j:bucket4j-redis:8.7.0")
@@ -78,7 +86,8 @@ dependencies {
     
     // Monitoring
     implementation("io.micrometer:micrometer-registry-prometheus")
-    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    // Only use Brave bridge for tracing (not both OTel and Brave to avoid conflicts)
+    // implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.micrometer:micrometer-tracing-bridge-brave")  // Zipkin support
     
     // Zipkin/Brave dependencies
@@ -102,14 +111,57 @@ dependencies {
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    // Ensure actuator types are also available on test classpath (redundant but explicit)
+    testImplementation("org.springframework.boot:spring-boot-starter-actuator")
+    // Add actuator autoconfigure for health endpoint classes in tests
+    testImplementation("org.springframework.boot:spring-boot-actuator-autoconfigure")
+    // Add actuator core for health classes
+    testImplementation("org.springframework.boot:spring-boot-actuator")
+    // Spring Boot TestContainers support for @ServiceConnection
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("com.redis:testcontainers-redis:2.2.2")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.h2database:h2")
     runtimeOnly("com.h2database:h2")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
     testImplementation("net.ttddyy:datasource-proxy:1.10")
+
+    // Network failure testing with Toxiproxy
+    testImplementation("org.testcontainers:toxiproxy:1.19.8")
+    testImplementation("eu.rekawek.toxiproxy:toxiproxy-java:2.1.7")
+
+    // JUnit Platform Suite for test organization
+    testImplementation("org.junit.platform:junit-platform-suite-engine")
+    testImplementation("org.junit.platform:junit-platform-suite-api")
+
+    // Performance Testing Dependencies
+    // JMH (Java Microbenchmark Harness) for microbenchmarks
+    testImplementation("org.openjdk.jmh:jmh-core:1.37")
+    testAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
+
+    // Gatling for load testing
+    testImplementation("io.gatling.highcharts:gatling-charts-highcharts:3.10.3")
+    testImplementation("io.gatling:gatling-app:3.10.3")
+    testImplementation("io.gatling:gatling-recorder:3.10.3")
+
+    // WireMock for service mocking
+    testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.1")
+    testImplementation("org.springframework.cloud:spring-cloud-contract-wiremock")
+
+    // Memory profiling and monitoring (use JVM built-in tools instead of Eclipse MAT)
+    // testImplementation("org.eclipse.mat:org.eclipse.mat.parser:1.14.0") // Removed due to availability issues
+
+    // Metrics and monitoring for tests
+    testImplementation("io.micrometer:micrometer-core")
+    testImplementation("io.micrometer:micrometer-registry-prometheus")
+    
+    // Logback for Markers in tests
+    testImplementation("net.logstash.logback:logstash-logback-encoder:7.4")
+    testImplementation("ch.qos.logback:logback-classic")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -141,10 +193,14 @@ tasks.withType<Test> {
         exclude("**/*IT.class")
     }
     
-    // CI-specific settings
+    // Memory settings for all test environments
+    maxHeapSize = "2g"
+    jvmArgs("-XX:+UseG1GC", "-XX:MaxGCPauseMillis=100")
+    
+    // Additional CI-specific settings
     if (System.getenv("CI") == "true") {
-        maxHeapSize = "1g"
-        jvmArgs("-XX:+UseG1GC", "-XX:MaxGCPauseMillis=100")
+        // CI-specific optimizations can go here
+        jvmArgs("-XX:+UnlockExperimentalVMOptions", "-XX:+UseContainerSupport")
     }
     
     // Continue on test failures for better reporting
@@ -201,6 +257,108 @@ tasks.jacocoTestCoverageVerification {
                 "com.focushive.identity.IdentityServiceApplication*"
             )
         }
+    }
+}
+
+// OWASP Dependency Check Configuration for vulnerability scanning
+configure<org.owasp.dependencycheck.gradle.extension.DependencyCheckExtension> {
+    // Configuration for production security scanning
+    failBuildOnCVSS = 7.0f  // Fail build if CVSS score >= 7.0 (High severity)
+    suppressionFile = "dependency-check-suppressions.xml"
+
+    analyzers.apply {
+        // Enable various analyzers
+        assemblyEnabled = false  // .NET assemblies
+        nuspecEnabled = false    // .NET NuGet
+        nodeEnabled = false      // Node.js
+
+        // Enable for Java/Kotlin
+        jarEnabled = true
+        centralEnabled = true
+    }
+
+    // Report formats
+    formats = listOf("HTML", "JSON", "CSV")
+
+    // Scan configuration
+    scanConfigurations = listOf("compileClasspath", "runtimeClasspath")
+
+    // Skip certain configurations
+    skipConfigurations = listOf("testCompileClasspath", "testRuntimeClasspath")
+
+    // NVD configuration
+    nvd.apply {
+        apiKey = System.getenv("NVD_API_KEY") ?: ""
+        delay = 4000  // Milliseconds between requests
+    }
+}
+
+// Task to check for dependency updates
+tasks.register("checkDependencyUpdates") {
+    group = "verification"
+    description = "Check for dependency updates and security patches"
+
+    doLast {
+        println("Checking for dependency updates...")
+        println("Run './gradlew dependencyUpdates' for detailed report")
+        println("Run './gradlew dependencyCheckAnalyze' for vulnerability scan")
+    }
+}
+
+// Custom task to generate security report
+tasks.register("securityReport") {
+    group = "verification"
+    description = "Generate comprehensive security report"
+    dependsOn("dependencyCheckAnalyze", "jacocoTestReport")
+
+    doLast {
+        println("Security Report Generated:")
+        println("- Dependency vulnerabilities: build/reports/dependency-check-report.html")
+        println("- Code coverage: build/reports/jacoco/test/html/index.html")
+    }
+}
+
+// JMH Configuration for Microbenchmarks
+jmh {
+    warmupIterations.set(3)
+    iterations.set(10)
+    fork.set(2)
+    benchmarkMode.set(listOf("Throughput", "AverageTime"))
+    timeUnit.set("ms")
+    verbosity.set("NORMAL")
+    failOnError.set(true)
+    forceGC.set(true)
+    jvmArgs.set(listOf("-Xms2g", "-Xmx4g", "-XX:+UseG1GC"))
+    resultFormat.set("JSON")
+    humanOutputFile.set(file("${layout.buildDirectory.get()}/reports/jmh/results.txt"))
+    resultsFile.set(file("${layout.buildDirectory.get()}/reports/jmh/results.json"))
+}
+
+// Custom task for performance tests
+tasks.register<Test>("performanceTest") {
+    group = "verification"
+    description = "Run comprehensive performance tests (PERF-001 to PERF-005)"
+
+    useJUnitPlatform {
+        includeTags("performance")
+    }
+
+    include("**/performance/**/*Test.class")
+
+    systemProperty("spring.profiles.active", "performance")
+    systemProperty("logging.level.com.focushive.identity", "WARN")
+    systemProperty("logging.level.org.springframework", "WARN")
+
+    // Memory settings for performance tests
+    maxHeapSize = "4g"
+    jvmArgs("-XX:+UseG1GC", "-XX:MaxGCPauseMillis=100", "-XX:+UnlockExperimentalVMOptions")
+
+    // Longer timeout for performance tests
+    timeout = Duration.ofMinutes(30)
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
     }
 }
 

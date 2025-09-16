@@ -35,7 +35,7 @@
   "hive_details": {
     "members": "Members",
     "member_count": "{{count}} member_one",
-    "member_count_plural": "{{count}} members", 
+    "member_count_plural": "{{count}} members",
     "created": "Created",
     "category": "Category",
     "tags": "Tags",
@@ -48,7 +48,7 @@
   "member_management": {
     "title": "Manage Members",
     "owner": "Owner",
-    "admin": "Admin", 
+    "admin": "Admin",
     "moderator": "Moderator",
     "member": "Member",
     "promote": "Promote",
@@ -82,7 +82,7 @@
       "description": "Anyone can discover and join this hive"
     },
     "private": {
-      "title": "Private", 
+      "title": "Private",
       "description": "Only invited members can join this hive"
     },
     "invite_only": {

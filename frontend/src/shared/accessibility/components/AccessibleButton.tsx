@@ -1,39 +1,39 @@
 /**
  * Accessible Button Components
- * 
+ *
  * WCAG 2.1 AA compliant button variants with proper ARIA attributes,
  * keyboard navigation, focus management, and screen reader support.
  */
 
-import React, { forwardRef } from 'react';
-import { Button, ButtonProps, IconButton, IconButtonProps, Fab, FabProps } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { useAnnouncement } from '../hooks/useAnnouncement';
-import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import type { AriaRole, AccessibleProps } from '../types/accessibility';
+import React, {forwardRef} from 'react';
+import {Button, ButtonProps, Fab, FabProps, IconButton, IconButtonProps} from '@mui/material';
+import {styled} from '@mui/material/styles';
+import {useAnnouncement} from '../hooks/useAnnouncement';
+import {useKeyboardNavigation} from '../hooks/useKeyboardNavigation';
+import type {AccessibleProps, AriaRole} from '../types/accessibility';
 
 // Enhanced Button with accessibility features
 const StyledAccessibleButton = styled(Button, {
-  shouldForwardProp: (prop) => 
-    prop !== 'hasConfirmation' && 
-    prop !== 'loadingText' && 
-    prop !== 'successText'
+  shouldForwardProp: (prop) =>
+      prop !== 'hasConfirmation' &&
+      prop !== 'loadingText' &&
+      prop !== 'successText'
 })<{
   hasConfirmation?: boolean;
   loadingText?: string;
   successText?: string;
-}>(({ theme }) => ({
+}>(({theme}) => ({
   // Ensure minimum touch target size
   minHeight: '44px',
   minWidth: '44px',
-  
+
   // Enhanced focus ring
   '&:focus': {
     outline: `2px solid ${theme.palette.primary.main}`,
     outlineOffset: '2px',
     backgroundColor: theme.palette.action.focus,
   },
-  
+
   // High contrast mode support
   '@media (prefers-contrast: high)': {
     border: '2px solid currentColor',
@@ -42,12 +42,12 @@ const StyledAccessibleButton = styled(Button, {
       outlineOffset: '3px',
     },
   },
-  
+
   // Loading state accessibility
   '&[aria-busy="true"]': {
     pointerEvents: 'none',
     position: 'relative',
-    
+
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -62,10 +62,10 @@ const StyledAccessibleButton = styled(Button, {
       animation: 'spin 1s linear infinite',
     },
   },
-  
+
   '@keyframes spin': {
-    '0%': { transform: 'translate(-50%, -50%) rotate(0deg)' },
-    '100%': { transform: 'translate(-50%, -50%) rotate(360deg)' },
+    '0%': {transform: 'translate(-50%, -50%) rotate(0deg)'},
+    '100%': {transform: 'translate(-50%, -50%) rotate(360deg)'},
   },
 }));
 
@@ -75,47 +75,47 @@ export interface AccessibleButtonProps extends Omit<ButtonProps, 'role'>, Access
    * @default 'button'
    */
   role?: AriaRole;
-  
+
   /**
    * Loading state for async operations
    */
   loading?: boolean;
-  
+
   /**
    * Text to announce when button is in loading state
    */
   loadingText?: string;
-  
+
   /**
    * Success state after completion
    */
   success?: boolean;
-  
+
   /**
    * Text to announce on success
    */
   successText?: string;
-  
+
   /**
    * Requires confirmation before action
    */
   requiresConfirmation?: boolean;
-  
+
   /**
    * Confirmation message
    */
   confirmationText?: string;
-  
+
   /**
    * Auto-focus on mount
    */
   autoFocus?: boolean;
-  
+
   /**
    * Keyboard shortcut description for screen readers
    */
   keyboardShortcut?: string;
-  
+
   /**
    * Additional context for screen readers
    */
@@ -124,7 +124,7 @@ export interface AccessibleButtonProps extends Omit<ButtonProps, 'role'>, Access
 
 /**
  * Accessible Button Component
- * 
+ *
  * Extends MUI Button with WCAG 2.1 AA compliance features:
  * - Proper ARIA attributes and roles
  * - Loading and success state announcements
@@ -134,24 +134,24 @@ export interface AccessibleButtonProps extends Omit<ButtonProps, 'role'>, Access
  * - Focus management and visual indicators
  */
 export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonProps>(({
-  children,
-  onClick,
-  disabled = false,
-  loading = false,
-  success = false,
-  loadingText = 'Loading...',
-  successText = 'Action completed successfully',
-  requiresConfirmation = false,
-  confirmationText = 'Are you sure?',
-  autoFocus = false,
-  keyboardShortcut,
-  description,
-  role = 'button',
-  'aria-label': ariaLabel,
-  'aria-describedby': ariaDescribedBy,
-  ...props
-}, ref) => {
-  const { announceStatus, announcePolite } = useAnnouncement();
+                                                                                        children,
+                                                                                        onClick,
+                                                                                        disabled = false,
+                                                                                        loading = false,
+                                                                                        success = false,
+                                                                                        loadingText = 'Loading...',
+                                                                                        successText = 'Action completed successfully',
+                                                                                        requiresConfirmation = false,
+                                                                                        confirmationText = 'Are you sure?',
+                                                                                        autoFocus = false,
+                                                                                        keyboardShortcut,
+                                                                                        description,
+                                                                                        role = 'button',
+                                                                                        'aria-label': ariaLabel,
+                                                                                        'aria-describedby': ariaDescribedBy,
+                                                                                        ...props
+                                                                                      }, ref) => {
+  const {announceStatus, announcePolite} = useAnnouncement();
   const [isConfirming, setIsConfirming] = React.useState(false);
   const [_hasInteracted, setHasInteracted] = React.useState(false);
 
@@ -176,19 +176,19 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
 
     try {
       await onClick?.(event);
-      
+
       if (success) {
         announceStatus(successText);
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch {
+      // console.error('Action failed');
       announceStatus('Action failed. Please try again.');
     } finally {
       setIsConfirming(false);
     }
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key === 'Escape' && isConfirming) {
       setIsConfirming(false);
       announcePolite('Action cancelled.');
@@ -219,66 +219,67 @@ export const AccessibleButton = forwardRef<HTMLButtonElement, AccessibleButtonPr
   const showConfirmationState = isConfirming && requiresConfirmation;
 
   return (
-    <>
-      <StyledAccessibleButton
-        {...props}
-        ref={ref}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        disabled={isDisabled}
-        autoFocus={autoFocus}
-        role={role}
-        aria-label={buttonLabel}
-        aria-describedby={describedByIds}
-        aria-busy={loading}
-        aria-disabled={isDisabled}
-        aria-pressed={showConfirmationState ? true : undefined}
-        data-state={
-          loading ? 'loading' : 
-          success ? 'success' : 
-          showConfirmationState ? 'confirming' : 
-          'default'
-        }
-      >
-        {loading ? loadingText : 
-         showConfirmationState ? `Confirm: ${children}` : 
-         children}
-      </StyledAccessibleButton>
+      <>
+        <StyledAccessibleButton
+            {...props}
+            ref={ref}
+            onClick={handleClick}
+            onKeyDown={handleKeyDown}
+            disabled={isDisabled}
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus={autoFocus}
+            role={role}
+            aria-label={buttonLabel}
+            aria-describedby={describedByIds}
+            aria-busy={loading}
+            aria-disabled={isDisabled}
+            aria-pressed={showConfirmationState ? true : undefined}
+            data-state={
+              loading ? 'loading' :
+                  success ? 'success' :
+                      showConfirmationState ? 'confirming' :
+                          'default'
+            }
+        >
+          {loading ? loadingText :
+              showConfirmationState ? `Confirm: ${children}` :
+                  children}
+        </StyledAccessibleButton>
 
-      {/* Hidden description for screen readers */}
-      {description && (
-        <span id={descriptionId} style={{ 
-          position: 'absolute', 
-          width: '1px', 
-          height: '1px', 
-          padding: 0, 
-          margin: '-1px', 
-          overflow: 'hidden', 
-          clip: 'rect(0, 0, 0, 0)', 
-          whiteSpace: 'nowrap', 
-          border: 0 
-        }}>
+        {/* Hidden description for screen readers */}
+        {description && (
+            <span id={descriptionId} style={{
+              position: 'absolute',
+              width: '1px',
+              height: '1px',
+              padding: 0,
+              margin: '-1px',
+              overflow: 'hidden',
+              clip: 'rect(0, 0, 0, 0)',
+              whiteSpace: 'nowrap',
+              border: 0
+            }}>
           {description}
         </span>
-      )}
+        )}
 
-      {/* Hidden keyboard shortcut info */}
-      {keyboardShortcut && (
-        <span id={shortcutId} style={{ 
-          position: 'absolute', 
-          width: '1px', 
-          height: '1px', 
-          padding: 0, 
-          margin: '-1px', 
-          overflow: 'hidden', 
-          clip: 'rect(0, 0, 0, 0)', 
-          whiteSpace: 'nowrap', 
-          border: 0 
-        }}>
+        {/* Hidden keyboard shortcut info */}
+        {keyboardShortcut && (
+            <span id={shortcutId} style={{
+              position: 'absolute',
+              width: '1px',
+              height: '1px',
+              padding: 0,
+              margin: '-1px',
+              overflow: 'hidden',
+              clip: 'rect(0, 0, 0, 0)',
+              whiteSpace: 'nowrap',
+              border: 0
+            }}>
           Keyboard shortcut: {keyboardShortcut}
         </span>
-      )}
-    </>
+        )}
+      </>
   );
 });
 
@@ -290,17 +291,17 @@ export interface AccessibleIconButtonProps extends Omit<IconButtonProps, 'role'>
    * Required: Accessible label for icon button
    */
   'aria-label': string;
-  
+
   /**
    * ARIA role for the icon button
    */
   role?: AriaRole;
-  
+
   /**
    * Loading state
    */
   loading?: boolean;
-  
+
   /**
    * Description of what the icon represents
    */
@@ -309,66 +310,66 @@ export interface AccessibleIconButtonProps extends Omit<IconButtonProps, 'role'>
 
 /**
  * Accessible Icon Button Component
- * 
+ *
  * Icon buttons require accessible labels and proper ARIA attributes
  */
 export const AccessibleIconButton = forwardRef<HTMLButtonElement, AccessibleIconButtonProps>(({
-  children,
-  'aria-label': ariaLabel,
-  role = 'button',
-  loading = false,
-  iconDescription,
-  ...props
-}, ref) => {
+                                                                                                children,
+                                                                                                'aria-label': ariaLabel,
+                                                                                                role = 'button',
+                                                                                                loading = false,
+                                                                                                iconDescription,
+                                                                                                ...props
+                                                                                              }, ref) => {
   const descriptionId = React.useId();
 
   return (
-    <>
-      <IconButton
-        {...props}
-        ref={ref}
-        role={role}
-        aria-label={ariaLabel}
-        aria-describedby={iconDescription ? descriptionId : undefined}
-        aria-busy={loading}
-        disabled={props.disabled || loading}
-        sx={{
-          minHeight: '44px',
-          minWidth: '44px',
-          '&:focus': {
-            outline: '2px solid',
-            outlineColor: 'primary.main',
-            outlineOffset: '2px',
-          },
-          '@media (prefers-contrast: high)': {
-            border: '2px solid currentColor',
-            '&:focus': {
-              outline: '3px solid currentColor',
-              outlineOffset: '3px',
-            },
-          },
-          ...props.sx,
-        }}
-      >
-        {children}
-      </IconButton>
+      <>
+        <IconButton
+            {...props}
+            ref={ref}
+            role={role}
+            aria-label={ariaLabel}
+            aria-describedby={iconDescription ? descriptionId : undefined}
+            aria-busy={loading}
+            disabled={props.disabled || loading}
+            sx={{
+              minHeight: '44px',
+              minWidth: '44px',
+              '&:focus': {
+                outline: '2px solid',
+                outlineColor: 'primary.main',
+                outlineOffset: '2px',
+              },
+              '@media (prefers-contrast: high)': {
+                border: '2px solid currentColor',
+                '&:focus': {
+                  outline: '3px solid currentColor',
+                  outlineOffset: '3px',
+                },
+              },
+              ...props.sx,
+            }}
+        >
+          {children}
+        </IconButton>
 
-      {iconDescription && (
-        <span id={descriptionId} style={{ 
-          position: 'absolute', 
-          width: '1px', 
-          height: '1px', 
-          padding: 0, 
-          margin: '-1px', 
-          overflow: 'hidden', 
-          clip: 'rect(0, 0, 0, 0)', 
-          whiteSpace: 'nowrap', 
-          border: 0 
-        }}>
+        {iconDescription && (
+            <span id={descriptionId} style={{
+              position: 'absolute',
+              width: '1px',
+              height: '1px',
+              padding: 0,
+              margin: '-1px',
+              overflow: 'hidden',
+              clip: 'rect(0, 0, 0, 0)',
+              whiteSpace: 'nowrap',
+              border: 0
+            }}>
           {iconDescription}
         </span>
-      )}
-    </>
+        )}
+      </>
   );
 });
 
@@ -380,17 +381,17 @@ export interface AccessibleFabProps extends Omit<FabProps, 'role'>, AccessiblePr
    * Required: Accessible label for FAB
    */
   'aria-label': string;
-  
+
   /**
    * ARIA role for the FAB
    */
   role?: AriaRole;
-  
+
   /**
    * Expanded state for expandable FABs
    */
   expanded?: boolean;
-  
+
   /**
    * Controls other elements (for expandable FABs)
    */
@@ -401,34 +402,34 @@ export interface AccessibleFabProps extends Omit<FabProps, 'role'>, AccessiblePr
  * Accessible Floating Action Button
  */
 export const AccessibleFab = forwardRef<HTMLButtonElement, AccessibleFabProps>(({
-  'aria-label': ariaLabel,
-  role = 'button',
-  expanded,
-  ...props
-}, ref) => {
+                                                                                  'aria-label': ariaLabel,
+                                                                                  role = 'button',
+                                                                                  expanded,
+                                                                                  ...props
+                                                                                }, ref) => {
   return (
-    <Fab
-      {...props}
-      ref={ref}
-      role={role}
-      aria-label={ariaLabel}
-      aria-expanded={expanded}
-      sx={{
-        '&:focus': {
-          outline: '2px solid',
-          outlineColor: 'primary.main',
-          outlineOffset: '2px',
-        },
-        '@media (prefers-contrast: high)': {
-          border: '2px solid currentColor',
-          '&:focus': {
-            outline: '3px solid currentColor',
-            outlineOffset: '3px',
-          },
-        },
-        ...props.sx,
-      }}
-    />
+      <Fab
+          {...props}
+          ref={ref}
+          role={role}
+          aria-label={ariaLabel}
+          aria-expanded={expanded}
+          sx={{
+            '&:focus': {
+              outline: '2px solid',
+              outlineColor: 'primary.main',
+              outlineOffset: '2px',
+            },
+            '@media (prefers-contrast: high)': {
+              border: '2px solid currentColor',
+              '&:focus': {
+                outline: '3px solid currentColor',
+                outlineOffset: '3px',
+              },
+            },
+            ...props.sx,
+          }}
+      />
   );
 });
 
@@ -446,37 +447,37 @@ export interface AccessibleButtonGroupProps {
 }
 
 export const AccessibleButtonGroup: React.FC<AccessibleButtonGroupProps> = ({
-  children,
-  orientation = 'horizontal',
-  role = 'group',
-  'aria-label': ariaLabel,
-  'aria-labelledby': ariaLabelledBy,
-}) => {
-  const { keyboardNavigationProps } = useKeyboardNavigation({
+                                                                              children,
+                                                                              orientation = 'horizontal',
+                                                                              role = 'group',
+                                                                              'aria-label': ariaLabel,
+                                                                              'aria-labelledby': ariaLabelledBy,
+                                                                            }) => {
+  const {keyboardNavigationProps} = useKeyboardNavigation({
     orientation,
     wrap: true,
     activateOnFocus: false,
   });
 
   return (
-    <div
-      role={role}
-      aria-label={ariaLabel}
-      aria-labelledby={ariaLabelledBy}
-      aria-orientation={orientation}
-      {...keyboardNavigationProps}
-      style={{
-        display: 'flex',
-        flexDirection: orientation === 'vertical' ? 'column' : 'row',
-        gap: '8px',
-      }}
-    >
-      {React.Children.map(children, (child, index) => 
-        React.cloneElement(child, {
-          tabIndex: index === 0 ? 0 : -1,
-        })
-      )}
-    </div>
+      <div
+          role={role}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy}
+          aria-orientation={orientation}
+          {...keyboardNavigationProps}
+          style={{
+            display: 'flex',
+            flexDirection: orientation === 'vertical' ? 'column' : 'row',
+            gap: '8px',
+          }}
+      >
+        {React.Children.map(children, (child, index) =>
+            React.cloneElement(child, {
+              tabIndex: index === 0 ? 0 : -1,
+            })
+        )}
+      </div>
   );
 };
 

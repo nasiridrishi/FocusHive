@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  env: { browser: true, es2020: true },
+  env: {browser: true, es2020: true},
   extends: [
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
@@ -13,11 +13,11 @@ module.exports = {
   rules: {
     // Console logging - warn by default, but more strict in production files
     'no-console': ['warn'],
-    
+
     // Strict TypeScript rules
-    '@typescript-eslint/no-explicit-any': ['error', { 
+    '@typescript-eslint/no-explicit-any': ['error', {
       ignoreRestArgs: true,
-      fixToUnknown: true 
+      fixToUnknown: true
     }],
     '@typescript-eslint/explicit-function-return-type': ['warn', {
       allowExpressions: true,
@@ -28,31 +28,31 @@ module.exports = {
     '@typescript-eslint/no-non-null-assertion': 'error',
     '@typescript-eslint/strict-boolean-expressions': 'off', // Too strict for now
     '@typescript-eslint/no-floating-promises': 'off', // Requires parserOptions.project
-    
+
     // Best practices
     'no-debugger': 'error',
     'no-alert': 'warn',
     'prefer-const': 'error',
     'no-var': 'error',
-    'eqeqeq': ['error', 'always', { null: 'ignore' }],
+    'eqeqeq': ['error', 'always', {null: 'ignore'}],
     'curly': ['error', 'multi-line'],
-    
+
     'react-refresh/only-export-components': [
       'warn',
-      { allowConstantExport: true },
+      {allowConstantExport: true},
     ],
-    
+
     // Naming Convention Rules for FocusHive
     '@typescript-eslint/naming-convention': [
       'error',
-      // Allow CSS selectors, HTML attributes, API properties, and special patterns
+      // Allow CSS selectors, HTML attributes, API properties, HTTP headers, and special patterns
       {
         selector: 'objectLiteralProperty',
         format: null,
         filter: {
           // Match patterns that should be exempt from naming convention
-          // Updated to include: MUI selectors, percentages, CSS variables, HTML elements, snake_case, numeric keys, MIME types, attribute selectors, version strings, CSS selectors, universal selectors, decimal numbers, paths, kebab-case, virtual modules
-          regex: '^(--[a-z-]+|&\\s*\\.|&\\s+[a-z]+|&\\s*>|&\\[|aria-|data-|Content-Type|fieldset|[0-9]+%|[0-9]+%,\\s*[0-9]+%|[0-9]+%,\\s*[0-9]+%,\\s*[0-9]+%|__[a-zA-Z]+|webkit-|moz-|ms-|o-|[a-z]+_[a-z_]+|^[0-9]+$|[a-z]+/[a-z]+|^_[a-zA-Z]|^[0-9]+\\.[0-9]+\\.[0-9]+$|^[0-9]+\\.[0-9]+$|\\*|:focus|:not\\(|^/[a-zA-Z]+|^[a-z]+-[a-z-]+$|virtual:)',
+          // Updated to include: HTTP security headers, MUI selectors, percentages, CSS variables, HTML elements, snake_case, numeric keys, MIME types, attribute selectors, version strings, CSS selectors, universal selectors, decimal numbers, paths, kebab-case, virtual modules
+          regex: '^(Content-Security-Policy|X-Frame-Options|X-Content-Type-Options|X-XSS-Protection|Referrer-Policy|Permissions-Policy|Cross-Origin-Embedder-Policy|Cross-Origin-Opener-Policy|Cross-Origin-Resource-Policy|Strict-Transport-Security|--[a-z-]+|&\\s*\\.|&\\s+[a-z]+|&\\s*>|&\\[|aria-|data-|Content-Type|fieldset|[0-9]+%|[0-9]+%,\\s*[0-9]+%|[0-9]+%,\\s*[0-9]+%,\\s*[0-9]+%|__[a-zA-Z]+|webkit-|moz-|ms-|o-|[a-z]+_[a-z_]+|^[0-9]+$|[a-z]+/[a-z]+|^_[a-zA-Z]|^[0-9]+\\.[0-9]+\\.[0-9]+$|^[0-9]+\\.[0-9]+$|\\*|:focus|:not\\(|^/[a-zA-Z]+|^[a-z]+-[a-z-]+$|virtual:)',
           match: true
         }
       },
@@ -165,18 +165,18 @@ module.exports = {
 
     // Disable conflicting camelcase rule in favor of naming-convention
     'camelcase': 'off',
-    
+
     // Allow unused variables with underscore prefix
     '@typescript-eslint/no-unused-vars': [
       'error',
-      { 
+      {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
-        ignoreRestSiblings: true 
+        ignoreRestSiblings: true
       }
     ],
   },
-  
+
   // Override rules for different file types
   overrides: [
     // Test files (unit/integration tests)
@@ -202,13 +202,13 @@ module.exports = {
       rules: {
         // Allow console.log in tests for debugging
         'no-console': 'off',
-        
+
         // More flexible naming in tests
         '@typescript-eslint/naming-convention': 'off',
-        
+
         // Allow any type in test mocks and fixtures
         '@typescript-eslint/no-explicit-any': 'warn',
-        
+
         // Allow unused variables for test setup
         '@typescript-eslint/no-unused-vars': [
           'error',
@@ -219,18 +219,18 @@ module.exports = {
             destructuredArrayIgnorePattern: '^_'
           }
         ],
-        
+
         // Allow empty functions in mocks
         '@typescript-eslint/no-empty-function': 'off',
-        
+
         // Allow non-null assertions in tests
         '@typescript-eslint/no-non-null-assertion': 'warn',
-        
+
         // Allow importing from devDependencies in tests
         'import/no-extraneous-dependencies': 'off',
       }
     },
-    
+
     // Test utilities and setup files
     {
       files: [
@@ -245,13 +245,13 @@ module.exports = {
       rules: {
         // Allow console for test utilities
         'no-console': 'off',
-        
+
         // Flexible naming for test utilities
         '@typescript-eslint/naming-convention': 'off',
-        
+
         // Allow any type for test utilities
         '@typescript-eslint/no-explicit-any': 'warn',
-        
+
         // Allow unused parameters in test utilities
         '@typescript-eslint/no-unused-vars': [
           'error',
@@ -261,12 +261,12 @@ module.exports = {
             ignoreRestSiblings: true
           }
         ],
-        
+
         // Allow importing from devDependencies
         'import/no-extraneous-dependencies': 'off',
       }
     },
-    
+
     // E2E test files (Playwright)
     {
       files: [
@@ -281,7 +281,7 @@ module.exports = {
       rules: {
         // Allow console.log for E2E debugging
         'no-console': 'off',
-        
+
         // More flexible naming for E2E tests and page objects
         '@typescript-eslint/naming-convention': [
           'error',
@@ -302,10 +302,10 @@ module.exports = {
             format: null
           }
         ],
-        
+
         // Allow any type for E2E test data and page interactions
         '@typescript-eslint/no-explicit-any': 'warn',
-        
+
         // Allow unused parameters in E2E helpers
         '@typescript-eslint/no-unused-vars': [
           'error',
@@ -315,18 +315,18 @@ module.exports = {
             ignoreRestSiblings: true
           }
         ],
-        
+
         // Allow empty functions in page object stubs
         '@typescript-eslint/no-empty-function': 'off',
-        
+
         // Allow non-null assertions in E2E tests
         '@typescript-eslint/no-non-null-assertion': 'warn',
-        
+
         // Allow importing from devDependencies
         'import/no-extraneous-dependencies': 'off',
       }
     },
-    
+
     // Configuration files
     {
       files: [
@@ -341,13 +341,13 @@ module.exports = {
       rules: {
         // Allow console in config files
         'no-console': 'off',
-        
+
         // Allow any type in configurations
         '@typescript-eslint/no-explicit-any': 'warn',
-        
+
         // Allow importing from devDependencies in configs
         'import/no-extraneous-dependencies': 'off',
-        
+
         // Allow unused vars in configs (sometimes needed for type inference)
         '@typescript-eslint/no-unused-vars': [
           'error',

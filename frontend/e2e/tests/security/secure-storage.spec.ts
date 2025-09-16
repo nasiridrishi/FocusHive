@@ -1,8 +1,8 @@
 /**
  * Secure Storage Security Tests (UOL-44.15)
- * 
+ *
  * Comprehensive secure storage testing for FocusHive frontend
- * 
+ *
  * Test Categories:
  * 1. JWT Token Storage Security
  * 2. Sensitive Data Storage Prevention
@@ -16,8 +16,7 @@
  * 10. Data Cleanup on Logout
  */
 
-import { test, expect } from '@playwright/test';
-import { Page, BrowserContext } from '@playwright/test';
+import {BrowserContext, expect, Page, test} from '@playwright/test';
 
 interface StorageItem {
   key: string;
@@ -37,7 +36,8 @@ interface CookieSecurityInfo {
 }
 
 class SecureStorageHelper {
-  constructor(private page: Page, private context: BrowserContext) {}
+  constructor(private page: Page, private context: BrowserContext) {
+  }
 
   async getLocalStorageItems(): Promise<StorageItem[]> {
     return await this.page.evaluate(() => {
@@ -98,16 +98,16 @@ class SecureStorageHelper {
     const cookieInfo = await this.getCookieSecurityInfo();
 
     const sensitiveLocalItems = localItems
-      .filter(item => this.isSensitiveData(item.key, item.value))
-      .map(item => item.key);
+    .filter(item => this.isSensitiveData(item.key, item.value))
+    .map(item => item.key);
 
     const sensitiveSessionItems = sessionItems
-      .filter(item => this.isSensitiveData(item.key, item.value))
-      .map(item => item.key);
+    .filter(item => this.isSensitiveData(item.key, item.value))
+    .map(item => item.key);
 
     const insecureCookies = cookieInfo
-      .filter(cookie => this.isInsecureCookie(cookie))
-      .map(cookie => cookie.name);
+    .filter(cookie => this.isInsecureCookie(cookie))
+    .map(cookie => cookie.name);
 
     return {
       localStorage: {
@@ -125,95 +125,6 @@ class SecureStorageHelper {
     };
   }
 
-  private isSensitiveData(key: string, value: string | null): boolean {
-    if (!value) return false;
-
-    const sensitiveKeywords = [
-      'password', 'secret', 'private', 'key', 'token', 'auth',
-      'session', 'credit', 'card', 'ssn', 'social', 'security',
-      'api_key', 'bearer', 'jwt', 'refresh', 'access'
-    ];
-
-    const keyLower = key.toLowerCase();
-    const valueLower = value.toLowerCase();
-
-    // Check if key contains sensitive keywords
-    if (sensitiveKeywords.some(keyword => keyLower.includes(keyword))) {
-      return true;
-    }
-
-    // Check for JWT tokens in value
-    if (this.looksLikeJWT(value)) {
-      return true;
-    }
-
-    // Check for credit card numbers
-    if (this.looksLikeCreditCard(value)) {
-      return true;
-    }
-
-    // Check for common sensitive patterns
-    if (/^[A-Za-z0-9+/=]{40,}$/.test(value)) { // Looks like encoded data
-      return true;
-    }
-
-    return false;
-  }
-
-  private isSensitiveKey(key: string): boolean {
-    const sensitiveKeys = [
-      'auth_token', 'access_token', 'refresh_token', 'jwt_token',
-      'session_id', 'api_key', 'private_key', 'password'
-    ];
-    
-    return sensitiveKeys.some(sensitiveKey => 
-      key.toLowerCase().includes(sensitiveKey)
-    );
-  }
-
-  private looksLikeJWT(value: string): boolean {
-    // JWT tokens have three parts separated by dots
-    const jwtPattern = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
-    return jwtPattern.test(value) && value.split('.').length === 3;
-  }
-
-  private looksLikeCreditCard(value: string): boolean {
-    // Remove spaces and dashes
-    const cleanValue = value.replace(/[\s-]/g, '');
-    
-    // Check for common credit card patterns
-    const ccPatterns = [
-      /^4[0-9]{12}(?:[0-9]{3})?$/, // Visa
-      /^5[1-5][0-9]{14}$/, // MasterCard
-      /^3[47][0-9]{13}$/, // American Express
-      /^3[0-9]{13}$/, // Diners Club
-      /^6(?:011|5[0-9]{2})[0-9]{12}$/ // Discover
-    ];
-
-    return ccPatterns.some(pattern => pattern.test(cleanValue));
-  }
-
-  private isInsecureCookie(cookie: CookieSecurityInfo): boolean {
-    // Check for authentication or session cookies that should be secure
-    const authCookieNames = [
-      'auth', 'session', 'token', 'login', 'jwt', 'access', 'refresh'
-    ];
-
-    const isAuthCookie = authCookieNames.some(name => 
-      cookie.name.toLowerCase().includes(name)
-    );
-
-    if (isAuthCookie) {
-      // Auth cookies should be secure, httpOnly, and have appropriate sameSite
-      return !cookie.secure || 
-             !cookie.httpOnly || 
-             cookie.sameSite === 'none' ||
-             !cookie.sameSite;
-    }
-
-    return false;
-  }
-
   async validateTokenStorage(): Promise<{
     tokensInSecureStorage: boolean;
     tokensInMemory: boolean;
@@ -224,7 +135,7 @@ class SecureStorageHelper {
       // Check for tokens in various storage mechanisms
       const localStorage = window.localStorage;
       const sessionStorage = window.sessionStorage;
-      
+
       let tokensInInsecure = false;
       let tokensInSecure = false;
       let tokensInMemory = false;
@@ -294,7 +205,7 @@ class SecureStorageHelper {
         localStorage.setItem('test_key', 'test_value');
         localStorageAccessible = localStorage.getItem('test_key') === 'test_value';
         localStorage.removeItem('test_key');
-      } catch (e) {
+      } catch {
         localStorageAccessible = false;
       }
 
@@ -303,14 +214,14 @@ class SecureStorageHelper {
         sessionStorage.setItem('test_key', 'test_value');
         sessionStorageAccessible = sessionStorage.getItem('test_key') === 'test_value';
         sessionStorage.removeItem('test_key');
-      } catch (e) {
+      } catch {
         sessionStorageAccessible = false;
       }
 
       // Test IndexedDB access
       try {
         indexedDBAccessible = typeof indexedDB !== 'undefined';
-      } catch (e) {
+      } catch {
         indexedDBAccessible = false;
       }
 
@@ -326,10 +237,10 @@ class SecureStorageHelper {
     await this.page.evaluate(() => {
       // Clear localStorage
       localStorage.clear();
-      
+
       // Clear sessionStorage
       sessionStorage.clear();
-      
+
       // Clear IndexedDB (if available)
       if ('indexedDB' in window) {
         // Note: IndexedDB clearing is more complex and would require
@@ -356,12 +267,101 @@ class SecureStorageHelper {
     const attackSuccessful = await this.page.evaluate((script) => {
       try {
         return eval(script);
-      } catch (error) {
+      } catch {
         return false;
       }
     }, maliciousScript);
 
     return attackSuccessful;
+  }
+
+  private isSensitiveData(key: string, value: string | null): boolean {
+    if (!value) return false;
+
+    const sensitiveKeywords = [
+      'password', 'secret', 'private', 'key', 'token', 'auth',
+      'session', 'credit', 'card', 'ssn', 'social', 'security',
+      'api_key', 'bearer', 'jwt', 'refresh', 'access'
+    ];
+
+    const keyLower = key.toLowerCase();
+    const _valueLower = value.toLowerCase();
+
+    // Check if key contains sensitive keywords
+    if (sensitiveKeywords.some(keyword => keyLower.includes(keyword))) {
+      return true;
+    }
+
+    // Check for JWT tokens in value
+    if (this.looksLikeJWT(value)) {
+      return true;
+    }
+
+    // Check for credit card numbers
+    if (this.looksLikeCreditCard(value)) {
+      return true;
+    }
+
+    // Check for common sensitive patterns
+    if (/^[A-Za-z0-9+/=]{40,}$/.test(value)) { // Looks like encoded data
+      return true;
+    }
+
+    return false;
+  }
+
+  private isSensitiveKey(key: string): boolean {
+    const sensitiveKeys = [
+      'auth_token', 'access_token', 'refresh_token', 'jwt_token',
+      'session_id', 'api_key', 'private_key', 'password'
+    ];
+
+    return sensitiveKeys.some(sensitiveKey =>
+        key.toLowerCase().includes(sensitiveKey)
+    );
+  }
+
+  private looksLikeJWT(value: string): boolean {
+    // JWT tokens have three parts separated by dots
+    const jwtPattern = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
+    return jwtPattern.test(value) && value.split('.').length === 3;
+  }
+
+  private looksLikeCreditCard(value: string): boolean {
+    // Remove spaces and dashes
+    const cleanValue = value.replace(/[\s-]/g, '');
+
+    // Check for common credit card patterns
+    const ccPatterns = [
+      /^4[0-9]{12}(?:[0-9]{3})?$/, // Visa
+      /^5[1-5][0-9]{14}$/, // MasterCard
+      /^3[47][0-9]{13}$/, // American Express
+      /^3[0-9]{13}$/, // Diners Club
+      /^6(?:011|5[0-9]{2})[0-9]{12}$/ // Discover
+    ];
+
+    return ccPatterns.some(pattern => pattern.test(cleanValue));
+  }
+
+  private isInsecureCookie(cookie: CookieSecurityInfo): boolean {
+    // Check for authentication or session cookies that should be secure
+    const authCookieNames = [
+      'auth', 'session', 'token', 'login', 'jwt', 'access', 'refresh'
+    ];
+
+    const isAuthCookie = authCookieNames.some(name =>
+        cookie.name.toLowerCase().includes(name)
+    );
+
+    if (isAuthCookie) {
+      // Auth cookies should be secure, httpOnly, and have appropriate sameSite
+      return !cookie.secure ||
+          !cookie.httpOnly ||
+          cookie.sameSite === 'none' ||
+          !cookie.sameSite;
+    }
+
+    return false;
   }
 }
 
@@ -369,7 +369,7 @@ test.describe('Secure Storage Security Tests', () => {
   let storageHelper: SecureStorageHelper;
   let context: BrowserContext;
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({browser}) => {
     context = await browser.newContext();
   });
 
@@ -377,14 +377,14 @@ test.describe('Secure Storage Security Tests', () => {
     await context.close();
   });
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page: _page}) => {
     storageHelper = new SecureStorageHelper(page, context);
-    
+
     await page.goto('/');
   });
 
   test.describe('JWT Token Storage Security', () => {
-    test('should not store JWT tokens in localStorage', async ({ page }) => {
+    test('should not store JWT tokens in localStorage', async ({page: _page}) => {
       // Login to generate tokens
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -393,12 +393,12 @@ test.describe('Secure Storage Security Tests', () => {
       await page.waitForURL('/dashboard');
 
       const tokenValidation = await storageHelper.validateTokenStorage();
-      
+
       // JWT tokens should not be in localStorage (insecure)
       expect(tokenValidation.tokensInInsecureStorage).toBe(false);
     });
 
-    test('should use secure storage mechanisms for tokens', async ({ page }) => {
+    test('should use secure storage mechanisms for tokens', async ({page: _page}) => {
       // Login to generate tokens
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -410,17 +410,17 @@ test.describe('Secure Storage Security Tests', () => {
       const cookieInfo = await storageHelper.getCookieSecurityInfo();
 
       // Tokens should be in secure storage (httpOnly cookies) or encrypted
-      const hasSecureTokenStorage = 
-        tokenValidation.tokensInSecureStorage || 
-        tokenValidation.encryptedTokens ||
-        cookieInfo.some(c => c.httpOnly && c.secure && 
-          (c.name.toLowerCase().includes('auth') || 
-           c.name.toLowerCase().includes('token')));
+      const hasSecureTokenStorage =
+          tokenValidation.tokensInSecureStorage ||
+          tokenValidation.encryptedTokens ||
+          cookieInfo.some(c => c.httpOnly && c.secure &&
+              (c.name.toLowerCase().includes('auth') ||
+                  c.name.toLowerCase().includes('token')));
 
       expect(hasSecureTokenStorage).toBe(true);
     });
 
-    test('should encrypt sensitive data in storage', async ({ page }) => {
+    test('should encrypt sensitive data in storage', async ({page: _page}) => {
       // Login to generate tokens
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -435,15 +435,15 @@ test.describe('Secure Storage Security Tests', () => {
       const hasEncryptedData = [...localItems, ...sessionItems].some(item => {
         if (item.value && item.value.length > 20) {
           // Check for base64-like encoding or encrypted patterns
-          return /^[A-Za-z0-9+/=]+$/.test(item.value) && 
-                 !(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/.test(item.value)); // Not a JWT
+          return /^[A-Za-z0-9+/=]+$/.test(item.value) &&
+              !(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/.test(item.value)); // Not a JWT
         }
         return false;
       });
 
       // If sensitive data is stored, it should be encrypted
       const sensitiveDataCheck = await storageHelper.checkForSensitiveDataInStorage();
-      if (sensitiveDataCheck.localStorage.hasSensitiveData || 
+      if (sensitiveDataCheck.localStorage.hasSensitiveData ||
           sensitiveDataCheck.sessionStorage.hasSensitiveData) {
         expect(hasEncryptedData).toBe(true);
       }
@@ -451,7 +451,7 @@ test.describe('Secure Storage Security Tests', () => {
   });
 
   test.describe('Cookie Security Attributes', () => {
-    test('should use secure cookie attributes for authentication', async ({ page }) => {
+    test('should use secure cookie attributes for authentication', async ({page: _page}) => {
       // Login to create authentication cookies
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -460,10 +460,10 @@ test.describe('Secure Storage Security Tests', () => {
       await page.waitForURL('/dashboard');
 
       const cookieInfo = await storageHelper.getCookieSecurityInfo();
-      const authCookies = cookieInfo.filter(cookie => 
-        cookie.name.toLowerCase().includes('auth') ||
-        cookie.name.toLowerCase().includes('session') ||
-        cookie.name.toLowerCase().includes('token')
+      const authCookies = cookieInfo.filter(cookie =>
+          cookie.name.toLowerCase().includes('auth') ||
+          cookie.name.toLowerCase().includes('session') ||
+          cookie.name.toLowerCase().includes('token')
       );
 
       // All authentication cookies should have proper security attributes
@@ -475,7 +475,7 @@ test.describe('Secure Storage Security Tests', () => {
       });
     });
 
-    test('should set appropriate cookie expiration', async ({ page }) => {
+    test('should set appropriate cookie expiration', async ({page: _page}) => {
       // Login to create cookies
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -484,9 +484,9 @@ test.describe('Secure Storage Security Tests', () => {
       await page.waitForURL('/dashboard');
 
       const cookieInfo = await storageHelper.getCookieSecurityInfo();
-      const authCookies = cookieInfo.filter(cookie => 
-        cookie.name.toLowerCase().includes('auth') ||
-        cookie.name.toLowerCase().includes('session')
+      const authCookies = cookieInfo.filter(cookie =>
+          cookie.name.toLowerCase().includes('auth') ||
+          cookie.name.toLowerCase().includes('session')
       );
 
       // Session cookies should have reasonable expiration times
@@ -494,7 +494,7 @@ test.describe('Secure Storage Security Tests', () => {
         if (cookie.expires) {
           const now = Date.now() / 1000; // Current time in seconds
           const maxAge = cookie.expires - now;
-          
+
           // Should expire within reasonable time (24 hours max for demo)
           expect(maxAge).toBeLessThan(24 * 60 * 60);
           expect(maxAge).toBeGreaterThan(0);
@@ -504,23 +504,23 @@ test.describe('Secure Storage Security Tests', () => {
   });
 
   test.describe('Storage Access Control', () => {
-    test('should prevent unauthorized storage access', async ({ page }) => {
+    test('should prevent unauthorized storage access', async ({page: _page}) => {
       // Test if malicious scripts can access storage
       const accessTest = await storageHelper.testStorageAccess();
-      
+
       // Storage should be accessible for legitimate scripts
       expect(accessTest.localStorageAccessible).toBe(true);
       expect(accessTest.sessionStorageAccessible).toBe(true);
     });
 
-    test('should protect against XSS storage attacks', async ({ page }) => {
+    test('should protect against XSS storage attacks', async ({page: _page}) => {
       const xssAttackSuccess = await storageHelper.simulateXSSStorageAttack();
-      
+
       // XSS attacks on storage should be prevented by CSP
       expect(xssAttackSuccess).toBe(false);
     });
 
-    test('should validate storage quota limits', async ({ page }) => {
+    test('should validate storage quota limits', async ({page: _page}) => {
       const quotaTest = await page.evaluate(() => {
         try {
           // Try to exceed storage quota
@@ -539,7 +539,7 @@ test.describe('Secure Storage Security Tests', () => {
   });
 
   test.describe('Sensitive Data Protection', () => {
-    test('should not store passwords in any storage', async ({ page }) => {
+    test('should not store passwords in any storage', async ({page: _page}) => {
       // Login and check for password storage
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -548,7 +548,7 @@ test.describe('Secure Storage Security Tests', () => {
       await page.waitForURL('/dashboard');
 
       const sensitiveData = await storageHelper.checkForSensitiveDataInStorage();
-      
+
       // Check specifically for password-related keys
       const hasPasswordData = [
         ...sensitiveData.localStorage.items,
@@ -559,10 +559,10 @@ test.describe('Secure Storage Security Tests', () => {
       expect(hasPasswordData).toBe(false);
     });
 
-    test('should not store credit card information', async ({ page }) => {
+    test('should not store credit card information', async ({page: _page}) => {
       // Simulate entering credit card info (if payment forms exist)
       const ccTestData = '4111111111111111'; // Test credit card number
-      
+
       // Try to store credit card data
       await page.evaluate((ccNumber) => {
         localStorage.setItem('test_payment', ccNumber);
@@ -570,7 +570,7 @@ test.describe('Secure Storage Security Tests', () => {
       }, ccTestData);
 
       const sensitiveData = await storageHelper.checkForSensitiveDataInStorage();
-      
+
       // Should detect and prevent credit card storage
       expect(sensitiveData.localStorage.hasSensitiveData).toBe(true);
       expect(sensitiveData.sessionStorage.hasSensitiveData).toBe(true);
@@ -582,7 +582,7 @@ test.describe('Secure Storage Security Tests', () => {
       });
     });
 
-    test('should mask sensitive data in storage', async ({ page }) => {
+    test('should mask sensitive data in storage', async ({page: _page}) => {
       // Check if any displayed sensitive data is properly masked
       const maskedDataTest = await page.evaluate(() => {
         const testData = {
@@ -600,7 +600,7 @@ test.describe('Secure Storage Security Tests', () => {
         for (const [key] of Object.entries(testData)) {
           const stored = localStorage.getItem(`test_${key}`);
           // Check if stored value is masked (contains asterisks or X's)
-          results[key] = stored ? /[\*X]{4,}/.test(stored) : false;
+          results[key] = stored ? /[*X]{4,}/.test(stored) : false;
           localStorage.removeItem(`test_${key}`);
         }
 
@@ -608,7 +608,7 @@ test.describe('Secure Storage Security Tests', () => {
       });
 
       // Sensitive data should be masked when stored
-      Object.values(maskedDataTest).forEach(isMasked => {
+      Object.values(maskedDataTest).forEach(_isMasked => {
         // Note: This test depends on implementation of data masking
         // If no masking is implemented, this test documents the requirement
       });
@@ -616,7 +616,7 @@ test.describe('Secure Storage Security Tests', () => {
   });
 
   test.describe('Data Cleanup and Lifecycle', () => {
-    test('should clear sensitive data on logout', async ({ page }) => {
+    test('should clear sensitive data on logout', async ({page: _page}) => {
       // Login first
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -625,7 +625,7 @@ test.describe('Secure Storage Security Tests', () => {
       await page.waitForURL('/dashboard');
 
       // Get storage state before logout
-      const beforeLogout = await storageHelper.validateTokenStorage();
+      const _beforeLogout = await storageHelper.validateTokenStorage();
 
       // Logout
       await page.click('[data-testid="logout-button"]');
@@ -643,7 +643,7 @@ test.describe('Secure Storage Security Tests', () => {
       expect(sensitiveDataAfterLogout.sessionStorage.hasSensitiveData).toBe(false);
     });
 
-    test('should clear data on session timeout', async ({ page }) => {
+    test('should clear data on session timeout', async ({page: _page}) => {
       // Login first
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -675,7 +675,7 @@ test.describe('Secure Storage Security Tests', () => {
       expect(sensitiveData.sessionStorage.hasSensitiveData).toBe(false);
     });
 
-    test('should handle browser close/refresh gracefully', async ({ page, context }) => {
+    test('should handle browser close/refresh gracefully', async ({page, context: _context}) => {
       // Login first
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -684,7 +684,7 @@ test.describe('Secure Storage Security Tests', () => {
       await page.waitForURL('/dashboard');
 
       // Get current storage state
-      const beforeRefresh = await storageHelper.checkForSensitiveDataInStorage();
+      const _beforeRefresh = await storageHelper.checkForSensitiveDataInStorage();
 
       // Simulate browser refresh
       await page.reload();
@@ -697,7 +697,7 @@ test.describe('Secure Storage Security Tests', () => {
       expect(afterRefresh.sessionStorage.hasSensitiveData).toBe(false);
     });
 
-    test('should implement secure token refresh', async ({ page }) => {
+    test('should implement secure token refresh', async ({page: _page}) => {
       // Login to get initial tokens
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -723,7 +723,7 @@ test.describe('Secure Storage Security Tests', () => {
   });
 
   test.describe('Storage Encryption and Integrity', () => {
-    test('should validate stored data integrity', async ({ page }) => {
+    test('should validate stored data integrity', async ({page: _page}) => {
       // Login and store some data
       await page.click('[data-testid="login-button"]');
       await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -734,41 +734,41 @@ test.describe('Secure Storage Security Tests', () => {
       // Test data integrity check
       const integrityTest = await page.evaluate(() => {
         // Store test data with checksum
-        const testData = { userId: '12345', preferences: { theme: 'dark' } };
+        const testData = {userId: '12345', preferences: {theme: 'dark'}};
         const dataString = JSON.stringify(testData);
-        
+
         // Simple checksum calculation (in real app, use proper hashing)
         const checksum = dataString.length.toString(16);
-        
+
         localStorage.setItem('user_data', dataString);
         localStorage.setItem('user_data_checksum', checksum);
 
         // Verify integrity
         const storedData = localStorage.getItem('user_data');
         const storedChecksum = localStorage.getItem('user_data_checksum');
-        
+
         if (storedData && storedChecksum) {
           const calculatedChecksum = storedData.length.toString(16);
           return calculatedChecksum === storedChecksum;
         }
-        
+
         return false;
       });
 
       expect(integrityTest).toBe(true);
     });
 
-    test('should detect storage tampering', async ({ page }) => {
+    test('should detect storage tampering', async ({page: _page}) => {
       // Test storage tampering detection
       const tamperingTest = await page.evaluate(() => {
         // Store original data
         const originalData = '{"userId":"12345","role":"user"}';
         localStorage.setItem('user_info', originalData);
-        
+
         // Simulate tampering
         const tamperedData = '{"userId":"12345","role":"admin"}';
         localStorage.setItem('user_info', tamperedData);
-        
+
         // In real implementation, there would be integrity checks
         // This test documents the requirement for tampering detection
         const currentData = localStorage.getItem('user_info');

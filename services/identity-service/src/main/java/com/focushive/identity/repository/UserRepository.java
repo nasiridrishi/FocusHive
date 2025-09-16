@@ -28,10 +28,19 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmailVerificationToken(String token);
     
     Optional<User> findByPasswordResetToken(String token);
-    
+
+    Optional<User> findByDeletionToken(String token);
+
     boolean existsByUsername(String username);
     
     boolean existsByEmail(String email);
+    
+    // Hash-based email lookup methods for encrypted email searches
+    @Query("SELECT u FROM User u WHERE u.emailHash = :emailHash")
+    Optional<User> findByEmailHash(@Param("emailHash") String emailHash);
+    
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.emailHash = :emailHash")
+    boolean existsByEmailHash(@Param("emailHash") String emailHash);
     
     @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL AND u.id = :id")
     Optional<User> findActiveById(@Param("id") UUID id);

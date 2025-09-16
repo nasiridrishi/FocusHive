@@ -1,14 +1,6 @@
 import React from 'react'
-import {
-  Box,
-  Typography,
-  Avatar,
-  styled,
-  keyframes,
-  alpha,
-  useTheme,
-} from '@mui/material'
-import { TypingIndicator as TypingIndicatorType } from '../../../shared/types/chat'
+import {alpha, Avatar, Box, keyframes, styled, Typography, useTheme,} from '@mui/material'
+import {TypingIndicator as TypingIndicatorType} from '../../../shared/types/chat'
 
 const typingAnimation = keyframes`
   0%, 60%, 100% {
@@ -21,7 +13,7 @@ const typingAnimation = keyframes`
   }
 `
 
-const TypingContainer = styled(Box)(({ theme }) => ({
+const TypingContainer = styled(Box)(({theme}) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1),
@@ -32,13 +24,13 @@ const TypingContainer = styled(Box)(({ theme }) => ({
   maxWidth: 'fit-content',
 }))
 
-const TypingDotsContainer = styled(Box)(({ theme }) => ({
+const TypingDotsContainer = styled(Box)(({theme}) => ({
   display: 'flex',
   gap: theme.spacing(0.5),
   alignItems: 'center',
 }))
 
-const TypingDot = styled(Box)<{ delay: number }>(({ theme, delay }) => ({
+const TypingDot = styled(Box)<{ delay: number }>(({theme, delay}) => ({
   width: 6,
   height: 6,
   borderRadius: '50%',
@@ -47,7 +39,7 @@ const TypingDot = styled(Box)<{ delay: number }>(({ theme, delay }) => ({
   animationDelay: `${delay}s`,
 }))
 
-const UserAvatars = styled(Box)(({ theme }) => ({
+const UserAvatars = styled(Box)(({theme}) => ({
   display: 'flex',
   marginRight: theme.spacing(0.5),
   '& .MuiAvatar-root': {
@@ -71,12 +63,12 @@ interface TypingIndicatorProps {
 }
 
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({
-  typingUsers,
-  maxVisibleUsers = 3,
-  showAvatars = true,
-  variant = 'full',
-  className,
-}) => {
+                                                           typingUsers,
+                                                           maxVisibleUsers = 3,
+                                                           showAvatars = true,
+                                                           variant = 'full',
+                                                           className,
+                                                         }) => {
   const theme = useTheme()
 
   if (typingUsers.length === 0) {
@@ -86,9 +78,9 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   const visibleUsers = typingUsers.slice(0, maxVisibleUsers)
   const remainingCount = typingUsers.length - maxVisibleUsers
 
-  const getTypingText = () => {
+  const getTypingText = (): string => {
     const names = visibleUsers.map(user => user.user.name)
-    
+
     if (names.length === 1) {
       return `${names[0]} is typing`
     } else if (names.length === 2) {
@@ -102,88 +94,88 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
     }
   }
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string): string => {
     return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
   }
 
   if (variant === 'compact') {
     return (
-      <Box className={className} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <TypingDotsContainer>
-          <TypingDot delay={0} />
-          <TypingDot delay={0.2} />
-          <TypingDot delay={0.4} />
-        </TypingDotsContainer>
-        <Typography variant="caption" color="text.secondary">
-          {typingUsers.length} typing
-        </Typography>
-      </Box>
+        <Box className={className} sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+          <TypingDotsContainer>
+            <TypingDot delay={0}/>
+            <TypingDot delay={0.2}/>
+            <TypingDot delay={0.4}/>
+          </TypingDotsContainer>
+          <Typography variant="caption" color="text.secondary">
+            {typingUsers.length} typing
+          </Typography>
+        </Box>
     )
   }
 
   return (
-    <TypingContainer className={className}>
-      {showAvatars && (
-        <UserAvatars>
-          {visibleUsers.map((user, index) => (
-            <Avatar
-              key={user.userId}
-              src={user.user.avatar}
-              sx={{ 
-                zIndex: visibleUsers.length - index,
-                fontSize: '0.7rem',
-              }}
-            >
-              {!user.user.avatar && getInitials(user.user.name)}
-            </Avatar>
-          ))}
-          {remainingCount > 0 && (
-            <Avatar
-              sx={{
-                backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                color: theme.palette.primary.main,
-                fontSize: '0.6rem',
-                fontWeight: 600,
-              }}
-            >
-              +{remainingCount}
-            </Avatar>
-          )}
-        </UserAvatars>
-      )}
-      
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-          {getTypingText()}
-        </Typography>
-        
-        <TypingDotsContainer>
-          <TypingDot delay={0} />
-          <TypingDot delay={0.2} />
-          <TypingDot delay={0.4} />
-        </TypingDotsContainer>
-      </Box>
-    </TypingContainer>
+      <TypingContainer className={className}>
+        {showAvatars && (
+            <UserAvatars>
+              {visibleUsers.map((user, index) => (
+                  <Avatar
+                      key={user.userId}
+                      src={user.user.avatar}
+                      sx={{
+                        zIndex: visibleUsers.length - index,
+                        fontSize: '0.7rem',
+                      }}
+                  >
+                    {!user.user.avatar && getInitials(user.user.name)}
+                  </Avatar>
+              ))}
+              {remainingCount > 0 && (
+                  <Avatar
+                      sx={{
+                        backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                        color: theme.palette.primary.main,
+                        fontSize: '0.6rem',
+                        fontWeight: 600,
+                      }}
+                  >
+                    +{remainingCount}
+                  </Avatar>
+              )}
+            </UserAvatars>
+        )}
+
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+          <Typography variant="body2" color="text.secondary" sx={{fontStyle: 'italic'}}>
+            {getTypingText()}
+          </Typography>
+
+          <TypingDotsContainer>
+            <TypingDot delay={0}/>
+            <TypingDot delay={0.2}/>
+            <TypingDot delay={0.4}/>
+          </TypingDotsContainer>
+        </Box>
+      </TypingContainer>
   )
 }
 
 export default React.memo(TypingIndicator)
 
 // Simplified dot-only indicator for inline use
-export const TypingDots: React.FC<{ size?: number; className?: string }> = ({ 
-  size = 6, 
-  className 
-}) => {
+export const TypingDots: React.FC<{ size?: number; className?: string }> = ({
+                                                                              size = 6,
+                                                                              className
+                                                                            }) => {
   return (
-    <Box className={className} sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-      <TypingDot delay={0} sx={{ width: size, height: size }} />
-      <TypingDot delay={0.2} sx={{ width: size, height: size }} />
-      <TypingDot delay={0.4} sx={{ width: size, height: size }} />
-    </Box>
+      <Box className={className} sx={{display: 'flex', gap: 0.5, alignItems: 'center'}}>
+        <TypingDot delay={0} sx={{width: size, height: size}}/>
+        <TypingDot delay={0.2} sx={{width: size, height: size}}/>
+        <TypingDot delay={0.4} sx={{width: size, height: size}}/>
+      </Box>
   )
 }

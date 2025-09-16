@@ -1,25 +1,22 @@
 package com.focushive.identity.entity;
 
 import com.focushive.identity.security.encryption.IEncryptionService;
+import com.focushive.identity.security.encryption.converters.SpringContextUtil;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for entities that have encrypted fields.
  * Provides common functionality for managing encrypted fields and their hashes.
  */
 @MappedSuperclass
-@Configurable
-@Slf4j
 public abstract class BaseEncryptedEntity {
-    
-    @Autowired
-    private transient IEncryptionService encryptionService;
+
+    private static final Logger log = LoggerFactory.getLogger(BaseEncryptedEntity.class);
     
     /**
      * Called before persisting or updating the entity.
@@ -28,6 +25,7 @@ public abstract class BaseEncryptedEntity {
     @PrePersist
     @PreUpdate
     public void generateHashes() {
+        IEncryptionService encryptionService = SpringContextUtil.getEncryptionService();
         if (encryptionService == null) {
             log.warn("EncryptionService not available during entity lifecycle");
             return;
@@ -47,6 +45,7 @@ public abstract class BaseEncryptedEntity {
      */
     @PostLoad
     public void postLoadProcessing() {
+        IEncryptionService encryptionService = SpringContextUtil.getEncryptionService();
         if (encryptionService == null) {
             log.debug("EncryptionService not available during post-load");
             return;

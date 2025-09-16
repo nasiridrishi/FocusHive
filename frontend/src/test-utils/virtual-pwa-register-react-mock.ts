@@ -1,5 +1,5 @@
 // Mock for virtual:pwa-register/react module
-import { useState } from 'react';
+import {useState} from 'react';
 
 export function useRegisterSW() {
   const [updateAvailable] = useState(false);

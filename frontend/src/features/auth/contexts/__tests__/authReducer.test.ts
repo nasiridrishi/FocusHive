@@ -1,18 +1,18 @@
-import { describe, it, expect } from 'vitest';
-import type { AuthState, User } from '@shared/types/auth';
+import {describe, expect, it} from 'vitest';
+import type {AuthState, User} from '@shared/types/auth';
 
 // We need to export the reducer and action types from the main file
 // For now, we'll recreate them for testing purposes
 type AuthAction =
-  | { type: 'AUTH_LOADING' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string; refreshToken: string } }
-  | { type: 'AUTH_FAILURE'; payload: { error: string } }
-  | { type: 'AUTH_LOGOUT' }
-  | { type: 'AUTH_UPDATE_USER'; payload: { user: User } }
-  | { type: 'AUTH_CLEAR_ERROR' }
-  | { type: 'AUTH_VALIDATE_START' }
-  | { type: 'AUTH_VALIDATE_SUCCESS'; payload: { user: User } }
-  | { type: 'AUTH_VALIDATE_FAILURE' };
+    | { type: 'AUTH_LOADING' }
+    | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string; refreshToken: string } }
+    | { type: 'AUTH_FAILURE'; payload: { error: string } }
+    | { type: 'AUTH_LOGOUT' }
+    | { type: 'AUTH_UPDATE_USER'; payload: { user: User } }
+    | { type: 'AUTH_CLEAR_ERROR' }
+    | { type: 'AUTH_VALIDATE_START' }
+    | { type: 'AUTH_VALIDATE_SUCCESS'; payload: { user: User } }
+    | { type: 'AUTH_VALIDATE_FAILURE' };
 
 // Initial auth state
 const initialAuthState: AuthState = {
@@ -29,7 +29,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   if (!action || !action.type) {
     return state;
   }
-  
+
   switch (action.type) {
     case 'AUTH_LOADING':
       return {
@@ -136,7 +136,7 @@ describe('authReducer', () => {
         error: 'Previous error',
       };
 
-      const action: AuthAction = { type: 'AUTH_LOADING' };
+      const action: AuthAction = {type: 'AUTH_LOADING'};
       const result = authReducer(stateWithError, action);
 
       expect(result).toEqual({
@@ -155,7 +155,7 @@ describe('authReducer', () => {
         isAuthenticated: true,
       };
 
-      const action: AuthAction = { type: 'AUTH_LOADING' };
+      const action: AuthAction = {type: 'AUTH_LOADING'};
       const result = authReducer(authenticatedState, action);
 
       expect(result).toEqual({
@@ -216,7 +216,7 @@ describe('authReducer', () => {
     });
 
     it('should replace previous user data on new authentication', () => {
-      const oldUser: User = { ...mockUser, id: '2', email: 'old@example.com' };
+      const oldUser: User = {...mockUser, id: '2', email: 'old@example.com'};
       const authenticatedState: AuthState = {
         ...initialAuthState,
         user: oldUser,
@@ -225,7 +225,7 @@ describe('authReducer', () => {
         isAuthenticated: true,
       };
 
-      const newUser: User = { ...mockUser, id: '3', email: 'new@example.com' };
+      const newUser: User = {...mockUser, id: '3', email: 'new@example.com'};
       const action: AuthAction = {
         type: 'AUTH_SUCCESS',
         payload: {
@@ -261,7 +261,7 @@ describe('authReducer', () => {
 
       const action: AuthAction = {
         type: 'AUTH_FAILURE',
-        payload: { error: 'Authentication failed' },
+        payload: {error: 'Authentication failed'},
       };
 
       const result = authReducer(authenticatedState, action);
@@ -279,7 +279,7 @@ describe('authReducer', () => {
     it('should set error on initial state', () => {
       const action: AuthAction = {
         type: 'AUTH_FAILURE',
-        payload: { error: 'Login failed' },
+        payload: {error: 'Login failed'},
       };
 
       const result = authReducer(initialAuthState, action);
@@ -302,7 +302,7 @@ describe('authReducer', () => {
         error: null,
       };
 
-      const action: AuthAction = { type: 'AUTH_LOGOUT' };
+      const action: AuthAction = {type: 'AUTH_LOGOUT'};
       const result = authReducer(authenticatedState, action);
 
       expect(result).toEqual({
@@ -319,7 +319,7 @@ describe('authReducer', () => {
         isAuthenticated: true,
       };
 
-      const action: AuthAction = { type: 'AUTH_LOGOUT' };
+      const action: AuthAction = {type: 'AUTH_LOGOUT'};
       const result = authReducer(stateWithError, action);
 
       expect(result).toEqual({
@@ -349,7 +349,7 @@ describe('authReducer', () => {
 
       const action: AuthAction = {
         type: 'AUTH_UPDATE_USER',
-        payload: { user: updatedUser },
+        payload: {user: updatedUser},
       };
 
       const result = authReducer(authenticatedState, action);
@@ -370,10 +370,10 @@ describe('authReducer', () => {
         isAuthenticated: true,
       };
 
-      const updatedUser: User = { ...mockUser, email: 'updated@example.com' };
+      const updatedUser: User = {...mockUser, email: 'updated@example.com'};
       const action: AuthAction = {
         type: 'AUTH_UPDATE_USER',
-        payload: { user: updatedUser },
+        payload: {user: updatedUser},
       };
 
       const result = authReducer(authenticatedState, action);
@@ -399,7 +399,7 @@ describe('authReducer', () => {
         token: mockTokens.token,
       };
 
-      const action: AuthAction = { type: 'AUTH_CLEAR_ERROR' };
+      const action: AuthAction = {type: 'AUTH_CLEAR_ERROR'};
       const result = authReducer(stateWithError, action);
 
       expect(result).toEqual({
@@ -416,7 +416,7 @@ describe('authReducer', () => {
         token: mockTokens.token,
       };
 
-      const action: AuthAction = { type: 'AUTH_CLEAR_ERROR' };
+      const action: AuthAction = {type: 'AUTH_CLEAR_ERROR'};
       const result = authReducer(cleanState, action);
 
       expect(result).toEqual(cleanState);
@@ -433,7 +433,7 @@ describe('authReducer', () => {
         isAuthenticated: true,
       };
 
-      const action: AuthAction = { type: 'AUTH_VALIDATE_START' };
+      const action: AuthAction = {type: 'AUTH_VALIDATE_START'};
       const result = authReducer(authenticatedState, action);
 
       expect(result).toEqual({
@@ -448,7 +448,7 @@ describe('authReducer', () => {
         error: 'Previous error',
       };
 
-      const action: AuthAction = { type: 'AUTH_VALIDATE_START' };
+      const action: AuthAction = {type: 'AUTH_VALIDATE_START'};
       const result = authReducer(stateWithError, action);
 
       expect(result).toEqual({
@@ -467,7 +467,7 @@ describe('authReducer', () => {
 
       const action: AuthAction = {
         type: 'AUTH_VALIDATE_SUCCESS',
-        payload: { user: mockUser },
+        payload: {user: mockUser},
       };
 
       const result = authReducer(loadingState, action);
@@ -491,7 +491,7 @@ describe('authReducer', () => {
 
       const action: AuthAction = {
         type: 'AUTH_VALIDATE_SUCCESS',
-        payload: { user: mockUser },
+        payload: {user: mockUser},
       };
 
       const result = authReducer(stateWithError, action);
@@ -513,7 +513,7 @@ describe('authReducer', () => {
         error: null,
       };
 
-      const action: AuthAction = { type: 'AUTH_VALIDATE_FAILURE' };
+      const action: AuthAction = {type: 'AUTH_VALIDATE_FAILURE'};
       const result = authReducer(authenticatedState, action);
 
       expect(result).toEqual({
@@ -529,7 +529,7 @@ describe('authReducer', () => {
         isLoading: true,
       };
 
-      const action: AuthAction = { type: 'AUTH_VALIDATE_FAILURE' };
+      const action: AuthAction = {type: 'AUTH_VALIDATE_FAILURE'};
       const result = authReducer(stateWithError, action);
 
       expect(result).toEqual({
@@ -547,8 +547,8 @@ describe('authReducer', () => {
         isAuthenticated: true,
       };
 
-      // @ts-expect-error - Testing invalid action type
-      const action = { type: 'UNKNOWN_ACTION', payload: { data: 'test' } };
+      // Testing invalid action type
+      const action = {type: 'UNKNOWN_ACTION' as unknown, payload: {data: 'test'}} as AuthAction;
       const result = authReducer(currentState, action);
 
       expect(result).toBe(currentState); // Should return exact same reference
@@ -560,8 +560,8 @@ describe('authReducer', () => {
         error: 'Some error',
       };
 
-      // @ts-expect-error - Testing invalid action
-      const result = authReducer(currentState, null);
+      // Testing invalid action
+      const result = authReducer(currentState, null as unknown as AuthAction);
 
       expect(result).toBe(currentState);
     });
@@ -577,7 +577,7 @@ describe('authReducer', () => {
 
       const action: AuthAction = {
         type: 'AUTH_FAILURE',
-        payload: { error: 'Test error' },
+        payload: {error: 'Test error'},
       };
 
       const result = authReducer(originalState, action);
@@ -595,17 +595,17 @@ describe('authReducer', () => {
     });
 
     it('should not mutate nested user object', () => {
-      const originalUser = { ...mockUser };
+      const originalUser = {...mockUser};
       const stateWithUser: AuthState = {
         ...initialAuthState,
         user: originalUser,
         isAuthenticated: true,
       };
 
-      const updatedUser: User = { ...mockUser, firstName: 'Updated' };
+      const updatedUser: User = {...mockUser, firstName: 'Updated'};
       const action: AuthAction = {
         type: 'AUTH_UPDATE_USER',
-        payload: { user: updatedUser },
+        payload: {user: updatedUser},
       };
 
       const result = authReducer(stateWithUser, action);
@@ -613,11 +613,11 @@ describe('authReducer', () => {
       // Original user object should not be modified
       expect(originalUser.firstName).toBe('Test');
       expect(stateWithUser.user).toBe(originalUser);
-      expect(stateWithUser.user!.firstName).toBe('Test');
+      expect(stateWithUser.user?.firstName).toBe('Test');
 
       // Result should have new user object
       expect(result.user).not.toBe(originalUser);
-      expect(result.user!.firstName).toBe('Updated');
+      expect(result.user?.firstName).toBe('Updated');
     });
   });
 
@@ -647,7 +647,7 @@ describe('authReducer', () => {
     it('should handle empty string error message', () => {
       const action: AuthAction = {
         type: 'AUTH_FAILURE',
-        payload: { error: '' },
+        payload: {error: ''},
       };
 
       const result = authReducer(initialAuthState, action);
@@ -660,23 +660,23 @@ describe('authReducer', () => {
       let state = initialAuthState;
 
       // Start loading
-      state = authReducer(state, { type: 'AUTH_LOADING' });
+      state = authReducer(state, {type: 'AUTH_LOADING'});
       expect(state.isLoading).toBe(true);
 
       // Fail authentication
       state = authReducer(state, {
         type: 'AUTH_FAILURE',
-        payload: { error: 'Failed' },
+        payload: {error: 'Failed'},
       });
       expect(state.isLoading).toBe(false);
       expect(state.error).toBe('Failed');
 
       // Clear error
-      state = authReducer(state, { type: 'AUTH_CLEAR_ERROR' });
+      state = authReducer(state, {type: 'AUTH_CLEAR_ERROR'});
       expect(state.error).toBeNull();
 
       // Start loading again
-      state = authReducer(state, { type: 'AUTH_LOADING' });
+      state = authReducer(state, {type: 'AUTH_LOADING'});
       expect(state.isLoading).toBe(true);
 
       // Succeed authentication

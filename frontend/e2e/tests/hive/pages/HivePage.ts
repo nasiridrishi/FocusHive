@@ -3,8 +3,8 @@
  * Centralizes hive-related page interactions for consistent testing
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TestHive, TIMER_CONFIGURATIONS } from '../hive-fixtures';
+import {expect, Locator, Page} from '@playwright/test';
+import {TIMER_CONFIGURATIONS} from '../hive-fixtures';
 
 export class HivePage {
   readonly page: Page;
@@ -128,7 +128,7 @@ export class HivePage {
    */
   async joinHive(approvalMessage?: string): Promise<void> {
     await this.joinButton.click();
-    
+
     // Handle approval modal if required
     const approvalModal = this.page.locator('[data-testid="join-approval-modal"]');
     if (await approvalModal.isVisible()) {
@@ -148,7 +148,7 @@ export class HivePage {
   async leaveHive(): Promise<void> {
     await this.menuButton.click();
     await this.leaveButton.click();
-    
+
     // Confirm leave action
     await this.page.click('[data-testid="confirm-leave-hive"]');
     await expect(this.page.locator('[data-testid="hive-left-message"]')).toBeVisible();
@@ -161,10 +161,10 @@ export class HivePage {
     if (config) {
       await this.configureTimer(config);
     }
-    
+
     await this.startTimerButton.click();
     await expect(this.activeTimer).toBeVisible();
-    
+
     // Extract session ID
     const sessionId = await this.activeTimer.getAttribute('data-session-id') || `session_${Date.now()}`;
     return sessionId;
@@ -175,10 +175,10 @@ export class HivePage {
    */
   async configureTimer(config: keyof typeof TIMER_CONFIGURATIONS): Promise<void> {
     const timerConfig = TIMER_CONFIGURATIONS[config];
-    
+
     await this.timerSettingsButton.click();
     await this.page.click(`[data-testid="timer-type-${timerConfig.type}"]`);
-    
+
     if (timerConfig.type === 'pomodoro') {
       await this.page.fill('[data-testid="work-duration-input"]', timerConfig.workDuration.toString());
       await this.page.fill('[data-testid="short-break-input"]', timerConfig.shortBreakDuration.toString());
@@ -186,7 +186,7 @@ export class HivePage {
     } else if (timerConfig.type === 'continuous') {
       await this.page.fill('[data-testid="timer-duration-input"]', timerConfig.duration.toString());
     }
-    
+
     await this.page.click('[data-testid="save-timer-settings"]');
   }
 
@@ -239,7 +239,7 @@ export class HivePage {
   async updatePresenceStatus(status: 'active' | 'away' | 'break' | 'offline'): Promise<void> {
     await this.userPresenceDropdown.click();
     await this.page.click(`[data-testid="presence-status-${status}"]`);
-    
+
     // Verify status update
     await expect(this.page.locator(`[data-testid="current-status-${status}"]`)).toBeVisible();
   }
@@ -259,7 +259,7 @@ export class HivePage {
       const username = await element.locator('[data-testid="member-username"]').textContent();
       const status = await element.locator('[data-testid="member-status"]').textContent();
       const isActive = await element.locator('[data-testid="member-active-indicator"]').isVisible();
-      
+
       members.push({
         username: username || '',
         status: status || '',
@@ -276,10 +276,10 @@ export class HivePage {
   async sendChatMessage(message: string): Promise<void> {
     await this.messageInput.fill(message);
     await this.sendButton.click();
-    
+
     // Verify message appears in chat
     await expect(
-      this.messagesList.locator(`[data-testid="message"]:has-text("${message}")`)
+        this.messagesList.locator(`[data-testid="message"]:has-text("${message}")`)
     ).toBeVisible();
   }
 
@@ -301,12 +301,12 @@ export class HivePage {
     currentStreak: number;
   }> {
     await this.openAnalytics();
-    
+
     const totalFocusTime = await this.page.locator('[data-testid="total-focus-time"]').textContent();
     const completedSessions = await this.page.locator('[data-testid="completed-sessions"]').textContent();
     const averageSessionLength = await this.page.locator('[data-testid="average-session-length"]').textContent();
     const currentStreak = await this.page.locator('[data-testid="current-streak"]').textContent();
-    
+
     return {
       totalFocusTime: parseInt(totalFocusTime?.replace(/\D/g, '') || '0'),
       completedSessions: parseInt(completedSessions?.replace(/\D/g, '') || '0'),
@@ -322,12 +322,12 @@ export class HivePage {
     await this.openAnalytics();
     await this.page.click('[data-testid="export-menu-button"]');
     await this.page.click(`[data-testid="export-${format}"]`);
-    
+
     // Wait for download
     const downloadPromise = this.page.waitForEvent('download');
     await this.page.click('[data-testid="confirm-export"]');
     const download = await downloadPromise;
-    
+
     expect(download.suggestedFilename()).toContain(format);
   }
 
@@ -337,9 +337,9 @@ export class HivePage {
   async waitForPresenceUpdate(userId: number, expectedStatus: string, timeoutMs: number = 5000): Promise<boolean> {
     const memberElement = this.page.locator(`[data-testid="member-${userId}"]`);
     const statusElement = memberElement.locator('[data-testid="member-status"]');
-    
+
     try {
-      await expect(statusElement).toHaveText(expectedStatus, { timeout: timeoutMs });
+      await expect(statusElement).toHaveText(expectedStatus, {timeout: timeoutMs});
       return true;
     } catch {
       return false;
@@ -352,17 +352,17 @@ export class HivePage {
   async waitForTimerSync(expectedTime: string, toleranceSeconds: number = 2): Promise<boolean> {
     const [expectedMinutes, expectedSeconds] = expectedTime.split(':').map(Number);
     const expectedTotalSeconds = expectedMinutes * 60 + expectedSeconds;
-    
+
     try {
       await expect(async () => {
         const currentTime = await this.timerDisplay.textContent() || '00:00';
         const [currentMinutes, currentSecs] = currentTime.split(':').map(Number);
         const currentTotalSeconds = currentMinutes * 60 + currentSecs;
-        
+
         const difference = Math.abs(currentTotalSeconds - expectedTotalSeconds);
         expect(difference).toBeLessThanOrEqual(toleranceSeconds);
-      }).toPass({ timeout: 5000 });
-      
+      }).toPass({timeout: 5000});
+
       return true;
     } catch {
       return false;
@@ -374,15 +374,15 @@ export class HivePage {
    */
   async inviteMembers(emails: string[]): Promise<void> {
     await this.inviteButton.click();
-    
+
     const inviteModal = this.page.locator('[data-testid="invite-modal"]');
     await expect(inviteModal).toBeVisible();
-    
+
     for (const email of emails) {
       await this.page.fill('[data-testid="invite-email-input"]', email);
       await this.page.click('[data-testid="add-invite-email"]');
     }
-    
+
     await this.page.click('[data-testid="send-invitations"]');
     await expect(this.page.locator('[data-testid="invitations-sent"]')).toBeVisible();
   }
@@ -401,7 +401,7 @@ export class HivePage {
     if (!await this.isOwner()) {
       throw new Error('Only hive owners can access settings');
     }
-    
+
     await this.settingsButton.click();
     await expect(this.page.locator('[data-testid="hive-settings-modal"]')).toBeVisible();
   }

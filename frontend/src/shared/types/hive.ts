@@ -1,5 +1,5 @@
 // Hive related types
-import { User } from './auth'
+import {User} from './auth'
 
 export interface Hive {
   id: string

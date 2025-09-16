@@ -22,6 +22,7 @@ export interface BeforeInstallPromptEvent extends Event {
     outcome: 'accepted' | 'dismissed';
     platform: string;
   }>;
+
   prompt(): Promise<void>;
 }
 
@@ -83,20 +84,25 @@ export interface PushEventData {
 // Workbox Window types
 export interface WorkboxWindow {
   register(): Promise<ServiceWorkerRegistration>;
+
   update(): Promise<ServiceWorkerRegistration>;
+
   addEventListener(type: string, listener: EventListener): void;
+
   removeEventListener(type: string, listener: EventListener): void;
+
   getSW(): Promise<ServiceWorker>;
+
   messageSW(data: unknown): Promise<unknown>;
 }
 
 // Cache Strategy Types
-export type CacheStrategy = 
-  | 'CacheFirst'
-  | 'CacheOnly' 
-  | 'NetworkFirst'
-  | 'NetworkOnly'
-  | 'StaleWhileRevalidate';
+export type CacheStrategy =
+    | 'CacheFirst'
+    | 'CacheOnly'
+    | 'NetworkFirst'
+    | 'NetworkOnly'
+    | 'StaleWhileRevalidate';
 
 // Runtime Caching Rule
 export interface RuntimeCacheRule {

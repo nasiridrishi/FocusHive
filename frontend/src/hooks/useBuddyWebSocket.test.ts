@@ -1,35 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useBuddyWebSocket } from './useWebSocket';
-import { useWebSocket } from './useWebSocket';
-import type { WebSocketMessage, PresenceUpdate } from '../services/websocket/WebSocketService';
-import { PresenceStatus } from '../services/websocket/WebSocketService';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {act, renderHook, waitFor} from '@testing-library/react';
+import {useBuddyWebSocket, useWebSocket} from './useWebSocket';
+import type {PresenceUpdate, WebSocketMessage} from '../services/websocket/WebSocketService';
+import {PresenceStatus} from '../services/websocket/WebSocketService';
 
 // Mock the base useWebSocket hook
 vi.mock('./useWebSocket', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal() as Record<string, unknown>;
   return {
     ...actual,
     useWebSocket: vi.fn()
   };
 });
 
-// Define types for buddy system
-interface BuddyCheckin {
-  id: string;
-  message: string;
-  mood: 'great' | 'good' | 'okay' | 'struggling';
-  completedTasks: number;
-  timestamp: string;
-}
-
-interface BuddyGoal {
-  id: string;
-  title: string;
-  description: string;
-  targetDate: string;
-  completed: boolean;
-}
+// Import buddy types instead of redefining
+import type {BuddyCheckin, BuddyGoal} from '../features/buddy/types/index';
 
 describe('useBuddyWebSocket', () => {
   const mockUseWebSocket = vi.mocked(useWebSocket);
@@ -68,7 +53,7 @@ describe('useBuddyWebSocket', () => {
     notifications: [],
     clearNotification: vi.fn(),
     clearAllNotifications: vi.fn(),
-    service: mockWebSocketService
+    service: mockWebSocketService as unknown as typeof import('../services/websocket/WebSocketService').default
   };
 
   let capturedMessageHandler: ((message: WebSocketMessage) => void) | undefined;
@@ -76,26 +61,26 @@ describe('useBuddyWebSocket', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    mockUseWebSocket.mockImplementation((options) => {
+
+    mockUseWebSocket.mockImplementation((_options) => {
       // Capture the message and presence handlers
-      capturedMessageHandler = options?.onMessage;
-      capturedPresenceHandler = options?.onPresenceUpdate;
-      
+      capturedMessageHandler = _options?.onMessage;
+      capturedPresenceHandler = _options?.onPresenceUpdate;
+
       return mockWebSocketReturn;
     });
   });
 
   it('should initialize with default state', () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     expect(result.current.buddyMessages).toEqual([]);
     expect(result.current.buddyPresence).toBeNull();
-    
+
     // Should have all base WebSocket properties
     expect(result.current.isConnected).toBe(false);
     expect(result.current.connectionState).toBe('DISCONNECTED');
-    
+
     // Should have buddy-specific methods
     expect(typeof result.current.sendBuddyRequest).toBe('function');
     expect(typeof result.current.acceptBuddyRequest).toBe('function');
@@ -106,14 +91,14 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should filter buddy messages from general messages', async () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     // Simulate buddy message
     const buddyMessage: WebSocketMessage = {
       id: 'msg-1',
       type: 'BUDDY_REQUEST' as WebSocketMessage['type'],
       event: 'buddy_request',
-      payload: { fromUserId: 123, message: 'Be my buddy!' },
+      payload: {fromUserId: 123, message: 'Be my buddy!'},
       timestamp: new Date().toISOString()
     };
 
@@ -131,7 +116,7 @@ describe('useBuddyWebSocket', () => {
       id: 'msg-2',
       type: 'NOTIFICATION' as WebSocketMessage['type'],
       event: 'notification',
-      payload: { message: 'General notification' },
+      payload: {message: 'General notification'},
       timestamp: new Date().toISOString()
     };
 
@@ -146,7 +131,7 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should handle presence updates for buddy', async () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     const presenceUpdate: PresenceUpdate = {
       userId: 456,
@@ -166,34 +151,34 @@ describe('useBuddyWebSocket', () => {
 
   it('should subscribe to buddy updates when connected with relationshipId', async () => {
     const relationshipId = 789;
-    
+
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => {
-      capturedMessageHandler = options?.onMessage;
-      capturedPresenceHandler = options?.onPresenceUpdate;
-      
+    mockUseWebSocket.mockImplementation((_options) => {
+      capturedMessageHandler = _options?.onMessage;
+      capturedPresenceHandler = _options?.onPresenceUpdate;
+
       return {
         ...mockWebSocketReturn,
         isConnected: true
       };
     });
 
-    const { result } = renderHook(() => useBuddyWebSocket(relationshipId));
+    const {result} = renderHook(() => useBuddyWebSocket(relationshipId));
 
     await waitFor(() => {
       expect(mockWebSocketService.subscribeToBuddyUpdates).toHaveBeenCalledWith(relationshipId);
     });
 
     // Verify unsubscribe on unmount
-    const { unmount } = renderHook(() => useBuddyWebSocket(relationshipId));
+    const {unmount} = renderHook(() => useBuddyWebSocket(relationshipId));
     unmount();
-    
+
     expect(result.current.unsubscribe).toHaveBeenCalledWith('buddy-sub-id');
   });
 
   it('should not subscribe when not connected', () => {
     const relationshipId = 789;
-    
+
     renderHook(() => useBuddyWebSocket(relationshipId));
 
     expect(mockWebSocketService.subscribeToBuddyUpdates).not.toHaveBeenCalled();
@@ -201,7 +186,7 @@ describe('useBuddyWebSocket', () => {
 
   it('should not subscribe when no relationshipId provided', async () => {
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
@@ -214,7 +199,7 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should handle buddy request actions', () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     // Test sending buddy request
     act(() => {
@@ -232,14 +217,13 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should handle buddy checkin', () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     const checkin: BuddyCheckin = {
-      id: 'checkin-1',
+      relationshipId: 789,
       message: 'Making good progress!',
-      mood: 'good',
-      completedTasks: 3,
-      timestamp: new Date().toISOString()
+      progressRating: 3,
+      moodRating: 4
     };
 
     act(() => {
@@ -250,14 +234,14 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should handle buddy goal updates', () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     const goal: BuddyGoal = {
-      id: 'goal-1',
+      relationshipId: 789,
       title: 'Complete project',
       description: 'Finish the final project for course',
-      targetDate: '2024-12-31',
-      completed: false
+      status: 'IN_PROGRESS',
+      dueDate: '2024-12-31'
     };
 
     act(() => {
@@ -268,7 +252,7 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should handle buddy session management', () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     const sessionId = 101;
 
@@ -288,28 +272,28 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should accumulate multiple buddy messages', async () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     const messages = [
       {
         id: 'msg-1',
         type: 'BUDDY_REQUEST' as WebSocketMessage['type'],
         event: 'buddy_request',
-        payload: { fromUserId: 123, message: 'First message' },
+        payload: {fromUserId: 123, message: 'First message'},
         timestamp: new Date().toISOString()
       },
       {
         id: 'msg-2',
         type: 'BUDDY_CHECKIN' as WebSocketMessage['type'],
         event: 'buddy_checkin',
-        payload: { mood: 'good', tasks: 2 },
+        payload: {mood: 'good', tasks: 2},
         timestamp: new Date().toISOString()
       },
       {
         id: 'msg-3',
         type: 'BUDDY_SESSION_START' as WebSocketMessage['type'],
         event: 'buddy_session_start',
-        payload: { sessionId: 456 },
+        payload: {sessionId: 456},
         timestamp: new Date().toISOString()
       }
     ];
@@ -328,20 +312,20 @@ describe('useBuddyWebSocket', () => {
 
   it('should handle subscription errors gracefully', () => {
     const relationshipId = 789;
-    
+
     // Mock service to return null (error case)
     mockWebSocketService.subscribeToBuddyUpdates.mockReturnValueOnce(null);
-    
+
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
 
-    const { unmount } = renderHook(() => useBuddyWebSocket(relationshipId));
+    const {unmount} = renderHook(() => useBuddyWebSocket(relationshipId));
 
     expect(mockWebSocketService.subscribeToBuddyUpdates).toHaveBeenCalledWith(relationshipId);
-    
+
     // Should not attempt to unsubscribe with null subscription
     unmount();
     expect(mockWebSocketReturn.unsubscribe).not.toHaveBeenCalled();
@@ -349,14 +333,14 @@ describe('useBuddyWebSocket', () => {
 
   it('should resubscribe when relationshipId changes', async () => {
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
 
-    const { rerender } = renderHook(
-      ({ relationshipId }: { relationshipId?: number }) => useBuddyWebSocket(relationshipId),
-      { initialProps: { relationshipId: 123 } }
+    const {rerender} = renderHook(
+        ({relationshipId}: { relationshipId?: number }) => useBuddyWebSocket(relationshipId),
+        {initialProps: {relationshipId: 123}}
     );
 
     await waitFor(() => {
@@ -364,7 +348,7 @@ describe('useBuddyWebSocket', () => {
     });
 
     // Change relationship ID
-    rerender({ relationshipId: 456 });
+    rerender({relationshipId: 456});
 
     await waitFor(() => {
       expect(mockWebSocketReturn.unsubscribe).toHaveBeenCalledWith('buddy-sub-id');
@@ -376,12 +360,12 @@ describe('useBuddyWebSocket', () => {
     const relationshipId = 789;
     let isConnected = false;
 
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected
     }));
 
-    const { rerender } = renderHook(() => useBuddyWebSocket(relationshipId));
+    const {rerender} = renderHook(() => useBuddyWebSocket(relationshipId));
 
     // Initially not connected - should not subscribe
     expect(mockWebSocketService.subscribeToBuddyUpdates).not.toHaveBeenCalled();
@@ -396,7 +380,7 @@ describe('useBuddyWebSocket', () => {
   });
 
   it('should preserve all base useWebSocket functionality', () => {
-    const { result } = renderHook(() => useBuddyWebSocket());
+    const {result} = renderHook(() => useBuddyWebSocket());
 
     // Check that all base properties are available
     expect(result.current.isConnected).toBe(mockWebSocketReturn.isConnected);

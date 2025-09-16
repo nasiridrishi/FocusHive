@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import {
-  Box,
-  Typography,
-  Alert,
-  Chip,
-  Stack,
-} from '@mui/material'
-import {
-  Explore as ExploreIcon,
-} from '@mui/icons-material'
-import { HiveList } from '../components'
-import { Hive, HiveMember } from '@shared/types'
+import React, {useEffect, useState} from 'react'
+import {Alert, Box, Chip, Stack, Typography,} from '@mui/material'
+import {Explore as ExploreIcon,} from '@mui/icons-material'
+import {HiveList} from '../components'
+import {Hive, HiveMember} from '@shared/types'
+import { useToast } from '../../../hooks/useToast'
 
 // Mock data for public hives
 const mockPublicHives: Hive[] = [
@@ -197,6 +190,7 @@ const mockPublicHives: Hive[] = [
 ]
 
 export const DiscoverPage: React.FC = () => {
+  const toast = useToast()
   const [hives, setHives] = useState<Hive[]>([])
   const [members, setMembers] = useState<Record<string, HiveMember[]>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -237,23 +231,23 @@ export const DiscoverPage: React.FC = () => {
   const handleJoinHive = async (hiveId: string, message?: string) => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     // Show success message or update UI
-    alert(`Successfully ${message ? 'requested to join' : 'joined'} hive!`)
+    toast.success(`Successfully ${message ? 'requested to join' : 'joined'} hive!`)
   }
 
-  const handleEnterHive = (hiveId: string) => {
+  const handleEnterHive = (hiveId: string): void => {
     // Navigate to hive page
     window.location.href = `/hive/${hiveId}`
   }
 
-  const handleShareHive = (hiveId: string) => {
+  const handleShareHive = (hiveId: string): void => {
     // Open share dialog or copy link
     navigator.clipboard.writeText(`${window.location.origin}/hive/${hiveId}`)
-    alert('Hive link copied to clipboard!')
+    toast.success('Hive link copied to clipboard!')
   }
 
-  const handleRefresh = () => {
+  const handleRefresh = (): void => {
     setIsLoading(true)
     setTimeout(() => {
       setHives(mockPublicHives)
@@ -262,65 +256,66 @@ export const DiscoverPage: React.FC = () => {
   }
 
   return (
-    <Box>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <ExploreIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-          <Typography variant="h4" component="h1" fontWeight={600}>
-            Discover Hives
+      <Box>
+        {/* Header */}
+        <Box sx={{mb: 4}}>
+          <Box sx={{display: 'flex', alignItems: 'center', gap: 2, mb: 2}}>
+            <ExploreIcon sx={{fontSize: 40, color: 'primary.main'}}/>
+            <Typography variant="h4" component="h1" fontWeight={600}>
+              Discover Hives
+            </Typography>
+          </Box>
+          <Typography variant="body1" color="text.secondary" sx={{mb: 3}}>
+            Explore public hives and find communities that match your interests.
+            Join fellow focused individuals and boost your productivity together.
           </Typography>
-        </Box>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Explore public hives and find communities that match your interests. 
-          Join fellow focused individuals and boost your productivity together.
-        </Typography>
 
-        {/* Featured Categories */}
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            <strong>New to FocusHive?</strong> Try joining a popular hive to get started. 
-            Look for hives with active members and topics that interest you.
-          </Typography>
-        </Alert>
+          {/* Featured Categories */}
+          <Alert severity="info" sx={{mb: 3}}>
+            <Typography variant="body2">
+              <strong>New to FocusHive?</strong> Try joining a popular hive to get started.
+              Look for hives with active members and topics that interest you.
+            </Typography>
+          </Alert>
 
-        <Box>
-          <Typography variant="h6" gutterBottom>
-            Popular Categories
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-            {[
-              'Coding', 'Writing', 'Study', 'Language Learning', 
-              'Art', 'Math', 'Reading', 'Research', 'Creative'
-            ].map((category) => (
-              <Chip
-                key={category}
-                label={category}
-                variant="outlined"
-                color="primary"
-                onClick={() => {}}
-                sx={{ cursor: 'pointer' }}
-              />
-            ))}
-          </Stack>
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Popular Categories
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{flexWrap: 'wrap', gap: 1}}>
+              {[
+                'Coding', 'Writing', 'Study', 'Language Learning',
+                'Art', 'Math', 'Reading', 'Research', 'Creative'
+              ].map((category) => (
+                  <Chip
+                      key={category}
+                      label={category}
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => {
+                      }}
+                      sx={{cursor: 'pointer'}}
+                  />
+              ))}
+            </Stack>
+          </Box>
         </Box>
+
+        {/* Hives List */}
+        <HiveList
+            hives={hives}
+            members={members}
+            currentUserId={currentUserId}
+            isLoading={isLoading}
+            onJoin={handleJoinHive}
+            onEnter={handleEnterHive}
+            onShare={handleShareHive}
+            onRefresh={handleRefresh}
+            title="Public Hives"
+            showCreateButton={false}
+            showFilters={true}
+        />
       </Box>
-
-      {/* Hives List */}
-      <HiveList
-        hives={hives}
-        members={members}
-        currentUserId={currentUserId}
-        isLoading={isLoading}
-        onJoin={handleJoinHive}
-        onEnter={handleEnterHive}
-        onShare={handleShareHive}
-        onRefresh={handleRefresh}
-        title="Public Hives"
-        showCreateButton={false}
-        showFilters={true}
-      />
-    </Box>
   )
 }
 

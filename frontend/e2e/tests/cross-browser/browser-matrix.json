@@ -3,7 +3,7 @@
     "chrome": {
       "versions": [
         "latest",
-        "latest-1", 
+        "latest-1",
         "latest-2"
       ],
       "channels": [
@@ -12,7 +12,11 @@
         "chrome-dev",
         "chrome-canary"
       ],
-      "platforms": ["desktop", "mobile", "tablet"],
+      "platforms": [
+        "desktop",
+        "mobile",
+        "tablet"
+      ],
       "features": {
         "webgl": true,
         "webgl2": true,
@@ -43,7 +47,9 @@
         "firefox-beta",
         "firefox-developer-edition"
       ],
-      "platforms": ["desktop"],
+      "platforms": [
+        "desktop"
+      ],
       "features": {
         "webgl": true,
         "webgl2": true,
@@ -68,7 +74,10 @@
         "latest",
         "latest-1"
       ],
-      "platforms": ["desktop", "mobile"],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "features": {
         "webgl": true,
         "webgl2": true,
@@ -99,7 +108,9 @@
         "msedge-beta",
         "msedge-dev"
       ],
-      "platforms": ["desktop"],
+      "platforms": [
+        "desktop"
+      ],
       "features": {
         "webgl": true,
         "webgl2": true,
@@ -122,43 +133,105 @@
   },
   "testMatrix": {
     "core-functionality": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "priority": "critical"
     },
     "javascript-features": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop"
+      ],
       "priority": "high"
     },
     "css-features": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "priority": "high"
     },
     "websocket-realtime": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "priority": "critical"
     },
     "media-handling": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "priority": "medium"
     },
     "pwa-features": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "priority": "high"
     },
     "form-input": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "priority": "high"
     },
     "browser-specific": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop"
+      ],
       "priority": "low"
     }
   },
@@ -170,9 +243,18 @@
       "edge": "90"
     },
     "polyfills-required": {
-      "safari": ["webp", "avif"],
-      "firefox": ["avif"],
-      "ie11": ["fetch", "promises", "customelements"]
+      "safari": [
+        "webp",
+        "avif"
+      ],
+      "firefox": [
+        "avif"
+      ],
+      "ie11": [
+        "fetch",
+        "promises",
+        "customelements"
+      ]
     },
     "known-issues": {
       "safari": [
@@ -193,23 +275,46 @@
   },
   "test-environments": {
     "local": {
-      "browsers": ["chrome", "firefox", "edge"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "edge"
+      ],
       "headless": false,
       "workers": 3
     },
     "ci": {
-      "browsers": ["chrome", "firefox"],
+      "browsers": [
+        "chrome",
+        "firefox"
+      ],
       "headless": true,
       "workers": 1
     },
     "browserstack": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "real-devices": true
     },
     "saucelabs": {
-      "browsers": ["chrome", "firefox", "safari", "edge"],
-      "platforms": ["desktop", "mobile"],
+      "browsers": [
+        "chrome",
+        "firefox",
+        "safari",
+        "edge"
+      ],
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
       "real-devices": true
     }
   }

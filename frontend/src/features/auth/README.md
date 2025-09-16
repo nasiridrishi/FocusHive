@@ -1,6 +1,7 @@
 # FocusHive Authentication System
 
-A complete JWT-based authentication system for React TypeScript applications with security best practices, automatic token refresh, and comprehensive error handling.
+A complete JWT-based authentication system for React TypeScript applications with security best
+practices, automatic token refresh, and comprehensive error handling.
 
 ## 🚀 Features
 

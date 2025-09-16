@@ -3,11 +3,10 @@
  * Tests how content adapts and transforms for mobile screens
  */
 
-import { test, expect, Page, Locator } from '@playwright/test';
-import { VIEWPORT_BREAKPOINTS, MOBILE_DEVICES } from './mobile.config';
-import { MobileHelper } from '../../helpers/mobile.helper';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { TEST_URLS } from '../../helpers/test-data';
+import {expect, Locator, Page, test} from '@playwright/test';
+import {MobileHelper} from '../../helpers/mobile.helper';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {TEST_URLS} from '../../helpers/test-data';
 
 interface ContentAdaptation {
   name: string;
@@ -42,9 +41,9 @@ interface FormAdaptation {
 
 test.describe('Content Adaptation - Layout Transformations', () => {
   let authHelper: AuthHelper;
-  let mobileHelper: MobileHelper;
+  let _mobileHelper: MobileHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
     mobileHelper = new MobileHelper(page);
     await authHelper.loginWithTestUser();
@@ -154,7 +153,7 @@ test.describe('Content Adaptation - Layout Transformations', () => {
   ];
 
   contentAdaptations.forEach(adaptation => {
-    test(`should adapt ${adaptation.name} correctly across breakpoints`, async ({ page }) => {
+    test(`should adapt ${adaptation.name} correctly across breakpoints`, async ({page}) => {
       const urlMap: Record<string, string> = {
         'Hive Grid to Vertical Stack': TEST_URLS.HIVE_LIST,
         'Analytics Dashboard Cards': TEST_URLS.ANALYTICS,
@@ -167,16 +166,16 @@ test.describe('Content Adaptation - Layout Transformations', () => {
 
       // Test mobile adaptation
       await validateContentAdaptation(page, adaptation, 'mobile', 390);
-      
+
       // Test tablet adaptation
       await validateContentAdaptation(page, adaptation, 'tablet', 768);
-      
+
       // Test desktop adaptation
       await validateContentAdaptation(page, adaptation, 'desktop', 1024);
     });
   });
 
-  test('should handle content overflow gracefully', async ({ page }) => {
+  test('should handle content overflow gracefully', async ({page}) => {
     await page.goto(TEST_URLS.HIVE_LIST);
     await page.waitForLoadState('networkidle');
 
@@ -184,14 +183,18 @@ test.describe('Content Adaptation - Layout Transformations', () => {
 
     for (const width of viewports) {
       await test.step(`Content overflow handling at ${width}px`, async () => {
-        await page.setViewportSize({ width, height: 800 });
+        await page.setViewportSize({width, height: 800});
         await page.waitForTimeout(300);
 
         // Check for text overflow
         const textOverflows = await page.evaluate(() => {
           const textElements = document.querySelectorAll('p, span, div, h1, h2, h3, h4, h5, h6');
-          const overflows: Array<{element: string; scrollWidth: number; clientWidth: number}> = [];
-          
+          const overflows: Array<{
+            element: string;
+            scrollWidth: number;
+            clientWidth: number
+          }> = [];
+
           textElements.forEach((el, index) => {
             const element = el as HTMLElement;
             if (element.scrollWidth > element.clientWidth + 5) { // 5px tolerance
@@ -202,7 +205,7 @@ test.describe('Content Adaptation - Layout Transformations', () => {
               });
             }
           });
-          
+
           return overflows;
         });
 
@@ -218,14 +221,14 @@ test.describe('Content Adaptation - Layout Transformations', () => {
         const imageOverflows = await page.evaluate(() => {
           const images = document.querySelectorAll('img');
           let overflowCount = 0;
-          
+
           images.forEach(img => {
             const rect = img.getBoundingClientRect();
             if (rect.right > window.innerWidth + 10) { // 10px tolerance
               overflowCount++;
             }
           });
-          
+
           return overflowCount;
         });
 
@@ -234,12 +237,12 @@ test.describe('Content Adaptation - Layout Transformations', () => {
     }
   });
 
-  test('should optimize images for mobile viewing', async ({ page }) => {
+  test('should optimize images for mobile viewing', async ({page}) => {
     await page.goto(TEST_URLS.HIVE_LIST);
     await page.waitForLoadState('networkidle');
 
     await test.step('Mobile image optimization', async () => {
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize({width: 390, height: 844});
       await page.waitForTimeout(300);
 
       const imageOptimizations = await page.evaluate(() => {
@@ -256,10 +259,10 @@ test.describe('Content Adaptation - Layout Transformations', () => {
         images.forEach(img => {
           const rect = img.getBoundingClientRect();
           const computedStyle = window.getComputedStyle(img);
-          
+
           optimizations.push({
             src: img.src || 'no-src',
-            dimensions: { width: rect.width, height: rect.height },
+            dimensions: {width: rect.width, height: rect.height},
             aspectRatio: rect.width / rect.height,
             isResponsive: computedStyle.maxWidth === '100%' || img.hasAttribute('sizes'),
             hasLazyLoading: img.getAttribute('loading') === 'lazy',
@@ -311,8 +314,8 @@ test.describe('Content Adaptation - Table Responsiveness', () => {
   ];
 
   tableAdaptations.forEach(tableTest => {
-    test(`should adapt table ${tableTest.selector} to mobile`, async ({ page }) => {
-      let authHelper = new AuthHelper(page);
+    test(`should adapt table ${tableTest.selector} to mobile`, async ({page}) => {
+      const authHelper = new AuthHelper(page);
       await authHelper.loginWithTestUser();
 
       const urlMap: Record<string, string> = {
@@ -328,14 +331,14 @@ test.describe('Content Adaptation - Table Responsiveness', () => {
         const table = page.locator(tableTest.selector);
 
         // Test desktop view first
-        await page.setViewportSize({ width: 1024, height: 768 });
+        await page.setViewportSize({width: 1024, height: 768});
         await page.waitForTimeout(300);
 
         if (await table.isVisible()) {
-          const desktopColumns = await table.locator('th, [role="columnheader"]').count();
-          
+          const _desktopColumns = await table.locator('th, [role="columnheader"]').count();
+
           // Test mobile view
-          await page.setViewportSize({ width: 390, height: 844 });
+          await page.setViewportSize({width: 390, height: 844});
           await page.waitForTimeout(500); // Allow adaptation time
 
           await validateTableMobileAdaptation(page, table, tableTest);
@@ -344,13 +347,13 @@ test.describe('Content Adaptation - Table Responsiveness', () => {
     });
   });
 
-  test('should handle table overflow with horizontal scroll', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle table overflow with horizontal scroll', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.ANALYTICS);
     await page.waitForLoadState('networkidle');
 
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({width: 390, height: 844});
 
     await test.step('Horizontal scroll table handling', async () => {
       const tables = page.locator('table, [role="table"]');
@@ -358,7 +361,7 @@ test.describe('Content Adaptation - Table Responsiveness', () => {
 
       if (tableCount > 0) {
         const firstTable = tables.first();
-        
+
         // Check if table container allows horizontal scroll
         const tableContainer = firstTable.locator('xpath=..');
         const scrollCapable = await tableContainer.evaluate(el => {
@@ -385,7 +388,7 @@ test.describe('Content Adaptation - Table Responsiveness', () => {
             return style.display === 'block' || style.display === 'flex';
           });
 
-          const hasAdaptation = hasCardLayout || hasStackedLayout;
+          const _hasAdaptation = hasCardLayout || hasStackedLayout;
           console.log(`Table adaptation detected: cards=${hasCardLayout}, stacked=${hasStackedLayout}`);
         }
       }
@@ -416,9 +419,9 @@ test.describe('Content Adaptation - Form Optimization', () => {
   ];
 
   formAdaptations.forEach(formTest => {
-    test(`should optimize ${formTest.name} for mobile`, async ({ page }) => {
-      let authHelper = new AuthHelper(page);
-      
+    test(`should optimize ${formTest.name} for mobile`, async ({page}) => {
+      const authHelper = new AuthHelper(page);
+
       const urlMap: Record<string, string> = {
         'Login Form': TEST_URLS.LOGIN,
         'Profile Settings Form': TEST_URLS.PROFILE,
@@ -426,20 +429,20 @@ test.describe('Content Adaptation - Form Optimization', () => {
       };
 
       await page.goto(urlMap[formTest.name] || TEST_URLS.HOME);
-      
+
       // For login form, don't authenticate first
       if (formTest.name !== 'Login Form') {
         await authHelper.loginWithTestUser();
       }
-      
+
       await page.waitForLoadState('networkidle');
 
       await test.step(`Testing mobile form optimization for ${formTest.name}`, async () => {
-        await page.setViewportSize({ width: 390, height: 844 });
+        await page.setViewportSize({width: 390, height: 844});
         await page.waitForTimeout(300);
 
         const form = page.locator(formTest.selector);
-        
+
         if (await form.isVisible()) {
           await validateMobileFormOptimizations(page, form, formTest);
         } else {
@@ -448,7 +451,7 @@ test.describe('Content Adaptation - Form Optimization', () => {
           if (await createButton.isVisible()) {
             await createButton.click();
             await page.waitForTimeout(500);
-            
+
             const modalForm = page.locator(formTest.selector);
             if (await modalForm.isVisible()) {
               await validateMobileFormOptimizations(page, modalForm, formTest);
@@ -459,22 +462,22 @@ test.describe('Content Adaptation - Form Optimization', () => {
     });
   });
 
-  test('should handle virtual keyboard appropriately', async ({ page }) => {
+  test('should handle virtual keyboard appropriately', async ({page}) => {
     await page.goto(TEST_URLS.LOGIN);
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({width: 390, height: 844});
 
     await test.step('Virtual keyboard handling', async () => {
       const inputs = [
-        { selector: 'input[type="email"]', expectedKeyboard: 'email' },
-        { selector: 'input[type="password"]', expectedKeyboard: 'text' },
-        { selector: 'input[type="tel"]', expectedKeyboard: 'tel' },
-        { selector: 'input[type="number"]', expectedKeyboard: 'numeric' },
-        { selector: 'input[type="url"]', expectedKeyboard: 'url' }
+        {selector: 'input[type="email"]', expectedKeyboard: 'email'},
+        {selector: 'input[type="password"]', expectedKeyboard: 'text'},
+        {selector: 'input[type="tel"]', expectedKeyboard: 'tel'},
+        {selector: 'input[type="number"]', expectedKeyboard: 'numeric'},
+        {selector: 'input[type="url"]', expectedKeyboard: 'url'}
       ];
 
       for (const input of inputs) {
         const field = page.locator(input.selector);
-        
+
         if (await field.isVisible()) {
           // Check input attributes that affect mobile keyboards
           const inputAttributes = await field.evaluate(el => ({
@@ -506,21 +509,21 @@ test.describe('Content Adaptation - Form Optimization', () => {
 });
 
 test.describe('Content Adaptation - Typography Scaling', () => {
-  test('should scale typography appropriately for mobile reading', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should scale typography appropriately for mobile reading', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.HOME);
 
     const viewports = [
-      { width: 320, name: 'Small Mobile' },
-      { width: 390, name: 'Standard Mobile' },
-      { width: 414, name: 'Large Mobile' },
-      { width: 768, name: 'Tablet' }
+      {width: 320, name: 'Small Mobile'},
+      {width: 390, name: 'Standard Mobile'},
+      {width: 414, name: 'Large Mobile'},
+      {width: 768, name: 'Tablet'}
     ];
 
     for (const viewport of viewports) {
       await test.step(`Typography scaling at ${viewport.name}`, async () => {
-        await page.setViewportSize({ width: viewport.width, height: 800 });
+        await page.setViewportSize({width: viewport.width, height: 800});
         await page.waitForTimeout(300);
 
         const typographyMetrics = await page.evaluate(() => {
@@ -533,14 +536,18 @@ test.describe('Content Adaptation - Typography Scaling', () => {
             small: document.querySelector('small, .small')
           };
 
-          const metrics: Record<string, {fontSize: number; lineHeight: number; readable: boolean}> = {};
+          const metrics: Record<string, {
+            fontSize: number;
+            lineHeight: number;
+            readable: boolean
+          }> = {};
 
           Object.entries(elements).forEach(([tag, el]) => {
             if (el) {
               const style = window.getComputedStyle(el);
               const fontSize = parseFloat(style.fontSize);
               const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.2;
-              
+
               metrics[tag] = {
                 fontSize,
                 lineHeight,
@@ -573,23 +580,28 @@ test.describe('Content Adaptation - Typography Scaling', () => {
     }
   });
 
-  test('should maintain good line spacing for mobile reading', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should maintain good line spacing for mobile reading', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.HOME);
 
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({width: 390, height: 844});
 
     await test.step('Line spacing validation', async () => {
       const lineSpacingMetrics = await page.evaluate(() => {
         const textElements = document.querySelectorAll('p, div, span, li');
-        const metrics: Array<{tag: string; fontSize: number; lineHeight: number; ratio: number}> = [];
+        const metrics: Array<{
+          tag: string;
+          fontSize: number;
+          lineHeight: number;
+          ratio: number
+        }> = [];
 
         textElements.forEach((el, index) => {
           const style = window.getComputedStyle(el);
           const fontSize = parseFloat(style.fontSize);
           const lineHeight = parseFloat(style.lineHeight);
-          
+
           if (!isNaN(fontSize) && !isNaN(lineHeight) && fontSize > 10) {
             metrics.push({
               tag: `${el.tagName}:nth-child(${index + 1})`,
@@ -606,7 +618,7 @@ test.describe('Content Adaptation - Typography Scaling', () => {
       for (const metric of lineSpacingMetrics) {
         // Line height should be at least 1.2x font size for readability
         expect(metric.ratio).toBeGreaterThanOrEqual(1.2);
-        
+
         // But not too high (>2.0) which can hurt readability
         expect(metric.ratio).toBeLessThanOrEqual(2.0);
       }
@@ -619,12 +631,12 @@ test.describe('Content Adaptation - Typography Scaling', () => {
 // Helper Functions
 
 async function validateContentAdaptation(
-  page: Page,
-  adaptation: ContentAdaptation,
-  breakpoint: 'mobile' | 'tablet' | 'desktop',
-  width: number
+    page: Page,
+    adaptation: ContentAdaptation,
+    breakpoint: 'mobile' | 'tablet' | 'desktop',
+    width: number
 ): Promise<void> {
-  await page.setViewportSize({ width, height: 800 });
+  await page.setViewportSize({width, height: 800});
   await page.waitForTimeout(500); // Allow adaptation time
 
   const element = page.locator(adaptation.selector);
@@ -633,24 +645,24 @@ async function validateContentAdaptation(
   if (await element.isVisible()) {
     // Test layout adaptation
     await validateLayoutAdaptation(page, element, expectation.layout);
-    
+
     // Test text size
     await validateTextSize(page, element, expectation.textSize);
-    
+
     // Test image scaling
     await validateImageScaling(page, element, expectation.imageScaling);
-    
+
     // Test interaction pattern
     await validateInteractionPattern(page, element, expectation.interactionPattern);
-    
+
     console.log(`${adaptation.name} validated at ${breakpoint} (${width}px)`);
   }
 }
 
 async function validateLayoutAdaptation(
-  page: Page,
-  element: Locator,
-  expectedLayout: ContentExpectation['layout']
+    page: Page,
+    element: Locator,
+    expectedLayout: ContentExpectation['layout']
 ): Promise<void> {
   const layoutInfo = await element.evaluate(el => {
     const style = window.getComputedStyle(el);
@@ -662,40 +674,44 @@ async function validateLayoutAdaptation(
   });
 
   switch (expectedLayout) {
-    case 'stacked':
+    case 'stacked': {
       expect(['block', 'flex']).toContain(layoutInfo.display);
       if (layoutInfo.display === 'flex') {
         expect(layoutInfo.flexDirection).toBe('column');
       }
       break;
-      
-    case 'grid':
+    }
+
+    case 'grid': {
       expect(layoutInfo.display).toBe('grid');
       expect(layoutInfo.gridTemplateColumns).not.toBe('none');
       break;
-      
-    case 'carousel':
+    }
+
+    case 'carousel': {
       const isScrollable = await element.evaluate(el => {
         const style = window.getComputedStyle(el);
         return style.overflowX === 'auto' || style.overflowX === 'scroll';
       });
       expect(isScrollable).toBeTruthy();
       break;
-      
-    case 'hidden':
+    }
+
+    case 'hidden': {
       await expect(element).not.toBeVisible();
       break;
+    }
   }
 }
 
 async function validateTextSize(
-  page: Page,
-  element: Locator,
-  expectedSize: ContentExpectation['textSize']
+    page: Page,
+    element: Locator,
+    expectedSize: ContentExpectation['textSize']
 ): Promise<void> {
   const textElements = element.locator('p, span, div, h1, h2, h3, h4, h5, h6');
   const count = await textElements.count();
-  
+
   if (count > 0) {
     const fontSize = await textElements.first().evaluate(el => {
       return parseFloat(window.getComputedStyle(el).fontSize);
@@ -714,13 +730,13 @@ async function validateTextSize(
 }
 
 async function validateImageScaling(
-  page: Page,
-  element: Locator,
-  expectedScaling: ContentExpectation['imageScaling']
+    page: Page,
+    element: Locator,
+    expectedScaling: ContentExpectation['imageScaling']
 ): Promise<void> {
   const images = element.locator('img');
   const count = await images.count();
-  
+
   if (count > 0) {
     const imageInfo = await images.first().evaluate(el => {
       const rect = el.getBoundingClientRect();
@@ -733,59 +749,65 @@ async function validateImageScaling(
     });
 
     switch (expectedScaling) {
-      case 'responsive':
+      case 'responsive': {
         expect(['100%', '100vw']).toContain(imageInfo.maxWidth);
         break;
-        
-      case 'cropped':
+      }
+
+      case 'cropped': {
         expect(['cover', 'crop']).toContain(imageInfo.objectFit);
         break;
-        
-      case 'hidden':
+      }
+
+      case 'hidden': {
         await expect(images.first()).not.toBeVisible();
         break;
+      }
     }
   }
 }
 
 async function validateInteractionPattern(
-  page: Page,
-  element: Locator,
-  expectedPattern: ContentExpectation['interactionPattern']
+    page: Page,
+    element: Locator,
+    expectedPattern: ContentExpectation['interactionPattern']
 ): Promise<void> {
   switch (expectedPattern) {
-    case 'swipe':
+    case 'swipe': {
       const touchCapable = await element.evaluate(el => {
         return 'ontouchstart' in el || 'ontouchstart' in window;
       });
       expect(touchCapable).toBeTruthy();
       break;
-      
-    case 'tap':
+    }
+
+    case 'tap': {
       const clickable = await element.evaluate(el => {
-        return el.style.cursor === 'pointer' || 
-               el.getAttribute('role') === 'button' ||
-               el.tagName.toLowerCase() === 'button';
+        return el.style.cursor === 'pointer' ||
+            el.getAttribute('role') === 'button' ||
+            el.tagName.toLowerCase() === 'button';
       });
       // This might be too strict, as not all tappable elements have cursor pointer
       console.log(`Tap interaction available: ${clickable}`);
       break;
+    }
   }
 }
 
 async function validateTableMobileAdaptation(
-  page: Page,
-  table: Locator,
-  tableTest: TableAdaptation
+    page: Page,
+    table: Locator,
+    tableTest: TableAdaptation
 ): Promise<void> {
   switch (tableTest.mobilePattern) {
-    case 'cards':
+    case 'cards': {
       const cards = page.locator('.card, [data-card="true"]');
       const cardCount = await cards.count();
       expect(cardCount).toBeGreaterThan(0);
       break;
-      
-    case 'horizontal_scroll':
+    }
+
+    case 'horizontal_scroll': {
       const isScrollable = await table.evaluate(el => {
         const parent = el.parentElement;
         if (parent) {
@@ -796,8 +818,9 @@ async function validateTableMobileAdaptation(
       });
       expect(isScrollable).toBeTruthy();
       break;
-      
-    case 'stacked_rows':
+    }
+
+    case 'stacked_rows': {
       const hasStackedLayout = await table.evaluate(el => {
         const rows = el.querySelectorAll('tr');
         if (rows.length > 0) {
@@ -808,19 +831,21 @@ async function validateTableMobileAdaptation(
       });
       console.log(`Stacked row layout detected: ${hasStackedLayout}`);
       break;
-      
-    case 'hidden_columns':
+    }
+
+    case 'hidden_columns': {
       const visibleColumns = await table.locator('th:visible').count();
       const totalColumns = await table.locator('th').count();
       expect(visibleColumns).toBeLessThan(totalColumns);
       break;
+    }
   }
 }
 
 async function validateMobileFormOptimizations(
-  page: Page,
-  form: Locator,
-  formTest: FormAdaptation
+    page: Page,
+    form: Locator,
+    formTest: FormAdaptation
 ): Promise<void> {
   const inputs = form.locator('input, textarea, select');
   const inputCount = await inputs.count();
@@ -828,28 +853,31 @@ async function validateMobileFormOptimizations(
   if (inputCount > 0) {
     for (const optimization of formTest.mobileOptimizations) {
       switch (optimization) {
-        case 'large_inputs':
+        case 'large_inputs': {
           const inputHeight = await inputs.first().evaluate(el => {
             return el.getBoundingClientRect().height;
           });
           expect(inputHeight).toBeGreaterThanOrEqual(44); // iOS minimum touch target
           break;
-          
-        case 'appropriate_keyboards':
+        }
+
+        case 'appropriate_keyboards': {
           const emailInput = inputs.locator('[type="email"]');
           if (await emailInput.count() > 0) {
             const inputType = await emailInput.getAttribute('type');
             expect(inputType).toBe('email');
           }
           break;
-          
-        case 'clear_labels':
+        }
+
+        case 'clear_labels': {
           const labels = form.locator('label');
           const labelCount = await labels.count();
           expect(labelCount).toBeGreaterThan(0);
           break;
-          
-        case 'touch_friendly_buttons':
+        }
+
+        case 'touch_friendly_buttons': {
           const buttons = form.locator('button, input[type="submit"]');
           if (await buttons.count() > 0) {
             const buttonHeight = await buttons.first().evaluate(el => {
@@ -858,6 +886,7 @@ async function validateMobileFormOptimizations(
             expect(buttonHeight).toBeGreaterThanOrEqual(44);
           }
           break;
+        }
       }
     }
   }

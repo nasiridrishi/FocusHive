@@ -1,0 +1,85 @@
+-- Fix Check-in Schema Migration
+-- Updates buddy_checkins table to match entity requirements and MoodType enum values
+
+-- ==============================================================================
+-- ALTER BUDDY CHECK-INS TABLE
+-- Fix data types and constraints to match test expectations
+-- ==============================================================================
+
+-- Update mood constraint to match MoodType enum values
+ALTER TABLE buddy_checkins DROP CONSTRAINT IF EXISTS buddy_checkins_mood_check;
+ALTER TABLE buddy_checkins ADD CONSTRAINT chk_mood
+    CHECK (mood IN ('MOTIVATED', 'FOCUSED', 'STRESSED', 'TIRED', 'EXCITED', 'NEUTRAL', 'FRUSTRATED', 'ACCOMPLISHED'));
+
+-- Update checkin_type constraint to match CheckInType enum values
+ALTER TABLE buddy_checkins DROP CONSTRAINT IF EXISTS buddy_checkins_checkin_type_check;
+ALTER TABLE buddy_checkins ADD CONSTRAINT chk_checkin_type
+    CHECK (checkin_type IN ('DAILY', 'WEEKLY', 'MILESTONE', 'GOAL_UPDATE', 'ENCOURAGEMENT'));
+
+-- Make content nullable (can be empty for some check-ins)
+ALTER TABLE buddy_checkins ALTER COLUMN content DROP NOT NULL;
+
+-- Remove columns that aren't needed for the entity
+ALTER TABLE buddy_checkins DROP COLUMN IF EXISTS mood_rating;
+ALTER TABLE buddy_checkins DROP COLUMN IF EXISTS progress_rating;
+ALTER TABLE buddy_checkins DROP COLUMN IF EXISTS current_focus;
+ALTER TABLE buddy_checkins DROP COLUMN IF EXISTS challenges;
+ALTER TABLE buddy_checkins DROP COLUMN IF EXISTS wins;
+ALTER TABLE buddy_checkins DROP COLUMN IF EXISTS productivity_score;
+ALTER TABLE buddy_checkins DROP COLUMN IF EXISTS goals_progress;
+
+-- Update productivity_rating constraint (test expects 1-10)
+ALTER TABLE buddy_checkins DROP CONSTRAINT IF EXISTS buddy_checkins_productivity_rating_check;
+ALTER TABLE buddy_checkins ADD CONSTRAINT chk_productivity_rating
+    CHECK (productivity_rating >= 1 AND productivity_rating <= 10);
+
+-- Convert user_id to UUID for consistency with other tables
+ALTER TABLE buddy_checkins ALTER COLUMN user_id TYPE UUID USING user_id::uuid;
+
+-- ==============================================================================
+-- ALTER ACCOUNTABILITY SCORES TABLE
+-- Fix data types to match entity requirements
+-- ==============================================================================
+
+-- Convert user_id to UUID for consistency
+ALTER TABLE accountability_scores ALTER COLUMN user_id TYPE UUID USING user_id::uuid;
+
+-- Update score constraint to match entity (0.00-1.00 instead of 0.00-100.00)
+ALTER TABLE accountability_scores DROP CONSTRAINT IF EXISTS accountability_scores_score_check;
+ALTER TABLE accountability_scores ADD CONSTRAINT chk_score
+    CHECK (score >= 0 AND score <= 1);
+
+-- Update score precision to match entity (3,2)
+ALTER TABLE accountability_scores ALTER COLUMN score TYPE DECIMAL(3,2);
+
+-- Update response_rate precision to match entity (3,2)
+ALTER TABLE accountability_scores ALTER COLUMN response_rate TYPE DECIMAL(3,2);
+
+-- Remove columns not needed for the entity
+ALTER TABLE accountability_scores DROP COLUMN IF EXISTS checkins_expected;
+ALTER TABLE accountability_scores DROP COLUMN IF EXISTS goals_total;
+ALTER TABLE accountability_scores DROP COLUMN IF EXISTS longest_streak;
+ALTER TABLE accountability_scores DROP COLUMN IF EXISTS last_checkin_at;
+
+-- Add unique constraint for user_id + partnership_id combination
+ALTER TABLE accountability_scores DROP CONSTRAINT IF EXISTS uk_user_partnership;
+ALTER TABLE accountability_scores ADD CONSTRAINT uk_user_partnership
+    UNIQUE (user_id, partnership_id);
+
+-- ==============================================================================
+-- CREATE INDEXES FOR PERFORMANCE
+-- ==============================================================================
+
+CREATE INDEX IF NOT EXISTS idx_buddy_checkins_partnership_id ON buddy_checkins(partnership_id);
+CREATE INDEX IF NOT EXISTS idx_buddy_checkins_user_id ON buddy_checkins(user_id);
+CREATE INDEX IF NOT EXISTS idx_buddy_checkins_created_at ON buddy_checkins(created_at);
+CREATE INDEX IF NOT EXISTS idx_buddy_checkins_partnership_user ON buddy_checkins(partnership_id, user_id);
+
+CREATE INDEX IF NOT EXISTS idx_accountability_scores_user_partnership ON accountability_scores(user_id, partnership_id);
+CREATE INDEX IF NOT EXISTS idx_accountability_scores_partnership ON accountability_scores(partnership_id);
+
+-- ==============================================================================
+-- COMMENTS
+-- ==============================================================================
+COMMENT ON TABLE buddy_checkins IS 'Check-ins between buddy partners with mood and productivity tracking';
+COMMENT ON TABLE accountability_scores IS 'Accountability metrics tracking user engagement and success rates';

@@ -1,9 +1,9 @@
 import React from 'react';
-import { render, RenderOptions, RenderResult, screen } from '@testing-library/react';
-import type { User } from '@shared/types/auth';
+import {render, RenderOptions, RenderResult, screen, act} from '@testing-library/react';
+import type {User} from '@shared/types/auth';
 
 // Import components from separate file to avoid Fast Refresh warnings
-import { AllTheProviders } from './testProviders';
+import {AllTheProviders} from './testProviders';
 
 // Custom render options
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
@@ -21,8 +21,8 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 
 // Custom render function
 export function renderWithProviders(
-  ui: React.ReactElement,
-  options: CustomRenderOptions = {}
+    ui: React.ReactElement,
+    options: CustomRenderOptions = {}
 ): RenderResult {
   const {
     initialEntries,
@@ -36,60 +36,83 @@ export function renderWithProviders(
     ...renderOptions
   } = options;
 
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <AllTheProviders
-      initialEntries={initialEntries}
-      user={user}
-      withRouter={withRouter}
-      withAuth={withAuth}
-      withTheme={withTheme}
-      withI18n={withI18n}
-      withQueryClient={withQueryClient}
-      withDatePickers={withDatePickers}
-    >
-      {children}
-    </AllTheProviders>
+  const Wrapper = ({children}: { children: React.ReactNode }): React.ReactElement => (
+      <AllTheProviders
+          initialEntries={initialEntries}
+          user={user}
+          withRouter={withRouter}
+          withAuth={withAuth}
+          withTheme={withTheme}
+          withI18n={withI18n}
+          withQueryClient={withQueryClient}
+          withDatePickers={withDatePickers}
+      >
+        {children}
+      </AllTheProviders>
   );
 
-  return render(ui, { wrapper: Wrapper, ...renderOptions });
+  return render(ui, {wrapper: Wrapper, ...renderOptions});
+}
+
+// Act-wrapped render for handling async state updates
+export function renderWithAct(
+    ui: React.ReactElement,
+    options: CustomRenderOptions = {}
+): Promise<RenderResult> {
+  return act(async () => {
+    return renderWithProviders(ui, options);
+  });
+}
+
+// Act-wrapped render for auth components specifically
+export function renderAuthWithAct(
+    ui: React.ReactElement,
+    options: CustomRenderOptions = {}
+): Promise<RenderResult> {
+  return act(async () => {
+    return renderWithProviders(ui, {
+      ...options,
+      withAuth: options.withAuth ?? false  // Default to false for manual auth provider
+    });
+  });
 }
 
 // Custom render for components that only need specific providers
-export const renderWithAuth = (ui: React.ReactElement, user?: User | null) => {
-  return renderWithProviders(ui, { 
-    user, 
-    withRouter: false, 
-    withQueryClient: false 
+export const renderWithAuth = (ui: React.ReactElement, {user}: {user?: User | null} = {}): RenderResult => {
+  return renderWithProviders(ui, {
+    user,
+    withRouter: false,
+    withQueryClient: false
   });
 };
 
-export const renderWithRouter = (ui: React.ReactElement, initialEntries?: string[]) => {
-  return renderWithProviders(ui, { 
-    initialEntries, 
-    withAuth: false, 
-    withQueryClient: false 
+export const renderWithRouter = (ui: React.ReactElement, {initialEntries}: {initialEntries?: string[]} = {}): RenderResult => {
+  return renderWithProviders(ui, {
+    initialEntries,
+    withAuth: false,
+    withQueryClient: false
   });
 };
 
-export const renderWithTheme = (ui: React.ReactElement) => {
-  return renderWithProviders(ui, { 
-    withRouter: false, 
-    withAuth: false, 
-    withQueryClient: false 
+export const renderWithTheme = (ui: React.ReactElement, _options: object = {}): RenderResult => {
+  return renderWithProviders(ui, {
+    withRouter: false,
+    withAuth: false,
+    withQueryClient: false
   });
 };
 
-export const renderWithQueryClient = (ui: React.ReactElement) => {
-  return renderWithProviders(ui, { 
-    withRouter: false, 
-    withAuth: false, 
-    withTheme: false, 
-    withI18n: false 
+export const renderWithQueryClient = (ui: React.ReactElement, _options: object = {}): RenderResult => {
+  return renderWithProviders(ui, {
+    withRouter: false,
+    withAuth: false,
+    withTheme: false,
+    withI18n: false
   });
 };
 
 // Custom utility function with different name to avoid conflict
-export const waitForLoadingToDisappear = async (element: HTMLElement) => {
+export const waitForLoadingToDisappear = async (element: HTMLElement): Promise<void> => {
   return screen.findByText(/loading/i).then(() => {
     // Wait for loading to disappear
     return new Promise((resolve) => {
@@ -99,26 +122,26 @@ export const waitForLoadingToDisappear = async (element: HTMLElement) => {
           resolve(undefined);
         }
       });
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, {childList: true, subtree: true});
     });
   });
 };
 
 // Common test selectors and utilities
-export const getByTextContent = (content: string) => {
+export const getByTextContent = (content: string, _unused: object = {}): HTMLElement => {
   return screen.getByText((_, element) => {
     return element?.textContent === content;
   });
 };
 
-export const queryByTextContent = (content: string) => {
+export const queryByTextContent = (content: string, _unused: object = {}): HTMLElement | null => {
   return screen.queryByText((_, element) => {
     return element?.textContent === content;
   });
 };
 
 // Re-export form utilities from separate file
-export { fillForm, submitForm } from './formUtils';
+export {fillForm, submitForm} from './formUtils';
 
 // Re-export specific functions from testing-library (not using * to avoid Fast Refresh warning)
 export {
@@ -180,7 +203,7 @@ export {
   configure,
   screen
 } from '@testing-library/react';
-export { default as userEvent } from '@testing-library/user-event';
+export {default as userEvent} from '@testing-library/user-event';
 
 // Re-export the custom render as the default render
-export { renderWithProviders as render };
+export {renderWithProviders as render};

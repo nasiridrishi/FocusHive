@@ -1,0 +1,49 @@
+-- Fix Partnership Constraints Migration
+-- Adds missing constraints and fixes data types for compatibility with entity
+
+-- ==============================================================================
+-- ALTER BUDDY PARTNERSHIPS TABLE
+-- Fix data types and add proper constraints
+-- ==============================================================================
+
+-- Add version column for optimistic locking
+ALTER TABLE buddy_partnerships ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0;
+
+-- Add last_interaction_at column if it doesn't exist
+ALTER TABLE buddy_partnerships ADD COLUMN IF NOT EXISTS last_interaction_at TIMESTAMP;
+
+-- Update status check constraint to match enum
+ALTER TABLE buddy_partnerships DROP CONSTRAINT IF EXISTS buddy_partnerships_status_check;
+ALTER TABLE buddy_partnerships ADD CONSTRAINT buddy_partnerships_status_check
+    CHECK (status IN ('PENDING', 'ACTIVE', 'PAUSED', 'ENDED'));
+
+-- Add constraint names for test validation
+ALTER TABLE buddy_partnerships DROP CONSTRAINT IF EXISTS buddy_partnerships_check;
+ALTER TABLE buddy_partnerships ADD CONSTRAINT chk_different_users
+    CHECK (user1_id != user2_id);
+
+-- Add compatibility score constraint with proper name
+ALTER TABLE buddy_partnerships DROP CONSTRAINT IF EXISTS buddy_partnerships_compatibility_score_check;
+ALTER TABLE buddy_partnerships ADD CONSTRAINT chk_compatibility_score
+    CHECK (compatibility_score BETWEEN 0.0000 AND 1.0000);
+
+-- Add health score constraint with proper name
+ALTER TABLE buddy_partnerships DROP CONSTRAINT IF EXISTS buddy_partnerships_health_score_check;
+ALTER TABLE buddy_partnerships ADD CONSTRAINT chk_health_score
+    CHECK (health_score BETWEEN 0.0000 AND 1.0000);
+
+-- ==============================================================================
+-- CREATE INDEXES FOR PERFORMANCE
+-- ==============================================================================
+
+CREATE INDEX IF NOT EXISTS idx_partnerships_user1_user2 ON buddy_partnerships(user1_id, user2_id);
+CREATE INDEX IF NOT EXISTS idx_partnerships_status ON buddy_partnerships(status);
+CREATE INDEX IF NOT EXISTS idx_partnerships_health_score ON buddy_partnerships(health_score);
+CREATE INDEX IF NOT EXISTS idx_partnerships_started_at ON buddy_partnerships(started_at);
+CREATE INDEX IF NOT EXISTS idx_partnerships_last_interaction ON buddy_partnerships(last_interaction_at);
+
+-- ==============================================================================
+-- COMMENTS
+-- ==============================================================================
+COMMENT ON COLUMN buddy_partnerships.version IS 'Version field for optimistic locking';
+COMMENT ON COLUMN buddy_partnerships.last_interaction_at IS 'Timestamp of last interaction between partners';

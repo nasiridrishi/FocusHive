@@ -1,14 +1,15 @@
 /**
  * Accessible Theme Configuration
- * 
+ *
  * Extends the base theme with WCAG 2.1 AA compliant colors,
  * focus indicators, and accessibility-focused component overrides.
  */
 
-import { createTheme, ThemeOptions } from '@mui/material/styles';
-import { createLightTheme, createDarkTheme } from '../../theme/theme';
-import { calculateContrastRatio, WCAG_CONTRAST_RATIOS } from '../utils/colorContrast';
-import { CONTRAST_RATIOS, TOUCH_TARGETS, FOCUS } from '../constants/wcag';
+import {createTheme, ThemeOptions, Theme} from '@mui/material/styles';
+import {createDarkTheme, createLightTheme} from '../../theme/theme';
+import {calculateContrastRatio, WCAG_CONTRAST_RATIOS} from '../utils/colorContrast';
+import {CONTRAST_RATIOS, FOCUS, TOUCH_TARGETS} from '../constants/wcag';
+import {theme} from "@shared/theme";
 
 /**
  * WCAG 2.1 AA Compliant Color Palette
@@ -21,14 +22,14 @@ export const accessibleColors = {
     tertiary: '#616161',       // 5.7:1 contrast on white (AA large text)
     disabled: '#9e9e9e',       // 2.9:1 contrast (for disabled state)
   },
-  
+
   // High contrast background colors
   background: {
     primary: '#ffffff',
     secondary: '#f5f5f5',      // Subtle background with maintained contrast
     tertiary: '#eeeeee',       // Card backgrounds
   },
-  
+
   // Accessible focus indicators
   focus: {
     primary: '#005fcc',        // Blue focus ring (4.5:1 on white)
@@ -37,7 +38,7 @@ export const accessibleColors = {
     warning: '#f57c00',        // Orange focus for warnings (3.4:1 on white, AA large)
     success: '#2e7d32',        // Green focus for success (4.9:1 on white)
   },
-  
+
   // Dark theme accessible colors
   dark: {
     text: {
@@ -69,7 +70,7 @@ export const focusRingConfig = {
   offset: FOCUS.FOCUS_RING_OFFSET,
   style: 'solid' as const,
   color: accessibleColors.focus.primary,
-  
+
   // Focus ring variants
   variants: {
     default: {
@@ -104,18 +105,18 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
   // Enhanced button accessibility
   MuiButton: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Ensure minimum touch target size
         minHeight: touchTargetConfig.recommendedSize,
         minWidth: touchTargetConfig.recommendedSize,
-        
+
         // Focus styles with high contrast
         '&:focus-visible': {
           ...focusRingConfig.variants.default,
           // Ensure focus is visible even with background
           backgroundColor: 'transparent',
         },
-        
+
         // High contrast mode support
         '@media (prefers-contrast: high)': {
           border: '1px solid currentColor',
@@ -124,18 +125,18 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
             outlineOffset: '2px',
           },
         },
-        
+
         // Reduced motion support
         '@media (prefers-reduced-motion: reduce)': {
           transition: 'none',
         },
-        
+
         // Ensure text contrast
         '&.MuiButton-contained': {
           color: theme.palette.getContrastText(theme.palette.primary.main),
         },
       }),
-      
+
       // Size variants with accessibility considerations
       sizeSmall: {
         minHeight: touchTargetConfig.minSize,
@@ -154,22 +155,22 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       },
     },
   },
-  
+
   // Enhanced form field accessibility
   MuiTextField: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Ensure proper spacing for touch targets
         marginBottom: touchTargetConfig.recommendedSpacing,
-        
+
         '& .MuiInputBase-root': {
           minHeight: touchTargetConfig.recommendedSize,
-          
+
           // Focus styles
           '&:focus-within': {
             ...focusRingConfig.variants.default,
           },
-          
+
           // High contrast support
           '@media (prefers-contrast: high)': {
             border: '2px solid currentColor',
@@ -180,7 +181,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
             },
           },
         },
-        
+
         // Error state accessibility
         '&.Mui-error .MuiInputBase-root': {
           '&:focus-within': {
@@ -191,28 +192,28 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced link accessibility
   MuiLink: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Ensure sufficient color contrast
         color: theme.palette.primary.main,
         textDecorationColor: 'currentColor',
-        
+
         // Focus styles
         '&:focus-visible': {
           ...focusRingConfig.variants.default,
           borderRadius: '2px',
         },
-        
+
         // Hover styles that work with high contrast
         '&:hover': {
           textDecoration: 'underline',
           textDecorationThickness: '2px',
           textUnderlineOffset: '2px',
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           textDecoration: 'underline',
@@ -225,16 +226,16 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced card accessibility
   MuiCard: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Focus styles for interactive cards
         '&[tabindex]:focus-visible': {
           ...focusRingConfig.variants.default,
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           border: '1px solid currentColor',
@@ -246,19 +247,19 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced chip accessibility
   MuiChip: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Ensure minimum touch target
         minHeight: touchTargetConfig.minSize,
-        
+
         // Focus styles
         '&:focus-visible': {
           ...focusRingConfig.variants.default,
         },
-        
+
         // Clickable chips
         '&.MuiChip-clickable': {
           minHeight: touchTargetConfig.recommendedSize,
@@ -270,12 +271,12 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
             },
           },
         },
-        
+
         // Delete button accessibility
         '& .MuiChip-deleteIcon': {
           minWidth: touchTargetConfig.minSize,
           minHeight: touchTargetConfig.minSize,
-          
+
           '&:focus-visible': {
             ...focusRingConfig.variants.inset,
           },
@@ -283,20 +284,20 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced fab accessibility
   MuiFab: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Ensure minimum size
         minWidth: touchTargetConfig.recommendedSize,
         minHeight: touchTargetConfig.recommendedSize,
-        
+
         // Focus styles
         '&:focus-visible': {
           ...focusRingConfig.variants.default,
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           border: '2px solid currentColor',
@@ -306,37 +307,35 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
           },
         },
       }),
-      
+
       sizeSmall: {
         minWidth: touchTargetConfig.minSize,
         minHeight: touchTargetConfig.minSize,
       },
-      
+
       sizeMedium: {
         minWidth: touchTargetConfig.recommendedSize,
         minHeight: touchTargetConfig.recommendedSize,
       },
-      
-      sizeLarge: {
-        minWidth: 64,
-        minHeight: 64,
-      },
+
+      // sizeLarge variant removed as it's not a valid MUI Fab size
+      // MUI Fab only supports sizeSmall and sizeMedium
     },
   },
-  
+
   // Enhanced tab accessibility
   MuiTab: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         minHeight: touchTargetConfig.recommendedSize,
         minWidth: touchTargetConfig.recommendedSize,
-        
+
         // Focus styles
         '&:focus-visible': {
           ...focusRingConfig.variants.default,
           zIndex: 1, // Ensure focus ring is above other tabs
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           border: '1px solid transparent',
@@ -352,11 +351,11 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced checkbox accessibility
   MuiCheckbox: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Focus styles
         '&:focus-visible': {
           '& .MuiSvgIcon-root': {
@@ -364,7 +363,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
             borderRadius: '2px',
           },
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           '& .MuiSvgIcon-root': {
@@ -378,11 +377,11 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced radio accessibility
   MuiRadio: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Focus styles
         '&:focus-visible': {
           '& .MuiSvgIcon-root': {
@@ -390,7 +389,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
             borderRadius: '50%',
           },
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           '& .MuiSvgIcon-root': {
@@ -404,18 +403,18 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced switch accessibility
   MuiSwitch: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         // Focus styles
         '&:focus-within': {
           '& .MuiSwitch-thumb': {
             ...focusRingConfig.variants.default,
           },
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           '& .MuiSwitch-track': {
@@ -429,11 +428,11 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Enhanced menu accessibility
   MuiMenu: {
     styleOverrides: {
-      paper: ({ theme: _theme }) => ({
+      paper: ({theme: _theme}) => ({
         // High contrast support
         '@media (prefers-contrast: high)': {
           border: '1px solid currentColor',
@@ -441,19 +440,19 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   MuiMenuItem: {
     styleOverrides: {
-      root: ({ theme: _theme }) => ({
+      root: ({theme: _theme}) => ({
         minHeight: touchTargetConfig.recommendedSize,
-        
+
         // Focus styles
         '&:focus-visible': {
           backgroundColor: theme.palette.action.focus,
           outline: `${FOCUS.FOCUS_RING_WIDTH}px solid ${accessibleColors.focus.primary}`,
           outlineOffset: `-${FOCUS.FOCUS_RING_WIDTH}px`,
         },
-        
+
         // High contrast support
         '@media (prefers-contrast: high)': {
           '&:focus-visible': {
@@ -466,7 +465,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       }),
     },
   },
-  
+
   // Global CSS baseline with accessibility enhancements
   MuiCssBaseline: {
     styleOverrides: {
@@ -474,12 +473,12 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
       '*:focus:not(:focus-visible)': {
         outline: 'none',
       },
-      
+
       '*:focus-visible': {
         outline: `${FOCUS.FOCUS_RING_WIDTH}px solid ${accessibleColors.focus.primary}`,
         outlineOffset: `${FOCUS.FOCUS_RING_OFFSET}px`,
       },
-      
+
       // High contrast mode support
       '@media (prefers-contrast: high)': {
         '*:focus-visible': {
@@ -487,7 +486,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
           outlineOffset: '2px',
         },
       },
-      
+
       // Reduced motion support
       '@media (prefers-reduced-motion: reduce)': {
         '*': {
@@ -497,7 +496,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
           scrollBehavior: 'auto !important',
         },
       },
-      
+
       // Screen reader only utility class
       '.sr-only': {
         position: 'absolute',
@@ -510,7 +509,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
         whiteSpace: 'nowrap',
         border: 0,
       },
-      
+
       // Skip link styles
       '.skip-link': {
         position: 'absolute',
@@ -523,7 +522,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
         borderRadius: '0 0 4px 4px',
         zIndex: 1000,
         border: `2px solid ${accessibleColors.focus.primary}`,
-        
+
         '&:focus': {
           top: '0',
         },
@@ -537,7 +536,7 @@ const accessibilityComponentOverrides: ThemeOptions['components'] = {
  */
 export function createAccessibleLightTheme() {
   const baseTheme = createLightTheme();
-  
+
   return createTheme({
     ...baseTheme,
     components: {
@@ -566,7 +565,7 @@ export function createAccessibleLightTheme() {
  */
 export function createAccessibleDarkTheme() {
   const baseTheme = createDarkTheme();
-  
+
   return createTheme({
     ...baseTheme,
     components: {
@@ -593,29 +592,29 @@ export function createAccessibleDarkTheme() {
 /**
  * Validate theme accessibility
  */
-export function validateThemeAccessibility(theme: unknown) {
+export function validateThemeAccessibility(theme: Theme) {
   const issues: string[] = [];
-  
+
   // Check text contrast ratios
   const textPrimaryRatio = calculateContrastRatio(
-    theme.palette.text.primary,
-    theme.palette.background.default
+      theme.palette?.text?.primary || '#000000',
+      theme.palette?.background?.default || '#ffffff'
   );
-  
+
   if (textPrimaryRatio < WCAG_CONTRAST_RATIOS.AA_NORMAL) {
     issues.push(`Primary text contrast ratio (${textPrimaryRatio.toFixed(2)}:1) does not meet WCAG AA standards`);
   }
-  
+
   // Check focus indicator contrast
   const focusRatio = calculateContrastRatio(
-    accessibleColors.focus.primary,
-    theme.palette.background.default
+      accessibleColors.focus.primary,
+      theme.palette?.background?.default || '#ffffff'
   );
-  
+
   if (focusRatio < CONTRAST_RATIOS.FOCUS_INDICATOR) {
     issues.push(`Focus indicator contrast ratio (${focusRatio.toFixed(2)}:1) does not meet requirements`);
   }
-  
+
   return {
     isValid: issues.length === 0,
     issues,

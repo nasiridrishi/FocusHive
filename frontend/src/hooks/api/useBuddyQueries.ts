@@ -1,6 +1,6 @@
 /**
  * Buddy System Query Hooks (Placeholder)
- * 
+ *
  * TODO: Implement buddy system-related query hooks
  */
 

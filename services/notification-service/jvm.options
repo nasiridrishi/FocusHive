@@ -1,0 +1,186 @@
+# JVM Tuning Options for Notification Service
+# Optimized for Java 21 with G1GC and low latency
+
+# ============================================
+# Memory Configuration
+# ============================================
+# Initial heap size (25% of system memory)
+-Xms2g
+
+# Maximum heap size (50% of system memory)
+-Xmx4g
+
+# Direct memory size for NIO operations
+-XX:MaxDirectMemorySize=512m
+
+# Metaspace sizing (for class metadata)
+-XX:MetaspaceSize=256m
+-XX:MaxMetaspaceSize=512m
+
+# Thread stack size
+-Xss256k
+
+# ============================================
+# Garbage Collection (G1GC)
+# ============================================
+# Use G1 Garbage Collector (best for low latency)
+-XX:+UseG1GC
+
+# Target pause time (aim for <200ms)
+-XX:MaxGCPauseMillis=200
+
+# G1GC region size
+-XX:G1HeapRegionSize=16m
+
+# Initiating heap occupancy percent
+-XX:InitiatingHeapOccupancyPercent=45
+
+# Reserve memory for GC
+-XX:G1ReservePercent=10
+
+# Enable string deduplication
+-XX:+UseStringDeduplication
+-XX:StringDeduplicationAgeThreshold=3
+
+# Parallel GC threads
+-XX:ParallelGCThreads=8
+
+# Concurrent GC threads
+-XX:ConcGCThreads=2
+
+# ============================================
+# Performance Optimizations
+# ============================================
+# Aggressive optimizations
+-XX:+AggressiveOpts
+
+# Tiered compilation
+-XX:+TieredCompilation
+-XX:TieredStopAtLevel=4
+
+# Inline method size
+-XX:MaxInlineSize=256
+
+# Biased locking (reduces lock overhead)
+-XX:+UseBiasedLocking
+
+# Large page support
+-XX:+UseLargePages
+-XX:LargePageSizeInBytes=2m
+
+# NUMA aware allocation
+-XX:+UseNUMA
+
+# Compressed OOPs for memory efficiency
+-XX:+UseCompressedOops
+-XX:+UseCompressedClassPointers
+
+# ============================================
+# JIT Compiler Settings
+# ============================================
+# Code cache size
+-XX:InitialCodeCacheSize=64m
+-XX:ReservedCodeCacheSize=256m
+
+# Compilation threshold
+-XX:CompileThreshold=1500
+
+# Tier 4 compilation threshold
+-XX:Tier4CompileThreshold=15000
+
+# Maximum compiled method size
+-XX:MaxInlineLevel=15
+
+# ============================================
+# Monitoring & Diagnostics
+# ============================================
+# GC logging (Java 11+ format)
+-Xlog:gc*:file=logs/gc.log:time,uptime,level,tags:filecount=10,filesize=10M
+
+# Heap dump on OutOfMemoryError
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=logs/heap-dump.hprof
+
+# Error file location
+-XX:ErrorFile=logs/hs_err_pid%p.log
+
+# Print compilation
+-XX:+PrintCompilation
+-XX:+PrintInlining
+
+# JMX monitoring
+-Dcom.sun.management.jmxremote=true
+-Dcom.sun.management.jmxremote.port=9090
+-Dcom.sun.management.jmxremote.authenticate=false
+-Dcom.sun.management.jmxremote.ssl=false
+
+# ============================================
+# Application Specific
+# ============================================
+# Timezone
+-Duser.timezone=UTC
+
+# File encoding
+-Dfile.encoding=UTF-8
+
+# Headless mode (no GUI)
+-Djava.awt.headless=true
+
+# DNS cache TTL (5 minutes)
+-Dsun.net.inetaddr.ttl=300
+
+# HTTP keep-alive
+-Dhttp.keepAlive=true
+-Dhttp.maxConnections=100
+
+# SSL/TLS optimizations
+-Djdk.tls.ephemeralDHKeySize=2048
+-Djdk.tls.rejectClientInitializedRenegotiation=true
+
+# ============================================
+# Spring Boot Specific
+# ============================================
+# Spring profiles
+-Dspring.profiles.active=prod
+
+# Actuator endpoints
+-Dmanagement.endpoints.web.exposure.include=health,metrics,prometheus
+
+# Logging level
+-Dlogging.level.root=INFO
+-Dlogging.level.com.focushive.notification=INFO
+
+# ============================================
+# Container/Cloud Specific
+# ============================================
+# Container awareness (Java 11+)
+-XX:+UseContainerSupport
+
+# CPU limits
+-XX:ActiveProcessorCount=4
+
+# Memory limits awareness
+-XX:MaxRAMPercentage=75.0
+-XX:MinRAMPercentage=50.0
+-XX:InitialRAMPercentage=50.0
+
+# ============================================
+# Security
+# ============================================
+# Disable remote code execution
+-Djava.rmi.server.useCodebaseOnly=true
+
+# Random number generation
+-Djava.security.egd=file:/dev/./urandom
+
+# ============================================
+# Debug Options (uncomment when needed)
+# ============================================
+# -XX:+PrintGCDetails
+# -XX:+PrintGCDateStamps
+# -XX:+PrintTenuringDistribution
+# -XX:+PrintAdaptiveSizePolicy
+# -XX:+PrintReferenceGC
+# -XX:+TraceClassLoading
+# -XX:+TraceClassUnloading
+# -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005

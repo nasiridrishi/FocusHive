@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import i18n from '../../../lib/i18n';
-import { I18nProvider } from './I18nProvider';
+import {I18nProvider} from './I18nProvider';
 
 export function withI18n<P extends object>(
-  Component: React.ComponentType<P>
+    Component: React.ComponentType<P>
 ): React.ComponentType<P> {
   const WrappedComponent = (props: P) => (
-    <I18nProvider>
-      <Component {...props} />
-    </I18nProvider>
+      <I18nProvider>
+        <Component {...props} />
+      </I18nProvider>
   )
 
   WrappedComponent.displayName = `withI18n(${Component.displayName || Component.name})`
-  
+
   return WrappedComponent
 }
 
-export function useI18nReady() {
+export function useI18nReady(): boolean {
   const [isReady, setIsReady] = useState(i18n.isInitialized)
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function useI18nReady() {
       return
     }
 
-    const checkReady = () => {
+    const checkReady = (): void => {
       if (i18n.isInitialized) {
         setIsReady(true)
       }

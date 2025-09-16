@@ -1,11 +1,11 @@
 /**
  * Comprehensive tests for tokenManager utility
- * 
+ *
  * Tests JWT token storage, validation, parsing, and security features
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { tokenManager } from '../tokenManager';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {tokenManager} from '../tokenManager';
 
 // Mock storage APIs
 const mockSessionStorage = {
@@ -27,7 +27,7 @@ const mockDispatchEvent = vi.fn();
 
 // Helper function to create valid JWT tokens for testing
 const createJWT = (payload: Record<string, unknown>): string => {
-  const header = { alg: 'HS256', typ: 'JWT' };
+  const header = {alg: 'HS256', typ: 'JWT'};
   const encodedHeader = btoa(JSON.stringify(header));
   const encodedPayload = btoa(JSON.stringify(payload));
   const signature = 'mock-signature';
@@ -44,7 +44,7 @@ const sampleTokens = {
     exp: 9999999999, // Far future
     iat: 1616239022
   }),
-  
+
   // Expired token
   expiredAccessToken: createJWT({
     sub: '1234567890',
@@ -53,10 +53,10 @@ const sampleTokens = {
     exp: 1616239022, // Past date
     iat: 1616239022
   }),
-  
+
   // Invalid token (malformed)
   invalidToken: 'invalid.token.here',
-  
+
   // Valid refresh token
   validRefreshToken: createJWT({
     sub: '1234567890',
@@ -70,23 +70,23 @@ describe('TokenManager', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Mock the storage APIs
     Object.defineProperty(window, 'sessionStorage', {
       value: mockSessionStorage,
       writable: true,
     });
-    
+
     Object.defineProperty(window, 'localStorage', {
       value: mockLocalStorage,
       writable: true,
     });
-    
+
     Object.defineProperty(window, 'dispatchEvent', {
       value: mockDispatchEvent,
       writable: true,
     });
-    
+
     // Mock Date.now for consistent testing
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
@@ -102,16 +102,16 @@ describe('TokenManager', () => {
       tokenManager.saveTokens(sampleTokens.validAccessToken, sampleTokens.validRefreshToken);
 
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-        'focushive_access_token',
-        sampleTokens.validAccessToken
+          'focushive_access_token',
+          sampleTokens.validAccessToken
       );
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-        'focushive_refresh_token',
-        sampleTokens.validRefreshToken
+          'focushive_refresh_token',
+          sampleTokens.validRefreshToken
       );
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-        'focushive_token_expires',
-        expect.any(String)
+          'focushive_token_expires',
+          expect.any(String)
       );
     });
 
@@ -262,15 +262,16 @@ describe('TokenManager', () => {
     });
 
     it('should consider token expired if it expires within buffer time', () => {
-      // Move time forward to just before expiry minus buffer (5 minutes)
-      const claims = tokenManager.parseJWT(sampleTokens.validAccessToken);
-      if (claims?.exp) {
-        const expiryTime = claims.exp * 1000;
-        const bufferTime = 5 * 60 * 1000; // 5 minutes
-        vi.setSystemTime(new Date(expiryTime - bufferTime + 1000)); // 1 second into buffer
-      }
+      // Create a token that expires soon (within buffer time)
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const tokenExpiringInBuffer = createJWT({
+        sub: '1234567890',
+        email: 'test@example.com',
+        exp: nowSeconds + 240, // Expires in 4 minutes (less than 5 minute buffer)
+        iat: nowSeconds - 3600
+      });
 
-      const isExpired = tokenManager.isTokenExpired(sampleTokens.validAccessToken);
+      const isExpired = tokenManager.isTokenExpired(tokenExpiringInBuffer);
       expect(isExpired).toBe(true);
     });
 
@@ -407,24 +408,24 @@ describe('TokenManager', () => {
   describe('Security Features', () => {
     it('should detect secure context support for httpOnly cookies', () => {
       // Mock secure context
-      Object.defineProperty(window, 'isSecureContext', { value: true, writable: true });
-      Object.defineProperty(navigator, 'cookieEnabled', { value: true, writable: true });
+      Object.defineProperty(window, 'isSecureContext', {value: true, writable: true});
+      Object.defineProperty(navigator, 'cookieEnabled', {value: true, writable: true});
 
       const supports = tokenManager.supportsHttpOnlyCookies();
       expect(supports).toBe(true);
     });
 
     it('should detect insecure context', () => {
-      Object.defineProperty(window, 'isSecureContext', { value: false, writable: true });
-      Object.defineProperty(navigator, 'cookieEnabled', { value: true, writable: true });
+      Object.defineProperty(window, 'isSecureContext', {value: false, writable: true});
+      Object.defineProperty(navigator, 'cookieEnabled', {value: true, writable: true});
 
       const supports = tokenManager.supportsHttpOnlyCookies();
       expect(supports).toBe(false);
     });
 
     it('should detect disabled cookies', () => {
-      Object.defineProperty(window, 'isSecureContext', { value: true, writable: true });
-      Object.defineProperty(navigator, 'cookieEnabled', { value: false, writable: true });
+      Object.defineProperty(window, 'isSecureContext', {value: true, writable: true});
+      Object.defineProperty(navigator, 'cookieEnabled', {value: false, writable: true});
 
       const supports = tokenManager.supportsHttpOnlyCookies();
       expect(supports).toBe(false);
@@ -434,8 +435,8 @@ describe('TokenManager', () => {
   describe('Automatic Token Refresh', () => {
     it('should support httpOnly cookie detection', () => {
       // Test the security feature for future httpOnly cookie implementation
-      Object.defineProperty(window, 'isSecureContext', { value: true, writable: true });
-      Object.defineProperty(navigator, 'cookieEnabled', { value: true, writable: true });
+      Object.defineProperty(window, 'isSecureContext', {value: true, writable: true});
+      Object.defineProperty(navigator, 'cookieEnabled', {value: true, writable: true});
 
       const supports = tokenManager.supportsHttpOnlyCookies();
       expect(supports).toBe(true);

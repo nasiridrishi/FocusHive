@@ -3,8 +3,8 @@
  * Provides utilities for testing gamification features, mocking data, and performance testing
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from './test-data';
+import {expect, Page} from '@playwright/test';
+import {TIMEOUTS} from './test-data';
 
 // Mock gamification data types
 export interface MockUser {
@@ -131,7 +131,8 @@ export interface MockGamificationData {
 }
 
 export class GamificationHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   /**
    * Generate mock gamification data with realistic values
@@ -161,13 +162,13 @@ export class GamificationHelper {
 
     if (!hasData) {
       return {
-        points: { current: 0, total: 0, todayEarned: 0, weekEarned: 0 },
+        points: {current: 0, total: 0, todayEarned: 0, weekEarned: 0},
         achievements: [],
         streaks: [],
         leaderboards: [],
         challenges: [],
         goals: [],
-        social: { friends: [], buddies: [], teams: [], mentorships: [] },
+        social: {friends: [], buddies: [], teams: [], mentorships: []},
         level: 1,
         rank: 0,
         totalUsers: 0,
@@ -460,7 +461,7 @@ export class GamificationHelper {
 
     // Generate social features
     const generateUsers = (count: number): MockUser[] => {
-      return Array.from({ length: count }, (_, i) => ({
+      return Array.from({length: count}, (_, i) => ({
         id: `friend-${i + 1}`,
         name: `Friend ${i + 1}`,
         avatar: `/avatars/friend${i + 1}.jpg`,
@@ -489,8 +490,8 @@ export class GamificationHelper {
       ],
       mentorships: [
         {
-          mentor: { id: 'mentor-1', name: 'Sarah Johnson', avatar: '/avatars/sarah.jpg' },
-          mentee: { id: 'mentee-1', name: 'Current User', avatar: '/avatars/user.jpg' },
+          mentor: {id: 'mentor-1', name: 'Sarah Johnson', avatar: '/avatars/sarah.jpg'},
+          mentee: {id: 'mentee-1', name: 'Current User', avatar: '/avatars/user.jpg'},
           status: 'active',
           progress: 65
         }
@@ -524,7 +525,7 @@ export class GamificationHelper {
     // Mock main dashboard endpoint
     await this.page.route('**/api/v1/gamification/**', (route) => {
       const url = route.request().url();
-      
+
       if (url.includes('/dashboard')) {
         route.fulfill({
           status: 200,
@@ -618,7 +619,7 @@ export class GamificationHelper {
    * Mock empty gamification state
    */
   async mockEmptyGamification(): Promise<void> {
-    const emptyData = this.generateMockGamificationData({ hasData: false });
+    const emptyData = this.generateMockGamificationData({hasData: false});
     await this.mockGamificationApi(emptyData);
   }
 
@@ -644,10 +645,10 @@ export class GamificationHelper {
    */
   async mockSlowGamificationApi(delayMs: number = 3000): Promise<void> {
     const mockData = this.generateMockGamificationData();
-    
+
     await this.page.route('**/api/v1/gamification/**', async (route) => {
       await new Promise(resolve => setTimeout(resolve, delayMs));
-      
+
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -723,7 +724,7 @@ export class GamificationHelper {
 
     // Verify achievement unlock notification
     const notification = this.page.locator('[data-testid="achievement-unlocked-notification"]');
-    await expect(notification).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(notification).toBeVisible({timeout: TIMEOUTS.MEDIUM});
 
     // Verify achievement badge shows as unlocked
     const achievementBadge = this.page.locator(`[data-testid="achievement-${achievementId}"]`);
@@ -775,7 +776,7 @@ export class GamificationHelper {
     // Test each streak counter
     for (let i = 0; i < count; i++) {
       const streakCounter = streakCounters.nth(i);
-      
+
       // Verify current streak is displayed
       const currentStreak = streakCounter.locator('[data-testid="current-streak"]');
       await expect(currentStreak).toBeVisible();
@@ -820,7 +821,7 @@ export class GamificationHelper {
 
     // Verify participation confirmation
     const confirmationMessage = this.page.locator('[data-testid="challenge-participation-success"]');
-    await expect(confirmationMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(confirmationMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
 
     // Verify challenge shows as participated
     const challengeCard = this.page.locator(`[data-testid="challenge-${challengeId}"]`);
@@ -844,7 +845,7 @@ export class GamificationHelper {
         await firstFriend.click();
 
         const comparisonModal = this.page.locator('[data-testid="friend-comparison-modal"]');
-        await expect(comparisonModal).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+        await expect(comparisonModal).toBeVisible({timeout: TIMEOUTS.MEDIUM});
       }
     }
 
@@ -862,13 +863,13 @@ export class GamificationHelper {
    */
   async testResponsiveDesign(): Promise<void> {
     const viewports = [
-      { name: 'mobile', width: 375, height: 667 },
-      { name: 'tablet', width: 768, height: 1024 },
-      { name: 'desktop', width: 1920, height: 1080 }
+      {name: 'mobile', width: 375, height: 667},
+      {name: 'tablet', width: 768, height: 1024},
+      {name: 'desktop', width: 1920, height: 1080}
     ];
 
     for (const viewport of viewports) {
-      await this.page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await this.page.setViewportSize({width: viewport.width, height: viewport.height});
       await this.page.waitForTimeout(1000);
 
       // Verify gamification dashboard is visible
@@ -969,9 +970,9 @@ export class GamificationHelper {
   async cleanup(): Promise<void> {
     // Clear route mocks
     await this.page.unrouteAll();
-    
+
     // Reset viewport
-    await this.page.setViewportSize({ width: 1280, height: 720 });
+    await this.page.setViewportSize({width: 1280, height: 720});
 
     // Clear local storage
     await this.page.evaluate(() => {

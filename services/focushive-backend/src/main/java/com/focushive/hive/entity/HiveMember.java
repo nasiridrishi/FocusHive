@@ -47,7 +47,16 @@ public class HiveMember extends BaseEntity {
     
     @Column(name = "notification_settings", columnDefinition = "TEXT")
     private String notificationSettings = "{}";
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invited_by_user_id")
+    private User invitedBy;
+
+    @NotNull(message = "Status is required")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberStatus status = MemberStatus.ACTIVE;
+
     // Getters and setters
     public Hive getHive() {
         return hive;
@@ -120,8 +129,28 @@ public class HiveMember extends BaseEntity {
     public void setNotificationSettings(String notificationSettings) {
         this.notificationSettings = notificationSettings;
     }
-    
+
+    public User getInvitedBy() {
+        return invitedBy;
+    }
+
+    public void setInvitedBy(User invitedBy) {
+        this.invitedBy = invitedBy;
+    }
+
+    public MemberStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(MemberStatus status) {
+        this.status = status;
+    }
+
     public enum MemberRole {
         OWNER, MODERATOR, MEMBER
+    }
+
+    public enum MemberStatus {
+        ACTIVE, INVITED, BANNED
     }
 }

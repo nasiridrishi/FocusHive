@@ -1,15 +1,15 @@
-import axios, { AxiosInstance } from 'axios'
+import axios, {AxiosInstance} from 'axios'
 import {
+  ForumAttachment,
   ForumCategory,
-  ForumPost,
-  ForumReply,
-  ForumUser,
-  ForumStats,
-  ForumSearchResult,
   ForumCreatePostRequest,
   ForumCreateReplyRequest,
   ForumNotification,
-  ForumAttachment
+  ForumPost,
+  ForumReply,
+  ForumSearchResult,
+  ForumStats,
+  ForumUser
 } from '../types'
 
 class ForumApiService {
@@ -27,23 +27,23 @@ class ForumApiService {
 
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('authToken')
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-      },
-      (error) => Promise.reject(error)
+        (config) => {
+          const token = localStorage.getItem('authToken')
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
+          return config
+        },
+        (error) => Promise.reject(error)
     )
 
     // Response interceptor for error handling
     this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        // API errors are handled at component level
-        throw error
-      }
+        (response) => response,
+        (error) => {
+          // API errors are handled at component level
+          throw error
+        }
     )
   }
 
@@ -65,10 +65,10 @@ class ForumApiService {
 
   // Posts
   async getPosts(
-    categoryId?: number,
-    page = 1,
-    limit = 20,
-    sortBy: 'recent' | 'popular' | 'oldest' = 'recent'
+      categoryId?: number,
+      page = 1,
+      limit = 20,
+      sortBy: 'recent' | 'popular' | 'oldest' = 'recent'
   ): Promise<{
     posts: ForumPost[]
     totalPages: number
@@ -104,7 +104,7 @@ class ForumApiService {
     formData.append('title', postData.title)
     formData.append('content', postData.content)
     formData.append('categoryId', postData.categoryId.toString())
-    
+
     if (postData.tags && postData.tags.length > 0) {
       formData.append('tags', JSON.stringify(postData.tags))
     }
@@ -172,10 +172,10 @@ class ForumApiService {
 
   // Replies
   async getReplies(
-    postId: number,
-    page = 1,
-    limit = 20,
-    sortBy: 'oldest' | 'newest' | 'most_liked' = 'oldest'
+      postId: number,
+      page = 1,
+      limit = 20,
+      sortBy: 'oldest' | 'newest' | 'most_liked' = 'oldest'
   ): Promise<{
     replies: ForumReply[]
     totalPages: number
@@ -221,7 +221,7 @@ class ForumApiService {
   }
 
   async updateReply(replyId: number, content: string): Promise<ForumReply> {
-    const response = await this.api.put(`/replies/${replyId}`, { content })
+    const response = await this.api.put(`/replies/${replyId}`, {content})
     return response.data
   }
 
@@ -241,20 +241,20 @@ class ForumApiService {
 
   // Search
   async search(
-    query: string,
-    filters?: {
-      categoryId?: number
-      authorId?: number
-      dateRange?: {
-        start: string
-        end: string
+      query: string,
+      filters?: {
+        categoryId?: number
+        authorId?: number
+        dateRange?: {
+          start: string
+          end: string
+        }
+        sortBy?: 'relevance' | 'date' | 'replies' | 'views'
+        tags?: string[]
       }
-      sortBy?: 'relevance' | 'date' | 'replies' | 'views'
-      tags?: string[]
-    }
   ): Promise<ForumSearchResult> {
-    const params = new URLSearchParams({ query })
-    
+    const params = new URLSearchParams({query})
+
     if (filters) {
       if (filters.categoryId) {
         params.append('categoryId', filters.categoryId.toString())
@@ -377,7 +377,7 @@ class ForumApiService {
 
   // Moderation (for moderators/admins)
   async hidePost(postId: number, reason: string): Promise<void> {
-    await this.api.put(`/moderation/posts/${postId}/hide`, { reason })
+    await this.api.put(`/moderation/posts/${postId}/hide`, {reason})
   }
 
   async unhidePost(postId: number): Promise<void> {
@@ -385,7 +385,7 @@ class ForumApiService {
   }
 
   async hideReply(replyId: number, reason: string): Promise<void> {
-    await this.api.put(`/moderation/replies/${replyId}/hide`, { reason })
+    await this.api.put(`/moderation/replies/${replyId}/hide`, {reason})
   }
 
   async unhideReply(replyId: number): Promise<void> {
@@ -393,7 +393,7 @@ class ForumApiService {
   }
 
   async movePost(postId: number, categoryId: number): Promise<ForumPost> {
-    const response = await this.api.put(`/moderation/posts/${postId}/move`, { categoryId })
+    const response = await this.api.put(`/moderation/posts/${postId}/move`, {categoryId})
     return response.data
   }
 
@@ -401,11 +401,11 @@ class ForumApiService {
   async uploadAttachment(file: File, postId?: number, replyId?: number): Promise<ForumAttachment> {
     const formData = new FormData()
     formData.append('file', file)
-    
+
     if (postId) {
       formData.append('postId', postId.toString())
     }
-    
+
     if (replyId) {
       formData.append('replyId', replyId.toString())
     }

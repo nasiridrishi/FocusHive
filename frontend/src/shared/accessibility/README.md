@@ -1,6 +1,7 @@
 # Accessibility System Documentation
 
-This comprehensive accessibility system provides WCAG 2.1 AA compliant components, utilities, and patterns for the FocusHive application.
+This comprehensive accessibility system provides WCAG 2.1 AA compliant components, utilities, and
+patterns for the FocusHive application.
 
 ## Table of Contents
 
@@ -31,6 +32,7 @@ The accessibility system is designed to:
 ### Base Components
 
 #### ScreenReaderOnly
+
 Visually hides content while keeping it available to screen readers.
 
 ```tsx
@@ -42,6 +44,7 @@ import { ScreenReaderOnly } from '@/shared/accessibility/components';
 ```
 
 #### SkipNavigation
+
 Provides skip links for keyboard users to navigate quickly to main content areas.
 
 ```tsx
@@ -58,6 +61,7 @@ import { SkipNavigation } from '@/shared/accessibility/components';
 ### Form Components
 
 #### AccessibleButton
+
 Enhanced button with loading states, confirmation, and proper ARIA attributes.
 
 ```tsx
@@ -76,6 +80,7 @@ import { AccessibleButton } from '@/shared/accessibility/components';
 ```
 
 #### AccessibleTextField
+
 Text field with validation announcements and character counting.
 
 ```tsx
@@ -93,6 +98,7 @@ import { AccessibleTextField } from '@/shared/accessibility/components';
 ```
 
 #### AccessibleSelect
+
 Select dropdown with proper ARIA relationships.
 
 ```tsx
@@ -111,6 +117,7 @@ import { AccessibleSelect } from '@/shared/accessibility/components';
 ### Modal Components
 
 #### AccessibleModal
+
 Modal with focus trapping and proper ARIA attributes.
 
 ```tsx
@@ -131,6 +138,7 @@ import { AccessibleModal } from '@/shared/accessibility/components';
 ### Navigation Components
 
 #### AccessibleNavigation
+
 Navigation with keyboard support and ARIA relationships.
 
 ```tsx
@@ -146,6 +154,7 @@ import { AccessibleNavigation } from '@/shared/accessibility/components';
 ```
 
 #### AccessibleBreadcrumbs
+
 Breadcrumb navigation with proper ARIA labels.
 
 ```tsx
@@ -164,6 +173,7 @@ import { AccessibleBreadcrumbs } from '@/shared/accessibility/components';
 ## Utilities
 
 ### Color Contrast
+
 Utilities for checking WCAG color contrast compliance.
 
 ```typescript
@@ -174,6 +184,7 @@ const isCompliant = meetsContrastRequirement('#333333', '#ffffff', 'AA', 'normal
 ```
 
 ### Focus Management
+
 Utilities for managing focus and creating focus traps.
 
 ```typescript
@@ -189,6 +200,7 @@ focusTrap.activate();
 ```
 
 ### ARIA Utilities
+
 Utilities for screen reader announcements and ARIA management.
 
 ```typescript
@@ -203,6 +215,7 @@ const uniqueId = generateId('form-field'); // 'form-field-123'
 ## Hooks
 
 ### useFocusTrap
+
 Hook for implementing focus traps in modals and overlays.
 
 ```tsx
@@ -224,6 +237,7 @@ function Modal({ isOpen, onClose }) {
 ```
 
 ### useAnnouncement
+
 Hook for screen reader announcements.
 
 ```tsx
@@ -243,6 +257,7 @@ function TaskManager() {
 ```
 
 ### useKeyboardNavigation
+
 Hook for implementing keyboard navigation patterns.
 
 ```tsx
@@ -264,6 +279,7 @@ function Menu() {
 ```
 
 ### useLiveRegion
+
 Hook for managing ARIA live regions.
 
 ```tsx
@@ -286,6 +302,7 @@ function StatusUpdater() {
 ## Testing
 
 ### Accessibility Test Utilities
+
 Comprehensive testing utilities for validating WCAG compliance.
 
 ```typescript
@@ -314,32 +331,33 @@ test('button should have valid contrast', () => {
 ### Test Categories
 
 1. **Color Contrast Tests**
-   - Text contrast ratios
-   - Focus indicator contrast
-   - Interactive element contrast
+    - Text contrast ratios
+    - Focus indicator contrast
+    - Interactive element contrast
 
 2. **Focus Management Tests**
-   - Tab order verification
-   - Focus trap functionality
-   - Focus restoration
+    - Tab order verification
+    - Focus trap functionality
+    - Focus restoration
 
 3. **ARIA Tests**
-   - Label relationships
-   - Live region functionality
-   - Role assignments
+    - Label relationships
+    - Live region functionality
+    - Role assignments
 
 4. **Keyboard Navigation Tests**
-   - Arrow key navigation
-   - Enter/Space activation
-   - Escape key handling
+    - Arrow key navigation
+    - Enter/Space activation
+    - Escape key handling
 
 5. **Touch Target Tests**
-   - Minimum size requirements (44px)
-   - Target spacing
+    - Minimum size requirements (44px)
+    - Target spacing
 
 ## Patterns
 
 ### Complex Keyboard Navigation
+
 Advanced patterns for data grids, tree views, and carousels.
 
 ```tsx
@@ -365,6 +383,7 @@ import { AccessibleDataGrid, AccessibleTreeView } from '@/shared/accessibility/p
 ## Usage Examples
 
 ### Complete Form Example
+
 ```tsx
 import {
   AccessibleTextField,
@@ -416,6 +435,7 @@ function UserProfileForm() {
 ```
 
 ### Modal with Focus Management
+
 ```tsx
 import { AccessibleModal, AccessibleButton } from '@/shared/accessibility/components';
 import { useFocusTrap } from '@/shared/accessibility/hooks/useFocusTrap';
@@ -474,26 +494,26 @@ function EditTaskModal({ task, isOpen, onClose, onSave }) {
 ### Level AA Requirements Met
 
 1. **Perceivable**
-   - ✅ Color contrast ratios (4.5:1 normal text, 3:1 large text)
-   - ✅ Alternative text for images and icons
-   - ✅ Resizable text up to 200%
-   - ✅ Color not used as the only visual means of conveying information
+    - ✅ Color contrast ratios (4.5:1 normal text, 3:1 large text)
+    - ✅ Alternative text for images and icons
+    - ✅ Resizable text up to 200%
+    - ✅ Color not used as the only visual means of conveying information
 
 2. **Operable**
-   - ✅ Keyboard accessible functionality
-   - ✅ No seizure-inducing content
-   - ✅ Sufficient time for interactions
-   - ✅ Focus indicators visible and high contrast
+    - ✅ Keyboard accessible functionality
+    - ✅ No seizure-inducing content
+    - ✅ Sufficient time for interactions
+    - ✅ Focus indicators visible and high contrast
 
 3. **Understandable**
-   - ✅ Readable text and predictable functionality
-   - ✅ Input assistance and error identification
-   - ✅ Consistent navigation and identification
+    - ✅ Readable text and predictable functionality
+    - ✅ Input assistance and error identification
+    - ✅ Consistent navigation and identification
 
 4. **Robust**
-   - ✅ Compatible with assistive technologies
-   - ✅ Valid HTML and ARIA markup
-   - ✅ Progressive enhancement support
+    - ✅ Compatible with assistive technologies
+    - ✅ Valid HTML and ARIA markup
+    - ✅ Progressive enhancement support
 
 ### Accessibility Features
 
@@ -509,6 +529,7 @@ function EditTaskModal({ task, isOpen, onClose, onSave }) {
 ## Best Practices
 
 ### Component Development
+
 1. **Always provide accessible names** for interactive elements
 2. **Use semantic HTML** before adding ARIA roles
 3. **Test with keyboard only** before adding mouse interactions
@@ -516,6 +537,7 @@ function EditTaskModal({ task, isOpen, onClose, onSave }) {
 5. **Provide context** for screen readers when visual cues are used
 
 ### Testing Guidelines
+
 1. **Test with multiple screen readers** (NVDA, JAWS, VoiceOver)
 2. **Verify keyboard navigation** in all components
 3. **Check color contrast** for all text and interactive elements
@@ -523,6 +545,7 @@ function EditTaskModal({ task, isOpen, onClose, onSave }) {
 5. **Validate touch targets** meet minimum size requirements
 
 ### Implementation Checklist
+
 - [ ] Component has proper ARIA labels and roles
 - [ ] Keyboard navigation works as expected
 - [ ] Color contrast meets WCAG AA standards
@@ -534,6 +557,7 @@ function EditTaskModal({ task, isOpen, onClose, onSave }) {
 - [ ] Component has been tested with assistive technology
 
 ### Common Patterns
+
 1. **Form Validation**: Always announce validation results
 2. **Dynamic Content**: Use live regions for updates
 3. **Navigation**: Implement skip links and landmarks
@@ -547,4 +571,5 @@ function EditTaskModal({ task, isOpen, onClose, onSave }) {
 - [WebAIM Screen Reader Testing](https://webaim.org/articles/screenreader_testing/)
 - [Material UI Accessibility](https://mui.com/material-ui/guides/accessibility/)
 
-For questions or contributions to the accessibility system, please refer to the component documentation and test suites.
+For questions or contributions to the accessibility system, please refer to the component
+documentation and test suites.

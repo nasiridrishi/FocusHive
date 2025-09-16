@@ -1,0 +1,89 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "notification-service.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "notification-service.labels" . | nindent 4 }}
+rules:
+  # Allow reading ConfigMaps and Secrets for configuration management
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  
+  # Allow reading own pod information for service discovery
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+    resourceNames: []
+  
+  # Allow reading endpoints for service discovery
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch"]
+  
+  {{- if .Values.rbac.rules }}
+  {{- with .Values.rbac.rules }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- end }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "notification-service.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "notification-service.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "notification-service.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "notification-service.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+
+{{- if .Values.rbac.clusterRole.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "notification-service.fullname" . }}-cluster
+  labels:
+    {{- include "notification-service.labels" . | nindent 4 }}
+rules:
+  # Allow reading nodes for node-level monitoring
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/metrics"]
+    verbs: ["get", "list", "watch"]
+  
+  # Allow reading non-resource URLs for monitoring
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+  
+  {{- if .Values.rbac.clusterRole.rules }}
+  {{- with .Values.rbac.clusterRole.rules }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  {{- end }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "notification-service.fullname" . }}-cluster
+  labels:
+    {{- include "notification-service.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "notification-service.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "notification-service.fullname" . }}-cluster
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end }}

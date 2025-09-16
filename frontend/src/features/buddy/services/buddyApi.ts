@@ -1,15 +1,15 @@
-import axios, { AxiosInstance } from 'axios'
+import axios, {AxiosInstance} from 'axios'
 import {
-  BuddyRelationship,
-  BuddyRequest,
+  BuddyCheckin,
+  BuddyGoal,
   BuddyMatch,
   BuddyPreferences,
-  BuddyGoal,
-  BuddyCheckin,
+  BuddyRelationship,
+  BuddyRequest,
   BuddySession,
   BuddyStats,
-  MatchScore,
-  CheckinStats
+  CheckinStats,
+  MatchScore
 } from '../types'
 
 class BuddyApiService {
@@ -27,23 +27,23 @@ class BuddyApiService {
 
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('authToken')
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-      },
-      (error) => Promise.reject(error)
+        (config) => {
+          const token = localStorage.getItem('authToken')
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
+          return config
+        },
+        (error) => Promise.reject(error)
     )
 
     // Response interceptor for error handling
     this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        // API errors are handled at component level
-        throw error
-      }
+        (response) => response,
+        (error) => {
+          // API errors are handled at component level
+          throw error
+        }
     )
   }
 
@@ -65,7 +65,7 @@ class BuddyApiService {
 
   async terminateRelationship(relationshipId: number, reason?: string): Promise<BuddyRelationship> {
     const response = await this.api.delete(`/relationship/${relationshipId}`, {
-      params: { reason }
+      params: {reason}
     })
     return response.data
   }
@@ -177,14 +177,14 @@ class BuddyApiService {
 
   async cancelSession(sessionId: number, reason?: string): Promise<BuddySession> {
     const response = await this.api.put(`/sessions/${sessionId}/cancel`, null, {
-      params: { reason }
+      params: {reason}
     })
     return response.data
   }
 
   async rateSession(sessionId: number, rating: number, feedback?: string): Promise<BuddySession> {
     const response = await this.api.post(`/sessions/${sessionId}/rate`, null, {
-      params: { rating, feedback }
+      params: {rating, feedback}
     })
     return response.data
   }

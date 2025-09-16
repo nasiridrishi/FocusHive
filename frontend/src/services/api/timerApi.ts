@@ -1,10 +1,10 @@
-import { AxiosInstance, AxiosError } from 'axios';
-import { apiClient } from './httpInterceptors';
-import { API_ENDPOINTS, buildEndpoint } from './index';
+import {AxiosError, AxiosInstance} from 'axios';
+import {apiClient} from './httpInterceptors';
+import {API_ENDPOINTS, buildEndpoint} from './index';
 
 /**
  * Timer API Service
- * 
+ *
  * Provides timer and focus session management with:
  * - Session lifecycle management
  * - Pomodoro technique support
@@ -108,7 +108,7 @@ class TimerApiService {
    */
   async endSession(sessionId: number, request?: Partial<EndSessionRequest>): Promise<FocusSession> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.TIMER.END_SESSION, { sessionId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.TIMER.END_SESSION, {sessionId});
       const response = await this.api.post<FocusSession>(endpoint, request);
       return response.data;
     } catch (error) {
@@ -122,7 +122,7 @@ class TimerApiService {
    */
   async pauseSession(sessionId: number): Promise<FocusSession> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.TIMER.PAUSE_SESSION, { sessionId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.TIMER.PAUSE_SESSION, {sessionId});
       const response = await this.api.post<FocusSession>(endpoint);
       return response.data;
     } catch (error) {
@@ -150,19 +150,22 @@ class TimerApiService {
   /**
    * Get session history
    */
-  async getSessionHistory(page = 0, size = 20, dateRange?: { start: string; end: string }): Promise<{
+  async getSessionHistory(page = 0, size = 20, dateRange?: {
+    start: string;
+    end: string
+  }): Promise<{
     content: FocusSession[];
     totalElements: number;
     totalPages: number;
   }> {
     try {
-      const params: Record<string, unknown> = { page, size };
+      const params: Record<string, unknown> = {page, size};
       if (dateRange) {
         params.startDate = dateRange.start;
         params.endDate = dateRange.end;
       }
 
-      const response = await this.api.get(API_ENDPOINTS.TIMER.SESSIONS_HISTORY, { params });
+      const response = await this.api.get(API_ENDPOINTS.TIMER.SESSIONS_HISTORY, {params});
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to get session history');
@@ -175,8 +178,8 @@ class TimerApiService {
    */
   async getDailyStats(date?: string): Promise<ProductivityStats> {
     try {
-      const params = date ? { date } : {};
-      const response = await this.api.get<ProductivityStats>(API_ENDPOINTS.TIMER.STATS_DAILY, { params });
+      const params = date ? {date} : {};
+      const response = await this.api.get<ProductivityStats>(API_ENDPOINTS.TIMER.STATS_DAILY, {params});
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to get daily stats');
@@ -189,8 +192,8 @@ class TimerApiService {
    */
   async getWeeklyStats(week?: string): Promise<ProductivityStats> {
     try {
-      const params = week ? { week } : {};
-      const response = await this.api.get<ProductivityStats>(API_ENDPOINTS.TIMER.STATS_WEEKLY, { params });
+      const params = week ? {week} : {};
+      const response = await this.api.get<ProductivityStats>(API_ENDPOINTS.TIMER.STATS_WEEKLY, {params});
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to get weekly stats');
@@ -203,8 +206,8 @@ class TimerApiService {
    */
   async getMonthlyStats(month?: string): Promise<ProductivityStats> {
     try {
-      const params = month ? { month } : {};
-      const response = await this.api.get<ProductivityStats>(API_ENDPOINTS.TIMER.STATS_MONTHLY, { params });
+      const params = month ? {month} : {};
+      const response = await this.api.get<ProductivityStats>(API_ENDPOINTS.TIMER.STATS_MONTHLY, {params});
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to get monthly stats');
@@ -278,7 +281,7 @@ class TimerApiService {
     try {
       const settings = await this.getPomodoroSettings();
       const duration = isLongBreak ? settings.longBreakDuration : settings.shortBreakDuration;
-      
+
       const request: StartSessionRequest = {
         sessionType: 'BREAK',
         targetDuration: duration,
@@ -315,9 +318,9 @@ class TimerApiService {
    */
   private handleError(error: unknown, defaultMessage: string): never {
     if (error instanceof AxiosError) {
-      const message = error.response?.data?.message || 
-                     error.response?.data?.error || 
-                     defaultMessage;
+      const message = error.response?.data?.message ||
+          error.response?.data?.error ||
+          defaultMessage;
       throw new Error(message);
     }
     throw new Error('Network error occurred');

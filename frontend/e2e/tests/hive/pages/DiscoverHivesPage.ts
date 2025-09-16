@@ -3,9 +3,7 @@
  * Handles hive browsing, searching, and filtering functionality
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { HiveSearchParams } from '../../../src/services/api/hiveApi';
-import { TestHive } from '../hive-fixtures';
+import {expect, Locator, Page} from '@playwright/test';
 
 export class DiscoverHivesPage {
   readonly page: Page;
@@ -130,13 +128,13 @@ export class DiscoverHivesPage {
    */
   async filterByPrivacy(privacy: 'public' | 'private' | 'all'): Promise<void> {
     await this.privacyFilter.click();
-    
+
     if (privacy !== 'all') {
       await this.page.click(`[data-testid="privacy-option-${privacy}"]`);
     } else {
       await this.page.click('[data-testid="privacy-option-all"]');
     }
-    
+
     await this.waitForResults();
   }
 
@@ -156,18 +154,18 @@ export class DiscoverHivesPage {
    */
   async filterByTags(tags: string[]): Promise<void> {
     await this.tagsFilter.click();
-    
+
     // First clear existing selections
     const clearAllTags = this.page.locator('[data-testid="clear-all-tags"]');
     if (await clearAllTags.isVisible()) {
       await clearAllTags.click();
     }
-    
+
     // Select specified tags
     for (const tag of tags) {
       await this.page.click(`[data-testid="tag-filter-${tag}"]`);
     }
-    
+
     // Close tag filter dropdown
     await this.tagsFilter.click();
     await this.waitForResults();
@@ -199,7 +197,7 @@ export class DiscoverHivesPage {
   async resetFilters(): Promise<void> {
     await this.resetFiltersButton.click();
     await this.waitForResults();
-    
+
     // Verify filters are reset
     await expect(this.searchInput).toHaveValue('');
     await expect(this.availableSlotsFilter).not.toBeChecked();
@@ -241,20 +239,20 @@ export class DiscoverHivesPage {
       const id = parseInt(await card.getAttribute('data-hive-id') || '0');
       const name = await card.locator('[data-testid="hive-name"]').textContent() || '';
       const description = await card.locator('[data-testid="hive-description"]').textContent() || '';
-      
+
       const memberText = await card.locator('[data-testid="member-count"]').textContent() || '0/0';
       const [currentMembers, maxMembers] = memberText.split('/').map(num => parseInt(num.trim()));
-      
+
       const privacyIcon = card.locator('[data-testid="privacy-icon"]');
       const isPrivate = await privacyIcon.getAttribute('title') === 'Private Hive';
-      
+
       const tagElements = await card.locator('[data-testid="hive-tag"]').all();
       const tags = [];
       for (const tagElement of tagElements) {
         const tagText = await tagElement.textContent();
         if (tagText) tags.push(tagText.trim());
       }
-      
+
       const hasAvailableSlots = currentMembers < maxMembers;
 
       hiveData.push({
@@ -277,7 +275,7 @@ export class DiscoverHivesPage {
    */
   async clickHiveCard(hiveId: number): Promise<void> {
     await this.page.click(`[data-testid="hive-card"][data-hive-id="${hiveId}"]`);
-    
+
     // Should navigate to hive page
     await expect(this.page.locator('[data-testid="hive-workspace"]')).toBeVisible();
   }
@@ -288,13 +286,13 @@ export class DiscoverHivesPage {
   async joinHiveFromCard(hiveId: number): Promise<void> {
     const card = this.page.locator(`[data-testid="hive-card"][data-hive-id="${hiveId}"]`);
     const joinButton = card.locator('[data-testid="quick-join-button"]');
-    
+
     await joinButton.click();
-    
+
     // Handle join confirmation or approval modal
     const confirmJoin = this.page.locator('[data-testid="confirm-join"]');
     const approvalModal = this.page.locator('[data-testid="join-approval-modal"]');
-    
+
     if (await confirmJoin.isVisible()) {
       await confirmJoin.click();
     } else if (await approvalModal.isVisible()) {
@@ -354,13 +352,13 @@ export class DiscoverHivesPage {
   }> {
     const currentPageElement = this.page.locator('[data-testid="current-page"]');
     const currentPage = parseInt(await currentPageElement.textContent() || '1');
-    
+
     const totalPagesElement = this.page.locator('[data-testid="total-pages"]');
     const totalPages = parseInt(await totalPagesElement.textContent() || '1');
-    
+
     const resultsPerPageValue = await this.resultsPerPageSelect.inputValue();
     const resultsPerPage = parseInt(resultsPerPageValue || '20');
-    
+
     const totalResults = await this.getResultsCount();
 
     return {
@@ -393,10 +391,10 @@ export class DiscoverHivesPage {
     if (await this.loadingIndicator.isVisible()) {
       await expect(this.loadingIndicator).not.toBeVisible();
     }
-    
+
     // Wait for either results or no results message
     await expect(
-      this.searchResults.or(this.noResultsMessage)
+        this.searchResults.or(this.noResultsMessage)
     ).toBeVisible();
   }
 
@@ -415,34 +413,34 @@ export class DiscoverHivesPage {
   }): Promise<void> {
     // Reset filters first
     await this.resetFilters();
-    
+
     // Apply search query
     if (params.query) {
       await this.searchHives(params.query);
     }
-    
+
     // Apply privacy filter
     if (params.privacy) {
       await this.filterByPrivacy(params.privacy);
     }
-    
+
     // Apply tags filter
     if (params.tags && params.tags.length > 0) {
       await this.filterByTags(params.tags);
     }
-    
+
     // Apply available slots filter
     if (params.hasAvailableSlots !== undefined) {
       await this.filterByAvailableSlots(params.hasAvailableSlots);
     }
-    
+
     // Apply member count filter
     if (params.memberCountMin !== undefined || params.memberCountMax !== undefined) {
       const min = params.memberCountMin || 0;
       const max = params.memberCountMax || 1000;
       await this.filterByMemberCount(min, max);
     }
-    
+
     // Apply sorting
     if (params.sortBy) {
       await this.sortResults(params.sortBy, params.sortOrder);
@@ -458,7 +456,7 @@ export class DiscoverHivesPage {
     tags?: string[];
   }): Promise<boolean> {
     const hiveCards = await this.getHiveCards();
-    
+
     for (const hive of hiveCards) {
       // Check available slots filter
       if (expectedFilters.hasAvailableSlots !== undefined) {
@@ -466,25 +464,25 @@ export class DiscoverHivesPage {
           return false;
         }
       }
-      
+
       // Check privacy filter
       if (expectedFilters.isPrivate !== undefined) {
         if (hive.isPrivate !== expectedFilters.isPrivate) {
           return false;
         }
       }
-      
+
       // Check tags filter
       if (expectedFilters.tags && expectedFilters.tags.length > 0) {
-        const hasMatchingTag = expectedFilters.tags.some(tag => 
-          hive.tags.includes(tag)
+        const hasMatchingTag = expectedFilters.tags.some(tag =>
+            hive.tags.includes(tag)
         );
         if (!hasMatchingTag) {
           return false;
         }
       }
     }
-    
+
     return true;
   }
 

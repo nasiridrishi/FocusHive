@@ -71,7 +71,7 @@ public class AuthController {
         @ApiResponse(responseCode = "429", description = "Too many requests - Rate limit exceeded")
     })
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
-    @RateLimit(value = 5, window = 1, timeUnit = TimeUnit.MINUTES, type = RateLimit.RateLimitType.IP_AND_USER,
+    @RateLimit(value = 5, window = 1, timeUnit = TimeUnit.MINUTES, type = RateLimit.RateLimitType.IP,
               message = "Too many login attempts. Please wait before trying again.",
               progressivePenalties = true)
     public ResponseEntity<AuthenticationResponse> login(
@@ -168,12 +168,14 @@ public class AuthController {
         @ApiResponse(responseCode = "429", description = "Too many requests - Rate limit exceeded")
     })
     @PostMapping(value = "/password/reset-request", produces = MediaType.APPLICATION_JSON_VALUE)
-    @RateLimit(value = 1, window = 1, timeUnit = TimeUnit.MINUTES, type = RateLimit.RateLimitType.IP,
-              message = "Too many password reset requests. Please wait before trying again.",
-              progressivePenalties = true)
+    // @RateLimit(value = 1, window = 1, timeUnit = TimeUnit.MINUTES, type = RateLimit.RateLimitType.IP,
+    //          message = "Too many password reset requests. Please wait before trying again.",
+    //          progressivePenalties = true)
     public ResponseEntity<MessageResponse> requestPasswordReset(
             @Valid @RequestBody PasswordResetRequest request) {
+        log.info("Received password reset request for email: {}", request.getEmail());
         authenticationService.requestPasswordReset(request.getEmail());
+        log.info("Password reset request processed, returning response");
         // Always return success to prevent user enumeration
         return ResponseEntity.ok(new MessageResponse("If an account exists with this email, a reset link has been sent."));
     }

@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useSpotify } from '../context/useSpotifyContext'
-import { Track, PlaybackState } from '../types'
-import type { UseSpotifyPlayerOptions } from '../../../types/spotify'
+import {useCallback, useEffect, useRef, useState} from 'react'
+import {useSpotify} from '../context/useSpotifyContext'
+import {PlaybackState, Track} from '../types'
+import type {UseSpotifyPlayerOptions} from '../../../types/spotify'
 
 // Enhanced playback state for the hook (extending the base PlaybackState)
 interface SpotifyPlaybackState extends PlaybackState {
@@ -15,7 +15,31 @@ interface SpotifyPlaybackState extends PlaybackState {
  * Enhanced Spotify Player Hook
  * Integrates with SpotifyContext for full SDK functionality
  */
-export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => {
+export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>): {
+  isConnected: boolean;
+  isAuthenticated: boolean;
+  isPremium: boolean;
+  deviceId: string | null;
+  isLoading: boolean;
+  playbackState: SpotifyPlaybackState;
+  error: string | null;
+  play: (trackUri?: string) => Promise<void>;
+  pause: () => Promise<void>;
+  togglePlay: () => Promise<void>;
+  seekTo: (positionSeconds: number) => Promise<void>;
+  setVolume: (volume: number) => Promise<void>;
+  skipNext: () => Promise<void>;
+  skipPrevious: () => Promise<void>;
+  getCurrentState: () => Promise<import('../../../types/spotify').Spotify.PlaybackState | null>;
+  transferPlayback: () => Promise<boolean>;
+  playTrack: (spotifyUri: string) => Promise<boolean>;
+  playPlaylist: (playlistUri: string, trackOffset?: number) => Promise<boolean>;
+  connect: () => Promise<boolean>;
+  disconnect: () => void;
+  canPlay: boolean;
+  canConnect: boolean;
+  clearError: () => void;
+} => {
   const spotify = useSpotify()
   const [playbackState, setPlaybackState] = useState<SpotifyPlaybackState>({
     isPlaying: false,
@@ -40,9 +64,9 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     const player = spotify.getPlayerInstance()
     if (!player) return
 
-    const handlePlayerStateChange = (state: import('../../../types/spotify').Spotify.PlaybackState | null) => {
+    const handlePlayerStateChange = (state: import('../../../types/spotify').Spotify.PlaybackState | null): unknown[] => {
       if (!state) {
-        setPlaybackState(prev => ({ ...prev, isPlaying: false, isPaused: true, currentTrack: null }))
+        setPlaybackState(prev => ({...prev, isPlaying: false, isPaused: true, currentTrack: null}))
         return
       }
 
@@ -83,7 +107,8 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     player.addListener('player_state_changed', handlePlayerStateChange)
 
     // Initial state fetch
-    player.getCurrentState().then(handlePlayerStateChange).catch(() => {})
+    player.getCurrentState().then(handlePlayerStateChange).catch(() => {
+    })
 
     return () => {
       player.removeListener('player_state_changed', handlePlayerStateChange)
@@ -118,7 +143,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     try {
       setError(null)
       if (trackUri) {
-        await spotify.play({ uris: [trackUri] })
+        await spotify.play({uris: [trackUri]})
       } else {
         await spotify.play()
       }
@@ -152,11 +177,11 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     if (!playbackState.canSeek) {
       throw new Error('Seeking not allowed for this track')
     }
-    
+
     try {
       setError(null)
       await spotify.seek(positionSeconds * 1000) // Convert to ms
-      setPlaybackState(prev => ({ ...prev, currentTime: positionSeconds }))
+      setPlaybackState(prev => ({...prev, currentTime: positionSeconds}))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to seek'
       setError(message)
@@ -169,7 +194,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     try {
       setError(null)
       await spotify.setVolume(clampedVolume)
-      setPlaybackState(prev => ({ ...prev, volume: clampedVolume }))
+      setPlaybackState(prev => ({...prev, volume: clampedVolume}))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to set volume'
       setError(message)
@@ -181,7 +206,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     if (!playbackState.canSkipNext) {
       throw new Error('Skipping to next track not allowed')
     }
-    
+
     try {
       setError(null)
       await spotify.next()
@@ -196,7 +221,7 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     if (!playbackState.canSkipPrevious) {
       throw new Error('Skipping to previous track not allowed')
     }
-    
+
     try {
       setError(null)
       await spotify.previous()
@@ -214,8 +239,8 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
         return await player.getCurrentState()
       }
       return null
-    } catch (err) {
-      console.error('Failed to get Spotify player state:', err);
+    } catch {
+      // console.error('Failed to get Spotify player state');
       return null
     }
   }, [spotify])
@@ -236,8 +261,8 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
       setError(null)
       await play(spotifyUri)
       return true
-    } catch (err) {
-      console.error('Failed to play track:', err);
+    } catch {
+      // console.error('Failed to play track');
       return false
     }
   }, [play])
@@ -245,9 +270,12 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
   const playPlaylist = useCallback(async (playlistUri: string, trackOffset?: number) => {
     try {
       setError(null)
-      const playOptions: { context_uri: string; offset?: { position: number } } = { context_uri: playlistUri }
+      const playOptions: {
+        context_uri: string;
+        offset?: { position: number }
+      } = {context_uri: playlistUri}
       if (trackOffset !== undefined) {
-        playOptions.offset = { position: trackOffset }
+        playOptions.offset = {position: trackOffset}
       }
       await spotify.play(playOptions)
       return true
@@ -265,11 +293,11 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     isPremium: spotify.state.auth.isPremium,
     deviceId: spotify.state.player.deviceId,
     isLoading: spotify.state.isLoading,
-    
+
     // Playback state
     playbackState,
     error: error || spotify.state.error,
-    
+
     // Basic controls
     play,
     pause,
@@ -278,21 +306,21 @@ export const useSpotifyPlayer = (options?: Partial<UseSpotifyPlayerOptions>) => 
     setVolume,
     skipNext,
     skipPrevious,
-    
+
     // Advanced controls
     getCurrentState,
     transferPlayback,
     playTrack,
     playPlaylist,
-    
+
     // Connection management
     connect: spotify.connectPlayer,
     disconnect: spotify.disconnectPlayer,
-    
+
     // Feature availability
     canPlay: spotify.isFeatureAvailable('play'),
     canConnect: spotify.isFeatureAvailable('connect'),
-    
+
     // Utilities
     clearError: () => setError(null)
   }

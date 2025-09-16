@@ -3,8 +3,7 @@
  * Comprehensive Playwright configuration for testing across multiple browsers
  */
 
-import { defineConfig, devices } from '@playwright/test';
-import { BrowserMatrix } from './browser-matrix';
+import {defineConfig, devices} from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/cross-browser',
@@ -22,9 +21,9 @@ export default defineConfig({
     }
   },
   reporter: [
-    ['html', { outputFolder: 'cross-browser-report' }],
-    ['json', { outputFile: 'cross-browser-results.json' }],
-    ['junit', { outputFile: 'cross-browser-junit.xml' }],
+    ['html', {outputFolder: 'cross-browser-report'}],
+    ['json', {outputFile: 'cross-browser-results.json'}],
+    ['junit', {outputFile: 'cross-browser-junit.xml'}],
     ['allure-playwright']
   ],
   use: {
@@ -40,7 +39,7 @@ export default defineConfig({
     // Desktop Chrome (Latest versions)
     {
       name: 'chrome-latest',
-      use: { ...devices['Desktop Chrome'] },
+      use: {...devices['Desktop Chrome']},
       metadata: {
         platform: 'desktop',
         browser: 'chrome',
@@ -49,7 +48,7 @@ export default defineConfig({
     },
     {
       name: 'chrome-previous',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         channel: 'chrome-dev'
       },
@@ -61,7 +60,7 @@ export default defineConfig({
     },
     {
       name: 'chrome-stable-1',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         channel: 'chrome'
       },
@@ -75,7 +74,7 @@ export default defineConfig({
     // Desktop Firefox (Latest versions)
     {
       name: 'firefox-latest',
-      use: { ...devices['Desktop Firefox'] },
+      use: {...devices['Desktop Firefox']},
       metadata: {
         platform: 'desktop',
         browser: 'firefox',
@@ -84,7 +83,7 @@ export default defineConfig({
     },
     {
       name: 'firefox-previous',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         channel: 'firefox-beta'
       },
@@ -96,7 +95,7 @@ export default defineConfig({
     },
     {
       name: 'firefox-stable-1',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         channel: 'firefox'
       },
@@ -110,7 +109,7 @@ export default defineConfig({
     // Desktop Safari (macOS only)
     {
       name: 'safari-latest',
-      use: { ...devices['Desktop Safari'] },
+      use: {...devices['Desktop Safari']},
       metadata: {
         platform: 'desktop',
         browser: 'safari',
@@ -119,7 +118,7 @@ export default defineConfig({
     },
     {
       name: 'safari-previous',
-      use: { ...devices['Desktop Safari'] },
+      use: {...devices['Desktop Safari']},
       metadata: {
         platform: 'desktop',
         browser: 'safari',
@@ -130,7 +129,7 @@ export default defineConfig({
     // Desktop Edge (Latest versions)
     {
       name: 'edge-latest',
-      use: { 
+      use: {
         ...devices['Desktop Edge'],
         channel: 'msedge'
       },
@@ -142,7 +141,7 @@ export default defineConfig({
     },
     {
       name: 'edge-previous',
-      use: { 
+      use: {
         ...devices['Desktop Edge'],
         channel: 'msedge-dev'
       },
@@ -154,7 +153,7 @@ export default defineConfig({
     },
     {
       name: 'edge-stable-1',
-      use: { 
+      use: {
         ...devices['Desktop Edge'],
         channel: 'msedge-beta'
       },
@@ -168,7 +167,7 @@ export default defineConfig({
     // Mobile browsers
     {
       name: 'chrome-mobile',
-      use: { 
+      use: {
         ...devices['Pixel 5'],
         hasTouch: true,
         isMobile: true
@@ -181,7 +180,7 @@ export default defineConfig({
     },
     {
       name: 'safari-mobile',
-      use: { 
+      use: {
         ...devices['iPhone 12'],
         hasTouch: true,
         isMobile: true
@@ -196,7 +195,7 @@ export default defineConfig({
     // Tablet browsers
     {
       name: 'chrome-tablet',
-      use: { 
+      use: {
         ...devices['iPad Pro'],
         hasTouch: true
       },
@@ -210,7 +209,7 @@ export default defineConfig({
     // Special configurations for testing specific features
     {
       name: 'chrome-no-javascript',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         javaScriptEnabled: false
       },
@@ -223,7 +222,7 @@ export default defineConfig({
     },
     {
       name: 'chrome-slow-network',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
           args: ['--force-effective-connection-type=2g']
@@ -238,7 +237,7 @@ export default defineConfig({
     },
     {
       name: 'chrome-high-contrast',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
           args: ['--force-prefers-color-scheme=dark', '--force-prefers-reduced-motion']

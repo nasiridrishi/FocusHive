@@ -2,4 +2,4 @@
 export * from './AnalyticsContext';
 
 // Named exports for convenience
-export { AnalyticsProvider, useAnalytics } from './AnalyticsContext';
+export {AnalyticsProvider, useAnalytics} from './AnalyticsContext';

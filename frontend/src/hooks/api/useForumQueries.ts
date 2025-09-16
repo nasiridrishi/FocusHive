@@ -1,6 +1,6 @@
 /**
  * Forum Query Hooks (Placeholder)
- * 
+ *
  * TODO: Implement forum-related query hooks
  */
 

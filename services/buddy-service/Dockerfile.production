@@ -1,0 +1,52 @@
+# =============================================================================
+# Production Dockerfile for FocusHive Buddy Service
+# Uses pre-built JAR from local build for reliability
+# =============================================================================
+
+FROM eclipse-temurin:21-jre-alpine AS runtime
+
+# Create application directory
+WORKDIR /app
+
+# Install health check dependencies and create non-root user for security
+RUN apk add --no-cache wget && \
+    addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
+
+# Copy the pre-built JAR from local build
+COPY --chown=appuser:appgroup build/libs/buddy-service.jar app.jar
+
+# Switch to non-root user
+USER appuser
+
+# Expose application port
+EXPOSE 8087
+
+# JVM options for production with optimized settings
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -XX:InitialRAMPercentage=50.0 \
+               -XX:+UseG1GC \
+               -XX:+UseStringDeduplication \
+               -XX:+ExitOnOutOfMemoryError \
+               -Xss256k \
+               -XX:MetaspaceSize=128m \
+               -XX:MaxMetaspaceSize=256m \
+               -Djava.security.egd=file:/dev/./urandom \
+               -Djava.awt.headless=true \
+               -Dspring.backgroundpreinitializer.ignore=true \
+               -Dspring.jmx.enabled=false \
+               -Dfile.encoding=UTF-8 \
+               -Duser.timezone=UTC \
+               -Djava.net.preferIPv4Stack=true"
+
+# Application configuration for production
+ENV SPRING_PROFILES_ACTIVE=docker \
+    SPRING_MAIN_LAZY_INITIALIZATION=false \
+    LOGGING_LEVEL_ROOT=INFO \
+    MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics \
+    MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

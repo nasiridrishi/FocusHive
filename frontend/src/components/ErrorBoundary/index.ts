@@ -9,7 +9,7 @@ export {
   withErrorBoundary,
   useErrorBoundaryConfig,
 } from './ErrorBoundaryConfig'
-export type { ErrorBoundaryConfigProps } from './ErrorBoundaryConfig'
+export type {ErrorBoundaryConfigProps} from './ErrorBoundaryConfig'
 
 // Specialized fallback components
 export {

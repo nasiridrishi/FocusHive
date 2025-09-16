@@ -1,39 +1,39 @@
-import { lazy, Suspense, ComponentType, ReactElement } from 'react'
-import { RouteLoadingFallback } from '@shared/components/loading'
+import {ComponentType, lazy, ReactElement, Suspense} from 'react'
+import {RouteLoadingFallback} from '@shared/components/loading'
 
 // Utility function to create lazy components with error boundaries and loading states
 export function createLazyComponent(
-  importFn: () => Promise<{ default: ComponentType<unknown> }>,
-  fallbackElement?: ReactElement,
-  displayName?: string
-) {
+    importFn: () => Promise<{ default: ComponentType<unknown> }>,
+    fallbackElement?: ReactElement,
+    displayName?: string
+): ComponentType<Record<string, unknown>> {
   const LazyComponent = lazy(importFn)
-  
-  const wrappedComponent = (props: Record<string, unknown>) => {
-    const fallback = fallbackElement || <RouteLoadingFallback />
-    
+
+  const wrappedComponent = (props: Record<string, unknown>): React.ReactElement => {
+    const fallback = fallbackElement || <RouteLoadingFallback/>
+
     return (
-      <Suspense fallback={fallback}>
-        <LazyComponent {...props} />
-      </Suspense>
+        <Suspense fallback={fallback}>
+          <LazyComponent {...props} />
+        </Suspense>
     )
   }
-  
+
   wrappedComponent.displayName = displayName || 'lazyComponent'
   return wrappedComponent
 }
 
 // Helper function for dynamic imports based on feature flags
 export function createConditionallazyComponent(
-  condition: boolean,
-  importFn: () => Promise<{ default: ComponentType<unknown> }>,
-  fallbackComponent?: ComponentType<unknown>,
-  loadingElement?: ReactElement
-) {
+    condition: boolean,
+    importFn: () => Promise<{ default: ComponentType<unknown> }>,
+    fallbackComponent?: ComponentType<unknown>,
+    loadingElement?: ReactElement
+): ComponentType<unknown> {
   if (!condition && fallbackComponent) {
     return fallbackComponent
   }
-  
+
   return createLazyComponent(importFn, loadingElement)
 }
 
@@ -50,7 +50,7 @@ export interface LazyRouteConfig {
 export const lazyRoutes: LazyRouteConfig[] = []
 
 // Preloader function to prefetch critical routes
-export function preloadCriticalRoutes() {
+export function preloadCriticalRoutes(): void {
   // Critical routes are already loaded with the main bundle
   // Routes preloaded successfully
 }
@@ -61,12 +61,12 @@ export const routePreloaders = {
   preloadAuth: () => {
     // Auth routes ready for preload
   },
-  
+
   // Preload main app routes
   preloadMainApp: () => {
     // Main app routes ready for preload
   },
-  
+
   // Preload heavy features on user interaction
   preloadHeavyFeatures: () => {
     // Heavy features ready for preload

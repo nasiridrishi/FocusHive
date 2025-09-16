@@ -1,1 +1,1 @@
-export { TimerProvider, useTimer, default as TimerContext } from './TimerContext'
+export {TimerProvider, useTimer, default as TimerContext} from './TimerContext'

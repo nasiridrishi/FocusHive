@@ -3,11 +3,10 @@
  * Tests layout adaptation patterns and responsive design components
  */
 
-import { test, expect, Page, Locator } from '@playwright/test';
-import { VIEWPORT_BREAKPOINTS, MOBILE_DEVICES } from './mobile.config';
-import { MobileHelper } from '../../helpers/mobile.helper';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { TEST_URLS } from '../../helpers/test-data';
+import {expect, Locator, Page, test} from '@playwright/test';
+import {MobileHelper} from '../../helpers/mobile.helper';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {TEST_URLS} from '../../helpers/test-data';
 
 interface LayoutTest {
   name: string;
@@ -48,7 +47,7 @@ interface FlexLayoutTest {
   selector: string;
   expectedDirection: {
     mobile: 'row' | 'column';
-    tablet: 'row' | 'column';  
+    tablet: 'row' | 'column';
     desktop: 'row' | 'column';
   };
   wrap?: boolean;
@@ -57,11 +56,11 @@ interface FlexLayoutTest {
 
 test.describe('Responsive Layout - Navigation Patterns', () => {
   let authHelper: AuthHelper;
-  let mobileHelper: MobileHelper;
+  let _mobileHelper: MobileHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
-    mobileHelper = new MobileHelper(page);
+    _mobileHelper = new MobileHelper(page);
     await authHelper.loginWithTestUser();
   });
 
@@ -70,16 +69,16 @@ test.describe('Responsive Layout - Navigation Patterns', () => {
       name: 'Main Navigation',
       selector: '[data-testid="main-navigation"]',
       breakpoints: {
-        mobile: { 
+        mobile: {
           visible: false, // Hidden on mobile, replaced by hamburger menu
           display: 'none'
         },
-        tablet: { 
+        tablet: {
           visible: true,
           position: 'fixed',
           display: 'flex'
         },
-        desktop: { 
+        desktop: {
           visible: true,
           position: 'static',
           display: 'flex'
@@ -91,15 +90,15 @@ test.describe('Responsive Layout - Navigation Patterns', () => {
       name: 'Mobile Menu Toggle',
       selector: '[data-testid="mobile-menu-toggle"]',
       breakpoints: {
-        mobile: { 
+        mobile: {
           visible: true,
           position: 'fixed'
         },
-        tablet: { 
+        tablet: {
           visible: false,
           display: 'none'
         },
-        desktop: { 
+        desktop: {
           visible: false,
           display: 'none'
         }
@@ -110,15 +109,15 @@ test.describe('Responsive Layout - Navigation Patterns', () => {
       name: 'Bottom Navigation',
       selector: '[data-testid="bottom-navigation"]',
       breakpoints: {
-        mobile: { 
+        mobile: {
           visible: true,
           position: 'fixed'
         },
-        tablet: { 
+        tablet: {
           visible: false,
           display: 'none'
         },
-        desktop: { 
+        desktop: {
           visible: false,
           display: 'none'
         }
@@ -129,15 +128,15 @@ test.describe('Responsive Layout - Navigation Patterns', () => {
       name: 'Breadcrumbs',
       selector: '[data-testid="breadcrumbs"]',
       breakpoints: {
-        mobile: { 
+        mobile: {
           visible: false,
           display: 'none'
         },
-        tablet: { 
+        tablet: {
           visible: true,
           display: 'block'
         },
-        desktop: { 
+        desktop: {
           visible: true,
           display: 'block'
         }
@@ -147,26 +146,26 @@ test.describe('Responsive Layout - Navigation Patterns', () => {
   ];
 
   navigationTests.forEach(test => {
-    test(`should adapt ${test.name} correctly across breakpoints`, async ({ page }) => {
+    test(`should adapt ${test.name} correctly across breakpoints`, async ({page}) => {
       await page.goto(TEST_URLS.DASHBOARD);
       await page.waitForLoadState('networkidle');
 
       // Test mobile layout
       await validateLayoutAtBreakpoint(page, test, 'mobile', 390);
-      
+
       // Test tablet layout  
       await validateLayoutAtBreakpoint(page, test, 'tablet', 768);
-      
+
       // Test desktop layout
       await validateLayoutAtBreakpoint(page, test, 'desktop', 1024);
     });
   });
 
-  test('should handle navigation drawer functionality', async ({ page }) => {
+  test('should handle navigation drawer functionality', async ({page}) => {
     await page.goto(TEST_URLS.DASHBOARD);
-    
+
     // Set mobile viewport
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({width: 390, height: 844});
     await page.waitForTimeout(300);
 
     await test.step('Mobile menu toggle should open/close drawer', async () => {
@@ -182,7 +181,7 @@ test.describe('Responsive Layout - Navigation Patterns', () => {
 
       // Verify drawer is open
       await expect(navigationDrawer).toBeVisible();
-      
+
       // Verify drawer has correct mobile styling
       const drawerStyle = await navigationDrawer.evaluate(el => ({
         position: window.getComputedStyle(el).position,
@@ -199,33 +198,33 @@ test.describe('Responsive Layout - Navigation Patterns', () => {
         await closeButton.click();
       } else {
         // Click outside drawer to close
-        await page.click('body', { position: { x: 50, y: 50 } });
+        await page.click('body', {position: {x: 50, y: 50}});
       }
 
       await page.waitForTimeout(500);
-      
+
       // Verify drawer is closed
       await expect(navigationDrawer).not.toBeVisible();
     });
   });
 
-  test('should handle tab navigation responsiveness', async ({ page }) => {
+  test('should handle tab navigation responsiveness', async ({page}) => {
     await page.goto(TEST_URLS.ANALYTICS);
     await page.waitForLoadState('networkidle');
 
     const tabTests = [
-      { width: 390, name: 'Mobile', expectedBehavior: 'scrollable_tabs' },
-      { width: 768, name: 'Tablet', expectedBehavior: 'full_width_tabs' },
-      { width: 1024, name: 'Desktop', expectedBehavior: 'full_width_tabs' }
+      {width: 390, name: 'Mobile', expectedBehavior: 'scrollable_tabs'},
+      {width: 768, name: 'Tablet', expectedBehavior: 'full_width_tabs'},
+      {width: 1024, name: 'Desktop', expectedBehavior: 'full_width_tabs'}
     ];
 
     for (const tabTest of tabTests) {
       await test.step(`Tab navigation on ${tabTest.name}`, async () => {
-        await page.setViewportSize({ width: tabTest.width, height: 800 });
+        await page.setViewportSize({width: tabTest.width, height: 800});
         await page.waitForTimeout(300);
 
         const tabContainer = page.locator('[data-testid="tab-container"], .tabs, [role="tablist"]');
-        
+
         if (await tabContainer.isVisible()) {
           const tabStyle = await tabContainer.evaluate(el => ({
             overflowX: window.getComputedStyle(el).overflowX,
@@ -253,7 +252,7 @@ test.describe('Responsive Layout - Content Grid Systems', () => {
       selector: '[data-testid="hive-grid"]',
       expectedColumns: {
         mobile: 1,
-        tablet: 2, 
+        tablet: 2,
         desktop: 3
       },
       itemSelector: '[data-testid^="hive-card-"]',
@@ -283,8 +282,8 @@ test.describe('Responsive Layout - Content Grid Systems', () => {
   ];
 
   gridTests.forEach(gridTest => {
-    test(`should adapt ${gridTest.name} grid layout correctly`, async ({ page }) => {
-      let authHelper = new AuthHelper(page);
+    test(`should adapt ${gridTest.name} grid layout correctly`, async ({page}) => {
+      const authHelper = new AuthHelper(page);
       await authHelper.loginWithTestUser();
 
       // Navigate to appropriate page based on grid type
@@ -293,31 +292,31 @@ test.describe('Responsive Layout - Content Grid Systems', () => {
         'Analytics Dashboard Grid': TEST_URLS.ANALYTICS,
         'User Profile Grid': TEST_URLS.PROFILE
       };
-      
+
       await page.goto(urlMap[gridTest.name as keyof typeof urlMap] || TEST_URLS.DASHBOARD);
       await page.waitForLoadState('networkidle');
 
       // Test mobile grid
       await validateGridLayout(page, gridTest, 'mobile', 390);
-      
+
       // Test tablet grid
       await validateGridLayout(page, gridTest, 'tablet', 768);
-      
+
       // Test desktop grid
       await validateGridLayout(page, gridTest, 'desktop', 1024);
     });
   });
 
-  test('should handle grid item overflow gracefully', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle grid item overflow gracefully', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.HIVE_LIST);
 
     const viewports = [390, 768, 1024];
-    
+
     for (const width of viewports) {
       await test.step(`Grid overflow handling at ${width}px`, async () => {
-        await page.setViewportSize({ width, height: 800 });
+        await page.setViewportSize({width, height: 800});
         await page.waitForTimeout(300);
 
         // Check for horizontal overflow
@@ -359,7 +358,7 @@ test.describe('Responsive Layout - Flex Containers', () => {
       selector: '[data-testid="form-actions"]',
       expectedDirection: {
         mobile: 'column',
-        tablet: 'row', 
+        tablet: 'row',
         desktop: 'row'
       },
       alignment: 'center'
@@ -377,19 +376,19 @@ test.describe('Responsive Layout - Flex Containers', () => {
   ];
 
   flexTests.forEach(flexTest => {
-    test(`should adapt ${flexTest.name} flex layout correctly`, async ({ page }) => {
-      let authHelper = new AuthHelper(page);
+    test(`should adapt ${flexTest.name} flex layout correctly`, async ({page}) => {
+      const authHelper = new AuthHelper(page);
       await authHelper.loginWithTestUser();
-      
+
       await page.goto(TEST_URLS.DASHBOARD);
       await page.waitForLoadState('networkidle');
 
       // Test mobile flex layout
       await validateFlexLayout(page, flexTest, 'mobile', 390);
-      
+
       // Test tablet flex layout  
       await validateFlexLayout(page, flexTest, 'tablet', 768);
-      
+
       // Test desktop flex layout
       await validateFlexLayout(page, flexTest, 'desktop', 1024);
     });
@@ -397,14 +396,14 @@ test.describe('Responsive Layout - Flex Containers', () => {
 });
 
 test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
-  test('should adapt modals for mobile screens', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should adapt modals for mobile screens', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.DASHBOARD);
 
     // Test mobile modal behavior
-    await page.setViewportSize({ width: 390, height: 844 });
-    
+    await page.setViewportSize({width: 390, height: 844});
+
     // Trigger modal (create hive, settings, etc.)
     const createButton = page.locator('[data-testid="create-hive-button"]');
     if (await createButton.isVisible()) {
@@ -412,7 +411,7 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
       await page.waitForTimeout(500);
 
       const modal = page.locator('[role="dialog"], .modal, [data-testid="modal"]');
-      
+
       if (await modal.isVisible()) {
         await test.step('Modal should be full-screen on mobile', async () => {
           const modalStyle = await modal.evaluate(el => ({
@@ -427,8 +426,8 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
           const viewport = page.viewportSize();
           if (viewport) {
             const modalWidth = parseInt(modalStyle.width);
-            const modalHeight = parseInt(modalStyle.height);
-            
+            const _modalHeight = parseInt(modalStyle.height);
+
             expect(modalWidth / viewport.width).toBeGreaterThan(0.9); // 90% or more
             expect(modalStyle.position).toBe('fixed');
           }
@@ -445,14 +444,14 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
     }
 
     // Test tablet modal behavior
-    await page.setViewportSize({ width: 768, height: 1024 });
-    
+    await page.setViewportSize({width: 768, height: 1024});
+
     if (await createButton.isVisible()) {
       await createButton.click();
       await page.waitForTimeout(500);
 
       const modal = page.locator('[role="dialog"], .modal, [data-testid="modal"]');
-      
+
       if (await modal.isVisible()) {
         await test.step('Modal should be centered on tablet', async () => {
           const modalStyle = await modal.evaluate(el => ({
@@ -471,16 +470,16 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
     }
   });
 
-  test('should handle drawer vs modal patterns appropriately', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle drawer vs modal patterns appropriately', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.PROFILE);
 
     const settingsButton = page.locator('[data-testid="settings-button"]');
-    
+
     if (await settingsButton.isVisible()) {
       // Mobile should use bottom drawer or full-screen modal
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize({width: 390, height: 844});
       await settingsButton.click();
       await page.waitForTimeout(500);
 
@@ -488,10 +487,10 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
       const fullScreenModal = page.locator('[data-testid="fullscreen-modal"]');
       const modal = page.locator('[role="dialog"]');
 
-      const hasMobilePattern = 
-        await bottomDrawer.isVisible() || 
-        await fullScreenModal.isVisible() || 
-        await modal.isVisible();
+      const hasMobilePattern =
+          await bottomDrawer.isVisible() ||
+          await fullScreenModal.isVisible() ||
+          await modal.isVisible();
 
       expect(hasMobilePattern).toBeTruthy();
 
@@ -500,7 +499,7 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
       await page.waitForTimeout(300);
 
       // Desktop should use centered modal
-      await page.setViewportSize({ width: 1024, height: 768 });
+      await page.setViewportSize({width: 1024, height: 768});
       await settingsButton.click();
       await page.waitForTimeout(500);
 
@@ -508,7 +507,7 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
       if (await centeredModal.isVisible()) {
         const modalStyle = await centeredModal.evaluate(el => {
           const rect = el.getBoundingClientRect();
-          const viewportWidth = window.innerWidth;
+          const _viewportWidth = window.innerWidth;
           return {
             width: rect.width,
             left: rect.left,
@@ -526,44 +525,44 @@ test.describe('Responsive Layout - Modal and Dialog Adaptation', () => {
 });
 
 test.describe('Responsive Layout - Typography and Spacing', () => {
-  test('should scale typography appropriately', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should scale typography appropriately', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.HOME);
 
     const typographyElements = [
-      { selector: 'h1', name: 'Main Heading', minMobile: 24, minDesktop: 32 },
-      { selector: 'h2', name: 'Section Heading', minMobile: 20, minDesktop: 24 },
-      { selector: 'h3', name: 'Sub Heading', minMobile: 18, minDesktop: 20 },
-      { selector: 'p', name: 'Body Text', minMobile: 14, minDesktop: 16 },
-      { selector: 'button', name: 'Button Text', minMobile: 14, minDesktop: 14 }
+      {selector: 'h1', name: 'Main Heading', minMobile: 24, minDesktop: 32},
+      {selector: 'h2', name: 'Section Heading', minMobile: 20, minDesktop: 24},
+      {selector: 'h3', name: 'Sub Heading', minMobile: 18, minDesktop: 20},
+      {selector: 'p', name: 'Body Text', minMobile: 14, minDesktop: 16},
+      {selector: 'button', name: 'Button Text', minMobile: 14, minDesktop: 14}
     ];
 
     for (const element of typographyElements) {
       const locator = page.locator(element.selector).first();
-      
+
       if (await locator.isVisible()) {
         await test.step(`${element.name} typography scaling`, async () => {
           // Test mobile font size
-          await page.setViewportSize({ width: 390, height: 844 });
+          await page.setViewportSize({width: 390, height: 844});
           await page.waitForTimeout(200);
-          
+
           const mobileFontSize = await locator.evaluate(el => {
             return parseFloat(window.getComputedStyle(el).fontSize);
           });
-          
+
           expect(mobileFontSize).toBeGreaterThanOrEqual(element.minMobile);
 
           // Test desktop font size
-          await page.setViewportSize({ width: 1024, height: 768 });
+          await page.setViewportSize({width: 1024, height: 768});
           await page.waitForTimeout(200);
-          
+
           const desktopFontSize = await locator.evaluate(el => {
             return parseFloat(window.getComputedStyle(el).fontSize);
           });
-          
+
           expect(desktopFontSize).toBeGreaterThanOrEqual(element.minDesktop);
-          
+
           // Desktop should generally be same or larger than mobile
           expect(desktopFontSize).toBeGreaterThanOrEqual(mobileFontSize - 1); // 1px tolerance
         });
@@ -571,31 +570,31 @@ test.describe('Responsive Layout - Typography and Spacing', () => {
     }
   });
 
-  test('should maintain appropriate spacing at all breakpoints', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should maintain appropriate spacing at all breakpoints', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.DASHBOARD);
 
     const spacingElements = [
-      { selector: '[data-testid="main-content"]', property: 'padding' },
-      { selector: '[data-testid="card-container"]', property: 'margin' },
-      { selector: '[data-testid="section-header"]', property: 'marginBottom' }
+      {selector: '[data-testid="main-content"]', property: 'padding'},
+      {selector: '[data-testid="card-container"]', property: 'margin'},
+      {selector: '[data-testid="section-header"]', property: 'marginBottom'}
     ];
 
     const viewports = [
-      { width: 390, name: 'Mobile' },
-      { width: 768, name: 'Tablet' },
-      { width: 1024, name: 'Desktop' }
+      {width: 390, name: 'Mobile'},
+      {width: 768, name: 'Tablet'},
+      {width: 1024, name: 'Desktop'}
     ];
 
     for (const viewport of viewports) {
       await test.step(`Spacing validation at ${viewport.name}`, async () => {
-        await page.setViewportSize({ width: viewport.width, height: 800 });
+        await page.setViewportSize({width: viewport.width, height: 800});
         await page.waitForTimeout(300);
 
         for (const element of spacingElements) {
           const locator = page.locator(element.selector);
-          
+
           if (await locator.isVisible()) {
             const spacing = await locator.evaluate((el, prop) => {
               const computed = window.getComputedStyle(el);
@@ -605,7 +604,7 @@ test.describe('Responsive Layout - Typography and Spacing', () => {
             // Minimum spacing requirements
             const minSpacing = viewport.width < 768 ? 8 : 12;
             expect(spacing).toBeGreaterThanOrEqual(minSpacing);
-            
+
             // Maximum spacing (prevent excessive whitespace)
             const maxSpacing = viewport.width < 768 ? 24 : 48;
             expect(spacing).toBeLessThanOrEqual(maxSpacing);
@@ -619,12 +618,12 @@ test.describe('Responsive Layout - Typography and Spacing', () => {
 // Helper Functions
 
 async function validateLayoutAtBreakpoint(
-  page: Page, 
-  layoutTest: LayoutTest, 
-  breakpoint: 'mobile' | 'tablet' | 'desktop',
-  width: number
+    page: Page,
+    layoutTest: LayoutTest,
+    breakpoint: 'mobile' | 'tablet' | 'desktop',
+    width: number
 ): Promise<void> {
-  await page.setViewportSize({ width, height: 800 });
+  await page.setViewportSize({width, height: 800});
   await page.waitForTimeout(300); // Allow CSS transitions
 
   const element = page.locator(layoutTest.selector);
@@ -640,15 +639,15 @@ async function validateLayoutAtBreakpoint(
   // Style validations (only if element is visible)
   if (expectation.visible && await element.isVisible()) {
     if (expectation.position) {
-      const position = await element.evaluate(el => 
-        window.getComputedStyle(el).position
+      const position = await element.evaluate(el =>
+          window.getComputedStyle(el).position
       );
       expect(position).toBe(expectation.position);
     }
 
     if (expectation.display) {
-      const display = await element.evaluate(el => 
-        window.getComputedStyle(el).display
+      const display = await element.evaluate(el =>
+          window.getComputedStyle(el).display
       );
       expect(display).toBe(expectation.display);
     }
@@ -661,43 +660,43 @@ async function validateLayoutAtBreakpoint(
 }
 
 async function validateGridLayout(
-  page: Page,
-  gridTest: GridLayoutTest,
-  breakpoint: 'mobile' | 'tablet' | 'desktop',
-  width: number
+    page: Page,
+    gridTest: GridLayoutTest,
+    breakpoint: 'mobile' | 'tablet' | 'desktop',
+    width: number
 ): Promise<void> {
-  await page.setViewportSize({ width, height: 800 });
+  await page.setViewportSize({width, height: 800});
   await page.waitForTimeout(300);
 
   const gridContainer = page.locator(gridTest.selector);
-  
+
   if (await gridContainer.isVisible()) {
     const expectedColumns = gridTest.expectedColumns[breakpoint];
-    
+
     // Check CSS Grid columns
     const actualColumns = await gridContainer.evaluate(el => {
       const style = window.getComputedStyle(el);
       const gridCols = style.gridTemplateColumns;
-      
+
       if (gridCols && gridCols !== 'none') {
         return gridCols.split(' ').length;
       }
-      
+
       // Fallback: check if using flexbox with width percentages
       const display = style.display;
       if (display === 'flex') {
         const children = Array.from(el.children);
         if (children.length === 0) return 0;
-        
+
         const firstChildWidth = window.getComputedStyle(children[0]).width;
-        const containerWidth = parseFloat(style.width);
-        
+        const _containerWidth = parseFloat(style.width);
+
         if (firstChildWidth.includes('%')) {
           const percentage = parseFloat(firstChildWidth);
           return Math.round(100 / percentage);
         }
       }
-      
+
       return 1; // Default to single column
     });
 
@@ -709,26 +708,26 @@ async function validateGridLayout(
         const style = window.getComputedStyle(el);
         return parseFloat(style.gap || style.gridGap || '0');
       });
-      
+
       expect(actualGap).toBeGreaterThanOrEqual(gridTest.gap - 4); // 4px tolerance
     }
   }
 }
 
 async function validateFlexLayout(
-  page: Page,
-  flexTest: FlexLayoutTest,
-  breakpoint: 'mobile' | 'tablet' | 'desktop',
-  width: number
+    page: Page,
+    flexTest: FlexLayoutTest,
+    breakpoint: 'mobile' | 'tablet' | 'desktop',
+    width: number
 ): Promise<void> {
-  await page.setViewportSize({ width, height: 800 });
+  await page.setViewportSize({width, height: 800});
   await page.waitForTimeout(300);
 
   const flexContainer = page.locator(flexTest.selector);
-  
+
   if (await flexContainer.isVisible()) {
     const expectedDirection = flexTest.expectedDirection[breakpoint];
-    
+
     const flexStyles = await flexContainer.evaluate(el => ({
       display: window.getComputedStyle(el).display,
       flexDirection: window.getComputedStyle(el).flexDirection,
@@ -746,9 +745,9 @@ async function validateFlexLayout(
     }
 
     if (flexTest.alignment) {
-      const hasValidAlignment = 
-        flexStyles.justifyContent.includes(flexTest.alignment) ||
-        flexStyles.alignItems.includes(flexTest.alignment);
+      const hasValidAlignment =
+          flexStyles.justifyContent.includes(flexTest.alignment) ||
+          flexStyles.alignItems.includes(flexTest.alignment);
       expect(hasValidAlignment).toBeTruthy();
     }
   }

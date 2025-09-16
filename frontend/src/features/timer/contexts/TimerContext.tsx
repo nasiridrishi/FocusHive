@@ -1,13 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { useWebSocket } from '../../../shared/contexts/WebSocketContext'
-import { usePresence } from '../../../shared/contexts/PresenceContext'
-import { 
-  TimerContextType, 
-  TimerState, 
-  TimerSettings, 
-  SessionStats, 
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react'
+import {useWebSocket} from '../../../shared/contexts/WebSocketContext'
+import {usePresence} from '../../../shared/contexts/PresenceContext'
+import {
   SessionGoal,
- 
+  SessionStats,
+  TimerContextType,
+  TimerSettings,
+  TimerState,
 } from '../../../shared/types/timer'
 
 const TimerContext = createContext<TimerContextType | undefined>(undefined)
@@ -45,30 +44,30 @@ const DEFAULT_TIMER_STATE: TimerState = {
 }
 
 export const TimerProvider: React.FC<TimerProviderProps> = ({
-  children,
-  userId,
-}) => {
-  const { isConnected, emit, on } = useWebSocket()
-  const { updatePresence, currentPresence } = usePresence()
-  
+                                                              children,
+                                                              userId,
+                                                            }) => {
+  const {isConnected, emit, on} = useWebSocket()
+  const {updatePresence, currentPresence} = usePresence()
+
   const [timerState, setTimerState] = useState<TimerState>(DEFAULT_TIMER_STATE)
   const [timerSettings, setTimerSettings] = useState<TimerSettings>(DEFAULT_TIMER_SETTINGS)
   const [currentSession, setCurrentSession] = useState<SessionStats | null>(null)
-  
+
   // Refs for timer management
   const timerIntervalRef = useRef<number | null>(null)
   const phaseStartTimeRef = useRef<Date | null>(null)
   const sessionStartTimeRef = useRef<Date | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
-  
+
   // Load settings from localStorage on mount
   useEffect(() => {
     const savedSettings = localStorage.getItem(`timer-settings-${userId}`)
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings)
-        setTimerSettings({ ...DEFAULT_TIMER_SETTINGS, ...parsed })
-      } catch (error) {
+        setTimerSettings({...DEFAULT_TIMER_SETTINGS, ...parsed})
+      } catch {
         // Timer settings parse error logged to error service
       }
     }
@@ -91,25 +90,25 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   // Sound notification helper
   const playNotificationSound = useCallback((soundType: string) => {
     if (!timerSettings.soundEnabled || !audioContextRef.current) return
-    
+
     // Use soundType to determine frequency
     const frequency = soundType === 'break' ? 440 : 880
-    
+
     try {
       // Create a simple beep sound
       const oscillator = audioContextRef.current.createOscillator()
       const gainNode = audioContextRef.current.createGain()
-      
+
       oscillator.connect(gainNode)
       gainNode.connect(audioContextRef.current.destination)
-      
+
       oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime)
       gainNode.gain.setValueAtTime(0.1, audioContextRef.current.currentTime)
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioContextRef.current.currentTime + 0.5)
-      
+
       oscillator.start(audioContextRef.current.currentTime)
       oscillator.stop(audioContextRef.current.currentTime + 0.5)
-    } catch (error) {
+    } catch {
       // Audio playback error logged to error service
     }
   }, [timerSettings.soundEnabled])
@@ -117,13 +116,13 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   // Browser notification helper
   const showNotification = useCallback((phase: TimerState['currentPhase']) => {
     if (!timerSettings.notificationsEnabled) return
-    
+
     if ('Notification' in window && Notification.permission === 'granted') {
       const title = phase === 'focus' ? 'Focus Time Complete!' : 'Break Time Complete!'
-      const body = phase === 'focus' 
-        ? 'Great work! Time for a break.' 
-        : 'Break\'s over. Ready to focus?'
-      
+      const body = phase === 'focus'
+          ? 'Great work! Time for a break.'
+          : 'Break\'s over. Ready to focus?'
+
       new Notification(title, {
         body,
         icon: '/logo192.png',
@@ -134,10 +133,14 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   const getPhaseLength = useCallback((phase: TimerState['currentPhase']): number => {
     switch (phase) {
-      case 'focus': return timerSettings.focusLength
-      case 'short-break': return timerSettings.shortBreakLength
-      case 'long-break': return timerSettings.longBreakLength
-      default: return 0
+      case 'focus':
+        return timerSettings.focusLength
+      case 'short-break':
+        return timerSettings.shortBreakLength
+      case 'long-break':
+        return timerSettings.longBreakLength
+      default:
+        return 0
     }
   }, [timerSettings])
 
@@ -186,10 +189,18 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     if (!isConnected) return
 
     const unsubscribeFunctions = [
-      on('timer:session_started', (data: unknown) => handleSessionStarted(data as { userId: string; sessionId: string })),
+      on('timer:session_started', (data: unknown) => handleSessionStarted(data as {
+        userId: string;
+        sessionId: string
+      })),
       on('timer:session_ended', (data: unknown) => handleSessionEnded(data as { userId: string })),
-      on('timer:phase_completed', (data: unknown) => handlePhaseCompleted(data as { userId: string })),
-      on('timer:settings_updated', (data: unknown) => handleSettingsUpdated(data as { userId: string; settings: TimerSettings })),
+      on('timer:phase_completed', (data: unknown) => handlePhaseCompleted(data as {
+        userId: string
+      })),
+      on('timer:settings_updated', (data: unknown) => handleSettingsUpdated(data as {
+        userId: string;
+        settings: TimerSettings
+      })),
     ]
 
     return () => {
@@ -201,8 +212,10 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   useEffect(() => {
     if (timerSettings.soundEnabled && !audioContextRef.current) {
       try {
-        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      } catch (error) {
+        audioContextRef.current = new (window.AudioContext || (window as unknown as {
+          webkitAudioContext: typeof AudioContext
+        }).webkitAudioContext)()
+      } catch {
         // Audio context initialization error logged to error service
       }
     }
@@ -214,13 +227,13 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       timerIntervalRef.current = window.setInterval(() => {
         setTimerState(prev => {
           const newTimeRemaining = Math.max(0, prev.timeRemaining - 1)
-          
+
           if (newTimeRemaining === 0) {
             // Phase completed - will be handled by separate effect
-            return { ...prev, timeRemaining: 0, isRunning: false }
+            return {...prev, timeRemaining: 0, isRunning: false}
           }
-          
-          return { ...prev, timeRemaining: newTimeRemaining }
+
+          return {...prev, timeRemaining: newTimeRemaining}
         })
       }, 1000)
     } else {
@@ -242,13 +255,13 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     if (!timerState.isRunning && timerState.timeRemaining === 0 && timerState.currentPhase !== 'idle') {
       handlePhaseCompletion(timerState)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timerState])
 
   const handlePhaseCompletion = useCallback((completedState: TimerState) => {
     playNotificationSound(completedState.currentPhase + 'End')
     showNotification(completedState.currentPhase)
-    
+
     // Emit phase completion to WebSocket
     emit('timer:phase_complete', {
       userId,
@@ -258,46 +271,81 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       timestamp: new Date().toISOString(),
     })
 
+    // Get next phase
+    const nextPhase = _getNextPhase(completedState)
+
     // Auto-start next phase if enabled
     if (shouldAutoStartNextPhase(completedState.currentPhase)) {
-      // We'll define startTimer later, so avoid the circular dependency for now
       setTimeout(() => {
-        // This will be handled by external timer management
+        // Start next phase automatically
+        const nextDuration = getPhaseLength(nextPhase)
+        const timeInSeconds = nextDuration * 60
+
+        setTimerState({
+          currentPhase: nextPhase,
+          timeRemaining: timeInSeconds,
+          isRunning: true,
+          isPaused: false,
+          currentCycle: nextPhase === 'focus' ? completedState.currentCycle + 1 : completedState.currentCycle,
+          totalCycles: completedState.totalCycles,
+        })
+
+        phaseStartTimeRef.current = new Date()
+        updatePresence('focusing', `${nextPhase} session started`)
       }, 1000)
     } else {
+      // Stop the timer but set to next phase (idle)
+      setTimerState({
+        currentPhase: 'idle',
+        timeRemaining: getPhaseLength('focus') * 60,
+        isRunning: false,
+        isPaused: false,
+        currentCycle: nextPhase === 'focus' ? completedState.currentCycle + 1 : completedState.currentCycle,
+        totalCycles: completedState.totalCycles,
+      })
       // Update presence to idle
       updatePresence('online', 'Timer phase completed')
     }
-  }, [currentSession, emit, userId, updatePresence, getPhaseLength, shouldAutoStartNextPhase, playNotificationSound, showNotification])
+  }, [currentSession, emit, userId, updatePresence, getPhaseLength, shouldAutoStartNextPhase, playNotificationSound, showNotification, _getNextPhase])
 
   const startTimer = useCallback((phase?: TimerState['currentPhase'], hiveId?: string) => {
     const targetPhase = phase || 'focus'
     const duration = getPhaseLength(targetPhase)
     const timeInSeconds = duration * 60
-    
+
     phaseStartTimeRef.current = new Date()
-    
+
     // Start new session if not already started
     if (!currentSession && targetPhase === 'focus') {
       const newSession: SessionStats = {
         id: generateSessionId(),
         userId,
-        user: { id: userId, name: '', username: '', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' },
+        user: {
+          id: userId,
+          name: '',
+          username: '',
+          email: '',
+          firstName: '',
+          lastName: '',
+          isEmailVerified: false,
+          createdAt: '',
+          updatedAt: ''
+        },
         hiveId: hiveId || currentPresence?.hiveId,
         date: new Date().toISOString().split('T')[0],
         focusTime: 0,
         breakTime: 0,
         completedCycles: 0,
         targetCycles: 4, // Default Pomodoro cycle
-        productivity: { rating: 0 },
+        productivity: {rating: 0},
         distractions: 0,
         goals: [],
         achievements: [],
       }
-      
+
       setCurrentSession(newSession)
       sessionStartTimeRef.current = new Date()
-      
+
       emit('timer:session_start', {
         userId,
         sessionId: newSession.id,
@@ -317,15 +365,15 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
     // Update presence based on phase
     const presenceStatus = targetPhase === 'focus' ? 'focusing' : 'break'
-    const activity = targetPhase === 'focus' 
-      ? `Focus session (${duration}min)` 
-      : `${targetPhase.replace('-', ' ')} (${duration}min)`
-    
+    const activity = targetPhase === 'focus'
+        ? `Focus session (${duration}min)`
+        : `${targetPhase.replace('-', ' ')} (${duration}min)`
+
     updatePresence(presenceStatus, activity)
-    
+
     // Play start sound
     playNotificationSound(targetPhase + 'Start')
-    
+
     // Emit timer start to WebSocket
     emit('timer:start', {
       userId,
@@ -336,20 +384,20 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       timestamp: new Date().toISOString(),
     })
   }, [
-    getPhaseLength, 
-    currentSession, 
-    userId, 
-    currentPresence?.hiveId, 
-    emit, 
+    getPhaseLength,
+    currentSession,
+    userId,
+    currentPresence?.hiveId,
+    emit,
     updatePresence,
     generateSessionId,
     playNotificationSound
   ])
 
   const pauseTimer = useCallback(() => {
-    setTimerState(prev => ({ ...prev, isPaused: true, isRunning: false }))
+    setTimerState(prev => ({...prev, isPaused: true, isRunning: false}))
     updatePresence('online', 'Timer paused')
-    
+
     emit('timer:pause', {
       userId,
       sessionId: currentSession?.id,
@@ -358,12 +406,12 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   }, [userId, currentSession?.id, emit, updatePresence])
 
   const resumeTimer = useCallback(() => {
-    setTimerState(prev => ({ ...prev, isPaused: false, isRunning: true }))
-    
+    setTimerState(prev => ({...prev, isPaused: false, isRunning: true}))
+
     const presenceStatus = timerState.currentPhase === 'focus' ? 'focusing' : 'break'
     const activity = `Resumed ${timerState.currentPhase.replace('-', ' ')}`
     updatePresence(presenceStatus, activity)
-    
+
     emit('timer:resume', {
       userId,
       sessionId: currentSession?.id,
@@ -376,10 +424,10 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       clearInterval(timerIntervalRef.current)
       timerIntervalRef.current = null
     }
-    
+
     setTimerState(DEFAULT_TIMER_STATE)
     updatePresence('online', 'Timer stopped')
-    
+
     emit('timer:stop', {
       userId,
       sessionId: currentSession?.id,
@@ -389,10 +437,10 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   const skipPhase = useCallback(() => {
     if (!timerState.isRunning && !timerState.isPaused) return
-    
+
     // Complete current phase artificially
     handlePhaseCompletion(timerState)
-    
+
     emit('timer:skip_phase', {
       userId,
       sessionId: currentSession?.id,
@@ -402,30 +450,30 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   }, [timerState, handlePhaseCompletion, userId, currentSession?.id, emit])
 
   const updateSettings = useCallback((settings: Partial<TimerSettings>) => {
-    setTimerSettings(prev => ({ ...prev, ...settings }))
-    
+    setTimerSettings(prev => ({...prev, ...settings}))
+
     emit('timer:settings_update', {
       userId,
-      settings: { ...timerSettings, ...settings },
+      settings: {...timerSettings, ...settings},
       timestamp: new Date().toISOString(),
     })
   }, [timerSettings, userId, emit])
 
   const addGoal = useCallback((description: string, priority: SessionGoal['priority']) => {
     if (!currentSession) return
-    
+
     const newGoal: SessionGoal = {
       id: generateGoalId(),
       description,
       priority,
       isCompleted: false,
     }
-    
+
     setCurrentSession(prev => prev ? {
       ...prev,
       goals: [...prev.goals, newGoal]
     } : null)
-    
+
     emit('timer:goal_added', {
       userId,
       sessionId: currentSession.id,
@@ -436,16 +484,16 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   const completeGoal = useCallback((goalId: string) => {
     if (!currentSession) return
-    
+
     setCurrentSession(prev => prev ? {
       ...prev,
-      goals: prev.goals.map(goal => 
-        goal.id === goalId 
-          ? { ...goal, isCompleted: true, completedAt: new Date().toISOString() }
-          : goal
+      goals: prev.goals.map(goal =>
+          goal.id === goalId
+              ? {...goal, isCompleted: true, completedAt: new Date().toISOString()}
+              : goal
       )
     } : null)
-    
+
     emit('timer:goal_completed', {
       userId,
       sessionId: currentSession.id,
@@ -456,12 +504,12 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   const removeGoal = useCallback((goalId: string) => {
     if (!currentSession) return
-    
+
     setCurrentSession(prev => prev ? {
       ...prev,
       goals: prev.goals.filter(goal => goal.id !== goalId)
     } : null)
-    
+
     emit('timer:goal_removed', {
       userId,
       sessionId: currentSession.id,
@@ -472,12 +520,12 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   const recordDistraction = useCallback(() => {
     if (!currentSession) return
-    
+
     setCurrentSession(prev => prev ? {
       ...prev,
       distractions: prev.distractions + 1
     } : null)
-    
+
     emit('timer:distraction_recorded', {
       userId,
       sessionId: currentSession.id,
@@ -487,29 +535,29 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   const endSession = useCallback((productivity: SessionStats['productivity']) => {
     if (!currentSession) return
-    
+
     const sessionEndTime = new Date()
-    const sessionDuration = sessionStartTimeRef.current 
-      ? (sessionEndTime.getTime() - sessionStartTimeRef.current.getTime()) / 1000 / 60
-      : 0
-    
+    const sessionDuration = sessionStartTimeRef.current
+        ? (sessionEndTime.getTime() - sessionStartTimeRef.current.getTime()) / 1000 / 60
+        : 0
+
     const updatedSession: SessionStats = {
       ...currentSession,
       productivity,
       focusTime: sessionDuration, // This should be calculated more precisely
     }
-    
+
     emit('timer:session_end', {
       userId,
       sessionId: currentSession.id,
       session: updatedSession,
       timestamp: sessionEndTime.toISOString(),
     })
-    
+
     setCurrentSession(null)
     setTimerState(DEFAULT_TIMER_STATE)
     updatePresence('online', 'Session completed')
-    
+
     sessionStartTimeRef.current = null
   }, [currentSession, userId, emit, updatePresence])
 
@@ -544,9 +592,9 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   }
 
   return (
-    <TimerContext.Provider value={value}>
-      {children}
-    </TimerContext.Provider>
+      <TimerContext.Provider value={value}>
+        {children}
+      </TimerContext.Provider>
   )
 }
 

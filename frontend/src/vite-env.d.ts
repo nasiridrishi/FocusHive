@@ -14,7 +14,7 @@ interface ImportMetaEnv {
   // Music Service Configuration
   readonly VITE_MUSIC_API_BASE_URL?: string;
   readonly VITE_MUSIC_SERVICE_URL?: string;
-  
+
   // Spotify Integration
   readonly VITE_SPOTIFY_CLIENT_ID?: string;
   readonly VITE_SPOTIFY_REDIRECT_URI?: string;
@@ -52,7 +52,7 @@ declare module 'virtual:pwa-register' {
 declare module 'virtual:pwa-register/react' {
   export interface RegisterSWOptions {
     immediate?: boolean;
-    onNeedRefresh?: () => void;  
+    onNeedRefresh?: () => void;
     onOfflineReady?: () => void;
     onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
     onRegisteredSW?: (swUrl: string, registration: ServiceWorkerRegistration | undefined) => void;
@@ -83,12 +83,17 @@ declare module 'workbox-window' {
     constructor(scriptURL: string, options?: {
       scope?: string;
     });
-    
+
     register(): Promise<ServiceWorkerRegistration>;
+
     update(): Promise<ServiceWorkerRegistration>;
+
     addEventListener(type: string, listener: EventListener): void;
+
     removeEventListener(type: string, listener: EventListener): void;
+
     getSW(): Promise<ServiceWorker>;
+
     messageSW(data: unknown): Promise<unknown>;
   }
 }

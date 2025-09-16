@@ -1,15 +1,15 @@
-export { default as I18nProvider } from './I18nProvider'
-export { withI18n, useI18nReady } from './i18nHooks'
-export { 
-  default as LanguageSwitcher, 
-  CompactLanguageSwitcher, 
-  DetailedLanguageSwitcher 
+export {default as I18nProvider} from './I18nProvider'
+export {withI18n, useI18nReady} from './i18nHooks'
+export {
+  default as LanguageSwitcher,
+  CompactLanguageSwitcher,
+  DetailedLanguageSwitcher
 } from './LanguageSwitcher'
 
 // Re-export hooks for convenience
-export { 
-  useTranslation, 
-  useFormatting, 
+export {
+  useTranslation,
+  useFormatting,
   useLanguageSwitcher,
   useTranslationWithValues,
   usePluralTranslation,

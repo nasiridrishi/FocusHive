@@ -3,7 +3,7 @@
  * Provides methods to interact with and test accessibility features
  */
 
-import { Page, Locator, expect } from '@playwright/test';
+import {expect, Locator, Page} from '@playwright/test';
 
 interface HeadingStructure {
   h1: Locator[];
@@ -24,7 +24,8 @@ interface LandmarkStructure {
 }
 
 export class AccessibilityPage {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   /**
    * Wait for page to load completely
@@ -150,7 +151,7 @@ export class AccessibilityPage {
    */
   async testFocusTrap(modal: Locator): Promise<void> {
     const focusableElements = await modal.locator(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     ).all();
 
     if (focusableElements.length === 0) return;
@@ -184,17 +185,17 @@ export class AccessibilityPage {
    */
   async verifyNoKeyboardTraps(): Promise<void> {
     const focusableElements = await this.getFocusableElements();
-    
+
     if (focusableElements.length === 0) return;
 
     // Tab through several elements to ensure no trapping
     for (let i = 0; i < Math.min(10, focusableElements.length); i++) {
       await this.page.keyboard.press('Tab');
-      
+
       // Ensure focus moves to a visible element
       const focusedElement = this.page.locator(':focus');
       await expect(focusedElement).toBeVisible();
-      
+
       // Wait briefly to allow for any focus management
       await this.page.waitForTimeout(100);
     }
@@ -272,7 +273,7 @@ export class AccessibilityPage {
     ];
 
     const errorMessages: Locator[] = [];
-    
+
     for (const selector of errorSelectors) {
       const elements = await this.page.locator(selector).all();
       errorMessages.push(...elements);
@@ -324,7 +325,7 @@ export class AccessibilityPage {
    */
   async verifyTextResizing(): Promise<void> {
     const originalViewport = this.page.viewportSize();
-    
+
     if (!originalViewport) return;
 
     // Simulate 200% zoom by reducing viewport
@@ -384,12 +385,12 @@ export class AccessibilityPage {
     const accessibleName = await element.evaluate((el) => {
       // Check various ways an element can have an accessible name
       return (
-        el.getAttribute('aria-label') ||
-        el.getAttribute('aria-labelledby') ||
-        (el as HTMLElement).innerText ||
-        el.getAttribute('alt') ||
-        el.getAttribute('title') ||
-        ''
+          el.getAttribute('aria-label') ||
+          el.getAttribute('aria-labelledby') ||
+          (el as HTMLElement).innerText ||
+          el.getAttribute('alt') ||
+          el.getAttribute('title') ||
+          ''
       );
     });
 
@@ -442,16 +443,16 @@ export class AccessibilityPage {
       const tabIndex = el.getAttribute('tabindex');
 
       return (
-        tagName === 'button' ||
-        tagName === 'a' ||
-        tagName === 'input' ||
-        tagName === 'select' ||
-        tagName === 'textarea' ||
-        role === 'button' ||
-        role === 'link' ||
-        role === 'tab' ||
-        role === 'menuitem' ||
-        (tabIndex !== null && tabIndex !== '-1')
+          tagName === 'button' ||
+          tagName === 'a' ||
+          tagName === 'input' ||
+          tagName === 'select' ||
+          tagName === 'textarea' ||
+          role === 'button' ||
+          role === 'link' ||
+          role === 'tab' ||
+          role === 'menuitem' ||
+          (tabIndex !== null && tabIndex !== '-1')
       );
     });
 
@@ -472,7 +473,7 @@ export class AccessibilityPage {
    */
   async verifyAriaAttributes(element: Locator): Promise<boolean> {
     const role = await element.getAttribute('role');
-    
+
     if (!role) return true; // Elements without roles don't need ARIA validation
 
     // Check required attributes for common roles
@@ -504,13 +505,13 @@ export class AccessibilityPage {
    */
   async getFormValidationErrors(): Promise<Array<{ field: Locator; error: string }>> {
     const errors: Array<{ field: Locator; error: string }> = [];
-    
+
     const fields = await this.page.locator('input, select, textarea').all();
-    
+
     for (const field of fields) {
       const validationMessage = await field.evaluate((el) => {
-        if (el instanceof HTMLInputElement || 
-            el instanceof HTMLSelectElement || 
+        if (el instanceof HTMLInputElement ||
+            el instanceof HTMLSelectElement ||
             el instanceof HTMLTextAreaElement) {
           return el.validationMessage;
         }
@@ -518,7 +519,7 @@ export class AccessibilityPage {
       });
 
       if (validationMessage) {
-        errors.push({ field, error: validationMessage });
+        errors.push({field, error: validationMessage});
       }
     }
 
@@ -539,7 +540,7 @@ export class AccessibilityPage {
     const lang = await this.getPageLanguage();
     const main = await this.page.locator('main, [role="main"]').count();
     const h1 = await this.page.locator('h1').count();
-    
+
     // Check heading order
     const headings = await this.getHeadingStructure();
     const headingOrder = await this.verifyHeadingOrder(headings);
@@ -561,10 +562,10 @@ export class AccessibilityPage {
 
     for (const [level, headingElements] of Object.entries(headings)) {
       const levelNumber = parseInt(level.substring(1)); // Extract number from h1, h2, etc.
-      
+
       for (const heading of headingElements) {
         const text = await heading.textContent();
-        allHeadings.push({ level: levelNumber, text: text || '' });
+        allHeadings.push({level: levelNumber, text: text || ''});
       }
     }
 

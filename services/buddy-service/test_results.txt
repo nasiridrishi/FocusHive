@@ -1,0 +1,22 @@
+PASSING TESTS (1):
+com.focushive.buddy.BuildConfigurationTest
+
+FAILING TESTS (18):
+com.focushive.buddy.controller.BuddyCheckinControllerTest
+com.focushive.buddy.controller.HealthControllerTest
+com.focushive.buddy.BuddyServiceApplicationTests
+com.focushive.buddy.constant.BuddyConstantsTest
+com.focushive.buddy.util.TimeZoneUtilsTest
+com.focushive.buddy.util.ValidationUtilsTest
+com.focushive.buddy.dto.ResponseDTOsTest
+com.focushive.buddy.exception.BuddyExceptionsTest
+com.focushive.buddy.e2e.BuddyServiceE2ESimpleTest
+com.focushive.buddy.e2e.BuddyServiceE2ETest
+com.focushive.buddy.repository.BuddyCheckinRepositoryTest
+com.focushive.buddy.repository.BuddyGoalRepositoryTest
+com.focushive.buddy.repository.BuddyPartnershipRepositoryTest
+com.focushive.buddy.service.BuddyCheckinServiceTest
+com.focushive.buddy.service.BuddyGoalServiceTest
+com.focushive.buddy.listener.BuddyEventListenerTest
+com.focushive.buddy.integration.SampleIntegrationTest
+com.focushive.buddy.infrastructure.TestInfrastructureTest

@@ -3,7 +3,7 @@
  * Provides utilities for testing real-time features and WebSocket connections
  */
 
-import { Page, expect } from '@playwright/test';
+import {Page} from '@playwright/test';
 
 export interface WebSocketMessage {
   type: string;
@@ -75,12 +75,12 @@ export class WebSocketTestHelper {
       // Store original WebSocket
       const OriginalWebSocket = window.WebSocket;
       const messageLog: WebSocketMessage[] = [];
-      
+
       // Override WebSocket constructor
       window.WebSocket = class extends OriginalWebSocket {
         constructor(url: string | URL, protocols?: string | string[]) {
           super(url, protocols);
-          
+
           // Store connection info
           window.__wsConnection = {
             url: url.toString(),
@@ -88,7 +88,7 @@ export class WebSocketTestHelper {
             isConnected: false,
             messageCount: 0
           };
-          
+
           // Monitor connection events
           this.addEventListener('open', () => {
             if (window.__wsConnection) {
@@ -96,20 +96,20 @@ export class WebSocketTestHelper {
               window.__wsConnection.readyState = this.readyState;
             }
           });
-          
+
           this.addEventListener('close', () => {
             if (window.__wsConnection) {
               window.__wsConnection.isConnected = false;
               window.__wsConnection.readyState = this.readyState;
             }
           });
-          
+
           this.addEventListener('error', () => {
             if (window.__wsConnection) {
               window.__wsConnection.readyState = this.readyState;
             }
           });
-          
+
           // Monitor messages
           this.addEventListener('message', (event) => {
             try {
@@ -119,13 +119,13 @@ export class WebSocketTestHelper {
                 payload: data.payload || data,
                 timestamp: new Date().toISOString()
               };
-              
+
               messageLog.push(message);
               if (window.__wsConnection) {
                 window.__wsConnection.messageCount = messageLog.length;
                 window.__wsConnection.lastMessage = message;
               }
-              
+
               // Store in global accessible location
               window.__wsMessageLog = messageLog;
             } catch (error) {
@@ -151,7 +151,7 @@ export class WebSocketTestHelper {
    */
   async waitForConnection(timeoutMs: number = 10000): Promise<boolean> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeoutMs) {
       const info = await this.getConnectionInfo();
       if (info?.isConnected) {
@@ -159,7 +159,7 @@ export class WebSocketTestHelper {
       }
       await this.page.waitForTimeout(100);
     }
-    
+
     return false;
   }
 
@@ -168,18 +168,18 @@ export class WebSocketTestHelper {
    */
   async waitForMessage(messageType: string, timeoutMs: number = 5000): Promise<WebSocketMessage | null> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeoutMs) {
       const messages = await this.getMessageLog();
       const targetMessage = messages.find(msg => msg.type === messageType);
-      
+
       if (targetMessage) {
         return targetMessage;
       }
-      
+
       await this.page.waitForTimeout(100);
     }
-    
+
     return null;
   }
 
@@ -222,21 +222,21 @@ export class WebSocketTestHelper {
    */
   async measureMessageLatency(messageType: string): Promise<number> {
     const startTime = Date.now();
-    
+
     // Send a test message
     await this.sendMessage({
       type: messageType,
-      payload: { timestamp: startTime },
+      payload: {timestamp: startTime},
       timestamp: new Date().toISOString()
     });
-    
+
     // Wait for response
     const response = await this.waitForMessage(`${messageType}_RESPONSE`);
-    
+
     if (response) {
       return Date.now() - startTime;
     }
-    
+
     return -1; // Timeout
   }
 
@@ -249,18 +249,18 @@ export class WebSocketTestHelper {
     latency: number;
   }> {
     const startTime = Date.now();
-    
+
     // Clear previous messages
     await this.clearMessageLog();
-    
+
     // Trigger presence update in UI
     await this.page.click('[data-testid="user-presence-dropdown"]');
     await this.page.click(`[data-testid="presence-status-${status}"]`);
-    
+
     // Wait for WebSocket message
     const message = await this.waitForMessage('PRESENCE_UPDATE');
     const latency = message ? Date.now() - startTime : -1;
-    
+
     return {
       sent: message !== null,
       received: message?.payload.userId === userId,
@@ -271,29 +271,29 @@ export class WebSocketTestHelper {
   /**
    * Test timer synchronization
    */
-  async testTimerSync(sessionId: string): Promise<{
+  async testTimerSync(_sessionId: string): Promise<{
     syncReceived: boolean;
     latency: number;
     participantCount: number;
   }> {
     const startTime = Date.now();
-    
+
     // Clear previous messages
     await this.clearMessageLog();
-    
+
     // Start timer
     await this.page.click('[data-testid="start-timer-button"]');
-    
+
     // Wait for timer sync message
     const syncMessage = await this.waitForMessage('TIMER_SYNC');
     const latency = syncMessage ? Date.now() - startTime : -1;
-    
+
     return {
       syncReceived: syncMessage !== null,
       latency,
-      participantCount: Array.isArray(syncMessage?.payload.participants) 
-        ? (syncMessage.payload.participants as unknown[]).length 
-        : 0
+      participantCount: Array.isArray(syncMessage?.payload.participants)
+          ? (syncMessage.payload.participants as unknown[]).length
+          : 0
     };
   }
 
@@ -309,28 +309,28 @@ export class WebSocketTestHelper {
     const initialMessageCount = await this.getMessageCount();
     let disconnections = 0;
     const latencies: number[] = [];
-    
+
     while (Date.now() - startTime < durationMs) {
       const info = await this.getConnectionInfo();
-      
+
       if (info && !info.isConnected) {
         disconnections++;
       }
-      
+
       // Test latency with ping
       const pingLatency = await this.measureMessageLatency('PING');
       if (pingLatency > 0) {
         latencies.push(pingLatency);
       }
-      
+
       await this.page.waitForTimeout(1000); // Check every second
     }
-    
+
     const finalMessageCount = await this.getMessageCount();
-    const averageLatency = latencies.length > 0 
-      ? latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length 
-      : 0;
-    
+    const averageLatency = latencies.length > 0
+        ? latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length
+        : 0;
+
     return {
       disconnections,
       averageLatency,
@@ -359,18 +359,18 @@ export class WebSocketTestHelper {
           }
         });
         break;
-        
+
       case 'slowNetwork':
         await this.page.context().setOffline(true);
         await this.page.waitForTimeout(2000);
         await this.page.context().setOffline(false);
         break;
-        
+
       case 'highLatency':
         // Simulate high latency by delaying WebSocket sends
         await this.page.evaluate(() => {
           const OriginalSend = WebSocket.prototype.send;
-          WebSocket.prototype.send = function(data) {
+          WebSocket.prototype.send = function (data) {
             setTimeout(() => OriginalSend.call(this, data), 1000);
           };
         });
@@ -384,7 +384,7 @@ export class WebSocketTestHelper {
   async verifyMessageOrdering(expectedOrder: string[]): Promise<boolean> {
     const messages = await this.getMessageLog();
     const messageTypes = messages.map(msg => msg.type);
-    
+
     // Check if the expected messages appear in order
     let lastIndex = -1;
     for (const expectedType of expectedOrder) {
@@ -394,7 +394,7 @@ export class WebSocketTestHelper {
       }
       lastIndex = index;
     }
-    
+
     return true;
   }
 
@@ -409,29 +409,29 @@ export class WebSocketTestHelper {
   }> {
     await this.clearMessageLog();
     const sentMessages: string[] = [];
-    
+
     // Send multiple messages rapidly
     for (let i = 0; i < messageCount; i++) {
       const messageId = `test_${i}_${Date.now()}`;
       sentMessages.push(messageId);
-      
+
       await this.sendMessage({
         type: 'TEST_MESSAGE',
-        payload: { id: messageId, sequence: i },
+        payload: {id: messageId, sequence: i},
         timestamp: new Date().toISOString()
       });
     }
-    
+
     // Wait for all messages to be processed
     await this.page.waitForTimeout(2000);
-    
+
     const receivedMessages = await this.getMessageLog();
     const testMessages = receivedMessages.filter(msg => msg.type === 'TEST_MESSAGE');
-    
+
     // Analyze results
     const receivedIds = testMessages.map(msg => msg.payload.id as string);
     const duplicates = receivedIds.length - new Set(receivedIds).size;
-    
+
     let outOfOrder = 0;
     for (let i = 1; i < testMessages.length; i++) {
       const currentSeq = testMessages[i].payload.sequence as number;
@@ -440,7 +440,7 @@ export class WebSocketTestHelper {
         outOfOrder++;
       }
     }
-    
+
     return {
       sent: messageCount,
       received: testMessages.length,
@@ -460,13 +460,13 @@ export class WebSocketTestHelper {
   }> {
     const info = await this.getConnectionInfo();
     const messages = await this.getMessageLog();
-    
+
     // Calculate metrics (simplified implementation)
     const connectionTime = info?.isConnected ? 0 : -1; // Would need to track actual connection time
     const averageLatency = 0; // Would need to implement latency tracking
     const messageRate = messages.length; // Messages per session
     const errorRate = 0; // Would need to track errors
-    
+
     return {
       connectionTime,
       averageLatency,

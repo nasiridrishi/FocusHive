@@ -1,6 +1,6 @@
 /**
  * Authentication Query Hooks
- * 
+ *
  * Provides React Query hooks for authentication operations with:
  * - Optimized caching strategies
  * - Optimistic updates
@@ -8,17 +8,17 @@
  * - Type safety
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { authApiService } from '@services/api';
-import { queryKeys, STALE_TIMES, CACHE_TIMES, invalidateQueries as _invalidateQueries } from '@lib/queryClient';
-import type { 
-  LoginRequest, 
-  LoginResponse, 
-  RegisterRequest, 
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {authApiService} from '@services/api';
+import {CACHE_TIMES, queryKeys, STALE_TIMES} from '@lib/queryClient';
+import type {
+  ChangePasswordRequest,
+  LoginRequest,
+  LoginResponse,
+  PasswordResetRequest,
+  RegisterRequest,
   RegisterResponse,
   User,
-  ChangePasswordRequest,
-  PasswordResetRequest,
 } from '@shared/types/auth';
 
 // ============================================================================
@@ -37,7 +37,9 @@ export const useCurrentUser = () => {
     retry: (failureCount, _error: unknown) => {
       // Don't retry on 401/403 _errors (user not authenticated)
       const hasResponse = _error && typeof _error === 'object' && 'response' in _error;
-      const status = hasResponse ? (_error as { response: { status?: number } }).response?.status : undefined;
+      const status = hasResponse ? (_error as {
+        response: { status?: number }
+      }).response?.status : undefined;
       if (status === 401 || status === 403) {
         return false;
       }
@@ -101,24 +103,24 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials: LoginRequest) => authApiService.login(credentials),
     mutationKey: ['auth', 'login'],
-    
+
     onMutate: async (credentials) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.auth.all });
+      await queryClient.cancelQueries({queryKey: queryKeys.auth.all});
 
       // Optimistically set loading state
       queryClient.setQueryData([...queryKeys.auth.all, 'loginStatus'], 'loading');
 
-      return { credentials };
+      return {credentials};
     },
 
     onSuccess: (data: LoginResponse, _variables, _context) => {
       // Update user data in cache
       queryClient.setQueryData(queryKeys.auth.user(), data.user);
-      
+
       // Mark authentication as valid
       queryClient.setQueryData([...queryKeys.auth.all, 'status'], true);
-      
+
       // Prefetch initial user data
       queryClient.prefetchQuery({
         queryKey: [...queryKeys.notifications.all, 'count'],
@@ -136,15 +138,15 @@ export const useLogin = () => {
 
     onError: (_error, _variables, _context) => {
       // Error handled by _error boundary and toast notifications
-      
+
       // Clear any optimistic updates
-      queryClient.removeQueries({ queryKey: [...queryKeys.auth.all, 'loginStatus'] });
+      queryClient.removeQueries({queryKey: [...queryKeys.auth.all, 'loginStatus']});
       queryClient.setQueryData([...queryKeys.auth.all, 'status'], false);
     },
 
     onSettled: () => {
       // Always clean up loading states
-      queryClient.removeQueries({ queryKey: [...queryKeys.auth.all, 'loginStatus'] });
+      queryClient.removeQueries({queryKey: [...queryKeys.auth.all, 'loginStatus']});
     },
 
     meta: {
@@ -200,13 +202,13 @@ export const useLogout = () => {
 
     onMutate: async () => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.auth.all });
+      await queryClient.cancelQueries({queryKey: queryKeys.auth.all});
     },
 
     onSuccess: () => {
       // Clear all cached data on logout
       queryClient.clear();
-      
+
       // Explicitly set auth status to false
       queryClient.setQueryData([...queryKeys.auth.all, 'status'], false);
     },
@@ -236,7 +238,7 @@ export const useUpdateProfile = () => {
 
     onMutate: async (newUserData) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.auth.user() });
+      await queryClient.cancelQueries({queryKey: queryKeys.auth.user()});
 
       // Snapshot previous value
       const previousUser = queryClient.getQueryData<User>(queryKeys.auth.user());
@@ -249,7 +251,7 @@ export const useUpdateProfile = () => {
         });
       }
 
-      return { previousUser };
+      return {previousUser};
     },
 
     onSuccess: (updatedUser) => {
@@ -259,7 +261,7 @@ export const useUpdateProfile = () => {
 
     onError: (_error, newUserData, context) => {
       // Error handled by _error boundary and toast notifications
-      
+
       // Rollback optimistic update
       if (context?.previousUser) {
         queryClient.setQueryData(queryKeys.auth.user(), context.previousUser);
@@ -268,7 +270,7 @@ export const useUpdateProfile = () => {
 
     onSettled: () => {
       // Always refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
+      queryClient.invalidateQueries({queryKey: queryKeys.auth.user()});
     },
 
     meta: {
@@ -290,7 +292,7 @@ export const useChangePassword = () => {
 
     onSuccess: () => {
       // Optionally invalidate auth status to re-verify
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.auth.all, 'status'] });
+      queryClient.invalidateQueries({queryKey: [...queryKeys.auth.all, 'status']});
     },
 
     onError: (_error) => {
@@ -332,7 +334,7 @@ export const useRequestPasswordReset = () => {
 export const useAuth = () => {
   const userQuery = useCurrentUser();
   const authStatusQuery = useAuthStatus();
-  
+
   const loginMutation = useLogin();
   const logoutMutation = useLogout();
   const registerMutation = useRegister();
@@ -341,31 +343,31 @@ export const useAuth = () => {
     // Data
     user: userQuery.data,
     isAuthenticated: authStatusQuery.data === true,
-    
+
     // Loading states
     isLoading: userQuery.isLoading || authStatusQuery.isLoading,
     isUserLoading: userQuery.isLoading,
     isAuthStatusLoading: authStatusQuery.isLoading,
-    
+
     // Error states
     error: userQuery.error || authStatusQuery.error,
     userError: userQuery.error,
     authStatusError: authStatusQuery.error,
-    
+
     // Mutations
     login: loginMutation.mutate,
     logout: logoutMutation.mutate,
     register: registerMutation.mutate,
-    
+
     // Mutation states
     isLoggingIn: loginMutation.isPending,
     isLoggingOut: logoutMutation.isPending,
     isRegistering: registerMutation.isPending,
-    
+
     loginError: loginMutation.error,
     logoutError: logoutMutation.error,
     registerError: registerMutation.error,
-    
+
     // Utilities
     refetchUser: userQuery.refetch,
     refetchAuthStatus: authStatusQuery.refetch,
@@ -377,19 +379,19 @@ export const useAuth = () => {
  */
 export const usePermissions = () => {
   const permissionsQuery = useUserPermissions();
-  
-  const hasPermission = (permission: string) => {
+
+  const hasPermission = (permission: string): boolean => {
     return permissionsQuery.data?.includes(permission) ?? false;
   };
-  
-  const hasAnyPermission = (permissions: string[]) => {
+
+  const hasAnyPermission = (permissions: string[]): boolean => {
     return permissions.some(permission => hasPermission(permission));
   };
-  
-  const hasAllPermissions = (permissions: string[]) => {
+
+  const hasAllPermissions = (permissions: string[]): boolean => {
     return permissions.every(permission => hasPermission(permission));
   };
-  
+
   return {
     permissions: permissionsQuery.data ?? [],
     isLoading: permissionsQuery.isLoading,

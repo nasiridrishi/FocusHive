@@ -1,1 +1,1 @@
-export { GamificationProvider, useGamification } from './GamificationContext';
+export {GamificationProvider, useGamification} from './GamificationContext';

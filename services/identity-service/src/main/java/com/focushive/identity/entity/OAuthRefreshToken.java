@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -81,7 +81,7 @@ public class OAuthRefreshToken {
                      joinColumns = @JoinColumn(name = "token_id"))
     @Column(name = "scope")
     @Builder.Default
-    private Set<String> scopes = new HashSet<>();
+    private Set<String> scopes = new LinkedHashSet<>();
     
     /**
      * Token expiration time (can be null for non-expiring tokens)
@@ -145,6 +145,13 @@ public class OAuthRefreshToken {
      */
     @Column(name = "session_id")
     private String sessionId;
+
+    /**
+     * The OAuth2 session associated with this refresh token.
+     */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "oauth2_session_id")
+    private OAuth2Session session;
     
     // Audit fields
     @CreationTimestamp

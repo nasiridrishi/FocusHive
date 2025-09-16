@@ -1,22 +1,23 @@
 /**
  * Environment Provider Component
- * 
+ *
  * Validates environment variables at application startup and provides
  * validated environment configuration throughout the app.
- * 
+ *
  * Shows an error page if critical environment variables are missing,
  * and provides a React context for accessing validated environment variables.
  */
 
-import React, { useEffect, useState, ReactNode } from 'react';
+import React, {ReactNode, useEffect, useState} from 'react';
 import {
-  validateEnvironment,
   checkEnvironmentSetup,
-  type ValidatedEnv
+  type ValidatedEnv,
+  validateEnvironment
 } from '../services/validation/envValidation';
 import EnvironmentError from '../components/EnvironmentError';
-import { CircularProgress, Box, Typography } from '@mui/material';
-import { EnvironmentContext, type EnvironmentContextValue } from './useEnvironment';
+import {Box, CircularProgress, Typography} from '@mui/material';
+import {EnvironmentContext, type EnvironmentContextValue} from './useEnvironment';
+import {logger} from '../utils/logger';
 
 // Provider Props
 interface EnvironmentProviderProps {
@@ -25,44 +26,45 @@ interface EnvironmentProviderProps {
 
 // Loading Component
 const EnvironmentLoading: React.FC = () => (
-  <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight="100vh"
-    gap={2}
-  >
-    <CircularProgress size={48} />
-    <Typography variant="h6" color="text.secondary">
-      Validating Configuration...
-    </Typography>
-  </Box>
+    <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        minHeight="100vh"
+        gap={2}
+    >
+      <CircularProgress size={48}/>
+      <Typography variant="h6" color="text.secondary">
+        Validating Configuration...
+      </Typography>
+    </Box>
 );
 
 /**
  * Environment Provider Component
- * 
+ *
  * Validates environment variables and provides access to validated config.
  * Renders an error page if validation fails.
  */
 export const EnvironmentProvider: React.FC<EnvironmentProviderProps> = ({
-  children
-}) => {
+                                                                          children
+                                                                        }) => {
   const [contextValue, setContextValue] = useState<EnvironmentContextValue>({
     env: {} as ValidatedEnv,
     isValid: false,
     errors: [],
     isLoading: true,
-    revalidate: () => {}
+    revalidate: () => {
+    }
   });
 
   const validateEnvironmentConfig = React.useCallback(() => {
-    setContextValue(prev => ({ ...prev, isLoading: true }));
+    setContextValue(prev => ({...prev, isLoading: true}));
 
     try {
       const result = validateEnvironment();
-      
+
       // Run development environment checks
       if (import.meta.env.DEV) {
         checkEnvironmentSetup();
@@ -79,14 +81,14 @@ export const EnvironmentProvider: React.FC<EnvironmentProviderProps> = ({
       // Log validation results in development
       if (import.meta.env.DEV) {
         if (result.isValid) {
-          console.log('✅ Environment validation successful');
+          logger.info('✅ Environment validation successful');
         } else {
-          console.error('❌ Environment validation failed:', result.errors);
+          logger.error('❌ Environment validation failed:', 'EnvironmentProvider', result.errors);
         }
       }
     } catch (error) {
-      console.error('Environment validation error:', error);
-      
+      logger.error('Environment validation error:', error);
+
       // Create a fallback error state
       setContextValue({
         env: {} as ValidatedEnv,
@@ -109,24 +111,24 @@ export const EnvironmentProvider: React.FC<EnvironmentProviderProps> = ({
 
   // Show loading while validating
   if (contextValue.isLoading) {
-    return <EnvironmentLoading />;
+    return <EnvironmentLoading/>;
   }
 
   // Show error page if validation fails
   if (!contextValue.isValid) {
     return (
-      <EnvironmentError 
-        errors={contextValue.errors}
-        onRetry={contextValue.revalidate}
-      />
+        <EnvironmentError
+            errors={contextValue.errors}
+            onRetry={contextValue.revalidate}
+        />
     );
   }
 
   // Provide validated environment to children
   return (
-    <EnvironmentContext.Provider value={contextValue}>
-      {children}
-    </EnvironmentContext.Provider>
+      <EnvironmentContext.Provider value={contextValue}>
+        {children}
+      </EnvironmentContext.Provider>
   );
 };
 

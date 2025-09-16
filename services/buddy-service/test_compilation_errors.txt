@@ -1,0 +1,200 @@
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/controller/BuddyPartnershipControllerTest.java:716: error: incompatible types: no instance(s) of type variable(s) T exist so that Matcher<T> conforms to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/controller/BuddyPartnershipControllerTest.java:716: error: reference to any is ambiguous
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:139: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:271: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:274: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:277: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:289: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:294: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:300: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:311: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:369: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:374: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:391: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:396: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:413: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:418: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:435: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:440: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:455: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:460: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:472: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:487: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:492: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:507: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:512: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:542: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:559: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:564: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:581: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:586: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:599: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:604: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:615: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:630: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:635: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:655: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:669: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:674: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:702: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:721: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:726: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:741: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:746: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:762: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:776: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:793: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:798: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:813: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:818: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:839: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:855: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:864: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:885: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:887: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:891: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:898: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:905: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:909: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:916: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:923: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:927: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:933: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:941: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:944: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:947: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:955: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:957: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:959: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:963: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:978: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:992: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:994: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:996: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:998: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1001: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1005: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1038: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1095: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1103: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1112: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1114: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1120: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1123: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1138: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1141: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1157: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1204: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1225: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1242: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1244: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1250: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1253: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1302: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1311: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1401: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1406: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1425: error: incompatible types: inference variable T has incompatible bounds
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1430: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1444: error: incompatible types: String cannot be converted to UUID
+/Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1458: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/controller/BuddyPartnershipControllerTest.java:716: error: reference to any is ambiguous
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/controller/BuddyPartnershipControllerTest.java:716: error: incompatible types: no instance(s) of type variable(s) T exist so that Matcher<T> conforms to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:139: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:271: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:274: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:277: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:289: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:294: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:300: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:311: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:369: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:374: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:391: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:396: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:413: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:418: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:435: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:440: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:455: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:460: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:472: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:487: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:492: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:507: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:512: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:542: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:559: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:564: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:581: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:586: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:599: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:604: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:615: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:630: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:635: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:655: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:669: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:674: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:702: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:721: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:726: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:741: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:746: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:762: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:776: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:793: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:798: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:813: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:818: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:839: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:855: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:864: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:885: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:887: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:891: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:898: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:905: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:909: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:916: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:923: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:927: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:933: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:941: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:944: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:947: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:955: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:957: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:959: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:963: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:978: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:992: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:994: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:996: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:998: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1001: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1005: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1038: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1095: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1103: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1112: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1114: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1120: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1123: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1138: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1141: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1157: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1204: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1225: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1242: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1244: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1250: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1253: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1302: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1311: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1401: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1406: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1425: error: incompatible types: inference variable T has incompatible bounds
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1430: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1444: error: incompatible types: String cannot be converted to UUID
+  /Users/nasir/uol/focushive/services/buddy-service/src/test/java/com/focushive/buddy/service/BuddyCheckinServiceTest.java:1458: error: incompatible types: inference variable T has incompatible bounds

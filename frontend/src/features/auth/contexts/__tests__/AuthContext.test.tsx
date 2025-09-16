@@ -1,16 +1,15 @@
-import React, { ReactNode } from 'react';
-import { 
-  renderWithProviders, 
-  waitFor, 
-  act, 
-  screen, 
-  userEvent 
+import React, {ReactNode} from 'react';
+import {
+  act,
+  renderWithProviders,
+  screen,
+  userEvent,
+  waitFor
 } from '../../../../test-utils/test-utils';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { AuthProvider, useAuth, useAuthState, useAuthActions } from '../index';
-import { AuthStateContext, AuthActionsContext } from '../authContexts';
-import authApiService, { tokenStorage } from '../../../../services/api/authApi';
-import type { User, LoginRequest, RegisterRequest } from '@shared/types/auth';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {AuthProvider, useAuth, useAuthActions, useAuthState} from '../index';
+import authApiService, {tokenStorage} from '../../../../services/api/authApi';
+import type {User} from '@shared/types/auth';
 
 // Mock the token manager
 vi.mock('../../../../utils/tokenManager', () => ({
@@ -97,82 +96,113 @@ const mockLoginResponse = {
 };
 
 // Test component to access context values
-const TestComponent = ({ children }: { children?: ReactNode }) => {
+const TestComponent = ({children}: { children?: ReactNode }): React.ReactElement => {
   const auth = useAuth();
-  
+
   return (
-    <div>
-      <div data-testid="auth-state">
-        <div data-testid="user-id">{auth.authState.user?.id || 'null'}</div>
-        <div data-testid="user-email">{auth.authState.user?.email || 'null'}</div>
-        <div data-testid="is-authenticated">{auth.authState.isAuthenticated.toString()}</div>
-        <div data-testid="is-loading">{auth.authState.isLoading.toString()}</div>
-        <div data-testid="error">{auth.authState.error || 'null'}</div>
-        <div data-testid="token">{auth.authState.token || 'null'}</div>
+      <div>
+        <div data-testid="auth-state">
+          <div data-testid="user-id">{auth.authState.user?.id || 'null'}</div>
+          <div data-testid="user-email">{auth.authState.user?.email || 'null'}</div>
+          <div data-testid="is-authenticated">{auth.authState.isAuthenticated.toString()}</div>
+          <div data-testid="is-loading">{auth.authState.isLoading.toString()}</div>
+          <div data-testid="error">{auth.authState.error || 'null'}</div>
+          <div data-testid="token">{auth.authState.token || 'null'}</div>
+        </div>
+        <div data-testid="auth-actions">
+          <button onClick={async () => {
+            try {
+              await auth.login({email: 'test@example.com', password: 'password'});
+            } catch {
+              // Expected for error tests
+            }
+          }}>
+            Login
+          </button>
+          <button onClick={async () => {
+            try {
+              await auth.register({
+                email: 'new@example.com',
+                password: 'password',
+                username: 'newuser',
+                firstName: 'New',
+                lastName: 'User'
+              });
+            } catch {
+              // Expected for error tests
+            }
+          }}>
+            Register
+          </button>
+          <button onClick={() => auth.logout()}>Logout</button>
+          <button onClick={async () => {
+            try {
+              await auth.refreshAuth();
+            } catch {
+              // Expected for error tests
+            }
+          }}>Refresh
+          </button>
+          <button onClick={async () => {
+            try {
+              await auth.updateProfile({firstName: 'Updated'});
+            } catch {
+              // Expected for error tests
+            }
+          }}>
+            Update Profile
+          </button>
+          <button onClick={async () => {
+            try {
+              await auth.changePassword({
+                currentPassword: 'old',
+                newPassword: 'new'
+              });
+            } catch {
+              // Expected for error tests
+            }
+          }}>
+            Change Password
+          </button>
+          <button onClick={async () => {
+            try {
+              await auth.requestPasswordReset({
+                email: 'test@example.com'
+              });
+            } catch {
+              // Expected for error tests
+            }
+          }}>
+            Reset Password
+          </button>
+          <button onClick={() => auth.clearError()}>Clear Error</button>
+        </div>
+        {children}
       </div>
-      <div data-testid="auth-actions">
-        <button onClick={async () => {
-          try {
-            await auth.login({ email: 'test@example.com', password: 'password' });
-          } catch (error) {
-            // Expected for error tests
-          }
-        }}>
-          Login
-        </button>
-        <button onClick={() => auth.register({ 
-          email: 'new@example.com', 
-          password: 'password', 
-          username: 'newuser',
-          firstName: 'New',
-          lastName: 'User'
-        })}>
-          Register
-        </button>
-        <button onClick={() => auth.logout()}>Logout</button>
-        <button onClick={async () => {
-          try {
-            await auth.refreshAuth();
-          } catch (error) {
-            // Expected for error tests
-          }
-        }}>Refresh</button>
-        <button onClick={() => auth.updateProfile({ firstName: 'Updated' })}>
-          Update Profile
-        </button>
-        <button onClick={() => auth.changePassword({ currentPassword: 'old', newPassword: 'new' })}>
-          Change Password
-        </button>
-        <button onClick={() => auth.requestPasswordReset({ email: 'test@example.com' })}>
-          Reset Password
-        </button>
-        <button onClick={() => auth.clearError()}>Clear Error</button>
-      </div>
-      {children}
-    </div>
   );
 };
 
 // Separate test components for individual hooks
-const StateTestComponent = () => {
+const StateTestComponent = (): React.ReactElement => {
   const authState = useAuthState();
   return (
-    <div>
-      <div data-testid="state-user-id">{authState.user?.id || 'null'}</div>
-      <div data-testid="state-is-authenticated">{authState.isAuthenticated.toString()}</div>
-    </div>
+      <div>
+        <div data-testid="state-user-id">{authState.user?.id || 'null'}</div>
+        <div data-testid="state-is-authenticated">{authState.isAuthenticated.toString()}</div>
+      </div>
   );
 };
 
-const ActionsTestComponent = () => {
+const ActionsTestComponent = (): React.ReactElement => {
   const authActions = useAuthActions();
   return (
-    <div>
-      <button onClick={() => authActions.login({ email: 'test@example.com', password: 'password' })}>
-        Actions Login
-      </button>
-      <button onClick={() => authActions.clearError()}>Actions Clear Error</button>
-    </div>
+      <div>
+        <button
+            onClick={() => authActions.login({email: 'test@example.com', password: 'password'})}>
+          Actions Login
+        </button>
+        <button onClick={() => authActions.clearError()}>Actions Clear Error</button>
+      </div>
   );
 };
 
@@ -189,10 +219,10 @@ describe('AuthContext', () => {
   describe('AuthProvider', () => {
     it('should provide initial auth state', () => {
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false } // Don't use default auth provider
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false} // Don't use default auth provider
       );
 
       expect(screen.getByTestId('user-id')).toHaveTextContent('null');
@@ -212,10 +242,10 @@ describe('AuthContext', () => {
       vi.mocked(tokenStorage.getRefreshToken).mockReturnValue(mockTokens.refreshToken);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // Initially loading
@@ -236,10 +266,10 @@ describe('AuthContext', () => {
       vi.mocked(tokenStorage.hasValidTokens).mockReturnValue(false);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // Should not be loading and should remain unauthenticated
@@ -256,10 +286,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.validateAuth).mockResolvedValue(false);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       await waitFor(() => {
@@ -277,10 +307,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.login).mockResolvedValue(mockLoginResponse);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const loginButton = screen.getByText('Login');
@@ -299,7 +329,7 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('user-id')).toHaveTextContent('1');
       expect(screen.getByTestId('user-email')).toHaveTextContent('testuser@example.com');
       expect(screen.getByTestId('error')).toHaveTextContent('null');
-      
+
       expect(authApiService.login).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password'
@@ -312,10 +342,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.login).mockRejectedValue(new Error(errorMessage));
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const loginButton = screen.getByText('Login');
@@ -340,14 +370,14 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.login).mockResolvedValueOnce(mockLoginResponse);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const loginButton = screen.getByText('Login');
-      
+
       // First login attempt - should fail
       await act(async () => {
         await user.click(loginButton);
@@ -374,16 +404,16 @@ describe('AuthContext', () => {
     it('should handle successful registration', async () => {
       const user = userEvent.setup();
       const registerResponse = {
-        user: { ...mockUser, email: 'new@example.com', username: 'newuser' },
+        user: {...mockUser, email: 'new@example.com', username: 'newuser'},
         ...mockTokens,
       };
       vi.mocked(authApiService.register).mockResolvedValue(registerResponse);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const registerButton = screen.getByText('Register');
@@ -397,7 +427,7 @@ describe('AuthContext', () => {
 
       expect(screen.getByTestId('user-email')).toHaveTextContent('new@example.com');
       expect(screen.getByTestId('is-authenticated')).toHaveTextContent('true');
-      
+
       expect(authApiService.register).toHaveBeenCalledWith({
         email: 'new@example.com',
         password: 'password',
@@ -408,15 +438,16 @@ describe('AuthContext', () => {
     });
 
     it('should handle registration failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const user = userEvent.setup();
       const errorMessage = 'Email already exists';
       vi.mocked(authApiService.register).mockRejectedValue(new Error(errorMessage));
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const registerButton = screen.getByText('Register');
@@ -429,6 +460,8 @@ describe('AuthContext', () => {
       });
 
       expect(screen.getByTestId('is-authenticated')).toHaveTextContent('false');
+      
+      consoleSpy.mockRestore();
     });
   });
 
@@ -439,16 +472,16 @@ describe('AuthContext', () => {
 
       // Start with authenticated state
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false, user: mockUser }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false, user: mockUser}
       );
 
       // Manually set authenticated state for testing logout
       const loginButton = screen.getByText('Login');
       vi.mocked(authApiService.login).mockResolvedValue(mockLoginResponse);
-      
+
       await act(async () => {
         await user.click(loginButton);
       });
@@ -474,21 +507,22 @@ describe('AuthContext', () => {
 
     it('should clear local state even if logout API fails', async () => {
       const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      });
       vi.mocked(authApiService.logout).mockRejectedValue(new Error('Network error'));
 
       // Start with authenticated state
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // Set authenticated state
       const loginButton = screen.getByText('Login');
       vi.mocked(authApiService.login).mockResolvedValue(mockLoginResponse);
-      
+
       await act(async () => {
         await user.click(loginButton);
       });
@@ -522,10 +556,10 @@ describe('AuthContext', () => {
       vi.mocked(tokenStorage.getRefreshToken).mockReturnValue(mockTokens.refreshToken);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const refreshButton = screen.getByText('Refresh');
@@ -548,14 +582,15 @@ describe('AuthContext', () => {
 
     it('should handle failed auth refresh', async () => {
       const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      });
       vi.mocked(authApiService.validateAuth).mockResolvedValue(false);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const refreshButton = screen.getByText('Refresh');
@@ -569,20 +604,21 @@ describe('AuthContext', () => {
 
       expect(screen.getByTestId('is-authenticated')).toHaveTextContent('false');
       expect(screen.getByTestId('user-id')).toHaveTextContent('null');
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should handle refresh auth error', async () => {
       const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      });
       vi.mocked(authApiService.validateAuth).mockRejectedValue(new Error('Network error'));
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const refreshButton = screen.getByText('Refresh');
@@ -595,7 +631,7 @@ describe('AuthContext', () => {
       });
 
       expect(screen.getByTestId('is-authenticated')).toHaveTextContent('false');
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -603,15 +639,15 @@ describe('AuthContext', () => {
   describe('Update profile functionality', () => {
     it('should handle successful profile update', async () => {
       const user = userEvent.setup();
-      const updatedUser = { ...mockUser, firstName: 'Updated' };
+      const updatedUser = {...mockUser, firstName: 'Updated'};
       vi.mocked(authApiService.updateProfile).mockResolvedValue(updatedUser);
 
       // Start with authenticated state
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // First authenticate
@@ -632,7 +668,7 @@ describe('AuthContext', () => {
       });
 
       await waitFor(() => {
-        expect(authApiService.updateProfile).toHaveBeenCalledWith({ firstName: 'Updated' });
+        expect(authApiService.updateProfile).toHaveBeenCalledWith({firstName: 'Updated'});
       });
 
       // Note: In a real test, we'd need to implement the reducer action to see the updated user
@@ -640,15 +676,16 @@ describe('AuthContext', () => {
     });
 
     it('should handle profile update failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const user = userEvent.setup();
       const errorMessage = 'Update failed';
       vi.mocked(authApiService.updateProfile).mockRejectedValue(new Error(errorMessage));
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // First authenticate
@@ -671,6 +708,8 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(screen.getByTestId('error')).toHaveTextContent(errorMessage);
       });
+      
+      consoleSpy.mockRestore();
     });
   });
 
@@ -680,10 +719,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.changePassword).mockResolvedValue();
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const changePasswordButton = screen.getByText('Change Password');
@@ -700,15 +739,16 @@ describe('AuthContext', () => {
     });
 
     it('should handle password change failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const user = userEvent.setup();
       const errorMessage = 'Current password is incorrect';
       vi.mocked(authApiService.changePassword).mockRejectedValue(new Error(errorMessage));
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const changePasswordButton = screen.getByText('Change Password');
@@ -719,20 +759,22 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(screen.getByTestId('error')).toHaveTextContent(errorMessage);
       });
+      
+      consoleSpy.mockRestore();
     });
   });
 
   describe('Password reset functionality', () => {
     it('should handle successful password reset request', async () => {
       const user = userEvent.setup();
-      const resetResponse = { message: 'Reset email sent' };
+      const resetResponse = {message: 'Reset email sent'};
       vi.mocked(authApiService.requestPasswordReset).mockResolvedValue(resetResponse);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const resetPasswordButton = screen.getByText('Reset Password');
@@ -748,15 +790,16 @@ describe('AuthContext', () => {
     });
 
     it('should handle password reset request failure', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const user = userEvent.setup();
       const errorMessage = 'Reset request failed';
       vi.mocked(authApiService.requestPasswordReset).mockRejectedValue(new Error(errorMessage));
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const resetPasswordButton = screen.getByText('Reset Password');
@@ -767,6 +810,8 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(screen.getByTestId('error')).toHaveTextContent(errorMessage);
       });
+      
+      consoleSpy.mockRestore();
     });
   });
 
@@ -776,10 +821,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.login).mockRejectedValue(new Error('Login failed'));
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // First cause an error
@@ -804,32 +849,34 @@ describe('AuthContext', () => {
 
   describe('Auth hooks', () => {
     it('should throw error when useAuthState is used outside provider', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      });
+
       expect(() => {
-        renderWithProviders(<StateTestComponent />, { withAuth: false });
+        renderWithProviders(<StateTestComponent/>, {withAuth: false});
       }).toThrow('useAuthState must be used within an AuthProvider');
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should throw error when useAuthActions is used outside provider', () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      });
+
       expect(() => {
-        renderWithProviders(<ActionsTestComponent />, { withAuth: false });
+        renderWithProviders(<ActionsTestComponent/>, {withAuth: false});
       }).toThrow('useAuthActions must be used within an AuthProvider');
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should work correctly when used within provider', () => {
       renderWithProviders(
-        <AuthProvider>
-          <StateTestComponent />
-          <ActionsTestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <StateTestComponent/>
+            <ActionsTestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       expect(screen.getByTestId('state-user-id')).toHaveTextContent('null');
@@ -840,10 +887,10 @@ describe('AuthContext', () => {
 
     it('should provide combined auth context through useAuth hook', () => {
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // Verify both state and actions are available
@@ -856,26 +903,26 @@ describe('AuthContext', () => {
 
   describe('Context separation', () => {
     it('should provide state and actions through separate contexts', () => {
-      const StateOnlyComponent = () => {
+      const StateOnlyComponent = (): React.ReactElement => {
         const authState = useAuthState();
         return <div data-testid="state-only-user">{authState.user?.id || 'null'}</div>;
       };
 
-      const ActionsOnlyComponent = () => {
+      const ActionsOnlyComponent = (): React.ReactElement => {
         const authActions = useAuthActions();
         return (
-          <button onClick={() => authActions.clearError()}>
-            Actions Only Clear
-          </button>
+            <button onClick={() => authActions.clearError()}>
+              Actions Only Clear
+            </button>
         );
       };
 
       renderWithProviders(
-        <AuthProvider>
-          <StateOnlyComponent />
-          <ActionsOnlyComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <StateOnlyComponent/>
+            <ActionsOnlyComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       expect(screen.getByTestId('state-only-user')).toHaveTextContent('null');
@@ -885,23 +932,24 @@ describe('AuthContext', () => {
 
   describe('Error boundary integration', () => {
     it('should wrap provider content in error boundary', () => {
-      const ThrowingComponent = () => {
+      const ThrowingComponent = (): React.ReactElement => {
         throw new Error('Test error');
       };
 
       // Error boundary should catch the error
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      });
+
       renderWithProviders(
-        <AuthProvider>
-          <ThrowingComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <ThrowingComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       // The error boundary should have caught the error and rendered fallback UI
       // The exact fallback UI depends on the FeatureLevelErrorBoundary implementation
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -913,10 +961,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.getCurrentUser).mockResolvedValue(mockUser);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       await waitFor(() => {
@@ -931,10 +979,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.validateAuth).mockResolvedValue(false);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       await waitFor(() => {
@@ -950,10 +998,10 @@ describe('AuthContext', () => {
       vi.mocked(authApiService.login).mockResolvedValue(mockLoginResponse);
 
       renderWithProviders(
-        <AuthProvider>
-          <TestComponent />
-        </AuthProvider>,
-        { withAuth: false }
+          <AuthProvider>
+            <TestComponent/>
+          </AuthProvider>,
+          {withAuth: false}
       );
 
       const loginButton = screen.getByText('Login');

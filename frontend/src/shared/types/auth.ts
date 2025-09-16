@@ -65,8 +65,10 @@ export interface AuthContextType {
   authState: AuthState
   login: (credentials: LoginRequest) => Promise<void>
   register: (userData: RegisterRequest) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   refreshAuth: () => Promise<void>
   updateProfile: (userData: Partial<User>) => Promise<void>
+  changePassword: (passwordData: ChangePasswordRequest) => Promise<void>
+  requestPasswordReset: (resetData: PasswordResetRequest) => Promise<PasswordResetResponse>
   clearError: () => void
 }

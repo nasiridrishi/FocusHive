@@ -3,16 +3,15 @@
  * Tests form elements, input types, validation, and interaction across browsers
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { getBrowserInfo } from './browser-helpers';
+import {expect, test} from '@playwright/test';
 
 test.describe('HTML5 Input Types', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should support modern input types', async ({ page }) => {
+  test('should support modern input types', async ({page}) => {
     await page.setContent(`
       <form id="input-types-form">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px;">
@@ -46,7 +45,7 @@ test.describe('HTML5 Input Types', () => {
       };
 
       const support: { [key: string]: boolean } = {};
-      
+
       Object.entries(inputs).forEach(([key, input]) => {
         if (input) {
           // If the browser doesn't support the input type, it falls back to 'text'
@@ -68,7 +67,7 @@ test.describe('HTML5 Input Types', () => {
     await expect(page.locator('#input-types-form')).toHaveScreenshot('html5-input-types.png');
   });
 
-  test('should handle input validation', async ({ page }) => {
+  test('should handle input validation', async ({page}) => {
     await page.setContent(`
       <form id="validation-form">
         <div style="padding: 20px;">
@@ -85,12 +84,12 @@ test.describe('HTML5 Input Types', () => {
     const emailInput = page.locator('#email-validation');
     const numberInput = page.locator('#number-validation');
     const patternInput = page.locator('#text-validation');
-    const minmaxInput = page.locator('#minmax-validation');
+    const _minmaxInput = page.locator('#minmax-validation');
     const submitButton = page.locator('button[type="submit"]');
 
     // Test required validation
     await submitButton.click();
-    
+
     const emailValidity = await emailInput.evaluate((input: HTMLInputElement) => ({
       valid: input.validity.valid,
       valueMissing: input.validity.valueMissing,
@@ -138,7 +137,7 @@ test.describe('HTML5 Input Types', () => {
     console.log('HTML5 Validation Tests Passed');
   });
 
-  test('should support custom validity messages', async ({ page }) => {
+  test('should support custom validity messages', async ({page}) => {
     await page.setContent(`
       <form id="custom-validity-form">
         <input type="email" id="custom-email" required>
@@ -162,7 +161,7 @@ test.describe('HTML5 Input Types', () => {
     `);
 
     const emailInput = page.locator('#custom-email');
-    
+
     // Trigger validation
     await emailInput.focus();
     await emailInput.blur();
@@ -177,11 +176,11 @@ test.describe('HTML5 Input Types', () => {
 });
 
 test.describe('Form Controls and Interactions', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
   });
 
-  test('should support advanced form controls', async ({ page }) => {
+  test('should support advanced form controls', async ({page}) => {
     await page.setContent(`
       <form id="advanced-controls">
         <div style="padding: 20px;">
@@ -251,7 +250,7 @@ test.describe('Form Controls and Interactions', () => {
     await expect(page.locator('#advanced-controls')).toHaveScreenshot('advanced-form-controls.png');
   });
 
-  test('should support form submission methods', async ({ page }) => {
+  test('should support form submission methods', async ({page}) => {
     await page.setContent(`
       <form id="submission-form" method="post" action="/test-submit">
         <input type="text" name="username" value="testuser">
@@ -290,13 +289,15 @@ test.describe('Form Controls and Interactions', () => {
 
     const submitButton = page.locator('#submit-btn');
     const ajaxButton = page.locator('#ajax-submit');
-    const resetButton = page.locator('#reset-btn');
+    const _resetButton = page.locator('#reset-btn');
 
     // Test native form submission
     await submitButton.click();
-    
-    const nativeSubmissionResult = await page.evaluate(() => 
-      (window as unknown as { formSubmissionResult?: { method: string; formData: { [key: string]: string } } }).formSubmissionResult
+
+    const nativeSubmissionResult = await page.evaluate(() =>
+        (window as unknown as {
+          formSubmissionResult?: { method: string; formData: { [key: string]: string } }
+        }).formSubmissionResult
     );
 
     expect(nativeSubmissionResult?.method).toBe('native');
@@ -305,9 +306,11 @@ test.describe('Form Controls and Interactions', () => {
 
     // Test AJAX submission with FormData
     await ajaxButton.click();
-    
-    const ajaxSubmissionResult = await page.evaluate(() => 
-      (window as unknown as { formSubmissionResult?: { method: string; data: { [key: string]: string } } }).formSubmissionResult
+
+    const ajaxSubmissionResult = await page.evaluate(() =>
+        (window as unknown as {
+          formSubmissionResult?: { method: string; data: { [key: string]: string } }
+        }).formSubmissionResult
     );
 
     expect(ajaxSubmissionResult?.method).toBe('ajax');
@@ -317,7 +320,7 @@ test.describe('Form Controls and Interactions', () => {
     console.log('Form Submission Tests Passed');
   });
 
-  test('should handle form autofill and autocomplete', async ({ page }) => {
+  test('should handle form autofill and autocomplete', async ({page}) => {
     await page.setContent(`
       <form id="autofill-form">
         <div style="padding: 20px;">
@@ -339,12 +342,12 @@ test.describe('Form Controls and Interactions', () => {
       const form = document.getElementById('autofill-form');
       const inputs = form?.querySelectorAll('input[autocomplete]');
       const attributes: { [key: string]: string } = {};
-      
+
       inputs?.forEach((input) => {
         const inputElement = input as HTMLInputElement;
         attributes[inputElement.name] = inputElement.getAttribute('autocomplete') || '';
       });
-      
+
       return attributes;
     });
 
@@ -359,11 +362,11 @@ test.describe('Form Controls and Interactions', () => {
 });
 
 test.describe('Keyboard and Accessibility', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
   });
 
-  test('should support keyboard navigation', async ({ page }) => {
+  test('should support keyboard navigation', async ({page}) => {
     await page.setContent(`
       <form id="keyboard-nav-form">
         <div style="padding: 20px;">
@@ -407,30 +410,32 @@ test.describe('Keyboard and Accessibility', () => {
     // Test Enter key on buttons
     const button1 = page.locator('#button1');
     await button1.focus();
-    
+
     let buttonClicked = false;
     await button1.evaluate((btn) => {
       btn.addEventListener('click', () => {
         (window as unknown as { buttonClicked: boolean }).buttonClicked = true;
       });
     });
-    
+
     await page.keyboard.press('Enter');
-    buttonClicked = await page.evaluate(() => (window as unknown as { buttonClicked?: boolean }).buttonClicked || false);
+    buttonClicked = await page.evaluate(() => (window as unknown as {
+      buttonClicked?: boolean
+    }).buttonClicked || false);
     expect(buttonClicked).toBe(true);
 
     // Test Space key on checkbox
     const checkbox = page.locator('#checkbox1');
     await checkbox.focus();
     await page.keyboard.press('Space');
-    
+
     const checkboxChecked = await checkbox.isChecked();
     expect(checkboxChecked).toBe(true);
 
     console.log('Keyboard Navigation Tests Passed');
   });
 
-  test('should support ARIA attributes and screen readers', async ({ page }) => {
+  test('should support ARIA attributes and screen readers', async ({page}) => {
     await page.setContent(`
       <form id="aria-form">
         <div style="padding: 20px;">
@@ -486,7 +491,7 @@ test.describe('Keyboard and Accessibility', () => {
       const group = document.querySelector('[role="group"]');
       const alert = document.querySelector('[role="alert"]');
       const status = document.querySelector('[role="status"]');
-      
+
       return {
         nameRequired: nameInput?.getAttribute('aria-required'),
         nameDescribedBy: nameInput?.getAttribute('aria-describedby'),
@@ -521,7 +526,7 @@ test.describe('Keyboard and Accessibility', () => {
     console.log('ARIA Attributes Tests Passed');
   });
 
-  test('should support focus management', async ({ page }) => {
+  test('should support focus management', async ({page}) => {
     await page.setContent(`
       <div id="focus-management">
         <button id="open-modal">Open Modal</button>
@@ -596,8 +601,8 @@ test.describe('Keyboard and Accessibility', () => {
     // Test modal opening and focus management
     const openModalButton = page.locator('#open-modal');
     const modal = page.locator('#modal');
-    const modalInput = page.locator('#modal-input');
-    const modalCancel = page.locator('#modal-cancel');
+    const _modalInput = page.locator('#modal-input');
+    const _modalCancel = page.locator('#modal-cancel');
 
     // Open modal
     await openModalButton.click();
@@ -625,7 +630,7 @@ test.describe('Keyboard and Accessibility', () => {
 });
 
 test.describe('Browser-Specific Form Behavior', () => {
-  test('should handle Safari form quirks', async ({ page, browserName }) => {
+  test('should handle Safari form quirks', async ({page, browserName}) => {
     test.skip(browserName !== 'webkit', 'Safari-specific test');
 
     await page.setContent(`
@@ -648,7 +653,7 @@ test.describe('Browser-Specific Form Behavior', () => {
     console.log('Safari form tests completed');
   });
 
-  test('should handle Chrome form enhancements', async ({ page, browserName }) => {
+  test('should handle Chrome form enhancements', async ({page, browserName}) => {
     test.skip(browserName !== 'chromium', 'Chrome-specific test');
 
     const chromeFormFeatures = await page.evaluate(() => {
@@ -662,7 +667,7 @@ test.describe('Browser-Specific Form Behavior', () => {
     console.log('Chrome Form Features:', chromeFormFeatures);
   });
 
-  test('should handle Firefox form behavior', async ({ page, browserName }) => {
+  test('should handle Firefox form behavior', async ({page, browserName}) => {
     test.skip(browserName !== 'firefox', 'Firefox-specific test');
 
     await page.setContent(`

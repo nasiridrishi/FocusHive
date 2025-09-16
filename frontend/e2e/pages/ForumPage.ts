@@ -3,8 +3,8 @@
  * Provides methods to interact with forum features in E2E tests
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from '../helpers/test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {TIMEOUTS} from '../helpers/test-data';
 
 export class ForumPage {
   readonly page: Page;
@@ -395,7 +395,7 @@ export class ForumPage {
    * Wait for forum page to load
    */
   async waitForLoad(): Promise<void> {
-    await this.forumContainer.waitFor({ timeout: TIMEOUTS.PAGE_LOAD });
+    await this.forumContainer.waitFor({timeout: TIMEOUTS.PAGE_LOAD});
   }
 
   /**
@@ -420,7 +420,7 @@ export class ForumPage {
   async searchContent(query: string): Promise<void> {
     await this.searchInput.fill(query);
     await this.searchButton.click();
-    await this.searchResults.waitFor({ timeout: TIMEOUTS.SEARCH });
+    await this.searchResults.waitFor({timeout: TIMEOUTS.SEARCH});
   }
 
   /**
@@ -455,7 +455,7 @@ export class ForumPage {
     }
 
     await this.postPublishButton.click();
-    await this.createPostDialog.waitFor({ state: 'hidden' });
+    await this.createPostDialog.waitFor({state: 'hidden'});
   }
 
   /**
@@ -471,8 +471,8 @@ export class ForumPage {
     await this.replySubmitButton.click();
 
     // Wait for reply to be posted
-    await this.page.waitForResponse(response => 
-      response.url().includes('/api/forum/replies') && response.status() === 201
+    await this.page.waitForResponse(response =>
+        response.url().includes('/api/forum/replies') && response.status() === 201
     );
   }
 
@@ -480,13 +480,13 @@ export class ForumPage {
    * Like a post
    */
   async likePost(postId?: string): Promise<void> {
-    const likeButton = postId 
-      ? this.page.locator(`[data-testid="like-post-${postId}"]`)
-      : this.likePostButton;
-    
+    const likeButton = postId
+        ? this.page.locator(`[data-testid="like-post-${postId}"]`)
+        : this.likePostButton;
+
     await likeButton.click();
-    await this.page.waitForResponse(response => 
-      response.url().includes('/like') && response.status() === 200
+    await this.page.waitForResponse(response =>
+        response.url().includes('/like') && response.status() === 200
     );
   }
 
@@ -495,12 +495,12 @@ export class ForumPage {
    */
   async vote(type: 'up' | 'down', contentId?: string): Promise<void> {
     const voteButton = contentId
-      ? this.page.locator(`[data-testid="${type}vote-${contentId}"]`)
-      : type === 'up' ? this.upvoteButton : this.downvoteButton;
-    
+        ? this.page.locator(`[data-testid="${type}vote-${contentId}"]`)
+        : type === 'up' ? this.upvoteButton : this.downvoteButton;
+
     await voteButton.click();
-    await this.page.waitForResponse(response => 
-      response.url().includes('/vote') && response.status() === 200
+    await this.page.waitForResponse(response =>
+        response.url().includes('/vote') && response.status() === 200
     );
   }
 
@@ -556,12 +556,12 @@ export class ForumPage {
    * Moderate content (hide, lock, pin, delete)
    */
   async moderateContent(
-    action: 'hide' | 'lock' | 'pin' | 'move' | 'delete',
-    reason?: string,
-    targetCategoryId?: string
+      action: 'hide' | 'lock' | 'pin' | 'move' | 'delete',
+      reason?: string,
+      targetCategoryId?: string
   ): Promise<void> {
     await this.moderationMenu.click();
-    
+
     const actionButtons = {
       hide: this.hideContentButton,
       lock: this.lockThreadButton,
@@ -574,20 +574,20 @@ export class ForumPage {
 
     if (reason || targetCategoryId) {
       await this.moderationReasonDialog.waitFor();
-      
+
       if (reason) {
         await this.moderationReasonInput.fill(reason);
       }
-      
+
       if (targetCategoryId && action === 'move') {
         await this.page.locator('[data-testid="target-category-select"]').click();
         await this.page.locator(`[data-value="${targetCategoryId}"]`).click();
       }
-      
+
       await this.confirmModerationButton.click();
     }
 
-    await this.moderationReasonDialog.waitFor({ state: 'hidden' });
+    await this.moderationReasonDialog.waitFor({state: 'hidden'});
   }
 
   /**
@@ -666,15 +666,15 @@ export class ForumPage {
   }): Promise<void> {
     await expect(this.postTitle.first()).toContainText(postData.title);
     await expect(this.postAuthor.first()).toContainText(postData.author);
-    
+
     if (postData.content) {
       await expect(this.postContent.first()).toContainText(postData.content);
     }
-    
+
     if (postData.category) {
       await expect(this.postCategory.first()).toContainText(postData.category);
     }
-    
+
     if (postData.repliesCount !== undefined) {
       await expect(this.postRepliesCount.first()).toContainText(postData.repliesCount.toString());
     }
@@ -695,7 +695,7 @@ export class ForumPage {
    */
   async verifySearchResults(query: string, expectedResultCount?: number): Promise<void> {
     await expect(this.searchResults).toBeVisible();
-    
+
     if (expectedResultCount !== undefined) {
       const resultsText = await this.searchResultsCount.textContent();
       const actualCount = resultsText ? parseInt(resultsText.match(/\d+/)?.[0] || '0') : 0;
@@ -719,7 +719,7 @@ export class ForumPage {
    */
   async verifyModerationTools(): Promise<void> {
     await expect(this.moderationMenu).toBeVisible();
-    
+
     await this.moderationMenu.click();
     await expect(this.hideContentButton).toBeVisible();
     await expect(this.lockThreadButton).toBeVisible();
@@ -734,7 +734,7 @@ export class ForumPage {
     // Check for proper ARIA labels and keyboard navigation
     await expect(this.createPostButton).toHaveAttribute('aria-label');
     await expect(this.searchInput).toHaveAttribute('aria-label');
-    
+
     // Test keyboard navigation
     await this.page.keyboard.press('Tab');
     await expect(this.createPostButton).toBeFocused();

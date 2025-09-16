@@ -2,8 +2,12 @@ package com.focushive.notification.dto;
 
 import com.focushive.notification.entity.NotificationType;
 import com.focushive.notification.entity.Notification;
+import com.focushive.notification.validation.XSSSafe;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +28,9 @@ public class CreateNotificationRequest {
     /**
      * ID of the user who should receive the notification
      */
-    @NotBlank(message = "User ID is required")
+    @NotNull(message = "User ID is required")
+    @Size(min = 1, max = 50, message = "User ID must be between 1 and 50 characters")
+    @Pattern(regexp = "^[a-zA-Z0-9-_]+$", message = "User ID contains invalid characters")
     private String userId;
 
     /**
@@ -36,14 +42,16 @@ public class CreateNotificationRequest {
     /**
      * Title of the notification
      */
-    @NotBlank(message = "Title is required")
+    @NotNull(message = "Title is required")
     @Size(max = 200, message = "Title must not exceed 200 characters")
+    @XSSSafe(message = "Title contains potentially dangerous content")
     private String title;
 
     /**
      * Content/body of the notification (optional)
      */
-    @Size(max = 2000, message = "Content must not exceed 2000 characters")
+    @Size(max = 5000, message = "Content must not exceed 5000 characters")
+    @XSSSafe(allowBasicHtml = true, message = "Content contains potentially dangerous content")
     private String content;
 
     /**
@@ -82,4 +90,10 @@ public class CreateNotificationRequest {
      */
     @Builder.Default
     private Boolean forceDelivery = false;
+
+    /**
+     * Additional metadata for the notification (optional)
+     */
+    @Valid
+    private NotificationMetadata metadata;
 }

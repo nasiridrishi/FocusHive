@@ -1,15 +1,15 @@
 /**
  * Accessibility Testing Fixtures and Test Data
- * 
+ *
  * Shared fixtures, test data, and utilities for accessibility E2E tests
  * Provides consistent test data across all accessibility test suites
- * 
+ *
  * UOL-44.19: Comprehensive Accessibility E2E Tests
  */
 
-import { test as base, Page } from '@playwright/test';
-import { injectAxe, getViolations, checkA11y } from 'axe-playwright';
-import { DEFAULT_ACCESSIBILITY_CONFIG, getAccessibilityConfig } from './accessibility.config';
+import {Page, test as base} from '@playwright/test';
+import {checkA11y, injectAxe} from 'axe-playwright';
+import {getAccessibilityConfig} from './accessibility.config';
 
 // Test data for accessibility testing
 export const ACCESSIBILITY_TEST_DATA = {
@@ -141,11 +141,11 @@ export const COLOR_CONTRAST_DATA = {
 
   // Test color combinations
   testColors: [
-    { background: '#ffffff', foreground: '#000000', ratio: 21, passes: true },
-    { background: '#ffffff', foreground: '#767676', ratio: 4.54, passes: true },
-    { background: '#ffffff', foreground: '#949494', ratio: 3.45, passes: false },
-    { background: '#000000', foreground: '#ffffff', ratio: 21, passes: true },
-    { background: '#0066cc', foreground: '#ffffff', ratio: 5.74, passes: true }
+    {background: '#ffffff', foreground: '#000000', ratio: 21, passes: true},
+    {background: '#ffffff', foreground: '#767676', ratio: 4.54, passes: true},
+    {background: '#ffffff', foreground: '#949494', ratio: 3.45, passes: false},
+    {background: '#000000', foreground: '#ffffff', ratio: 21, passes: true},
+    {background: '#0066cc', foreground: '#ffffff', ratio: 5.74, passes: true}
   ]
 };
 
@@ -180,25 +180,25 @@ export const KEYBOARD_TEST_DATA = {
 export const SCREEN_READER_DATA = {
   // Common screen readers and their usage statistics
   screenReaders: {
-    nvda: { name: 'NVDA', usage: 65.6, platform: 'Windows' },
-    jaws: { name: 'JAWS', usage: 60.5, platform: 'Windows' },
-    voiceover: { name: 'VoiceOver', usage: 47.1, platform: 'macOS/iOS' },
-    talkback: { name: 'TalkBack', usage: 32.8, platform: 'Android' },
-    orca: { name: 'Orca', usage: 8.7, platform: 'Linux' }
+    nvda: {name: 'NVDA', usage: 65.6, platform: 'Windows'},
+    jaws: {name: 'JAWS', usage: 60.5, platform: 'Windows'},
+    voiceover: {name: 'VoiceOver', usage: 47.1, platform: 'macOS/iOS'},
+    talkback: {name: 'TalkBack', usage: 32.8, platform: 'Android'},
+    orca: {name: 'Orca', usage: 8.7, platform: 'Linux'}
   },
 
   // ARIA roles and their expected announcements
   ariaRoles: [
-    { role: 'button', expectation: 'announces as button' },
-    { role: 'link', expectation: 'announces as link with destination' },
-    { role: 'heading', expectation: 'announces heading level' },
-    { role: 'list', expectation: 'announces list with item count' },
-    { role: 'listitem', expectation: 'announces item position' },
-    { role: 'navigation', expectation: 'announces as navigation' },
-    { role: 'main', expectation: 'announces as main content' },
-    { role: 'complementary', expectation: 'announces as complementary' },
-    { role: 'banner', expectation: 'announces as banner' },
-    { role: 'contentinfo', expectation: 'announces as content info' }
+    {role: 'button', expectation: 'announces as button'},
+    {role: 'link', expectation: 'announces as link with destination'},
+    {role: 'heading', expectation: 'announces heading level'},
+    {role: 'list', expectation: 'announces list with item count'},
+    {role: 'listitem', expectation: 'announces item position'},
+    {role: 'navigation', expectation: 'announces as navigation'},
+    {role: 'main', expectation: 'announces as main content'},
+    {role: 'complementary', expectation: 'announces as complementary'},
+    {role: 'banner', expectation: 'announces as banner'},
+    {role: 'contentinfo', expectation: 'announces as content info'}
   ]
 };
 
@@ -213,13 +213,13 @@ export const test = base.extend<{
   waitForLiveRegionUpdate: (selector: string, timeout?: number) => Promise<string>;
 }>({
   // Enhanced page fixture with accessibility setup
-  accessibilityPage: async ({ page }, use) => {
+  accessibilityPage: async ({page}, use) => {
     // Configure accessibility settings
     const config = getAccessibilityConfig(process.env.ACCESSIBILITY_CONFIG || 'default');
-    
+
     // Set viewport based on config
     if (config.browsers.mobile.enabled && process.env.ACCESSIBILITY_CONFIG === 'mobile') {
-      await page.setViewportSize({ width: 375, height: 667 });
+      await page.setViewportSize({width: 375, height: 667});
     }
 
     // Inject axe-core for accessibility testing
@@ -244,8 +244,8 @@ export const test = base.extend<{
   },
 
   // Utility to skip axe violations for specific tests
-  skipA11yViolations: async ({}, use) => {
-    const skip = () => {
+  skipA11yViolations: async (_context: unknown, use: unknown) => {
+    const skip = (): void => {
       // Mark test as skipped for axe violations
       console.warn('Axe violations skipped for this test');
     };
@@ -253,8 +253,8 @@ export const test = base.extend<{
   },
 
   // Utility to check accessibility compliance
-  expectA11yCompliance: async ({ page }, use) => {
-    const checkCompliance = async (selector?: string) => {
+  expectA11yCompliance: async ({page}, use) => {
+    const checkCompliance = async (selector?: string): Promise<void> => {
       await checkA11y(page, selector, {
         axeOptions: {
           runOnly: {
@@ -269,7 +269,7 @@ export const test = base.extend<{
   },
 
   // Utility to get color contrast ratio
-  getColorContrast: async ({ page }, use) => {
+  getColorContrast: async ({page}, use) => {
     const getContrast = async (elementSelector: string): Promise<number> => {
       return await page.evaluate((selector) => {
         const element = document.querySelector(selector);
@@ -280,12 +280,12 @@ export const test = base.extend<{
         const textColor = computedStyle.color;
 
         // Simple contrast calculation (would use a proper library in production)
-        const getRGB = (color: string) => {
+        const getRGB = (color: string): unknown[] => {
           const match = color.match(/\d+/g);
           return match ? match.map(Number) : [0, 0, 0];
         };
 
-        const getLuminance = (rgb: number[]) => {
+        const getLuminance = (rgb: number[]): number => {
           const [r, g, b] = rgb.map(c => {
             c = c / 255;
             return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -295,13 +295,13 @@ export const test = base.extend<{
 
         const bgRGB = getRGB(backgroundColor);
         const textRGB = getRGB(textColor);
-        
+
         const bgLuminance = getLuminance(bgRGB);
         const textLuminance = getLuminance(textRGB);
-        
+
         const lighter = Math.max(bgLuminance, textLuminance);
         const darker = Math.min(bgLuminance, textLuminance);
-        
+
         return (lighter + 0.05) / (darker + 0.05);
       }, elementSelector);
     };
@@ -309,27 +309,27 @@ export const test = base.extend<{
   },
 
   // Utility to test keyboard navigation
-  testKeyboardNavigation: async ({ page }, use) => {
-    const testNavigation = async (startSelector: string, expectedOrder: string[]) => {
+  testKeyboardNavigation: async ({page}, use) => {
+    const testNavigation = async (startSelector: string, expectedOrder: string[]): Promise<void> => {
       // Focus on starting element
       await page.locator(startSelector).focus();
-      
+
       const focusedElements: string[] = [];
-      
+
       // Navigate through expected order
       for (let i = 0; i < expectedOrder.length; i++) {
         const focusedElement = await page.locator(':focus');
-        const elementId = await focusedElement.getAttribute('id') || 
-                          await focusedElement.getAttribute('data-testid') || 
-                          await focusedElement.evaluate(el => el.tagName.toLowerCase());
-        
+        const elementId = await focusedElement.getAttribute('id') ||
+            await focusedElement.getAttribute('data-testid') ||
+            await focusedElement.evaluate(el => el.tagName.toLowerCase());
+
         focusedElements.push(elementId);
-        
+
         if (i < expectedOrder.length - 1) {
           await page.keyboard.press('Tab');
         }
       }
-      
+
       // Verify focus order matches expectations
       return focusedElements;
     };
@@ -337,8 +337,8 @@ export const test = base.extend<{
   },
 
   // Utility to announce messages to screen readers
-  announceToScreenReader: async ({ page }, use) => {
-    const announce = async (message: string) => {
+  announceToScreenReader: async ({page}, use) => {
+    const announce = async (message: string): Promise<void> => {
       await page.evaluate((msg) => {
         // Create or update live region
         let announcer = document.getElementById('accessibility-announcer');
@@ -354,11 +354,11 @@ export const test = base.extend<{
           announcer.style.overflow = 'hidden';
           document.body.appendChild(announcer);
         }
-        
+
         // Clear and set new message
         announcer.textContent = '';
         setTimeout(() => {
-          announcer!.textContent = msg;
+          announcer?.textContent = msg;
         }, 100);
       }, message);
     };
@@ -366,13 +366,13 @@ export const test = base.extend<{
   },
 
   // Utility to wait for live region updates
-  waitForLiveRegionUpdate: async ({ page }, use) => {
+  waitForLiveRegionUpdate: async ({page}, use) => {
     const waitForUpdate = async (selector: string, timeout = 5000): Promise<string> => {
       const liveRegion = page.locator(selector);
-      
+
       // Wait for content to appear or change
-      await liveRegion.waitFor({ state: 'visible', timeout });
-      
+      await liveRegion.waitFor({state: 'visible', timeout});
+
       return await liveRegion.textContent() || '';
     };
     await use(waitForUpdate);
@@ -385,12 +385,12 @@ export class AccessibilityHelpers {
     const headings = await page.locator(ACCESSIBILITY_SELECTORS.allHeadings).all();
     const issues: string[] = [];
     let previousLevel = 0;
-    
+
     if (headings.length === 0) {
       issues.push('No headings found on page');
-      return { valid: false, issues };
+      return {valid: false, issues};
     }
-    
+
     // Check for H1
     const h1Count = await page.locator('h1').count();
     if (h1Count === 0) {
@@ -398,40 +398,40 @@ export class AccessibilityHelpers {
     } else if (h1Count > 1) {
       issues.push('Multiple H1 headings found');
     }
-    
+
     // Check heading hierarchy
     for (const heading of headings) {
       const tagName = await heading.evaluate(el => el.tagName.toLowerCase());
       const level = parseInt(tagName.charAt(1));
-      
+
       if (previousLevel > 0 && level > previousLevel + 1) {
         issues.push(`Heading level skip: ${tagName} after h${previousLevel}`);
       }
-      
+
       previousLevel = level;
     }
-    
-    return { valid: issues.length === 0, issues };
+
+    return {valid: issues.length === 0, issues};
   }
-  
+
   static async checkFormLabels(page: Page): Promise<{ valid: boolean; issues: string[] }> {
     const inputs = await page.locator(ACCESSIBILITY_SELECTORS.formInputs).all();
     const issues: string[] = [];
-    
+
     for (const input of inputs) {
       const type = await input.getAttribute('type');
-      
+
       // Skip hidden inputs
       if (type === 'hidden') continue;
-      
+
       const id = await input.getAttribute('id');
       const ariaLabel = await input.getAttribute('aria-label');
       const ariaLabelledBy = await input.getAttribute('aria-labelledby');
-      
+
       if (id) {
         const label = page.locator(`label[for="${id}"]`);
         const hasLabel = await label.count() > 0;
-        
+
         if (!hasLabel && !ariaLabel && !ariaLabelledBy) {
           issues.push(`Input without label: ${type || 'text'} input`);
         }
@@ -439,40 +439,43 @@ export class AccessibilityHelpers {
         issues.push(`Input without ID or aria-label: ${type || 'text'} input`);
       }
     }
-    
-    return { valid: issues.length === 0, issues };
+
+    return {valid: issues.length === 0, issues};
   }
-  
+
   static async checkImageAltText(page: Page): Promise<{ valid: boolean; issues: string[] }> {
     const images = await page.locator(ACCESSIBILITY_SELECTORS.images).all();
     const issues: string[] = [];
-    
+
     for (const image of images) {
       const alt = await image.getAttribute('alt');
       const ariaLabel = await image.getAttribute('aria-label');
       const ariaLabelledBy = await image.getAttribute('aria-labelledby');
       const role = await image.getAttribute('role');
-      
+
       // Decorative images should have empty alt
       if (role === 'presentation' || role === 'none') {
         continue;
       }
-      
+
       if (alt === null && !ariaLabel && !ariaLabelledBy) {
         issues.push('Image without alt text or aria-label');
       }
     }
-    
-    return { valid: issues.length === 0, issues };
+
+    return {valid: issues.length === 0, issues};
   }
-  
-  static async checkFocusManagement(page: Page, triggerSelector: string): Promise<{ valid: boolean; issues: string[] }> {
+
+  static async checkFocusManagement(page: Page, _triggerSelector: string): Promise<{
+    valid: boolean;
+    issues: string[]
+  }> {
     const issues: string[] = [];
-    
+
     // Test focus visibility
     await page.keyboard.press('Tab');
     const focusedElement = page.locator(':focus');
-    
+
     if (await focusedElement.count() === 0) {
       issues.push('No visible focus indicator');
     } else {
@@ -486,20 +489,20 @@ export class AccessibilityHelpers {
           border: styles.border
         };
       });
-      
-      const hasVisibleFocus = focusStyles.outline !== 'none' || 
-                             focusStyles.outlineWidth !== '0px' ||
-                             focusStyles.boxShadow !== 'none' ||
-                             focusStyles.border !== 'none';
-      
+
+      const hasVisibleFocus = focusStyles.outline !== 'none' ||
+          focusStyles.outlineWidth !== '0px' ||
+          focusStyles.boxShadow !== 'none' ||
+          focusStyles.border !== 'none';
+
       if (!hasVisibleFocus) {
         issues.push('Focus indicator not visible');
       }
     }
-    
-    return { valid: issues.length === 0, issues };
+
+    return {valid: issues.length === 0, issues};
   }
 }
 
-export { test as accessibilityTest };
+export {test as accessibilityTest};
 export default test;

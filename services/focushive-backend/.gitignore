@@ -1,6 +1,8 @@
 # Build files
 build/
 target/
+bin/
+out/
 *.jar
 *.war
 *.ear
@@ -13,6 +15,14 @@ target/
 *.iml
 *.ipr
 *.iws
+
+# Eclipse IDE files
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache/
 
 # OS files
 .DS_Store
@@ -30,11 +40,24 @@ application-local.yml
 *.swp
 *~
 
+# Deployment and sensitive scripts
+deploy.sh
+deploy-*.sh
+*.pem
+*.key
+*.p12
+
 # Node modules (if any)
 node_modules/
 npm-debug.log*
 
 # Gradle
 .gradle/
+.gradle-cache/
 gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.properties
+.gradle_cache/
+gradlew.bat
+
+# Docker volume data
+data/

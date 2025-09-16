@@ -1,0 +1,91 @@
+# FocusHive Identity Service Docker Ignore File
+# Prevents unnecessary files from being sent to Docker build context
+
+# Build artifacts
+build/
+.gradle/
+out/
+bin/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*
+LICENSE*
+CHANGELOG*
+docs/
+
+# Test artifacts
+test-results/
+test-output/
+coverage/
+*.log
+logs/
+
+# Development files
+.env
+.env.*
+*.env
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Docker files (except those needed for build)
+docker-compose*.yml
+Dockerfile.*
+!Dockerfile
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.cache
+
+# Node modules (if any frontend assets)
+node_modules/
+
+# Python virtualenv (if any scripts)
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Editor backup files
+*~
+.*.swp
+.*.swo
+
+# Build scripts that aren't needed in container
+scripts/
+deployment/
+
+# Local configuration
+local.properties
+secrets.properties
+application-local.yml
+application-local.properties

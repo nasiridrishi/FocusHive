@@ -1,21 +1,21 @@
-export { 
-  useWebSocket, 
-  WebSocketProvider, 
-  ConnectionState 
+export {
+  useWebSocket,
+  WebSocketProvider,
+  ConnectionState
 } from './WebSocketContext'
 
-export { 
-  usePresence, 
-  PresenceProvider 
+export {
+  usePresence,
+  PresenceProvider
 } from './PresenceContext'
 
-export { 
-  useChat, 
-  ChatProvider 
+export {
+  useChat,
+  ChatProvider
 } from './ChatContext'
 
 // Timer context from timer feature
-export { 
-  useTimer, 
-  TimerProvider 
+export {
+  useTimer,
+  TimerProvider
 } from '../../features/timer/contexts/TimerContext'

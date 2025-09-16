@@ -2,7 +2,9 @@
 
 ## Overview
 
-The FocusHive Music Module provides a comprehensive frontend interface for the Music Recommendation Service, offering rich music player functionality, collaborative playlist management, Spotify integration, and real-time music synchronization features.
+The FocusHive Music Module provides a comprehensive frontend interface for the Music Recommendation
+Service, offering rich music player functionality, collaborative playlist management, Spotify
+integration, and real-time music synchronization features.
 
 ## Architecture
 
@@ -40,6 +42,7 @@ src/features/music/
 The main music player component with support for both mini and full display modes.
 
 **Features:**
+
 - **Dual Display Modes**: Mini player (fixed position) and full player (embedded)
 - **Spotify Integration**: Seamless switching between local and Spotify Premium playback
 - **Advanced Controls**: Play/pause, skip, seek, volume, shuffle, repeat
@@ -47,6 +50,7 @@ The main music player component with support for both mini and full display mode
 - **Rich Metadata Display**: Album art, track info, collaborative indicators
 
 **Usage:**
+
 ```typescript
 import { MusicPlayer } from '@/features/music'
 
@@ -62,6 +66,7 @@ import { MusicPlayer } from '@/features/music'
 ```
 
 **Props:**
+
 ```typescript
 interface MusicPlayerProps {
   mode?: 'mini' | 'full'           // Display mode
@@ -76,6 +81,7 @@ interface MusicPlayerProps {
 Playlist selection and management interface with search, filtering, and creation capabilities.
 
 **Features:**
+
 - **Smart Filtering**: Filter by type (personal, hive, smart playlists)
 - **Search Functionality**: Real-time playlist and track search
 - **Creation Interface**: Modal-based playlist creation
@@ -83,6 +89,7 @@ Playlist selection and management interface with search, filtering, and creation
 - **Visual Indicators**: Collaborative status, track counts, duration
 
 **Usage:**
+
 ```typescript
 import { PlaylistSelector } from '@/features/music'
 
@@ -100,6 +107,7 @@ import { PlaylistSelector } from '@/features/music'
 Real-time collaborative playlist management with voting and drag-drop reordering.
 
 **Features:**
+
 - **Democratic Voting**: Upvote/downvote tracks in collaborative sessions
 - **Real-time Updates**: Live queue updates via WebSocket
 - **Drag-and-Drop Reordering**: Intuitive queue management
@@ -107,6 +115,7 @@ Real-time collaborative playlist management with voting and drag-drop reordering
 - **Visual Feedback**: Vote counts, position indicators, user attribution
 
 **Usage:**
+
 ```typescript
 import { CollaborativeQueue } from '@/features/music'
 
@@ -124,6 +133,7 @@ import { CollaborativeQueue } from '@/features/music'
 Intelligent mood and task type selection for personalized recommendations.
 
 **Features:**
+
 - **Mood Selection**: Pre-defined moods with visual indicators
 - **Task Type Integration**: Context-aware recommendations
 - **Energy Level Control**: Fine-tune energy preferences
@@ -131,6 +141,7 @@ Intelligent mood and task type selection for personalized recommendations.
 - **Visual Design**: Color-coded mood states with icons
 
 **Usage:**
+
 ```typescript
 import { MoodSelector } from '@/features/music'
 
@@ -148,13 +159,15 @@ import { MoodSelector } from '@/features/music'
 Spotify OAuth2 integration with premium feature detection and connection management.
 
 **Features:**
+
 - **OAuth2 Flow**: Secure Spotify authentication
-- **Premium Detection**: Automatic feature availability detection  
+- **Premium Detection**: Automatic feature availability detection
 - **Connection Management**: Connect/disconnect functionality
 - **Visual Status**: Connection state indicators
 - **Fallback Handling**: Graceful degradation for free accounts
 
 **Usage:**
+
 ```typescript
 import { SpotifyConnectButton } from '@/features/music'
 
@@ -173,6 +186,7 @@ import { SpotifyConnectButton } from '@/features/music'
 Central state management for music functionality with comprehensive API integration.
 
 **State Management:**
+
 - Current track and playback state
 - Queue management and voting
 - Playlist CRUD operations
@@ -180,6 +194,7 @@ Central state management for music functionality with comprehensive API integrat
 - WebSocket real-time updates
 
 **Usage:**
+
 ```typescript
 import { useMusicContext } from '@/features/music/context'
 
@@ -203,6 +218,7 @@ const MusicComponent = () => {
 Spotify-specific state management and Web SDK integration.
 
 **Features:**
+
 - OAuth2 token management with refresh
 - Spotify Web SDK player initialization
 - Premium feature detection
@@ -210,6 +226,7 @@ Spotify-specific state management and Web SDK integration.
 - Encrypted token storage
 
 **Usage:**
+
 ```typescript
 import { useSpotifyContext } from '@/features/music/context'
 
@@ -234,6 +251,7 @@ const SpotifyComponent = () => {
 Hook for generating and managing music recommendations.
 
 **Features:**
+
 - Session-based recommendations
 - Task and mood optimization
 - Feedback submission and learning
@@ -241,6 +259,7 @@ Hook for generating and managing music recommendations.
 - Performance analytics integration
 
 **API:**
+
 ```typescript
 const {
   recommendations,
@@ -265,6 +284,7 @@ await generateRecommendations({
 Real-time collaborative playlist management hook.
 
 **Features:**
+
 - Real-time queue synchronization
 - Voting system integration
 - Member management
@@ -272,6 +292,7 @@ Real-time collaborative playlist management hook.
 - Optimistic UI updates
 
 **API:**
+
 ```typescript
 const {
   queue,
@@ -291,6 +312,7 @@ await vote('track-id', 'up')
 Advanced playback control with crossfading and smart features.
 
 **Features:**
+
 - Crossfade transitions
 - Smart skip logic
 - Quick seek controls (10s forward/backward)
@@ -298,6 +320,7 @@ Advanced playback control with crossfading and smart features.
 - Volume management with fade
 
 **API:**
+
 ```typescript
 const {
   playWithCrossfade,
@@ -314,6 +337,7 @@ const {
 Spotify Web SDK integration hook for premium users.
 
 **Features:**
+
 - Web SDK player initialization
 - Device management
 - Premium feature access
@@ -321,6 +345,7 @@ Spotify Web SDK integration hook for premium users.
 - Connection state handling
 
 **API:**
+
 ```typescript
 const {
   player,
@@ -339,6 +364,7 @@ const {
 Real-time WebSocket connection for collaborative features.
 
 **Features:**
+
 - Automatic connection management
 - Message routing and handling
 - Reconnection logic
@@ -346,6 +372,7 @@ Real-time WebSocket connection for collaborative features.
 - Connection state tracking
 
 **API:**
+
 ```typescript
 const {
   isConnected,
@@ -364,6 +391,7 @@ const {
 ### Core Types
 
 **Track Interface:**
+
 ```typescript
 interface Track {
   id: string
@@ -383,6 +411,7 @@ interface Track {
 ```
 
 **Playlist Interface:**
+
 ```typescript
 interface Playlist {
   id: string
@@ -400,6 +429,7 @@ interface Playlist {
 ```
 
 **PlaybackState Interface:**
+
 ```typescript
 interface PlaybackState {
   isPlaying: boolean
@@ -416,6 +446,7 @@ interface PlaybackState {
 ### Recommendation Types
 
 **MoodState Interface:**
+
 ```typescript
 interface MoodState {
   mood: string
@@ -428,6 +459,7 @@ type TaskType = 'focus' | 'creative' | 'break' | 'exercise' | 'relax' | 'social'
 ```
 
 **SessionRecommendationRequest Interface:**
+
 ```typescript
 interface SessionRecommendationRequest {
   hiveId?: string
@@ -446,6 +478,7 @@ interface SessionRecommendationRequest {
 The `musicApi.ts` service provides comprehensive integration with the Music Service backend.
 
 **Key Methods:**
+
 ```typescript
 // Recommendations
 const recommendations = await musicApi.generateSessionRecommendations(request)
@@ -468,6 +501,7 @@ const joined = await musicApi.joinCollaborativeSession(playlistId)
 The `spotifyService.ts` handles Spotify Web API integration for track metadata and premium features.
 
 **Key Methods:**
+
 ```typescript
 // Authentication
 const authUrl = await spotifyService.getAuthUrl()
@@ -489,9 +523,11 @@ await spotifyService.setVolume(volume)
 
 ### WebSocket Integration
 
-The music module integrates with the Music Service WebSocket endpoints for real-time collaborative features.
+The music module integrates with the Music Service WebSocket endpoints for real-time collaborative
+features.
 
 **Supported Events:**
+
 - `TRACK_ADDED`: New track added to collaborative queue
 - `TRACK_VOTED`: Vote cast on collaborative track
 - `QUEUE_UPDATED`: Queue order or content changed
@@ -500,6 +536,7 @@ The music module integrates with the Music Service WebSocket endpoints for real-
 - `USER_LEFT`: User left collaborative session
 
 **Event Handling:**
+
 ```typescript
 const handleWebSocketMessage = (message: WebSocketMessage) => {
   switch (message.type) {
@@ -538,6 +575,7 @@ VITE_ENABLE_REAL_TIME_UPDATES=true
 The music module integrates with Material-UI theming for consistent visual design.
 
 **Custom Theme Extensions:**
+
 ```typescript
 // Theme customization for music components
 const musicTheme = {
@@ -572,6 +610,7 @@ const musicTheme = {
 The music module includes comprehensive unit tests for all components and hooks.
 
 **Test Coverage:**
+
 - Component rendering and interaction
 - Hook state management and API calls
 - Context provider functionality
@@ -579,6 +618,7 @@ The music module includes comprehensive unit tests for all components and hooks.
 - Error scenarios and edge cases
 
 **Example Test:**
+
 ```typescript
 // MusicPlayer.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -609,6 +649,7 @@ test('displays track information correctly', () => {
 Integration tests verify API interactions and real-time functionality.
 
 **Test Scenarios:**
+
 - Music Service API integration
 - Spotify OAuth2 flow
 - WebSocket connection and messaging
@@ -781,11 +822,13 @@ if (hasMediaSession) {
 ### Debugging
 
 **Enable Debug Logging**:
+
 ```typescript
 localStorage.setItem('debug', 'music:*')
 ```
 
 **WebSocket Debug Messages**:
+
 ```typescript
 const ws = useMusicWebSocket({
   hiveId,
@@ -834,47 +877,48 @@ Major architectural decisions are documented in ADR (Architecture Decision Recor
 ### Planned Features
 
 1. **AI-Powered Recommendations**:
-   - Machine learning model integration
-   - Behavioral pattern analysis
-   - Cross-user collaborative filtering
+    - Machine learning model integration
+    - Behavioral pattern analysis
+    - Cross-user collaborative filtering
 
 2. **Enhanced Collaboration**:
-   - Video chat integration during music sessions
-   - Synchronized playback across devices
-   - Advanced permission management
+    - Video chat integration during music sessions
+    - Synchronized playback across devices
+    - Advanced permission management
 
 3. **Extended Platform Support**:
-   - Apple Music integration
-   - YouTube Music integration
-   - Local file support
+    - Apple Music integration
+    - YouTube Music integration
+    - Local file support
 
 4. **Advanced Analytics**:
-   - Listening habit analytics
-   - Productivity correlation insights
-   - Music discovery metrics
+    - Listening habit analytics
+    - Productivity correlation insights
+    - Music discovery metrics
 
 ### Technical Improvements
 
 1. **Performance**:
-   - Service worker for offline playback
-   - Advanced caching strategies
-   - Bundle size optimization
+    - Service worker for offline playback
+    - Advanced caching strategies
+    - Bundle size optimization
 
 2. **Developer Experience**:
-   - Component storybook
-   - Enhanced TypeScript coverage
-   - Automated visual regression testing
+    - Component storybook
+    - Enhanced TypeScript coverage
+    - Automated visual regression testing
 
 3. **Accessibility**:
-   - Voice control integration
-   - Enhanced screen reader support
-   - Cognitive accessibility features
+    - Voice control integration
+    - Enhanced screen reader support
+    - Cognitive accessibility features
 
 ---
 
 ## License
 
-This music module is part of the FocusHive project and is subject to the project's overall licensing terms.
+This music module is part of the FocusHive project and is subject to the project's overall licensing
+terms.
 
 ## Support
 

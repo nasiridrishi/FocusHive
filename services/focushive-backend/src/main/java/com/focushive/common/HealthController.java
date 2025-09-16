@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,8 @@ import java.util.Map;
 @RequestMapping("/api/health")
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "app.features.health.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnBean(IdentityServiceClient.class)
+@Profile("!test")
 public class HealthController {
     
     private final IdentityServiceClient identityServiceClient;

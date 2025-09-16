@@ -7,7 +7,6 @@ import {
   Stack,
   styled,
   alpha,
-  useTheme,
 } from '@mui/material';
 import { LoadingSpinner } from './LoadingSpinner';
 import { LoadingOverlay } from './LoadingOverlay';
@@ -45,17 +44,16 @@ export interface FormWithLoadingProps {
 const FormContainer = styled(Paper, {
   shouldForwardProp: (prop) => !['loading', 'disableInteraction'].includes(prop as string),
 })<{ loading: boolean; disableInteraction: boolean }>(
-  ({ theme, loading, disableInteraction }) => ({
+  ({ loading, disableInteraction }) => ({
     position: 'relative',
     overflow: 'hidden',
-    transition: theme.transitions.create(['opacity', 'filter'], {
-      duration: theme.transitions.duration.standard,
-    }),
+    transition: 'opacity 300ms, filter 300ms',
     ...(loading && disableInteraction && {
       pointerEvents: 'none',
       opacity: 0.7,
       filter: 'grayscale(20%)',
-      '& *': {
+       
+      ['& *']: {
         userSelect: 'none',
       },
     }),
@@ -94,30 +92,6 @@ const DisabledOverlay = styled(Box)(({ theme }) => ({
 
 /**
  * FormWithLoading component that provides loading states for forms
- * 
- * @example
- * ```tsx
- * // Overlay loading
- * <FormWithLoading 
- *   loading={isSubmitting}
- *   variant="overlay"
- *   loadingMessage="Saving changes..."
- * >
- *   <form onSubmit={handleSubmit}>
- *     // Form content
- *   </form>
- * </FormWithLoading>
- * 
- * // Progress bar loading
- * <FormWithLoading 
- *   loading={isUploading}
- *   variant="progress-only"
- *   showProgress
- *   progress={uploadProgress}
- * >
- *   // Form content
- * </FormWithLoading>
- * ```
  */
 export const FormWithLoading: React.FC<FormWithLoadingProps> = ({
   children,
@@ -134,18 +108,15 @@ export const FormWithLoading: React.FC<FormWithLoadingProps> = ({
   onSubmitEnd,
   preventMultipleSubmissions = true,
 }) => {
-  const theme = useTheme();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const prevLoading = React.useRef(loading);
 
   // Handle submission state changes
   React.useEffect(() => {
     if (loading && !prevLoading.current) {
-      // Started loading
       setIsSubmitting(true);
       onSubmitStart?.();
     } else if (!loading && prevLoading.current) {
-      // Stopped loading
       setIsSubmitting(false);
       onSubmitEnd?.();
     }
@@ -161,7 +132,7 @@ export const FormWithLoading: React.FC<FormWithLoadingProps> = ({
     }
   }, [loading, isSubmitting, preventMultipleSubmissions]);
 
-  const renderLoadingIndicator = () => {
+  const renderLoadingIndicator = (): React.ReactNode => {
     if (loadingIndicator) {
       return loadingIndicator;
     }
@@ -201,7 +172,7 @@ export const FormWithLoading: React.FC<FormWithLoadingProps> = ({
         );
 
       case 'disable':
-        return null; // No visual indicator, just disable interaction
+        return null;
 
       case 'overlay':
       default:
@@ -223,7 +194,6 @@ export const FormWithLoading: React.FC<FormWithLoadingProps> = ({
       return children;
     }
 
-    // Wrap forms with submission handler
     const processChildren = (child: React.ReactNode): React.ReactNode => {
       if (React.isValidElement(child)) {
         if (child.type === 'form') {
@@ -259,84 +229,24 @@ export const FormWithLoading: React.FC<FormWithLoadingProps> = ({
       }}
       {...containerProps}
     >
-      {/* Progress indicator for progress-only variant */}
       {loading && variant === 'progress-only' && renderLoadingIndicator()}
 
-      {/* Form content */}
       <Box sx={{ position: 'relative' }}>
         {enhancedChildren}
 
-        {/* Loading states */}
         {loading && variant === 'overlay' && renderLoadingIndicator()}
-        
+
         {loading && variant === 'disable' && (
           <DisabledOverlay />
         )}
       </Box>
 
-      {/* Inline loading indicator */}
       {loading && variant === 'inline' && (
         <Box mt={2}>
           {renderLoadingIndicator()}
         </Box>
       )}
     </FormContainer>
-  );
-};
-
-// Hook for form loading state management
-export const useFormLoading = () => {
-  const [loading, setLoading] = React.useState(false);
-  const [progress, setProgress] = React.useState(0);
-  const [message, setMessage] = React.useState('');
-
-  const startLoading = React.useCallback((loadingMessage?: string) => {
-    setMessage(loadingMessage || 'Processing...');
-    setProgress(0);
-    setLoading(true);
-  }, []);
-
-  const stopLoading = React.useCallback(() => {
-    setLoading(false);
-    setProgress(0);
-  }, []);
-
-  const updateProgress = React.useCallback((value: number, progressMessage?: string) => {
-    setProgress(Math.max(0, Math.min(100, value)));
-    if (progressMessage) {
-      setMessage(progressMessage);
-    }
-  }, []);
-
-  return {
-    loading,
-    progress,
-    message,
-    startLoading,
-    stopLoading,
-    updateProgress,
-    setMessage,
-  };
-};
-
-// Higher-order component for form loading
-export interface WithFormLoadingProps {
-  formLoading?: boolean;
-  formLoadingMessage?: string;
-  formLoadingVariant?: FormWithLoadingProps['variant'];
-}
-
-export const withFormLoading = <P extends object>(
-  Component: React.ComponentType<P>
-): React.FC<P & WithFormLoadingProps> => {
-  return ({ formLoading, formLoadingMessage, formLoadingVariant, ...props }) => (
-    <FormWithLoading
-      loading={formLoading || false}
-      loadingMessage={formLoadingMessage}
-      variant={formLoadingVariant}
-    >
-      <Component {...(props as P)} />
-    </FormWithLoading>
   );
 };
 

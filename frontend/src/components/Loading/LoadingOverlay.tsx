@@ -2,14 +2,14 @@ import React from 'react';
 import {
   Backdrop,
   Box,
-  Typography,
   Fade,
+  LinearProgress,
   Portal,
   styled,
+  Typography,
   useTheme,
-  LinearProgress,
 } from '@mui/material';
-import { LoadingSpinner, LoadingSpinnerProps } from './LoadingSpinner';
+import {LoadingSpinner, LoadingSpinnerProps} from './LoadingSpinner';
 
 export interface LoadingOverlayProps {
   /** Whether the overlay is visible */
@@ -50,26 +50,26 @@ export interface LoadingOverlayProps {
 const OverlayContainer = styled(Box, {
   shouldForwardProp: (prop) => !['blurBackground', 'backdropOpacity'].includes(prop as string),
 })<{ blurBackground: boolean; backdropOpacity: number }>(
-  ({ theme, blurBackground, backdropOpacity }) => ({
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'column',
-    backgroundColor: `rgba(255, 255, 255, ${backdropOpacity})`,
-    zIndex: theme.zIndex.modal,
-    ...(blurBackground && {
-      backdropFilter: 'blur(4px)',
-      WebkitBackdropFilter: 'blur(4px)', // Safari support
-    }),
-  })
+    ({theme, blurBackground, backdropOpacity}) => ({
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      backgroundColor: `rgba(255, 255, 255, ${backdropOpacity})`,
+      zIndex: theme.zIndex.modal,
+      ...(blurBackground && {
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)', // Safari support
+      }),
+    })
 );
 
-const ContentContainer = styled(Box)(({ theme }) => ({
+const ContentContainer = styled(Box)(({theme}) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -86,14 +86,14 @@ const ContentContainer = styled(Box)(({ theme }) => ({
   textAlign: 'center',
 }));
 
-const MessageContainer = styled(Box)(({ theme }) => ({
+const MessageContainer = styled(Box)(({theme}) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   gap: theme.spacing(1),
 }));
 
-const ProgressContainer = styled(Box)(({ theme }) => ({
+const ProgressContainer = styled(Box)(({theme}) => ({
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
@@ -102,7 +102,7 @@ const ProgressContainer = styled(Box)(({ theme }) => ({
 
 /**
  * LoadingOverlay component for full-screen loading states
- * 
+ *
  * @example
  * ```tsx
  * // Simple overlay
@@ -110,7 +110,7 @@ const ProgressContainer = styled(Box)(({ theme }) => ({
  *   open={isLoading} 
  *   message="Loading hives..." 
  * />
- * 
+ *
  * // With progress
  * <LoadingOverlay 
  *   open={isLoading}
@@ -118,7 +118,7 @@ const ProgressContainer = styled(Box)(({ theme }) => ({
  *   showProgress
  *   progress={uploadProgress}
  * />
- * 
+ *
  * // Closable overlay
  * <LoadingOverlay 
  *   open={isLoading}
@@ -129,26 +129,26 @@ const ProgressContainer = styled(Box)(({ theme }) => ({
  * ```
  */
 export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
-  open,
-  message,
-  subtitle,
-  showProgress = false,
-  progress = 0,
-  closable = false,
-  onClose,
-  backdropOpacity = 0.8,
-  blurBackground = true,
-  disableBackdropClick = true,
-  zIndex,
-  spinnerProps = {},
-  usePortal = true,
-  container,
-  timeout = 300,
-  sx = {},
-}) => {
+                                                                open,
+                                                                message,
+                                                                subtitle,
+                                                                showProgress = false,
+                                                                progress = 0,
+                                                                closable = false,
+                                                                onClose,
+                                                                backdropOpacity = 0.8,
+                                                                blurBackground = true,
+                                                                disableBackdropClick = true,
+                                                                zIndex,
+                                                                spinnerProps = {},
+                                                                usePortal = true,
+                                                                container,
+                                                                timeout = 300,
+                                                                sx = {},
+                                                              }) => {
   const theme = useTheme();
 
-  const handleBackdropClick = (event: React.MouseEvent) => {
+  const handleBackdropClick = (event: React.MouseEvent): void => {
     if (!disableBackdropClick && closable && onClose) {
       event.stopPropagation();
       onClose();
@@ -156,90 +156,90 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   };
 
   const content = (
-    <Fade in={open} timeout={timeout}>
-      <OverlayContainer
-        blurBackground={blurBackground}
-        backdropOpacity={backdropOpacity}
-        onClick={handleBackdropClick}
-        sx={{
-          ...(zIndex && { zIndex }),
-          ...sx,
-        }}
-      >
-        <ContentContainer
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking content
+      <Fade in={open} timeout={timeout}>
+        <OverlayContainer
+            blurBackground={blurBackground}
+            backdropOpacity={backdropOpacity}
+            onClick={handleBackdropClick}
+            sx={{
+              ...(zIndex && {zIndex}),
+              ...sx,
+            }}
         >
-          {/* Loading Spinner */}
-          <LoadingSpinner
-            size="large"
-            variant="inline"
-            {...spinnerProps}
-          />
+          <ContentContainer
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking content
+          >
+            {/* Loading Spinner */}
+            <LoadingSpinner
+                size="large"
+                variant="inline"
+                {...spinnerProps}
+            />
 
-          {/* Message Container */}
-          {(message || subtitle) && (
-            <MessageContainer>
-              {message && (
-                <Typography 
-                  variant="h6" 
-                  component="h2"
-                  color="text.primary"
-                  sx={{ fontWeight: 500 }}
+            {/* Message Container */}
+            {(message || subtitle) && (
+                <MessageContainer>
+                  {message && (
+                      <Typography
+                          variant="h6"
+                          component="h2"
+                          color="text.primary"
+                          sx={{fontWeight: 500}}
+                      >
+                        {message}
+                      </Typography>
+                  )}
+                  {subtitle && (
+                      <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{maxWidth: '300px'}}
+                      >
+                        {subtitle}
+                      </Typography>
+                  )}
+                </MessageContainer>
+            )}
+
+            {/* Progress Indicator */}
+            {showProgress && (
+                <ProgressContainer>
+                  <LinearProgress
+                      variant={progress > 0 ? 'determinate' : 'indeterminate'}
+                      value={progress}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: theme.palette.grey[200],
+                        '& .MuiLinearProgress-bar': {
+                          borderRadius: 3,
+                        },
+                      }}
+                  />
+                  {progress > 0 && (
+                      <Typography variant="caption" color="text.secondary">
+                        {Math.round(progress)}%
+                      </Typography>
+                  )}
+                </ProgressContainer>
+            )}
+
+            {/* Close instruction */}
+            {closable && (
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      fontSize: '0.75rem',
+                      opacity: 0.7,
+                    }}
                 >
-                  {message}
+                  Click outside to cancel
                 </Typography>
-              )}
-              {subtitle && (
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{ maxWidth: '300px' }}
-                >
-                  {subtitle}
-                </Typography>
-              )}
-            </MessageContainer>
-          )}
-
-          {/* Progress Indicator */}
-          {showProgress && (
-            <ProgressContainer>
-              <LinearProgress
-                variant={progress > 0 ? 'determinate' : 'indeterminate'}
-                value={progress}
-                sx={{
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: theme.palette.grey[200],
-                  '& .MuiLinearProgress-bar': {
-                    borderRadius: 3,
-                  },
-                }}
-              />
-              {progress > 0 && (
-                <Typography variant="caption" color="text.secondary">
-                  {Math.round(progress)}%
-                </Typography>
-              )}
-            </ProgressContainer>
-          )}
-
-          {/* Close instruction */}
-          {closable && (
-            <Typography 
-              variant="caption" 
-              color="text.secondary"
-              sx={{ 
-                fontSize: '0.75rem',
-                opacity: 0.7,
-              }}
-            >
-              Click outside to cancel
-            </Typography>
-          )}
-        </ContentContainer>
-      </OverlayContainer>
-    </Fade>
+            )}
+          </ContentContainer>
+        </OverlayContainer>
+      </Fade>
   );
 
   if (!open) {
@@ -248,9 +248,9 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 
   if (usePortal) {
     return (
-      <Portal container={container}>
-        {content}
-      </Portal>
+        <Portal container={container}>
+          {content}
+        </Portal>
     );
   }
 
@@ -259,90 +259,57 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 
 // Alternative backdrop-based implementation
 export const BackdropLoadingOverlay: React.FC<LoadingOverlayProps> = ({
-  open,
-  message,
-  onClose,
-  closable = false,
-  disableBackdropClick = true,
-  zIndex,
-  spinnerProps = {},
-  timeout = 300,
-  sx = {},
-}) => {
-  const handleClose = () => {
+                                                                        open,
+                                                                        message,
+                                                                        onClose,
+                                                                        closable = false,
+                                                                        disableBackdropClick = true,
+                                                                        zIndex,
+                                                                        spinnerProps = {},
+                                                                        timeout = 300,
+                                                                        sx = {},
+                                                                      }) => {
+  const handleClose = (): void => {
     if (closable && onClose) {
       onClose();
     }
   };
 
   return (
-    <Backdrop
-      open={open}
-      onClick={!disableBackdropClick ? handleClose : undefined}
-      sx={{
-        color: '#fff',
-        zIndex: zIndex || ((theme) => theme.zIndex.modal),
-        backdropFilter: 'blur(4px)',
-        ...sx,
-      }}
-      transitionDuration={timeout}
-    >
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        gap={2}
-        onClick={(e) => e.stopPropagation()}
+      <Backdrop
+          open={open}
+          onClick={!disableBackdropClick ? handleClose : undefined}
+          sx={{
+            color: '#fff',
+            zIndex: zIndex || ((theme) => theme.zIndex.modal),
+            backdropFilter: 'blur(4px)',
+            ...sx,
+          }}
+          transitionDuration={timeout}
       >
-        <LoadingSpinner
-          size="large"
-          variant="inline"
-          customColor="#fff"
-          {...spinnerProps}
-        />
-        {message && (
-          <Typography variant="h6" color="inherit">
-            {message}
-          </Typography>
-        )}
-      </Box>
-    </Backdrop>
+        <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap={2}
+            onClick={(e) => e.stopPropagation()}
+        >
+          <LoadingSpinner
+              size="large"
+              variant="inline"
+              customColor="#fff"
+              {...spinnerProps}
+          />
+          {message && (
+              <Typography variant="h6" color="inherit">
+                {message}
+              </Typography>
+          )}
+        </Box>
+      </Backdrop>
   );
 };
 
-// Hook for managing overlay state
-export const useLoadingOverlay = () => {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [message, setMessage] = React.useState<string>('');
-  const [progress, setProgress] = React.useState<number>(0);
-
-  const showOverlay = React.useCallback((loadingMessage?: string) => {
-    setMessage(loadingMessage || '');
-    setIsOpen(true);
-  }, []);
-
-  const hideOverlay = React.useCallback(() => {
-    setIsOpen(false);
-    setProgress(0);
-  }, []);
-
-  const updateProgress = React.useCallback((value: number) => {
-    setProgress(Math.max(0, Math.min(100, value)));
-  }, []);
-
-  const updateMessage = React.useCallback((newMessage: string) => {
-    setMessage(newMessage);
-  }, []);
-
-  return {
-    isOpen,
-    message,
-    progress,
-    showOverlay,
-    hideOverlay,
-    updateProgress,
-    updateMessage,
-  };
-};
+// Hook for managing overlay state is available in './useLoadingOverlay'
 
 export default LoadingOverlay;

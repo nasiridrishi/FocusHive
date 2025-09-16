@@ -4,44 +4,34 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.MediaType;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import com.focushive.identity.security.JwtAuthenticationFilter;
+import com.focushive.identity.security.PathTraversalPreventionFilter;
+import com.focushive.identity.security.OWASPCompliantCorsFilter;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
-@Profile("!test")
+@Profile({"!test", "!security-test", "!owasp-test"})
 public class SecurityConfig {
 
     @Value("${security.cors.allowed-origins}")
@@ -51,47 +41,41 @@ public class SecurityConfig {
 
     @Bean
     @Order(3)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
-        // Create CSRF token request handler for Double Submit Cookie pattern
-        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
-        // Set the name of the attribute the CsrfToken will be populated on
-        requestHandler.setCsrfRequestAttributeName("_csrf");
-
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
+                                                         JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                         PathTraversalPreventionFilter pathTraversalPreventionFilter,
+                                                         OWASPCompliantCorsFilter owaspCompliantCorsFilter,
+                                                         CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // Enable CSRF protection for cookie-based authentication
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(requestHandler)
-                        .ignoringRequestMatchers(
-                                // Allow these endpoints without CSRF for initial authentication
-                                "/api/v1/auth/register", 
-                                "/api/v1/auth/login",
-                                "/api/v1/auth/refresh",
-                                "/api/v1/auth/validate",
-                                "/api/v1/auth/introspect",
-                                "/api/v1/auth/password/reset-request", 
-                                "/api/v1/auth/password/reset",
-                                "/oauth2/**", 
-                                "/.well-known/**",
-                                "/api/v1/oauth2/**",
-                                "/api/v1/performance-test/**",
-                                "/actuator/health", 
-                                "/api-docs/**", 
-                                "/swagger-ui/**",
-                                "/api/v1/health"
-                        )
+                // This filter chain handles API requests and everything else not handled by previous chains
+                .securityMatcher(request ->
+                    request.getRequestURI().startsWith("/api/") ||
+                    request.getRequestURI().startsWith("/actuator/") ||
+                    request.getRequestURI().equals("/health") ||
+                    request.getRequestURI().startsWith("/api-docs/") ||
+                    request.getRequestURI().startsWith("/swagger-ui/")
                 )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                // Disable CSRF protection for stateless JWT authentication
+                // JWT tokens are not vulnerable to CSRF attacks since they are sent in headers, not cookies
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/actuator/health", "/api-docs/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/api/v1/health").permitAll()
-                        .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
-                        .requestMatchers("/api/v1/auth/refresh", "/api/v1/auth/validate").permitAll()
-                        .requestMatchers("/api/v1/auth/introspect").permitAll()
-                        .requestMatchers("/api/v1/auth/password/reset-request", "/api/v1/auth/password/reset").permitAll()
+                        // A01: Allow CORS preflight requests (OPTIONS) to pass through
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // A05: Secure actuator endpoints - only health check is public
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")  // All other actuator endpoints require admin
+                        .requestMatchers("/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/refresh", "/api/auth/validate").permitAll()
+                        .requestMatchers("/api/auth/introspect").permitAll()
+                        .requestMatchers("/api/auth/jwks", "/api/auth/jwt-health").permitAll()
+                        .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
+                        .requestMatchers("/api/auth/redirect").permitAll()  // A10: Allow redirect endpoint for SSRF testing
                         .requestMatchers("/oauth2/**", "/.well-known/**").permitAll()
-                        .requestMatchers("/api/v1/oauth2/**").permitAll()
-                        .requestMatchers("/api/v1/performance-test/**").permitAll()
+                        .requestMatchers("/api/oauth2/**").permitAll()
+                        .requestMatchers("/api/performance-test/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
@@ -100,6 +84,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .addFilterBefore(owaspCompliantCorsFilter, org.springframework.web.filter.CorsFilter.class)
+                .addFilterBefore(pathTraversalPreventionFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -128,23 +114,83 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
+        // Parse allowed origins from properties
+        String[] allowedOriginsArray = corsAllowedOrigins.split(",");
+
+        SecurityAwareCorsConfiguration configuration = new SecurityAwareCorsConfiguration();
+        configuration.setTrustedOrigins(Arrays.asList(allowedOriginsArray));
+
+        // For OWASP A01 compliance: Accept preflight requests from any origin
+        // but only return CORS headers for trusted origins
+        // Allow all origins for OPTIONS but control headers via checkOrigin
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+
+        // IMPORTANT: Don't set allowCredentials to true with wildcard origins
+        // This is done by the custom checkOrigin method instead
+        configuration.setAllowCredentials(false);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList(
-            "Content-Type", 
-            "Authorization", 
-            "X-Requested-With", 
-            "Accept", 
-            "Origin", 
-            "Access-Control-Request-Method", 
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+            "Access-Control-Request-Method",
             "Access-Control-Request-Headers"
         ));
-        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+    /**
+     * Custom CORS configuration that properly handles OWASP A01 compliance.
+     *
+     * For unauthorized origins:
+     * - Returns null for Access-Control-Allow-Origin (header not set)
+     * - Still allows OPTIONS requests to pass through (required for CORS spec)
+     * - Logs security violations for monitoring
+     */
+    private static class SecurityAwareCorsConfiguration extends CorsConfiguration {
+
+        private static final org.slf4j.Logger securityLogger =
+            org.slf4j.LoggerFactory.getLogger("SECURITY.CORS");
+
+        private java.util.List<String> trustedOrigins;
+
+        public void setTrustedOrigins(java.util.List<String> trustedOrigins) {
+            this.trustedOrigins = trustedOrigins;
+        }
+
+        @Override
+        public String checkOrigin(String requestOrigin) {
+            if (requestOrigin == null) {
+                // No origin header - allow for same-origin requests
+                return null;
+            }
+
+            // Check if origin is in our trusted list
+            boolean isTrusted = trustedOrigins != null && trustedOrigins.contains(requestOrigin);
+
+            if (isTrusted) {
+                securityLogger.debug("CORS: Authorized origin access: {}", requestOrigin);
+                return requestOrigin;
+            } else {
+                // Log security violation but allow preflight to proceed
+                // Return null to indicate no CORS headers should be set for this origin
+                securityLogger.warn("CORS violation: Unauthorized origin attempted access: {}", requestOrigin);
+                return null;
+            }
+        }
+
+        @Override
+        public Boolean getAllowCredentials() {
+            // Only allow credentials for trusted origins
+            return false;
+        }
+
+    }
+
 }

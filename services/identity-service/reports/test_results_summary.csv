@@ -1,0 +1,4 @@
+batch_name,total_tests,passed,failed,errors,skipped,pass_rate,duration_seconds
+unit-fast-1,2,0,2,0,0,0.0%,0.002
+unit-fast-2,2,0,2,0,0,0.0%,0.001
+unit-medium,2,0,2,0,0,0.0%,0.002

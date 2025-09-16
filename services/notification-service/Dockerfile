@@ -1,57 +1,82 @@
 # Build stage
-FROM gradle:8.8-jdk21-alpine AS build
+FROM gradle:8.5-jdk21 AS build
 WORKDIR /app
 
 # Copy dependency management files first for better caching
-COPY build.gradle.kts settings.gradle.kts ./
+COPY build.gradle.kts settings.gradle.kts gradle.properties* ./
 COPY gradle ./gradle
-COPY gradlew ./
+COPY gradlew* ./
 
 # Download dependencies (cached layer)
-RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
+RUN chmod +x ./gradlew 2>/dev/null || true && \
+    gradle dependencies --no-daemon || ./gradlew dependencies --no-daemon
 
-# Copy source code and build
+# Copy source code and resources
 COPY src ./src
-RUN ./gradlew build -x test --no-daemon
+COPY jvm.options* ./
+COPY start-optimized.sh* ./
 
-# Extract layers for Spring Boot optimization
-RUN java -Djarmode=tools -jar build/libs/*.jar extract --layers
+# Build application with optimizations (skip tests and license checks)
+RUN gradle clean build -x test -x license --no-daemon && \
+    echo "Build completed successfully"
 
 # Production runtime stage
 FROM eclipse-temurin:21-jre-alpine AS production
 WORKDIR /app
 
-# Install curl for health checks and dumb-init for proper signal handling
-RUN apk add --no-cache curl dumb-init
+# Install required packages for production
+RUN apk add --no-cache \
+    curl \
+    bash \
+    tzdata \
+    dumb-init && \
+    rm -rf /var/cache/apk/*
 
-# Create non-root user
-RUN addgroup -g 1001 -S spring && \
-    adduser -S spring -u 1001 -G spring && \
-    mkdir -p /app/logs && \
-    chown -R spring:spring /app
+# Set timezone
+ENV TZ=UTC
 
-# Copy Spring Boot layers for optimal caching
-COPY --from=build --chown=spring:spring /app/dependencies/ ./
-COPY --from=build --chown=spring:spring /app/spring-boot-loader/ ./
-COPY --from=build --chown=spring:spring /app/snapshot-dependencies/ ./
-COPY --from=build --chown=spring:spring /app/application/ ./
+# Create non-root user with specific UID/GID
+RUN addgroup -g 1001 -S focushive && \
+    adduser -S focushive -u 1001 -G focushive && \
+    mkdir -p /app/logs /app/config /app/tmp && \
+    chown -R focushive:focushive /app
+
+# Copy the JAR file from the build stage
+COPY --from=build --chown=focushive:focushive /app/build/libs/notification-service.jar ./app.jar
+
+# Copy JVM options if exists
+COPY --from=build --chown=focushive:focushive /app/jvm.options* ./
+
+# Copy startup script if exists
+COPY --from=build --chown=focushive:focushive /app/start-optimized.sh* ./
 
 # Switch to non-root user
-USER spring:spring
+USER focushive:focushive
 
-EXPOSE 8083
+# Expose application and JMX ports
+EXPOSE 8083 9090
+
+# Environment variables for production
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:InitialRAMPercentage=50.0 \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:+UseStringDeduplication \
+    -XX:+OptimizeStringConcat \
+    -Djava.security.egd=file:/dev/./urandom \
+    -Djava.awt.headless=true \
+    -Dfile.encoding=UTF-8 \
+    -Duser.timezone=UTC \
+    -Dspring.backgroundpreinitializer.ignore=true"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8083/notifications/actuator/health || exit 1
+    CMD curl -f http://localhost:8083/actuator/health || exit 1
 
-# Use dumb-init for proper signal handling and optimized JVM flags
-ENTRYPOINT ["dumb-init", "--", "java", \
-    "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-XX:+UseG1GC", \
-    "-XX:+UseStringDeduplication", \
-    "-XX:+OptimizeStringConcat", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-Dspring.backgroundpreinitializer.ignore=true", \
-    "org.springframework.boot.loader.launch.JarLauncher"]
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

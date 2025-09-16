@@ -79,9 +79,12 @@ dependencies {
     // Rate Limiting with Bucket4j
     implementation("com.bucket4j:bucket4j-redis:8.7.0")
     implementation("com.bucket4j:bucket4j-core:8.7.0")
-    
+
     // Redis Jedis client
     implementation("redis.clients:jedis:5.1.0")
+
+    // Caffeine Cache
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")

@@ -1,24 +1,24 @@
-import { describe, it, expect, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import {describe, expect, it, vi} from 'vitest';
+import {screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithProviders } from '@/test-utils/test-utils';
-import { createA11yTestSuite } from '@/test-utils/accessibility-utils';
+import {renderWithProviders} from '@/test-utils/test-utils';
+import {createA11yTestSuite} from '@/test-utils/accessibility-utils';
 import AccessibleButton from './AccessibleButton';
 
-const renderAccessibleButton = (props = {}) => {
+const renderAccessibleButton = (props = {}): void => {
   return renderWithProviders(
-    <AccessibleButton {...props}>
-      Click me
-    </AccessibleButton>
+      <AccessibleButton {...props}>
+        Click me
+      </AccessibleButton>
   );
 };
 
 describe('AccessibleButton', () => {
   it('renders with correct ARIA attributes', () => {
     renderWithProviders(
-      <AccessibleButton aria-label="Custom button label">
-        Click me
-      </AccessibleButton>
+        <AccessibleButton aria-label="Custom button label">
+          Click me
+        </AccessibleButton>
     );
 
     const button = screen.getByRole('button');
@@ -28,9 +28,9 @@ describe('AccessibleButton', () => {
 
   it('supports disabled state with proper ARIA', () => {
     renderWithProviders(
-      <AccessibleButton disabled>
-        Disabled button
-      </AccessibleButton>
+        <AccessibleButton disabled>
+          Disabled button
+        </AccessibleButton>
     );
 
     const button = screen.getByRole('button');
@@ -40,9 +40,9 @@ describe('AccessibleButton', () => {
 
   it('supports loading state with proper ARIA', () => {
     renderWithProviders(
-      <AccessibleButton loading>
-        Loading button
-      </AccessibleButton>
+        <AccessibleButton loading>
+          Loading button
+        </AccessibleButton>
     );
 
     const button = screen.getByRole('button');
@@ -55,13 +55,13 @@ describe('AccessibleButton', () => {
     const user = userEvent.setup();
 
     renderWithProviders(
-      <AccessibleButton onClick={onClick}>
-        Click me
-      </AccessibleButton>
+        <AccessibleButton onClick={onClick}>
+          Click me
+        </AccessibleButton>
     );
 
     const button = screen.getByRole('button');
-    
+
     // Should be focusable
     await user.tab();
     expect(button).toHaveFocus();
@@ -79,14 +79,14 @@ describe('AccessibleButton', () => {
     const user = userEvent.setup();
 
     renderWithProviders(
-      <div>
-        <AccessibleButton>First</AccessibleButton>
-        <AccessibleButton>Second</AccessibleButton>
-      </div>
+        <div>
+          <AccessibleButton>First</AccessibleButton>
+          <AccessibleButton>Second</AccessibleButton>
+        </div>
     );
 
-    const firstButton = screen.getByRole('button', { name: 'First' });
-    const secondButton = screen.getByRole('button', { name: 'Second' });
+    const firstButton = screen.getByRole('button', {name: 'First'});
+    const secondButton = screen.getByRole('button', {name: 'Second'});
 
     // Tab navigation
     await user.tab();
@@ -96,24 +96,24 @@ describe('AccessibleButton', () => {
     expect(secondButton).toHaveFocus();
 
     // Shift+tab navigation
-    await user.tab({ shift: true });
+    await user.tab({shift: true});
     expect(firstButton).toHaveFocus();
   });
 
   it('supports different variants with proper semantics', () => {
-    const { rerender } = renderWithProviders(
-      <AccessibleButton variant="primary">
-        Primary
-      </AccessibleButton>
+    const {rerender} = renderWithProviders(
+        <AccessibleButton variant="primary">
+          Primary
+        </AccessibleButton>
     );
 
     let button = screen.getByRole('button');
     expect(button).toHaveClass(/primary/i);
 
     rerender(
-      <AccessibleButton variant="secondary">
-        Secondary
-      </AccessibleButton>
+        <AccessibleButton variant="secondary">
+          Secondary
+        </AccessibleButton>
     );
 
     button = screen.getByRole('button');
@@ -122,29 +122,29 @@ describe('AccessibleButton', () => {
 
   it('handles icon buttons with proper labels', () => {
     renderWithProviders(
-      <AccessibleButton 
-        aria-label="Close dialog"
-        variant="icon"
-      >
-        <span aria-hidden="true">×</span>
-      </AccessibleButton>
+        <AccessibleButton
+            aria-label="Close dialog"
+            variant="icon"
+        >
+          <span aria-hidden="true">×</span>
+        </AccessibleButton>
     );
 
-    const button = screen.getByRole('button', { name: 'Close dialog' });
+    const button = screen.getByRole('button', {name: 'Close dialog'});
     expect(button).toBeInTheDocument();
-    
+
     const icon = button.querySelector('[aria-hidden="true"]');
     expect(icon).toBeInTheDocument();
   });
 
   it('supports tooltip functionality with proper ARIA', () => {
     renderWithProviders(
-      <AccessibleButton
-        title="This is a tooltip"
-        aria-describedby="button-tooltip"
-      >
-        Hover me
-      </AccessibleButton>
+        <AccessibleButton
+            title="This is a tooltip"
+            aria-describedby="button-tooltip"
+        >
+          Hover me
+        </AccessibleButton>
     );
 
     const button = screen.getByRole('button');
@@ -154,14 +154,14 @@ describe('AccessibleButton', () => {
 
   it('handles form submission buttons correctly', () => {
     renderWithProviders(
-      <form>
-        <AccessibleButton type="submit">
-          Submit Form
-        </AccessibleButton>
-      </form>
+        <form>
+          <AccessibleButton type="submit">
+            Submit Form
+          </AccessibleButton>
+        </form>
     );
 
-    const button = screen.getByRole('button', { name: 'Submit Form' });
+    const button = screen.getByRole('button', {name: 'Submit Form'});
     expect(button).toHaveAttribute('type', 'submit');
   });
 });

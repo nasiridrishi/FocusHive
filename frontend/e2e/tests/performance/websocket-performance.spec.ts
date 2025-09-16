@@ -1,6 +1,6 @@
 /**
  * WebSocket Real-time Performance Tests for Frontend
- * 
+ *
  * Comprehensive WebSocket performance testing for FocusHive real-time features:
  * - Connection establishment and stability
  * - Message latency and throughput
@@ -11,10 +11,10 @@
  * - Message ordering and delivery guarantees
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { PerformanceTestHelper, WebSocketPerformanceMetrics } from './performance-helpers';
-import { performanceCollector, PerformanceMetrics } from './performance-metrics';
-import { AuthHelper } from '../../helpers/auth.helper';
+import {expect, test} from '@playwright/test';
+import {PerformanceTestHelper, WebSocketPerformanceMetrics} from './performance-helpers';
+import {performanceCollector, PerformanceMetrics} from './performance-metrics';
+import {AuthHelper} from '../../helpers/auth.helper';
 
 // Extended performance interface for memory access
 interface ExtendedPerformance extends Performance {
@@ -38,28 +38,28 @@ const WEBSOCKET_TEST_CONFIG = {
   throughputThreshold: 100,       // 100 messages per second
   stabilityThreshold: 99,         // 99% connection stability
   memoryGrowthLimit: 10,          // 10MB memory growth during test
-  
+
   testDuration: {
     short: 30000,   // 30 seconds
     medium: 120000, // 2 minutes
     long: 300000    // 5 minutes
   },
-  
+
   messageTypes: [
-    { type: 'ping', size: 50, frequency: 1000 },        // Every second
-    { type: 'presence', size: 200, frequency: 5000 },   // Every 5 seconds
-    { type: 'chat', size: 500, frequency: 2000 },       // Every 2 seconds
-    { type: 'timer', size: 100, frequency: 1000 },      // Every second
-    { type: 'notification', size: 300, frequency: 10000 } // Every 10 seconds
+    {type: 'ping', size: 50, frequency: 1000},        // Every second
+    {type: 'presence', size: 200, frequency: 5000},   // Every 5 seconds
+    {type: 'chat', size: 500, frequency: 2000},       // Every 2 seconds
+    {type: 'timer', size: 100, frequency: 1000},      // Every second
+    {type: 'notification', size: 300, frequency: 10000} // Every 10 seconds
   ],
-  
+
   concurrencyLevels: [1, 5, 10, 25, 50], // Number of concurrent connections
-  
+
   websocketEndpoints: [
-    { name: 'Main WebSocket', url: 'ws://localhost:8080/ws' },
-    { name: 'Chat WebSocket', url: 'ws://localhost:8084/ws/chat' },
-    { name: 'Presence WebSocket', url: 'ws://localhost:8080/ws/presence' },
-    { name: 'Notifications WebSocket', url: 'ws://localhost:8083/ws/notifications' }
+    {name: 'Main WebSocket', url: 'ws://localhost:8080/ws'},
+    {name: 'Chat WebSocket', url: 'ws://localhost:8084/ws/chat'},
+    {name: 'Presence WebSocket', url: 'ws://localhost:8080/ws/presence'},
+    {name: 'Notifications WebSocket', url: 'ws://localhost:8083/ws/notifications'}
   ]
 };
 
@@ -80,7 +80,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
   let authHelper: AuthHelper;
   let performanceHelper: PerformanceTestHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
     performanceHelper = new PerformanceTestHelper(page);
     await performanceHelper.initializePerformanceMonitoring();
@@ -93,7 +93,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
   // Test basic WebSocket connection performance
   for (const endpoint of WEBSOCKET_TEST_CONFIG.websocketEndpoints) {
-    test(`WebSocket Connection - ${endpoint.name}`, async ({ page }) => {
+    test(`WebSocket Connection - ${endpoint.name}`, async ({page}) => {
       performanceCollector.startTest(`WebSocket - ${endpoint.name} Connection`);
 
       await page.goto('http://localhost:3000/dashboard');
@@ -135,7 +135,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
                 metrics.maxLatency = Math.max(metrics.maxLatency, latency);
                 metrics.minLatency = Math.min(metrics.minLatency, latency);
               }
-            } catch (e) {
+            } catch {
               // Handle non-JSON messages
             }
           };
@@ -155,7 +155,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
             if (latencies.length > 0) {
               metrics.avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
             }
-            
+
             // Get memory usage
             const memory = (performance as ExtendedPerformance).memory;
             if (memory) {
@@ -170,10 +170,10 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
       // Validate connection performance
       expect(connectionResult.connectionTime, `${endpoint.name} should connect quickly`)
-        .toBeLessThan(WEBSOCKET_TEST_CONFIG.connectionTimeout);
+      .toBeLessThan(WEBSOCKET_TEST_CONFIG.connectionTimeout);
 
       expect(connectionResult.errorCount, `${endpoint.name} should have no connection errors`)
-        .toBe(0);
+      .toBe(0);
 
       // Record results
       const wsMetrics: WebSocketPerformanceMetrics = {
@@ -188,7 +188,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
         webSocketMetrics: wsMetrics
       };
 
-      const result = performanceCollector.endTest(`WebSocket - ${endpoint.name} Connection`, metrics);
+      const _result = performanceCollector.endTest(`WebSocket - ${endpoint.name} Connection`, metrics);
 
       console.log(`🔌 ${endpoint.name} Connection Performance:`);
       console.log(`  Connection Time: ${connectionResult.connectionTime.toFixed(2)}ms`);
@@ -199,7 +199,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
   }
 
   // Test message latency and throughput
-  test('WebSocket Performance - Message Latency and Throughput', async ({ page }) => {
+  test('WebSocket Performance - Message Latency and Throughput', async ({page}) => {
     performanceCollector.startTest('WebSocket - Message Performance');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -212,18 +212,18 @@ test.describe('WebSocket Real-time Performance Tests', () => {
         maxLatency: number;
         p95Latency: number;
         throughput: number;
-        messageTypes: Array<{type: string; count: number; avgLatency: number}>;
+        messageTypes: Array<{ type: string; count: number; avgLatency: number }>;
       }>((resolve) => {
         const ws = new WebSocket('ws://localhost:8080/ws');
         const latencies: number[] = [];
         const messageTypeStats = new Map<string, number[]>();
         const startTime = performance.now();
-        let messagesSent = 0;
+        let _messagesSent = 0;
         let messagesReceived = 0;
 
         ws.onopen = () => {
           // Send different types of messages
-          const sendMessage = (type: string, size: number) => {
+          const sendMessage = (type: string, size: number): void => {
             const timestamp = performance.now();
             const payload = {
               type,
@@ -231,7 +231,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
               data: 'x'.repeat(size - 50) // Subtract overhead
             };
             ws.send(JSON.stringify(payload));
-            messagesSent++;
+            _messagesSent++;
           };
 
           // Send messages according to configuration
@@ -251,13 +251,13 @@ test.describe('WebSocket Real-time Performance Tests', () => {
             if (message.timestamp && message.type) {
               const latency = performance.now() - message.timestamp;
               latencies.push(latency);
-              
+
               if (!messageTypeStats.has(message.type)) {
                 messageTypeStats.set(message.type, []);
               }
-              messageTypeStats.get(message.type)!.push(latency);
+              messageTypeStats.get(message.type)?.push(latency);
             }
-          } catch (e) {
+          } catch {
             // Handle non-JSON messages
           }
         };
@@ -265,7 +265,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
         setTimeout(() => {
           const testDuration = (performance.now() - startTime) / 1000; // seconds
           const throughput = messagesReceived / testDuration;
-          
+
           // Calculate statistics
           latencies.sort((a, b) => a - b);
           const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
@@ -281,7 +281,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
           }));
 
           ws.close();
-          
+
           resolve({
             totalMessages: messagesReceived,
             avgLatency,
@@ -296,13 +296,13 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
     // Validate message performance
     expect(messagePerformance.avgLatency, 'Average message latency should be low')
-      .toBeLessThan(WEBSOCKET_TEST_CONFIG.messageLatencyThreshold);
+    .toBeLessThan(WEBSOCKET_TEST_CONFIG.messageLatencyThreshold);
 
     expect(messagePerformance.p95Latency, 'P95 latency should be reasonable')
-      .toBeLessThan(WEBSOCKET_TEST_CONFIG.messageLatencyThreshold * 2);
+    .toBeLessThan(WEBSOCKET_TEST_CONFIG.messageLatencyThreshold * 2);
 
     expect(messagePerformance.throughput, 'Message throughput should be adequate')
-      .toBeGreaterThan(10); // At least 10 messages per second
+    .toBeGreaterThan(10); // At least 10 messages per second
 
     // Record results
     const wsMetrics: WebSocketPerformanceMetrics = {
@@ -317,7 +317,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
       webSocketMetrics: wsMetrics
     };
 
-    const result = performanceCollector.endTest('WebSocket - Message Performance', metrics);
+    const _result = performanceCollector.endTest('WebSocket - Message Performance', metrics);
 
     console.log(`📨 Message Performance Analysis:`);
     console.log(`  Total Messages: ${messagePerformance.totalMessages}`);
@@ -325,14 +325,14 @@ test.describe('WebSocket Real-time Performance Tests', () => {
     console.log(`  Max Latency: ${messagePerformance.maxLatency.toFixed(2)}ms`);
     console.log(`  P95 Latency: ${messagePerformance.p95Latency.toFixed(2)}ms`);
     console.log(`  Throughput: ${messagePerformance.throughput.toFixed(2)} msg/sec`);
-    
+
     messagePerformance.messageTypes.forEach(type => {
       console.log(`  ${type.type}: ${type.count} messages, ${type.avgLatency.toFixed(2)}ms avg`);
     });
   });
 
   // Test connection stability and reconnection handling
-  test('WebSocket Performance - Connection Stability', async ({ page }) => {
+  test('WebSocket Performance - Connection Stability', async ({page}) => {
     performanceCollector.startTest('WebSocket - Connection Stability');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -350,12 +350,12 @@ test.describe('WebSocket Real-time Performance Tests', () => {
         let totalConnections = 0;
         let successfulConnections = 0;
         let reconnectAttempts = 0;
-        let reconnectTimes: number[] = [];
+        const reconnectTimes: number[] = [];
         let messagesSent = 0;
         let messagesReceived = 0;
         let reconnectStartTime = 0;
 
-        const createConnection = () => {
+        const createConnection = (): void => {
           totalConnections++;
           const ws = new WebSocket('ws://localhost:8080/ws');
           let connected = false;
@@ -363,7 +363,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
           ws.onopen = () => {
             connected = true;
             successfulConnections++;
-            
+
             if (reconnectStartTime > 0) {
               const reconnectTime = performance.now() - reconnectStartTime;
               reconnectTimes.push(reconnectTime);
@@ -396,7 +396,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
             if (connected) {
               reconnectAttempts++;
               reconnectStartTime = performance.now();
-              
+
               // Attempt reconnection after delay
               setTimeout(() => {
                 if (totalConnections < 5) { // Limit to 5 connection cycles
@@ -416,9 +416,9 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
         // Wait for test completion
         setTimeout(() => {
-          const avgReconnectTime = reconnectTimes.length > 0 ? 
-            reconnectTimes.reduce((a, b) => a + b, 0) / reconnectTimes.length : 0;
-          
+          const avgReconnectTime = reconnectTimes.length > 0 ?
+              reconnectTimes.reduce((a, b) => a + b, 0) / reconnectTimes.length : 0;
+
           const stabilityPercentage = (successfulConnections / totalConnections) * 100;
           const dataLoss = Math.max(0, messagesSent - messagesReceived);
 
@@ -436,13 +436,13 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
     // Validate connection stability
     expect(stabilityTest.stabilityPercentage, 'Connection stability should be high')
-      .toBeGreaterThan(WEBSOCKET_TEST_CONFIG.stabilityThreshold);
+    .toBeGreaterThan(WEBSOCKET_TEST_CONFIG.stabilityThreshold);
 
     expect(stabilityTest.avgReconnectTime, 'Reconnection should be fast')
-      .toBeLessThan(WEBSOCKET_TEST_CONFIG.connectionTimeout);
+    .toBeLessThan(WEBSOCKET_TEST_CONFIG.connectionTimeout);
 
     expect(stabilityTest.dataLoss, 'Data loss should be minimal')
-      .toBeLessThan(stabilityTest.totalConnections * 2); // Allow some tolerance
+    .toBeLessThan(stabilityTest.totalConnections * 2); // Allow some tolerance
 
     // Record results
     const wsMetrics: WebSocketPerformanceMetrics = {
@@ -457,7 +457,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
       webSocketMetrics: wsMetrics
     };
 
-    const result = performanceCollector.endTest('WebSocket - Connection Stability', metrics);
+    const _result = performanceCollector.endTest('WebSocket - Connection Stability', metrics);
 
     console.log(`🔄 Connection Stability Analysis:`);
     console.log(`  Total Connections: ${stabilityTest.totalConnections}`);
@@ -469,13 +469,13 @@ test.describe('WebSocket Real-time Performance Tests', () => {
   });
 
   // Test memory usage during high-frequency WebSocket operations
-  test('WebSocket Performance - Memory Usage Under Load', async ({ page }) => {
+  test('WebSocket Performance - Memory Usage Under Load', async ({page}) => {
     performanceCollector.startTest('WebSocket - Memory Under Load');
 
     await page.goto('http://localhost:3000/dashboard');
     await page.waitForLoadState('networkidle');
 
-    const initialMemory = await performanceHelper.getMemoryUsage();
+    const _initialMemory = await performanceHelper.getMemoryUsage();
 
     const memoryTest = await page.evaluate(async () => {
       return new Promise<{
@@ -490,7 +490,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
         let messagesSent = 0;
         let messagesReceived = 0;
 
-        const getMemoryUsage = () => {
+        const getMemoryUsage = (): void => {
           const memory = (performance as ExtendedPerformance).memory;
           return memory ? memory.usedJSHeapSize / 1024 / 1024 : 0;
         };
@@ -517,9 +517,9 @@ test.describe('WebSocket Real-time Performance Tests', () => {
                 }
               }
             };
-            
+
             ws.send(JSON.stringify(message));
-            
+
             // Sample memory every 100 messages
             if (messagesSent % 100 === 0) {
               memorySamples.push(getMemoryUsage());
@@ -535,17 +535,17 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
         ws.onmessage = (event) => {
           messagesReceived++;
-          
+
           // Store messages in buffer to simulate real app behavior
           try {
             const message = JSON.parse(event.data);
             messageBuffer.push(message);
-            
+
             // Simulate processing and cleanup
             if (messageBuffer.length > 50) {
               messageBuffer.splice(0, 25); // Remove old messages
             }
-          } catch (e) {
+          } catch {
             // Handle non-JSON messages
           }
         };
@@ -571,10 +571,10 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
     // Validate memory usage
     expect(memoryGrowth, 'Memory growth should be reasonable')
-      .toBeLessThan(WEBSOCKET_TEST_CONFIG.memoryGrowthLimit);
+    .toBeLessThan(WEBSOCKET_TEST_CONFIG.memoryGrowthLimit);
 
     expect(peakGrowth, 'Peak memory usage should be controlled')
-      .toBeLessThan(WEBSOCKET_TEST_CONFIG.memoryGrowthLimit * 2);
+    .toBeLessThan(WEBSOCKET_TEST_CONFIG.memoryGrowthLimit * 2);
 
     // Record results
     const memoryMetrics = {
@@ -600,7 +600,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
       webSocketMetrics: wsMetrics
     };
 
-    const result = performanceCollector.endTest('WebSocket - Memory Under Load', metrics);
+    const _result = performanceCollector.endTest('WebSocket - Memory Under Load', metrics);
 
     console.log(`💾 Memory Usage Under WebSocket Load:`);
     console.log(`  Initial Memory: ${memoryTest.initialMemory.toFixed(2)}MB`);
@@ -614,7 +614,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
   // Test concurrent WebSocket connections
   for (const concurrency of WEBSOCKET_TEST_CONFIG.concurrencyLevels) {
-    test(`WebSocket Performance - ${concurrency} Concurrent Connections`, async ({ page }) => {
+    test(`WebSocket Performance - ${concurrency} Concurrent Connections`, async ({page}) => {
       performanceCollector.startTest(`WebSocket - ${concurrency} Concurrent`);
 
       await page.goto('http://localhost:3000/dashboard');
@@ -668,7 +668,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
                   const latency = performance.now() - message.timestamp;
                   latencies.push(latency);
                 }
-              } catch (e) {
+              } catch {
                 // Handle non-JSON messages
               }
             };
@@ -682,10 +682,10 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
           setTimeout(() => {
             const avgConnectionTime = connectionTimes.length > 0 ?
-              connectionTimes.reduce((a, b) => a + b, 0) / connectionTimes.length : 0;
-            
+                connectionTimes.reduce((a, b) => a + b, 0) / connectionTimes.length : 0;
+
             const avgLatency = latencies.length > 0 ?
-              latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
+                latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
 
             // Close all connections
             connections.forEach(ws => {
@@ -707,13 +707,13 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
       // Validate concurrent connection performance
       expect(concurrentTest.connectionsEstablished, `Should establish ${concurrency} connections`)
-        .toBe(concurrency);
+      .toBe(concurrency);
 
       expect(concurrentTest.avgConnectionTime, 'Connection time should not degrade significantly')
-        .toBeLessThan(WEBSOCKET_TEST_CONFIG.connectionTimeout * (1 + concurrency * 0.1)); // Allow degradation
+      .toBeLessThan(WEBSOCKET_TEST_CONFIG.connectionTimeout * (1 + concurrency * 0.1)); // Allow degradation
 
       expect(concurrentTest.errors, 'Errors should be minimal')
-        .toBeLessThan(concurrency * 0.1); // Less than 10% error rate
+      .toBeLessThan(concurrency * 0.1); // Less than 10% error rate
 
       // Record results
       const wsMetrics: WebSocketPerformanceMetrics = {
@@ -728,7 +728,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
         webSocketMetrics: wsMetrics
       };
 
-      const result = performanceCollector.endTest(`WebSocket - ${concurrency} Concurrent`, metrics);
+      const _result = performanceCollector.endTest(`WebSocket - ${concurrency} Concurrent`, metrics);
 
       console.log(`🔗 ${concurrency} Concurrent Connections:`);
       console.log(`  Established: ${concurrentTest.connectionsEstablished}/${concurrency}`);
@@ -741,7 +741,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
   }
 
   // Test UI responsiveness during heavy WebSocket traffic
-  test('WebSocket Performance - UI Responsiveness Under Load', async ({ page }) => {
+  test('WebSocket Performance - UI Responsiveness Under Load', async ({page}) => {
     performanceCollector.startTest('WebSocket - UI Responsiveness');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -783,8 +783,8 @@ test.describe('WebSocket Real-time Performance Tests', () => {
       }>((resolve) => {
         let frameCount = 0;
         let lastFrameTime = performance.now();
-        
-        const measureFrameRate = () => {
+
+        const measureFrameRate = (): number => {
           frameCount++;
           const currentTime = performance.now();
           if (currentTime - lastFrameTime >= 1000) {
@@ -839,13 +839,13 @@ test.describe('WebSocket Real-time Performance Tests', () => {
 
     // Validate UI responsiveness
     expect(uiResponsiveness.buttonClickLatency, 'Button clicks should remain responsive')
-      .toBeLessThan(50); // 50ms max
+    .toBeLessThan(50); // 50ms max
 
     expect(uiResponsiveness.inputLatency, 'Input should remain responsive')
-      .toBeLessThan(100); // 100ms max
+    .toBeLessThan(100); // 100ms max
 
     expect(uiResponsiveness.frameRate, 'Frame rate should not drop significantly')
-      .toBeGreaterThan(30); // At least 30 FPS
+    .toBeGreaterThan(30); // At least 30 FPS
 
     // Cleanup
     await page.evaluate(() => {
@@ -871,7 +871,7 @@ test.describe('WebSocket Real-time Performance Tests', () => {
       reactPerformance: reactMetrics
     };
 
-    const result = performanceCollector.endTest('WebSocket - UI Responsiveness', metrics);
+    const _result = performanceCollector.endTest('WebSocket - UI Responsiveness', metrics);
 
     console.log(`🖱️ UI Responsiveness Under WebSocket Load:`);
     console.log(`  Button Click Latency: ${uiResponsiveness.buttonClickLatency.toFixed(2)}ms`);

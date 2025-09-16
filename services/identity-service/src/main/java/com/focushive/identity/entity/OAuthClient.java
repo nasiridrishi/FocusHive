@@ -22,7 +22,24 @@ import java.util.UUID;
 @EqualsAndHashCode(exclude = {"user", "authorizedScopes"})
 @ToString(exclude = {"clientSecret", "user"})
 public class OAuthClient {
-    
+
+    /**
+     * Client type for OAuth2 clients
+     */
+    public enum ClientType {
+        /**
+         * Confidential clients are applications that are able to securely authenticate with the
+         * authorization server (e.g., server-side applications).
+         */
+        CONFIDENTIAL,
+
+        /**
+         * Public clients are applications that are unable to securely authenticate with the
+         * authorization server (e.g., single-page applications, mobile apps).
+         */
+        PUBLIC
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -32,7 +49,12 @@ public class OAuthClient {
     
     @Column(name = "client_secret", nullable = false)
     private String clientSecret;
-    
+
+    @Column(name = "client_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private ClientType clientType = ClientType.CONFIDENTIAL;
+
     @Column(name = "client_name", nullable = false, length = 100)
     private String clientName;
     
@@ -79,11 +101,32 @@ public class OAuthClient {
     @Column(nullable = false)
     @Builder.Default
     private boolean enabled = true;
-    
+
+    @Column(name = "require_pkce", nullable = false)
+    @Builder.Default
+    private boolean requirePkce = false;
+
+    // Rate limiting configuration
+    @Column(name = "rate_limit_override")
+    private Integer rateLimitOverride;
+
+    @Column(name = "rate_limit_window_minutes")
+    private Integer rateLimitWindowMinutes;
+
+    @Column(name = "trusted", nullable = false)
+    @Builder.Default
+    private boolean trusted = false;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
-    
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     @Column(name = "last_used_at")
     private Instant lastUsedAt;
+
+    @Column(name = "secret_rotated_at")
+    private Instant secretRotatedAt;
 }

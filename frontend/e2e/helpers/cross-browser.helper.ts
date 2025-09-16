@@ -2,8 +2,8 @@
  * Cross-browser testing utilities and browser detection helpers
  */
 
-import { Page, Browser, BrowserContext, expect, TestInfo } from '@playwright/test';
-import { TIMEOUTS } from './test-data';
+import {Browser, BrowserContext, Page, TestInfo} from '@playwright/test';
+import {TIMEOUTS} from './test-data';
 
 export interface BrowserInfo {
   name: string;
@@ -108,7 +108,7 @@ export async function getBrowserInfo(page: Page): Promise<BrowserInfo> {
   const userAgent = await page.evaluate(() => navigator.userAgent);
   const browserName = await page.context().browser()?.browserType().name() || 'unknown';
   const version = await page.evaluate(() => navigator.appVersion);
-  
+
   const features = await page.evaluate(() => {
     return {
       isMobile: /Mobi|Android/i.test(navigator.userAgent),
@@ -170,10 +170,10 @@ export async function detectFeatureSupport(page: Page): Promise<FeatureSupport> 
       },
       javascript: {
         es6Modules: 'noModule' in document.createElement('script'),
-        asyncAwait: (function() {
+        asyncAwait: (function () {
           try {
             return !!Function('return (async () => {})();')();
-          } catch (e) {
+          } catch {
             return false;
           }
         })(),
@@ -191,14 +191,14 @@ export async function detectFeatureSupport(page: Page): Promise<FeatureSupport> 
         localStorage: (() => {
           try {
             return 'localStorage' in window && window.localStorage !== null;
-          } catch (e) {
+          } catch {
             return false;
           }
         })(),
         sessionStorage: (() => {
           try {
             return 'sessionStorage' in window && window.sessionStorage !== null;
-          } catch (e) {
+          } catch {
             return false;
           }
         })(),
@@ -226,15 +226,15 @@ export async function detectFeatureSupport(page: Page): Promise<FeatureSupport> 
 export async function waitForFontsLoaded(page: Page, timeout: number = TIMEOUTS.MEDIUM): Promise<void> {
   try {
     await page.waitForFunction(
-      () => {
-        if ('fonts' in document) {
-          return document.fonts.ready;
-        }
-        return true; // Fallback for browsers without font loading API
-      },
-      { timeout }
+        () => {
+          if ('fonts' in document) {
+            return document.fonts.ready;
+          }
+          return true; // Fallback for browsers without font loading API
+        },
+        {timeout}
     );
-  } catch (error) {
+  } catch {
     console.warn('Font loading detection failed, proceeding anyway:', error);
   }
 }
@@ -260,7 +260,7 @@ export async function testCSSSupport(page: Page, property: string, value: string
     if (typeof CSS !== 'undefined' && CSS.supports) {
       return CSS.supports(prop, val);
     }
-    
+
     // Fallback for older browsers
     const element = document.createElement('div');
     element.style.cssText = `${prop}: ${val}`;
@@ -275,7 +275,7 @@ export async function testAPISupport(page: Page, apiPath: string): Promise<boole
   return await page.evaluate((path) => {
     const parts = path.split('.');
     let obj: Record<string, unknown> = window as Record<string, unknown>;
-    
+
     for (const part of parts) {
       if (!(part in obj)) {
         return false;
@@ -290,7 +290,7 @@ export async function testAPISupport(page: Page, apiPath: string): Promise<boole
         return false;
       }
     }
-    
+
     return true;
   }, apiPath);
 }
@@ -299,19 +299,19 @@ export async function testAPISupport(page: Page, apiPath: string): Promise<boole
  * Simulate network conditions for testing
  */
 export async function simulateNetworkConditions(
-  page: Page,
-  condition: 'fast-3g' | 'slow-3g' | 'offline'
+    page: Page,
+    condition: 'fast-3g' | 'slow-3g' | 'offline'
 ): Promise<void> {
   const conditions = {
-    'fast-3g': { downloadThroughput: 1.5 * 1024 * 1024, uploadThroughput: 750 * 1024, latency: 40 },
-    'slow-3g': { downloadThroughput: 500 * 1024, uploadThroughput: 500 * 1024, latency: 400 },
-    'offline': { offline: true },
+    'fast-3g': {downloadThroughput: 1.5 * 1024 * 1024, uploadThroughput: 750 * 1024, latency: 40},
+    'slow-3g': {downloadThroughput: 500 * 1024, uploadThroughput: 500 * 1024, latency: 400},
+    'offline': {offline: true},
   };
 
   if (condition === 'offline') {
     await page.context().setOffline(true);
   } else {
-    const { downloadThroughput, uploadThroughput, latency } = conditions[condition];
+    const {downloadThroughput, uploadThroughput, latency} = conditions[condition];
     // Note: This is a Chromium-specific feature
     try {
       const client = await page.context().newCDPSession(page);
@@ -321,7 +321,7 @@ export async function simulateNetworkConditions(
         uploadThroughput,
         latency,
       });
-    } catch (error) {
+    } catch {
       console.warn('Network emulation not supported in this browser:', error);
     }
   }
@@ -340,7 +340,7 @@ export async function resetNetworkConditions(page: Page): Promise<void> {
       uploadThroughput: -1,
       latency: 0,
     });
-  } catch (error) {
+  } catch {
     // Network emulation not supported, ignore
   }
 }
@@ -349,18 +349,18 @@ export async function resetNetworkConditions(page: Page): Promise<void> {
  * Take a screenshot with browser-specific naming
  */
 export async function takeScreenshotWithBrowserInfo(
-  page: Page,
-  testInfo: TestInfo,
-  screenshotName: string
+    page: Page,
+    testInfo: TestInfo,
+    screenshotName: string
 ): Promise<string> {
   const browserInfo = await getBrowserInfo(page);
   const filename = `${screenshotName}-${browserInfo.name.toLowerCase()}-${testInfo.retry}.png`;
-  
+
   await page.screenshot({
     path: `test-results/${testInfo.title}/${filename}`,
     fullPage: true,
   });
-  
+
   return filename;
 }
 
@@ -374,14 +374,14 @@ export async function waitForAnimationsComplete(page: Page): Promise<void> {
     for (const element of animatingElements) {
       const computedStyle = window.getComputedStyle(element);
       if (
-        computedStyle.animationName !== 'none' ||
-        computedStyle.transitionProperty !== 'none'
+          computedStyle.animationName !== 'none' ||
+          computedStyle.transitionProperty !== 'none'
       ) {
         return false;
       }
     }
     return true;
-  }, { timeout: TIMEOUTS.MEDIUM });
+  }, {timeout: TIMEOUTS.MEDIUM});
 }
 
 /**
@@ -401,15 +401,15 @@ export class BrowserWorkarounds {
    */
   async handleFileUpload(selector: string, filePath: string): Promise<void> {
     const fileInput = this.page.locator(selector);
-    
+
     if (this.browserInfo.isWebkit) {
       // WebKit sometimes needs explicit interaction
       await fileInput.click();
       await this.page.waitForTimeout(500);
     }
-    
+
     await fileInput.setInputFiles(filePath);
-    
+
     if (this.browserInfo.isFirefox) {
       // Firefox might need additional time to process file
       await this.page.waitForTimeout(1000);
@@ -421,7 +421,7 @@ export class BrowserWorkarounds {
    */
   async handleDatePicker(selector: string, date: string): Promise<void> {
     const dateInput = this.page.locator(selector);
-    
+
     if (this.browserInfo.isWebkit || this.browserInfo.isMobile) {
       // Safari and mobile browsers often have different date picker behavior
       await dateInput.click();
@@ -441,9 +441,9 @@ export class BrowserWorkarounds {
         webkitRequestFullscreen?: () => Promise<void>;
         mozRequestFullScreen?: () => Promise<void>;
       }
-      
+
       const extendedElement = element as ExtendedElement;
-      
+
       if (element.requestFullscreen) {
         element.requestFullscreen();
       } else if (extendedElement.webkitRequestFullscreen) {
@@ -480,12 +480,12 @@ export class BrowserWorkarounds {
    */
   async enableVideoAutoplay(selector: string): Promise<void> {
     const video = this.page.locator(selector);
-    
+
     if (this.browserInfo.isWebkit || this.browserInfo.isMobile) {
       // Safari and mobile browsers require user interaction for autoplay
       await video.click();
     }
-    
+
     await video.evaluate((videoElement) => {
       (videoElement as HTMLVideoElement).muted = true; // Muted videos can autoplay
       (videoElement as HTMLVideoElement).play();
@@ -504,7 +504,7 @@ export function getBrowserTimeoutMultiplier(browserName: string): number {
     'Mobile Chrome': 1.3, // Mobile can be slower
     'Mobile Safari': 1.5, // Mobile Safari can be quite slow
   };
-  
+
   return multipliers[browserName] || 1.0;
 }
 
@@ -512,11 +512,11 @@ export function getBrowserTimeoutMultiplier(browserName: string): number {
  * Create browser-specific test context
  */
 export async function createBrowserSpecificContext(
-  browser: Browser,
-  browserName: string
+    browser: Browser,
+    browserName: string
 ): Promise<BrowserContext> {
   const baseOptions = {
-    viewport: { width: 1280, height: 720 },
+    viewport: {width: 1280, height: 720},
     ignoreHTTPSErrors: true,
   };
 

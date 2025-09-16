@@ -5,7 +5,8 @@ import com.focushive.api.dto.identity.UserDto;
 import com.focushive.common.exception.ResourceNotFoundException;
 import com.focushive.common.exception.BadRequestException;
 import com.focushive.common.exception.ForbiddenException;
-import com.focushive.config.CacheConfig;
+import com.focushive.common.exception.ValidationException;
+import com.focushive.config.UnifiedRedisConfig;
 import com.focushive.hive.dto.CreateHiveRequest;
 import com.focushive.hive.dto.HiveResponse;
 import com.focushive.hive.dto.UpdateHiveRequest;
@@ -16,12 +17,13 @@ import com.focushive.hive.repository.HiveRepository;
 import com.focushive.hive.service.HiveService;
 import com.focushive.user.entity.User;
 import com.focushive.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,27 +37,62 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class HiveServiceImpl implements HiveService {
-    
+
     private final HiveRepository hiveRepository;
     private final HiveMemberRepository hiveMemberRepository;
     private final UserRepository userRepository;
     private final IdentityServiceClient identityServiceClient;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public HiveServiceImpl(HiveRepository hiveRepository,
+                          HiveMemberRepository hiveMemberRepository,
+                          UserRepository userRepository,
+                          ApplicationEventPublisher eventPublisher,
+                          @Autowired(required = false) IdentityServiceClient identityServiceClient) {
+        this.hiveRepository = hiveRepository;
+        this.hiveMemberRepository = hiveMemberRepository;
+        this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
+        this.identityServiceClient = identityServiceClient;
+
+        if (identityServiceClient == null) {
+            log.warn("IdentityServiceClient not available - running in degraded mode");
+        }
+    }
+
+    // Constants for business rules
+    private static final int MAX_HIVES_PER_USER = 10;
     
     @Override
     @Caching(evict = {
-        @CacheEvict(value = CacheConfig.HIVES_ACTIVE_CACHE, allEntries = true),
-        @CacheEvict(value = CacheConfig.HIVES_USER_CACHE, allEntries = true)
+        @CacheEvict(value = UnifiedRedisConfig.HIVES_ACTIVE_CACHE, allEntries = true),
+        @CacheEvict(value = UnifiedRedisConfig.HIVES_USER_CACHE, allEntries = true)
     })
     public HiveResponse createHive(CreateHiveRequest request, String ownerId) {
         log.info("Creating new hive '{}' for user {}", request.getName(), ownerId);
-        
+
+        // Validate request constraints
+        validateHiveConstraints(request);
+
         // Get owner from database
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        
+
+        // Check user hive limit
+        long userHiveCount = hiveRepository.countByOwnerIdAndDeletedAtIsNull(ownerId);
+        if (userHiveCount >= MAX_HIVES_PER_USER) {
+            throw new BadRequestException(
+                String.format("You have reached the maximum number of hives (%d). Please delete some hives first.",
+                    MAX_HIVES_PER_USER));
+        }
+
+        // Check name uniqueness per user
+        if (hiveRepository.existsByNameAndOwnerIdAndDeletedAtIsNull(request.getName(), ownerId)) {
+            throw new BadRequestException("A hive with this name already exists in your account");
+        }
+
         // Generate unique slug
         String slug = generateUniqueSlug(request.getName());
         
@@ -83,13 +120,21 @@ public class HiveServiceImpl implements HiveService {
         ownerMember.setJoinedAt(LocalDateTime.now());
         hiveMemberRepository.save(ownerMember);
         
+        // Publish hive created event
+        try {
+            eventPublisher.publishEvent(new com.focushive.events.HiveCreatedEvent(
+                hive.getId(), hive.getName(), ownerId, hive.getIsPublic()));
+        } catch (Exception e) {
+            log.warn("Failed to publish HiveCreatedEvent for hive {}: {}", hive.getId(), e.getMessage());
+        }
+
         log.info("Successfully created hive '{}' with ID {}", hive.getName(), hive.getId());
         return new HiveResponse(hive, 1);
     }
     
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheConfig.HIVE_DETAILS_CACHE, key = "#hiveId + ':' + #userId", unless = "#result == null")
+    @Cacheable(value = UnifiedRedisConfig.HIVE_DETAILS_CACHE, key = "#hiveId + ':' + #userId", unless = "#result == null")
     public HiveResponse getHive(String hiveId, String userId) {
         // Removed debug log to avoid logging user data frequently
         
@@ -199,13 +244,20 @@ public class HiveServiceImpl implements HiveService {
         hive.setDeletedAt(LocalDateTime.now());
         hive.setIsActive(false);
         hiveRepository.save(hive);
-        
+
+        // Publish hive deleted event
+        try {
+            eventPublisher.publishEvent(new Object()); // Generic event for now
+        } catch (Exception e) {
+            log.warn("Failed to publish HiveDeletedEvent for hive {}: {}", hiveId, e.getMessage());
+        }
+
         log.info("Successfully deleted hive {}", hiveId);
     }
     
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheConfig.HIVES_ACTIVE_CACHE, key = "'public:' + #pageable.pageNumber + ':' + #pageable.pageSize", unless = "#result.isEmpty()")
+    @Cacheable(value = UnifiedRedisConfig.HIVES_ACTIVE_CACHE, key = "'public:' + #pageable.pageNumber + ':' + #pageable.pageSize", unless = "#result.isEmpty()")
     public Page<HiveResponse> listPublicHives(Pageable pageable) {
         Page<Hive> hives = hiveRepository.findPublicHives(pageable);
         return hives.map(hive -> {
@@ -216,7 +268,7 @@ public class HiveServiceImpl implements HiveService {
     
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheConfig.HIVES_USER_CACHE, key = "#userId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize", unless = "#result.isEmpty()")
+    @Cacheable(value = UnifiedRedisConfig.HIVES_USER_CACHE, key = "#userId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize", unless = "#result.isEmpty()")
     public Page<HiveResponse> listUserHives(String userId, Pageable pageable) {
         Page<HiveMember> memberships = hiveMemberRepository.findByUserId(userId, pageable);
         return memberships.map(member -> {
@@ -344,7 +396,14 @@ public class HiveServiceImpl implements HiveService {
         // Update role
         member.setRole(newRole);
         member = hiveMemberRepository.save(member);
-        
+
+        // Publish role change event
+        try {
+            eventPublisher.publishEvent(new Object()); // Generic event for now
+        } catch (Exception e) {
+            log.warn("Failed to publish RoleChangeEvent for member {} in hive {}: {}", memberId, hiveId, e.getMessage());
+        }
+
         log.info("Successfully updated member {} role to {} in hive {}", memberId, newRole, hiveId);
         return member;
     }
@@ -422,5 +481,58 @@ public class HiveServiceImpl implements HiveService {
         }
         
         return slug;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = UnifiedRedisConfig.HIVES_STATS_CACHE, key = "'active-count'")
+    public long getActiveHiveCount() {
+        // For now, consider all hives as active
+        // In the future, this could be enhanced to filter by recent activity
+        return hiveRepository.count();
+    }
+
+    @Override
+    public void validateHiveConstraints(CreateHiveRequest request) {
+        log.debug("Validating hive constraints for request: {}", request.getName());
+
+        // Validate name
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new ValidationException("Hive name is required");
+        }
+
+        if (request.getName().length() > 100) {
+            throw new ValidationException("Hive name must not exceed 100 characters");
+        }
+
+        // Validate description
+        if (request.getDescription() != null && request.getDescription().length() > 500) {
+            throw new ValidationException("Description must not exceed 500 characters");
+        }
+
+        // Validate max members
+        if (request.getMaxMembers() == null) {
+            throw new ValidationException("Max members is required");
+        }
+
+        if (request.getMaxMembers() < 1) {
+            throw new ValidationException("Max members must be at least 1");
+        }
+
+        if (request.getMaxMembers() > 100) {
+            throw new ValidationException("Max members cannot exceed 100");
+        }
+
+        // Validate type
+        if (request.getType() == null) {
+            throw new ValidationException("Hive type is required");
+        }
+
+        // Validate public flag
+        if (request.getIsPublic() == null) {
+            throw new ValidationException("Public/private setting is required");
+        }
+
+        log.debug("Hive constraints validation passed for: {}", request.getName());
     }
 }

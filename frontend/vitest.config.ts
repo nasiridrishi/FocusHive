@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import {defineConfig} from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
@@ -8,8 +8,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test-setup.ts',
-    testTimeout: 10000, // Increase timeout to 10 seconds
-    hookTimeout: 10000, // Increase hook timeout
+    testTimeout: 10000, // Reduce timeout back to 10 seconds
+    hookTimeout: 10000, // Reduce hook timeout
     // Add worker limits to prevent runaway processes
     pool: 'threads',
     poolOptions: {
@@ -17,6 +17,10 @@ export default defineConfig({
         maxThreads: 4, // Limit to 4 worker threads max
         minThreads: 1  // Start with 1 thread
       }
+    },
+    // Disable fake timers globally to prevent conflicts
+    fakeTimers: {
+      toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval']
     },
     // Coverage configuration
     coverage: {

@@ -1,11 +1,11 @@
 /**
  * API Endpoint Verification Utility
- * 
- * This utility helps verify that frontend API services are correctly aligned 
+ *
+ * This utility helps verify that frontend API services are correctly aligned
  * with backend Spring Boot controller endpoints.
  */
 
-import { API_ENDPOINTS } from './index';
+import {API_ENDPOINTS} from './index';
 
 export interface EndpointVerification {
   service: string;
@@ -25,7 +25,7 @@ export function verifyEndpointAlignment(): EndpointVerification[] {
       service: 'Auth',
       endpoint: API_ENDPOINTS.AUTH.LOGIN,
       expectedBackendPath: '/api/demo/login',
-      isAligned: API_ENDPOINTS.AUTH.LOGIN === '/api/demo/login',
+      isAligned: API_ENDPOINTS.AUTH.LOGIN as string === '/api/demo/login',
       notes: 'DemoController @PostMapping("/login")'
     },
     {
@@ -107,7 +107,7 @@ export function verifyEndpointAlignment(): EndpointVerification[] {
       service: 'Buddy',
       endpoint: API_ENDPOINTS.BUDDY.BASE,
       expectedBackendPath: '/api/buddy',
-      isAligned: API_ENDPOINTS.BUDDY.BASE === '/api/buddy',
+      isAligned: API_ENDPOINTS.BUDDY.BASE as string === '/api/buddy',
       notes: 'BuddyController @RequestMapping("/api/buddy")'
     },
 
@@ -116,7 +116,7 @@ export function verifyEndpointAlignment(): EndpointVerification[] {
       service: 'Notifications',
       endpoint: API_ENDPOINTS.NOTIFICATIONS.BASE,
       expectedBackendPath: '/api/notifications',
-      isAligned: API_ENDPOINTS.NOTIFICATIONS.BASE === '/api/notifications',
+      isAligned: API_ENDPOINTS.NOTIFICATIONS.BASE as string === '/api/notifications',
       notes: 'NotificationController @RequestMapping("/api/notifications")'
     }
   ];
@@ -150,28 +150,30 @@ export function generateAlignmentReport(): {
  */
 export function logVerificationReport(): void {
   const report = generateAlignmentReport();
-  
-  console.group('🔍 API Endpoint Alignment Verification');
-  console.log(`📊 Alignment Status: ${report.alignmentPercentage}% (${report.aligned.length}/${report.totalCount})`);
-  
+
+  // console.group('🔍 API Endpoint Alignment Verification');
+  // console.log(`📊 Alignment Status: ${report.alignmentPercentage}% (${report.aligned.length}/${report.totalCount})`);
+
   if (report.misaligned.length > 0) {
-    console.group('❌ Misaligned Endpoints');
+    // console.group('❌ Misaligned Endpoints');
     report.misaligned.forEach(item => {
-      console.log(`${item.service}: ${item.endpoint} !== ${item.expectedBackendPath}`);
-      if (item.notes) console.log(`  Note: ${item.notes}`);
+      // console.log(`${item.service}: ${item.endpoint} !== ${item.expectedBackendPath}`);
+      if (item.notes) {
+        // console.log(`  Note: ${item.notes}`);
+      }
     });
-    console.groupEnd();
+    // console.groupEnd();
   }
 
   if (report.aligned.length > 0) {
-    console.group('✅ Aligned Endpoints');
-    report.aligned.forEach(item => {
-      console.log(`${item.service}: ${item.endpoint}`);
+    // console.group('✅ Aligned Endpoints');
+    report.aligned.forEach(_item => {
+      // console.log(`${_item.service}: ${_item.endpoint}`);
     });
-    console.groupEnd();
+    // console.groupEnd();
   }
 
-  console.groupEnd();
+  // console.groupEnd();
 }
 
 /**
@@ -198,7 +200,7 @@ export function testApiServiceConfigurations(): {
 
   const services = [
     'authApiService',
-    'hiveApiService', 
+    'hiveApiService',
     'presenceApiService',
     'timerApiService',
     'analyticsApiService',

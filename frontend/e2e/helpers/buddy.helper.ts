@@ -3,8 +3,7 @@
  * Provides utilities for testing buddy system features, mocking data, and performance testing
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from './test-data';
+import {expect, Locator, Page} from '@playwright/test';
 
 // Mock buddy data types based on the actual buddy types
 export interface MockBuddyData {
@@ -140,7 +139,8 @@ export interface MockBuddyData {
 }
 
 export class BuddyHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   /**
    * Generate mock buddy data with realistic values
@@ -182,7 +182,7 @@ export class BuddyHelper {
     hasData?: boolean;
   } = {}): MockBuddyData {
     const {
-      userId = 'test-user@focushive.com',
+      userId: _userId = 'test-user@focushive.com',
       activeBuddyCount = 2,
       includePotentialMatches = true,
       matchCount = 5,
@@ -193,28 +193,28 @@ export class BuddyHelper {
       includeChallenges = false,
       includeStudyGroups = false,
       includeStreaks = false,
-      includeReminders = false,
-      includeMessages = false,
-      includeEncouragementTools = false,
-      includeSharedWorkspace = false,
+      includeReminders: _includeReminders = false,
+      includeMessages: _includeMessages = false,
+      includeEncouragementTools: _includeEncouragementTools = false,
+      includeSharedWorkspace: _includeSharedWorkspace = false,
       includeBuddyNotifications = false,
-      includeHelpFeatures = false,
+      includeHelpFeatures: _includeHelpFeatures = false,
       includeProfiles = false,
-      includeRelationshipHistory = false,
-      includeSwitchingOptions = false,
-      includeFeedbackSystem = false,
-      includeConflictResolution = false,
-      includeSafetyFeatures = false,
-      includeSecureCommunications = false,
-      includePrivacyValidation = false,
-      includePrivacySettings = false,
+      includeRelationshipHistory: _includeRelationshipHistory = false,
+      includeSwitchingOptions: _includeSwitchingOptions = false,
+      includeFeedbackSystem: _includeFeedbackSystem = false,
+      includeConflictResolution: _includeConflictResolution = false,
+      includeSafetyFeatures: _includeSafetyFeatures = false,
+      includeSecureCommunications: _includeSecureCommunications = false,
+      includePrivacyValidation: _includePrivacyValidation = false,
+      includePrivacySettings: _includePrivacySettings = false,
       includeRealtimeUpdates = false,
-      includeConcurrentInteractions = false,
+      includeConcurrentInteractions: _includeConcurrentInteractions = false,
       includeNotificationIntegration = false,
-      includeMaxLimitScenario = false,
-      includeSearchResults = false,
-      includeMatchReasons = false,
-      includeAllFeatures = false,
+      includeMaxLimitScenario: _includeMaxLimitScenario = false,
+      includeSearchResults: _includeSearchResults = false,
+      includeMatchReasons: _includeMatchReasons = false,
+      includeAllFeatures: _includeAllFeatures = false,
       hasData = true
     } = options;
 
@@ -252,7 +252,7 @@ export class BuddyHelper {
     }
 
     // Generate active buddies
-    const activeBuddies = Array.from({ length: activeBuddyCount }, (_, i) => ({
+    const activeBuddies = Array.from({length: activeBuddyCount}, (_, i) => ({
       id: i + 1,
       username: `buddy_${i + 1}`,
       avatar: `https://avatars.example.com/buddy_${i + 1}.jpg`,
@@ -269,7 +269,7 @@ export class BuddyHelper {
     }));
 
     // Generate pending buddy requests
-    const pendingRequests = Array.from({ length: 2 }, (_, i) => ({
+    const pendingRequests = Array.from({length: 2}, (_, i) => ({
       id: i + 100,
       fromUsername: `requester_${i + 1}`,
       fromUserId: i + 200,
@@ -280,7 +280,7 @@ export class BuddyHelper {
     }));
 
     // Generate sent requests
-    const sentRequests = Array.from({ length: 1 }, (_, i) => ({
+    const sentRequests = Array.from({length: 1}, (_, i) => ({
       id: i + 300,
       toUsername: `potential_buddy_${i + 1}`,
       toUserId: i + 400,
@@ -290,10 +290,10 @@ export class BuddyHelper {
     }));
 
     // Generate potential matches
-    const potentialMatches = includePotentialMatches ? Array.from({ length: matchCount }, (_, i) => {
+    const potentialMatches = includePotentialMatches ? Array.from({length: matchCount}, (_, i) => {
       const focusAreas = ['Programming', 'Web Development', 'Data Science', 'Mobile Development', 'UI/UX Design'];
       const commonAreas = focusAreas.slice(0, Math.floor(Math.random() * 3) + 1);
-      
+
       return {
         userId: i + 500,
         username: `potential_${i + 1}`,
@@ -315,7 +315,7 @@ export class BuddyHelper {
     }) : [];
 
     // Generate upcoming sessions
-    const upcomingSessions = includeSharedSessions ? Array.from({ length: 3 }, (_, i) => ({
+    const upcomingSessions = includeSharedSessions ? Array.from({length: 3}, (_, i) => ({
       id: i + 600,
       relationshipId: i + 1, // Link to active buddies
       partnerUsername: `buddy_${(i % activeBuddyCount) + 1}`,
@@ -326,7 +326,7 @@ export class BuddyHelper {
     })) : [];
 
     // Generate goals
-    const goals = includeGoals ? Array.from({ length: activeBuddyCount * 3 }, (_, i) => ({
+    const goals = includeGoals ? Array.from({length: activeBuddyCount * 3}, (_, i) => ({
       id: i + 700,
       relationshipId: Math.floor(i / 3) + 1,
       title: [
@@ -346,7 +346,7 @@ export class BuddyHelper {
     })) : [];
 
     // Generate check-ins
-    const checkins = includeCheckins ? Array.from({ length: activeBuddyCount * 5 }, (_, i) => ({
+    const checkins = includeCheckins ? Array.from({length: activeBuddyCount * 5}, (_, i) => ({
       id: i + 800,
       relationshipId: Math.floor(i / 5) + 1,
       checkinTime: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -363,21 +363,29 @@ export class BuddyHelper {
     })) : [];
 
     // Generate challenges
-    const challenges = includeChallenges ? Array.from({ length: 2 }, (_, i) => ({
+    const challenges = includeChallenges ? Array.from({length: 2}, (_, i) => ({
       id: i + 900,
       title: ['Weekly Focus Challenge', 'Goal Sprint Challenge'][i],
       type: ['focus-time', 'goal-completion'][i],
       description: i === 0 ? 'Who can maintain the longest focus sessions this week?' : 'Race to complete the most goals this month!',
       status: ['ACTIVE', 'ACTIVE'][i] as const,
       participants: [
-        { username: 'You', score: Math.floor(Math.random() * 100), progress: Math.floor(Math.random() * 100) },
-        { username: `buddy_${i + 1}`, score: Math.floor(Math.random() * 100), progress: Math.floor(Math.random() * 100) }
+        {
+          username: 'You',
+          score: Math.floor(Math.random() * 100),
+          progress: Math.floor(Math.random() * 100)
+        },
+        {
+          username: `buddy_${i + 1}`,
+          score: Math.floor(Math.random() * 100),
+          progress: Math.floor(Math.random() * 100)
+        }
       ],
       endDate: new Date(Date.now() + (7 - i * 2) * 24 * 60 * 60 * 1000).toISOString()
     })) : [];
 
     // Generate study groups
-    const studyGroups = includeStudyGroups ? Array.from({ length: 1 }, (_, i) => ({
+    const studyGroups = includeStudyGroups ? Array.from({length: 1}, (_, i) => ({
       id: i + 1000,
       name: 'Algorithm Study Group',
       description: 'Weekly algorithm practice and problem-solving sessions',
@@ -628,7 +636,7 @@ export class BuddyHelper {
         // Mock WebSocket updates
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('buddy-status-update', {
-            detail: { buddyId: 'buddy-1', status: 'in-focus-session' }
+            detail: {buddyId: 'buddy-1', status: 'in-focus-session'}
           }));
         }, 2000);
       });
@@ -639,7 +647,7 @@ export class BuddyHelper {
    * Mock empty buddy data
    */
   async mockEmptyBuddyData(): Promise<void> {
-    const emptyData = this.generateMockBuddyData({ hasData: false });
+    const emptyData = this.generateMockBuddyData({hasData: false});
     await this.mockBuddyApi(emptyData);
   }
 
@@ -690,12 +698,12 @@ export class BuddyHelper {
    */
   async simulateStatusChange(buddyId: string, newStatus: string): Promise<void> {
     await this.page.evaluate(
-      ({ buddyId, newStatus }) => {
-        window.dispatchEvent(new CustomEvent('buddy-status-update', {
-          detail: { buddyId, status: newStatus }
-        }));
-      },
-      { buddyId, newStatus }
+        ({buddyId, newStatus}) => {
+          window.dispatchEvent(new CustomEvent('buddy-status-update', {
+            detail: {buddyId, status: newStatus}
+          }));
+        },
+        {buddyId, newStatus}
     );
   }
 
@@ -704,23 +712,23 @@ export class BuddyHelper {
    */
   async testResponsiveDesign(): Promise<void> {
     const viewports = [
-      { width: 1920, height: 1080, name: 'Desktop Large' },
-      { width: 1366, height: 768, name: 'Desktop' },
-      { width: 768, height: 1024, name: 'Tablet' },
-      { width: 375, height: 667, name: 'Mobile' }
+      {width: 1920, height: 1080, name: 'Desktop Large'},
+      {width: 1366, height: 768, name: 'Desktop'},
+      {width: 768, height: 1024, name: 'Tablet'},
+      {width: 375, height: 667, name: 'Mobile'}
     ];
 
     for (const viewport of viewports) {
       await this.page.setViewportSize(viewport);
       await this.page.waitForTimeout(500); // Allow time for responsive adjustments
-      
+
       // Verify essential elements are still visible
       const dashboard = this.page.locator('[data-testid="buddy-dashboard"]');
       await expect(dashboard).toBeVisible();
     }
 
     // Reset to default desktop size
-    await this.page.setViewportSize({ width: 1366, height: 768 });
+    await this.page.setViewportSize({width: 1366, height: 768});
   }
 
   /**
@@ -730,7 +738,7 @@ export class BuddyHelper {
     // Check for proper ARIA labels on buddy cards
     const buddyCards = this.page.locator('[data-testid="buddy-card"]');
     const cardCount = await buddyCards.count();
-    
+
     for (let i = 0; i < cardCount; i++) {
       const card = buddyCards.nth(i);
       const ariaLabel = await card.getAttribute('aria-label');
@@ -779,10 +787,10 @@ export class BuddyHelper {
     return {
       getMetrics: async () => {
         const renderStartTime = Date.now();
-        
+
         // Wait for buddy components to render
-        await this.page.locator('[data-testid="buddy-dashboard"]').waitFor({ state: 'visible' });
-        
+        await this.page.locator('[data-testid="buddy-dashboard"]').waitFor({state: 'visible'});
+
         const renderEndTime = Date.now();
 
         // Test interaction performance
@@ -808,7 +816,7 @@ export class BuddyHelper {
   async cleanup(): Promise<void> {
     // Remove all route mocks
     await this.page.unrouteAll();
-    
+
     // Clear any test-specific local storage
     await this.page.evaluate(() => {
       Object.keys(localStorage).forEach(key => {
@@ -841,13 +849,13 @@ export class BuddyHelper {
     for (let i = 0; i < Math.min(displayedCount, expectedData.activeBuddies.length); i++) {
       const card = buddyCards.nth(i);
       const expectedBuddy = expectedData.activeBuddies[i];
-      
+
       // Check username is displayed
       const usernameElement = card.locator('[data-testid="buddy-username"]');
       if (await usernameElement.isVisible()) {
         await expect(usernameElement).toContainText(expectedBuddy.username);
       }
-      
+
       // Check status is displayed
       const statusElement = card.locator('[data-testid="buddy-status"]');
       if (await statusElement.isVisible()) {
@@ -862,7 +870,7 @@ export class BuddyHelper {
   async testChartInteractions(chartLocator: Locator): Promise<void> {
     // Test hover interactions
     await chartLocator.hover();
-    
+
     // Look for tooltips or interactive elements
     const tooltip = this.page.locator('[role="tooltip"]');
     if (await tooltip.isVisible()) {
@@ -883,7 +891,7 @@ export class BuddyHelper {
     // Check for aria-label or aria-describedby
     const ariaLabel = await chartLocator.getAttribute('aria-label');
     const ariaDescribedBy = await chartLocator.getAttribute('aria-describedby');
-    
+
     expect(ariaLabel || ariaDescribedBy).toBeTruthy();
 
     // Check for chart legend accessibility

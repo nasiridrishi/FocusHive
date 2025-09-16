@@ -1,38 +1,34 @@
 /**
  * E2E Tests for Persona Management - Core CRUD Operations
- * 
+ *
  * Comprehensive testing of persona creation, reading, updating, and deletion
  * Validates CM3035 Advanced Web Design template requirements for multi-persona profiles
- * 
+ *
  * @fileoverview Persona management E2E tests
  * @version 1.0.0
  */
 
-import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
-import { IdentityPage } from '../../pages/IdentityPage';
-import { PersonaSwitcherPage } from '../../pages/PersonaSwitcherPage';
+import {type APIRequestContext, expect, type Page, test} from '@playwright/test';
+import {IdentityPage} from '../../pages/IdentityPage';
+import {PersonaSwitcherPage} from '../../pages/PersonaSwitcherPage';
 import {
+  AccessibilityHelper,
   AuthenticationHelper,
-  PersonaHelper,
   PerformanceHelper,
-  AccessibilityHelper
+  PersonaHelper
 } from '../../helpers/identity/identity-helpers';
 import {
-  IdentityTestDataManager,
   IdentityTestDataFactory,
-  type TestUser,
-  type TestPersona
+  IdentityTestDataManager,
+  type TestPersona,
+  type TestUser
 } from '../../fixtures/identity/identity-fixtures';
-import { 
-  PERFORMANCE_THRESHOLDS, 
-  TEST_USERS, 
-  PERSONA_TEMPLATES 
-} from './identity.config';
+import {PERFORMANCE_THRESHOLDS, TEST_USERS} from './identity.config';
 
 test.describe('Persona Management - Core CRUD Operations', () => {
   let page: Page;
   let apiContext: APIRequestContext;
-  let identityPage: IdentityPage;
+  let _identityPage: IdentityPage;
   let personaPage: PersonaSwitcherPage;
   let authHelper: AuthenticationHelper;
   let personaHelper: PersonaHelper;
@@ -41,7 +37,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
   let dataManager: IdentityTestDataManager;
   let testUser: TestUser;
 
-  test.beforeAll(async ({ browser, playwright }) => {
+  test.beforeAll(async ({browser, playwright}) => {
     // Create API context for setup
     apiContext = await playwright.request.newContext({
       baseURL: process.env.E2E_IDENTITY_API_URL || 'http://localhost:8081'
@@ -105,7 +101,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
       // Verify persona was created
       await personaPage.verifyPersonaExists(personaData.name);
-      
+
       // Verify defaults were applied
       await personaPage.verifyPersonaPrivacySettings(personaData.name, {
         profileVisibility: 'FRIENDS',
@@ -176,7 +172,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
     test('should prevent duplicate persona names', async () => {
       const personaName = 'Duplicate Test';
-      
+
       // Create first persona
       const personaData = IdentityTestDataFactory.createPersona('PERSONAL', {
         name: personaName
@@ -220,29 +216,29 @@ test.describe('Persona Management - Core CRUD Operations', () => {
         themePreference: 'light'
       });
 
-      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken!);
+      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken || '');
     });
 
     test('should display persona in management list', async () => {
       await personaPage.goToPersonas();
-      
+
       await expect(page.locator(`[data-testid="persona-item-${testPersona.name}"]`)).toBeVisible();
       await expect(page.locator(`[data-testid="persona-item-${testPersona.name}"] [data-testid="persona-name"]`))
-        .toContainText(testPersona.name);
+      .toContainText(testPersona.name);
       await expect(page.locator(`[data-testid="persona-item-${testPersona.name}"] [data-testid="persona-display-name"]`))
-        .toContainText(testPersona.displayName);
+      .toContainText(testPersona.displayName);
       await expect(page.locator(`[data-testid="persona-item-${testPersona.name}"] [data-testid="persona-type"]`))
-        .toContainText(testPersona.type);
+      .toContainText(testPersona.type);
     });
 
     test('should display persona in switcher dropdown', async () => {
       await personaPage.personaSwitcher.click();
-      
+
       await expect(page.locator(`[data-testid="persona-option-${testPersona.name}"]`)).toBeVisible();
       await expect(page.locator(`[data-testid="persona-option-${testPersona.name}"] [data-testid="persona-name"]`))
-        .toContainText(testPersona.name);
+      .toContainText(testPersona.name);
       await expect(page.locator(`[data-testid="persona-option-${testPersona.name}"] [data-testid="persona-display-name"]`))
-        .toContainText(testPersona.displayName);
+      .toContainText(testPersona.displayName);
 
       // Close dropdown
       await page.keyboard.press('Escape');
@@ -262,10 +258,10 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
     test('should display correct persona count', async () => {
       await personaPage.goToPersonas();
-      
+
       const personaNames = await personaPage.getPersonaNames();
       const countDisplay = page.locator('[data-testid="personas-count"]');
-      
+
       await expect(countDisplay).toContainText(`${personaNames.length} persona${personaNames.length !== 1 ? 's' : ''}`);
     });
   });
@@ -282,12 +278,12 @@ test.describe('Persona Management - Core CRUD Operations', () => {
         themePreference: 'light'
       });
 
-      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken!);
+      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken || '');
     });
 
     test('should update persona display name', async () => {
       const newDisplayName = 'Updated Display Name';
-      
+
       await personaPage.editPersona(testPersona.name, {
         displayName: newDisplayName
       });
@@ -295,17 +291,17 @@ test.describe('Persona Management - Core CRUD Operations', () => {
       // Verify update in management list
       await personaPage.goToPersonas();
       await expect(page.locator(`[data-testid="persona-item-${testPersona.name}"] [data-testid="persona-display-name"]`))
-        .toContainText(newDisplayName);
+      .toContainText(newDisplayName);
 
       // Verify update in switcher
       await personaPage.personaSwitcher.click();
       await expect(page.locator(`[data-testid="persona-option-${testPersona.name}"] [data-testid="persona-display-name"]`))
-        .toContainText(newDisplayName);
+      .toContainText(newDisplayName);
     });
 
     test('should update persona bio', async () => {
       const newBio = 'This is an updated biography with more details about the persona.';
-      
+
       await personaPage.editPersona(testPersona.name, {
         bio: newBio
       });
@@ -318,7 +314,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
     test('should update persona theme preference', async () => {
       const newTheme = 'dark';
-      
+
       await personaPage.editPersona(testPersona.name, {
         themePreference: newTheme
       });
@@ -335,13 +331,13 @@ test.describe('Persona Management - Core CRUD Operations', () => {
         bio: 'Updated with multiple changes',
         themePreference: 'auto'
       };
-      
+
       await personaPage.editPersona(testPersona.name, updates);
 
       // Verify all updates
       await personaPage.goToPersonas();
       await page.locator(`[data-testid="persona-item-${testPersona.name}"] [data-testid="edit-button"]`).click();
-      
+
       await expect(personaPage.personaDisplayNameInput).toHaveValue(updates.displayName!);
       await expect(personaPage.personaBioTextarea).toHaveValue(updates.bio!);
       await expect(personaPage.personaThemeSelect).toHaveValue(updates.themePreference!);
@@ -381,7 +377,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
         displayName: 'Delete Test Persona'
       });
 
-      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken!);
+      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken || '');
     });
 
     test('should delete persona successfully', async () => {
@@ -402,7 +398,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
       // Verify confirmation modal appears
       await expect(page.locator('[data-testid="delete-persona-modal"]')).toBeVisible();
       await expect(page.locator('[data-testid="delete-persona-modal"] [data-testid="persona-name"]'))
-        .toContainText(testPersona.name);
+      .toContainText(testPersona.name);
 
       // Cancel deletion
       await page.locator('[data-testid="cancel-delete-persona"]').click();
@@ -419,7 +415,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
       // Try to delete default persona
       await personaPage.goToPersonas();
       const deleteButton = page.locator(`[data-testid="persona-item-${testPersona.name}"] [data-testid="delete-button"]`);
-      
+
       // Delete button should be disabled or not visible for default persona
       await expect(deleteButton).toBeDisabled();
     });
@@ -464,8 +460,8 @@ test.describe('Persona Management - Core CRUD Operations', () => {
         isDefault: true
       });
 
-      await personaHelper.createPersonaViaAPI(workPersona, testUser.accessToken!);
-      await personaHelper.createPersonaViaAPI(personalPersona, testUser.accessToken!);
+      await personaHelper.createPersonaViaAPI(workPersona, testUser.accessToken || '');
+      await personaHelper.createPersonaViaAPI(personalPersona, testUser.accessToken || '');
     });
 
     test('should set persona as default', async () => {
@@ -474,11 +470,11 @@ test.describe('Persona Management - Core CRUD Operations', () => {
       // Verify default badge appears
       await personaPage.goToPersonas();
       await expect(page.locator(`[data-testid="persona-item-${workPersona.name}"] [data-testid="default-badge"]`))
-        .toBeVisible();
+      .toBeVisible();
 
       // Verify old default no longer has badge
       await expect(page.locator(`[data-testid="persona-item-${personalPersona.name}"] [data-testid="default-badge"]`))
-        .not.toBeVisible();
+      .not.toBeVisible();
     });
 
     test('should use default persona on login', async () => {
@@ -498,7 +494,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
       const personaNames = await personaPage.getPersonaNames();
       const expectedOrder = [workPersona.name, ...personaNames.filter(name => name !== workPersona.name)];
-      
+
       await personaPage.verifyPersonaOrder(expectedOrder);
     });
   });
@@ -511,7 +507,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
         name: 'Avatar Test'
       });
 
-      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken!);
+      await personaHelper.createPersonaViaAPI(testPersona, testUser.accessToken || '');
     });
 
     test('should upload persona avatar', async () => {
@@ -532,7 +528,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
       // Verify avatar appears in UI
       await personaPage.goToPersonas();
       await expect(page.locator(`[data-testid="persona-item-${testPersona.name}"] [data-testid="persona-avatar"]`))
-        .toBeVisible();
+      .toBeVisible();
     });
 
     test('should validate avatar file type', async () => {
@@ -571,16 +567,16 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
     test('should support keyboard navigation', async () => {
       await personaPage.goToPersonas();
-      
+
       await a11yHelper.testKeyboardNavigation(
-        '[data-testid="create-persona-button"]',
-        '[data-testid="personas-list"] [data-testid="edit-button"]:first'
+          '[data-testid="create-persona-button"]',
+          '[data-testid="personas-list"] [data-testid="edit-button"]:first'
       );
     });
 
     test('should have proper focus indicators', async () => {
       await personaPage.goToCreatePersona();
-      
+
       await a11yHelper.verifyFocusIndicators([
         '[data-testid="persona-name"]',
         '[data-testid="persona-type"]',
@@ -591,11 +587,11 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
     test('should have proper ARIA labels', async () => {
       await personaPage.goToPersonas();
-      
+
       // Verify important elements have ARIA labels
       await expect(personaPage.createPersonaButton).toHaveAttribute('aria-label');
       await expect(personaPage.personaSwitcher).toHaveAttribute('aria-label');
-      
+
       const personaItems = await page.locator('[data-testid^="persona-item-"]').all();
       for (const item of personaItems) {
         await expect(item).toHaveAttribute('aria-label');
@@ -611,7 +607,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
       });
 
       await personaPage.goToCreatePersona();
-      
+
       const personaData = IdentityTestDataFactory.createPersona('PERSONAL', {
         name: 'API Error Test'
       });
@@ -660,7 +656,7 @@ test.describe('Persona Management - Core CRUD Operations', () => {
 
       // Check specific error messages
       const errorTexts = await Promise.all(
-        validationErrors.map(error => error.textContent())
+          validationErrors.map(error => error.textContent())
       );
       expect(errorTexts.some(text => text?.includes('Name is required'))).toBe(true);
       expect(errorTexts.some(text => text?.includes('too long'))).toBe(true);

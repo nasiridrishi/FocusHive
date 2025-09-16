@@ -1,6 +1,6 @@
 /**
  * Performance Testing Helper Utilities for FocusHive Frontend
- * 
+ *
  * Comprehensive utilities for:
  * - Core Web Vitals measurement
  * - React component performance profiling
@@ -11,7 +11,7 @@
  * - Device and network simulation
  */
 
-import { Page, BrowserContext, Browser, CDPSession } from '@playwright/test';
+import {CDPSession, Page} from '@playwright/test';
 
 // Extended performance interfaces
 interface ExtendedPerformance extends Performance {
@@ -22,8 +22,8 @@ interface ExtendedPerformance extends Performance {
   };
 }
 
-interface PerformanceNavigationTimingExtended extends PerformanceNavigationTiming {
-  navigationStart: number;
+interface _PerformanceNavigationTimingExtended extends PerformanceNavigationTiming {
+  fetchStart: number;
 }
 
 interface LayoutShiftEntry extends PerformanceEntry {
@@ -31,18 +31,18 @@ interface LayoutShiftEntry extends PerformanceEntry {
   hadRecentInput: boolean;
 }
 
-interface LongTaskEntry extends PerformanceEntry {
-  startTime: number;
+interface _LongTaskEntry extends PerformanceEntry {
+  _startTime: number;
   duration: number;
 }
 
-interface PaintEntry extends PerformanceEntry {
+interface _PaintEntry extends PerformanceEntry {
   name: string;
-  startTime: number;
+  _startTime: number;
 }
 
 interface LCPEntry extends PerformanceEntry {
-  startTime: number;
+  _startTime: number;
 }
 
 interface NetworkResponseEvent {
@@ -82,11 +82,11 @@ interface CSSCoverageEntry {
   text: string;
 }
 
-interface JSCoverageResult {
+interface _JSCoverageResult {
   result: JSCoverageEntry[];
 }
 
-interface CSSCoverageResult {
+interface _CSSCoverageResult {
   coverage: CSSCoverageEntry[];
 }
 
@@ -96,7 +96,7 @@ interface NavigationMetrics {
   loadComplete: number;
 }
 
-interface WebSocketTestMessage {
+interface _WebSocketTestMessage {
   timestamp: number;
   type: string;
 }
@@ -253,19 +253,50 @@ export class PerformanceTestHelper {
   private performanceObserver: PerformanceObserver | null = null;
   private memoryLeakDetector: NodeJS.Timeout | null = null;
 
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
+
+  /**
+   * Get performance thresholds
+   */
+  static getPerformanceThresholds(): PerformanceThresholds {
+    return {
+      coreWebVitals: {
+        fcp: {good: 1000, needsImprovement: 3000},
+        lcp: {good: 2500, needsImprovement: 4000},
+        tti: {good: 3500, needsImprovement: 5800},
+        cls: {good: 0.1, needsImprovement: 0.25},
+        fid: {good: 100, needsImprovement: 300},
+        ttfb: {good: 600, needsImprovement: 1500}
+      },
+      react: {
+        renderTime: {good: 16, needsImprovement: 33}, // 60fps = 16ms/frame
+        rerenderCount: {good: 5, needsImprovement: 15},
+        fps: {good: 55, needsImprovement: 30}
+      },
+      memory: {
+        usage: {good: 50, needsImprovement: 100}, // MB
+        leakRate: {good: 1, needsImprovement: 5} // MB per minute
+      },
+      network: {
+        totalRequests: {good: 10, needsImprovement: 30},
+        bundleSize: {good: 500, needsImprovement: 2000}, // KB
+        responseTime: {good: 200, needsImprovement: 1000}
+      }
+    };
+  }
 
   /**
    * Initialize performance monitoring
    */
   async initializePerformanceMonitoring(): Promise<void> {
     this.cdpSession = await this.page.context().newCDPSession(this.page);
-    
+
     // Enable performance domains
     await this.cdpSession.send('Performance.enable');
     await this.cdpSession.send('Runtime.enable');
     await this.cdpSession.send('Network.enable');
-    
+
     // Enable coverage for bundle analysis
     await this.cdpSession.send('Profiler.enable');
     await this.cdpSession.send('CSS.enable');
@@ -280,25 +311,25 @@ export class PerformanceTestHelper {
         const observer = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const navigationEntry = entries.find(entry => entry.entryType === 'navigation') as PerformanceNavigationTiming;
-          
+
           if (navigationEntry) {
             resolve({
               ttfb: navigationEntry.responseStart - navigationEntry.requestStart,
-              domContentLoaded: navigationEntry.domContentLoadedEventEnd - navigationEntry.navigationStart,
-              loadComplete: navigationEntry.loadEventEnd - navigationStart
+              domContentLoaded: navigationEntry.domContentLoadedEventEnd - navigationEntry.fetchStart,
+              loadComplete: navigationEntry.loadEventEnd - navigationEntry.fetchStart
             });
           }
         });
-        
-        observer.observe({ type: 'navigation', buffered: true });
-        
+
+        observer.observe({type: 'navigation', buffered: true});
+
         // Fallback timeout
         setTimeout(() => {
           const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
           resolve({
             ttfb: navigation ? navigation.responseStart - navigation.requestStart : 0,
-            domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.navigationStart : 0,
-            loadComplete: navigation ? navigation.loadEventEnd - navigation.navigationStart : 0
+            domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.fetchStart : 0,
+            loadComplete: navigation ? navigation.loadEventEnd - navigation.fetchStart : 0
           });
         }, 5000);
       });
@@ -308,7 +339,7 @@ export class PerformanceTestHelper {
     const paintMetrics = await this.page.evaluate(() => {
       const paintEntries = performance.getEntriesByType('paint');
       const fcp = paintEntries.find(entry => entry.name === 'first-contentful-paint')?.startTime || 0;
-      return { fcp };
+      return {fcp};
     });
 
     // Get LCP using PerformanceObserver
@@ -319,12 +350,12 @@ export class PerformanceTestHelper {
           const entries = list.getEntries() as LCPEntry[];
           const lastEntry = entries[entries.length - 1];
           if (lastEntry) {
-            lcpValue = lastEntry.startTime;
+            lcpValue = lastEntry._startTime;
           }
         });
-        
-        observer.observe({ type: 'largest-contentful-paint', buffered: true });
-        
+
+        observer.observe({type: 'largest-contentful-paint', buffered: true});
+
         setTimeout(() => resolve(lcpValue), 3000);
       });
     });
@@ -341,9 +372,9 @@ export class PerformanceTestHelper {
             }
           }
         });
-        
-        observer.observe({ type: 'layout-shift', buffered: true });
-        
+
+        observer.observe({type: 'layout-shift', buffered: true});
+
         setTimeout(() => resolve(clsValue), 3000);
       });
     });
@@ -361,38 +392,6 @@ export class PerformanceTestHelper {
   }
 
   /**
-   * Calculate Time to Interactive
-   */
-  private async calculateTimeToInteractive(): Promise<number> {
-    return await this.page.evaluate(() => {
-      return new Promise<number>((resolve) => {
-        // Simplified TTI calculation based on long tasks
-        let tti = 0;
-        const observer = new PerformanceObserver((list) => {
-          const entries = list.getEntries();
-          const longTasks = entries.filter(entry => entry.duration > 50);
-          
-          if (longTasks.length === 0) {
-            tti = performance.now();
-          } else {
-            const lastLongTask = longTasks[longTasks.length - 1];
-            tti = lastLongTask.startTime + lastLongTask.duration;
-          }
-        });
-        
-        try {
-          observer.observe({ type: 'longtask', buffered: true });
-        } catch {
-          // Fallback if longtask is not supported
-          tti = performance.now();
-        }
-        
-        setTimeout(() => resolve(tti || performance.now()), 5000);
-      });
-    });
-  }
-
-  /**
    * Measure React component performance
    */
   async measureReactPerformance(componentSelector: string): Promise<ReactPerformanceMetrics> {
@@ -404,8 +403,8 @@ export class PerformanceTestHelper {
       }
     });
 
-    const startTime = Date.now();
-    const initialMemory = await this.getMemoryUsage();
+    const _startTime = Date.now();
+    const _initialMemory = await this.getMemoryUsage();
 
     // Trigger component render
     await this.page.locator(componentSelector).first().click();
@@ -418,10 +417,10 @@ export class PerformanceTestHelper {
     const fps = await this.measureFPS();
 
     return {
-      renderTime: endTime - startTime,
+      renderTime: endTime - _startTime,
       rerenderCount: await this.countReRenders(),
       memoryUsage: finalMemory,
-      interactionResponseTime: endTime - startTime,
+      interactionResponseTime: endTime - _startTime,
       fps
     };
   }
@@ -454,11 +453,15 @@ export class PerformanceTestHelper {
   /**
    * Detect memory leaks over time
    */
-  async detectMemoryLeaks(durationMs: number, sampleIntervalMs: number = 1000): Promise<{ hasLeak: boolean; leakRate: number; samples: MemoryInfo[] }> {
+  async detectMemoryLeaks(durationMs: number, sampleIntervalMs: number = 1000): Promise<{
+    hasLeak: boolean;
+    leakRate: number;
+    samples: MemoryInfo[]
+  }> {
     const samples: MemoryInfo[] = [];
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
-    while (Date.now() - startTime < durationMs) {
+    while (Date.now() - _startTime < durationMs) {
       const memInfo = await this.getMemoryUsage();
       samples.push(memInfo);
       await this.page.waitForTimeout(sampleIntervalMs);
@@ -466,7 +469,7 @@ export class PerformanceTestHelper {
 
     // Analyze trend
     if (samples.length < 3) {
-      return { hasLeak: false, leakRate: 0, samples };
+      return {hasLeak: false, leakRate: 0, samples};
     }
 
     const firstSample = samples[0];
@@ -527,61 +530,19 @@ export class PerformanceTestHelper {
   }
 
   /**
-   * Analyze bundle size and composition
-   */
-  private async analyzeBundleSize(): Promise<BundleMetrics> {
-    if (!this.cdpSession) {
-      throw new Error('CDP session not initialized');
-    }
-
-    // Start coverage
-    await this.cdpSession.send('Profiler.startPreciseCoverage', { callCount: false, detailed: true });
-    await this.cdpSession.send('CSS.startRuleUsageTracking');
-
-    // Navigate to trigger bundle loading
-    await this.page.reload();
-    await this.page.waitForLoadState('networkidle');
-
-    // Get coverage data
-    const jsCoverage = await this.cdpSession.send('Profiler.takePreciseCoverage');
-    const cssCoverage = await this.cdpSession.send('CSS.takeCoverageSnapshot');
-
-    // Calculate unused code
-    let totalJSBytes = 0;
-    let unusedJSBytes = 0;
-
-    for (const entry of jsCoverage.result) {
-      totalJSBytes += entry.functions.reduce((total, func) => total + (func.ranges[0]?.count || 0), 0);
-      unusedJSBytes += entry.functions.reduce((total, func) => {
-        return total + func.ranges.filter(range => range.count === 0).length;
-      }, 0);
-    }
-
-    const totalCSSBytes = cssCoverage.coverage.reduce((total: number, entry: CSSCoverageEntry) => total + entry.text.length, 0);
-
-    return {
-      initialBundleSize: totalJSBytes,
-      totalJSSize: totalJSBytes,
-      totalCSSSize: totalCSSBytes,
-      chunkCount: await this.getChunkCount(),
-      unusedCodePercentage: (unusedJSBytes / totalJSBytes) * 100
-    };
-  }
-
-  /**
    * Measure WebSocket performance
    */
   async measureWebSocketPerformance(websocketUrl: string): Promise<WebSocketPerformanceMetrics> {
-    const startTime = Date.now();
-    let connectionTime = 0;
-    let messageCount = 0;
-    let totalLatency = 0;
-    let reconnections = 0;
+    const _startTime = Date.now();
+    const _connectionTime = 0;
+    const _messageCount = 0;
+    const _totalLatency = 0;
+    const _reconnections = 0;
 
     const metrics = await this.page.evaluate(async (url) => {
       return new Promise<WebSocketTestMetrics>((resolve) => {
         const ws = new WebSocket(url);
-        const startTime = Date.now();
+        const _startTime = Date.now();
         let connectionTime = 0;
         let messagesSent = 0;
         let messagesReceived = 0;
@@ -589,13 +550,13 @@ export class PerformanceTestHelper {
         let reconnections = 0;
 
         ws.onopen = () => {
-          connectionTime = Date.now() - startTime;
-          
+          connectionTime = Date.now() - _startTime;
+
           // Send test messages
-          const sendMessage = () => {
+          const sendMessage = (): void => {
             if (ws.readyState === WebSocket.OPEN) {
               const timestamp = Date.now();
-              ws.send(JSON.stringify({ timestamp, type: 'ping' }));
+              ws.send(JSON.stringify({timestamp, type: 'ping'}));
               messagesSent++;
             }
           };
@@ -604,7 +565,7 @@ export class PerformanceTestHelper {
           setTimeout(() => {
             clearInterval(interval);
             ws.close();
-            
+
             resolve({
               connectionTime,
               messagesSent,
@@ -623,7 +584,7 @@ export class PerformanceTestHelper {
               totalLatency += latency;
               messagesReceived++;
             }
-          } catch (e) {
+          } catch {
             messagesReceived++;
           }
         };
@@ -655,19 +616,19 @@ export class PerformanceTestHelper {
 
     // Generate large dataset
     await this.page.evaluate((size) => {
-      const largeData = Array.from({ length: size }, (_, i) => ({
+      const largeData = Array.from({length: size}, (_, i) => ({
         id: i,
         name: `Item ${i}`,
         description: `Description for item ${i}`,
         value: Math.random() * 1000
       }));
-      
+
       // Store in window for component to use
       window.largeTestData = largeData;
     }, dataSize);
 
     const initialRenderEnd = Date.now();
-    const initialMemory = await this.getMemoryUsage();
+    const _initialMemory = await this.getMemoryUsage();
 
     // Test scrolling performance
     const scrollStart = Date.now();
@@ -689,7 +650,7 @@ export class PerformanceTestHelper {
       initialRenderTime: initialRenderEnd - startRenderTime,
       scrollPerformance: scrollEnd - scrollStart,
       memoryUsage: finalMemory,
-      virtualizationEfficiency: this.calculateVirtualizationEfficiency(initialMemory, finalMemory, dataSize),
+      virtualizationEfficiency: this.calculateVirtualizationEfficiency(_initialMemory, finalMemory, dataSize),
       searchPerformance: searchEnd - searchStart
     };
   }
@@ -734,37 +695,7 @@ export class PerformanceTestHelper {
       throw new Error('CDP session not initialized');
     }
 
-    await this.cdpSession.send('Emulation.setCPUThrottlingRate', { rate });
-  }
-
-  /**
-   * Get performance thresholds
-   */
-  static getPerformanceThresholds(): PerformanceThresholds {
-    return {
-      coreWebVitals: {
-        fcp: { good: 1000, needsImprovement: 3000 },
-        lcp: { good: 2500, needsImprovement: 4000 },
-        tti: { good: 3500, needsImprovement: 5800 },
-        cls: { good: 0.1, needsImprovement: 0.25 },
-        fid: { good: 100, needsImprovement: 300 },
-        ttfb: { good: 600, needsImprovement: 1500 }
-      },
-      react: {
-        renderTime: { good: 16, needsImprovement: 33 }, // 60fps = 16ms/frame
-        rerenderCount: { good: 5, needsImprovement: 15 },
-        fps: { good: 55, needsImprovement: 30 }
-      },
-      memory: {
-        usage: { good: 50, needsImprovement: 100 }, // MB
-        leakRate: { good: 1, needsImprovement: 5 } // MB per minute
-      },
-      network: {
-        totalRequests: { good: 10, needsImprovement: 30 },
-        bundleSize: { good: 500, needsImprovement: 2000 }, // KB
-        responseTime: { good: 200, needsImprovement: 1000 }
-      }
-    };
+    await this.cdpSession.send('Emulation.setCPUThrottlingRate', {rate});
   }
 
   /**
@@ -777,7 +708,7 @@ export class PerformanceTestHelper {
     memoryLeak: { hasLeak: boolean; leakRate: number };
   }): Promise<string> {
     const thresholds = PerformanceTestHelper.getPerformanceThresholds();
-    
+
     const report = `
 # Frontend Performance Test Report
 
@@ -790,7 +721,10 @@ export class PerformanceTestHelper {
 
 ## React Performance
 - **Render Time**: ${metrics.reactPerformance.renderTime}ms ${this.getStatus(metrics.reactPerformance.renderTime, thresholds.react.renderTime)}
-- **FPS**: ${metrics.reactPerformance.fps} ${this.getStatus(metrics.reactPerformance.fps, { good: 55, needsImprovement: 30 })}
+- **FPS**: ${metrics.reactPerformance.fps} ${this.getStatus(metrics.reactPerformance.fps, {
+      good: 55,
+      needsImprovement: 30
+    })}
 - **Memory Usage**: ${(metrics.reactPerformance.memoryUsage.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB
 
 ## Network Performance
@@ -806,6 +740,86 @@ export class PerformanceTestHelper {
     return report;
   }
 
+  async cleanup(): Promise<void> {
+    if (this.cdpSession) {
+      await this.cdpSession.detach();
+    }
+  }
+
+  /**
+   * Calculate Time to Interactive
+   */
+  private async calculateTimeToInteractive(): Promise<number> {
+    return await this.page.evaluate(() => {
+      return new Promise<number>((resolve) => {
+        // Simplified TTI calculation based on long tasks
+        let tti = 0;
+        const observer = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          const longTasks = entries.filter(entry => entry.duration > 50);
+
+          if (longTasks.length === 0) {
+            tti = performance.now();
+          } else {
+            const lastLongTask = longTasks[longTasks.length - 1];
+            tti = lastLongTask._startTime + lastLongTask.duration;
+          }
+        });
+
+        try {
+          observer.observe({type: 'longtask', buffered: true});
+        } catch {
+          // Fallback if longtask is not supported
+          tti = performance.now();
+        }
+
+        setTimeout(() => resolve(tti || performance.now()), 5000);
+      });
+    });
+  }
+
+  /**
+   * Analyze bundle size and composition
+   */
+  private async analyzeBundleSize(): Promise<BundleMetrics> {
+    if (!this.cdpSession) {
+      throw new Error('CDP session not initialized');
+    }
+
+    // Start coverage
+    await this.cdpSession.send('Profiler.startPreciseCoverage', {callCount: false, detailed: true});
+    await this.cdpSession.send('CSS.startRuleUsageTracking');
+
+    // Navigate to trigger bundle loading
+    await this.page.reload();
+    await this.page.waitForLoadState('networkidle');
+
+    // Get coverage data
+    const jsCoverage = await this.cdpSession.send('Profiler.takePreciseCoverage');
+    const cssCoverage = await this.cdpSession.send('CSS.takeCoverageSnapshot');
+
+    // Calculate unused code
+    let totalJSBytes = 0;
+    let unusedJSBytes = 0;
+
+    for (const entry of jsCoverage.result) {
+      totalJSBytes += entry.functions.reduce((total, func) => total + (func.ranges[0]?.count || 0), 0);
+      unusedJSBytes += entry.functions.reduce((total, func) => {
+        return total + func.ranges.filter(range => range.count === 0).length;
+      }, 0);
+    }
+
+    const totalCSSBytes = cssCoverage.coverage.reduce((total: number, entry: CSSCoverageEntry) => total + entry.text.length, 0);
+
+    return {
+      initialBundleSize: totalJSBytes,
+      totalJSSize: totalJSBytes,
+      totalCSSSize: totalCSSBytes,
+      chunkCount: await this.getChunkCount(),
+      unusedCodePercentage: (unusedJSBytes / totalJSBytes) * 100
+    };
+  }
+
   // Helper methods
   private getStatus(value: number, threshold: { good: number; needsImprovement: number }): string {
     if (value <= threshold.good) return '✅ Good';
@@ -817,9 +831,9 @@ export class PerformanceTestHelper {
     return await this.page.evaluate(() => {
       return new Promise<number>((resolve) => {
         let frames = 0;
-        let lastTime = performance.now();
-        
-        function countFrame(currentTime: number) {
+        const lastTime = performance.now();
+
+        function countFrame(currentTime: number): void {
           frames++;
           if (currentTime - lastTime >= 1000) {
             resolve(frames);
@@ -827,7 +841,7 @@ export class PerformanceTestHelper {
           }
           requestAnimationFrame(countFrame);
         }
-        
+
         requestAnimationFrame(countFrame);
       });
     });
@@ -842,7 +856,7 @@ export class PerformanceTestHelper {
   private async getResourceLoadTime(): Promise<number> {
     return await this.page.evaluate(() => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      return navigation ? navigation.loadEventEnd - navigation.navigationStart : 0;
+      return navigation ? navigation.loadEventEnd - navigation.fetchStart : 0;
     });
   }
 
@@ -852,15 +866,9 @@ export class PerformanceTestHelper {
     return scripts + stylesheets;
   }
 
-  private calculateVirtualizationEfficiency(initialMemory: MemoryInfo, finalMemory: MemoryInfo, dataSize: number): number {
-    const memoryGrowth = finalMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
+  private calculateVirtualizationEfficiency(_initialMemory: MemoryInfo, finalMemory: MemoryInfo, dataSize: number): number {
+    const memoryGrowth = finalMemory.usedJSHeapSize - _initialMemory.usedJSHeapSize;
     const expectedGrowth = dataSize * 100; // Assume 100 bytes per item without virtualization
     return Math.max(0, 100 - ((memoryGrowth / expectedGrowth) * 100));
-  }
-
-  async cleanup(): Promise<void> {
-    if (this.cdpSession) {
-      await this.cdpSession.detach();
-    }
   }
 }

@@ -3,8 +3,8 @@
  * Provides methods to interact with buddy system features in E2E tests
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from '../helpers/test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {TIMEOUTS} from '../helpers/test-data';
 
 export class BuddyPage {
   readonly page: Page;
@@ -95,9 +95,9 @@ export class BuddyPage {
 
     // Main dashboard elements
     this.dashboard = page.locator('[data-testid="buddy-dashboard"]');
-    this.dashboardTitle = page.locator('h1, h2, h3, h4').filter({ hasText: /Buddy System|Buddy Dashboard/i });
+    this.dashboardTitle = page.locator('h1, h2, h3, h4').filter({hasText: /Buddy System|Buddy Dashboard/i});
     this.loadingSpinner = page.locator('[data-testid="loading-spinner"], .MuiCircularProgress-root');
-    this.errorAlert = page.locator('.MuiAlert-root[severity="error"], [role="alert"]').filter({ hasText: /error|failed/i });
+    this.errorAlert = page.locator('.MuiAlert-root[severity="error"], [role="alert"]').filter({hasText: /error|failed/i});
     this.retryButton = page.locator('button:has-text("Retry"), button:has-text("Try Again")');
     this.refreshButton = page.locator('button[aria-label*="refresh"], [data-testid="refresh-button"]');
     this.emptyStateMessage = page.locator(':has-text("No buddy relationships"), :has-text("Get started by finding")');
@@ -195,15 +195,18 @@ export class BuddyPage {
    * Wait for page to load completely
    */
   async waitForPageLoad(): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
-    
+    await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
+
     // Wait for dashboard to be visible or error/empty state to appear
     try {
       await Promise.race([
-        this.dashboard.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-        this.errorAlert.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-        this.emptyStateMessage.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-        this.page.locator('main, .MuiContainer-root, body').waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM })
+        this.dashboard.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+        this.errorAlert.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+        this.emptyStateMessage.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+        this.page.locator('main, .MuiContainer-root, body').waitFor({
+          state: 'visible',
+          timeout: TIMEOUTS.MEDIUM
+        })
       ]);
     } catch {
       // If none of the expected elements appear, just ensure the page has loaded
@@ -217,17 +220,17 @@ export class BuddyPage {
   async waitForDataLoad(): Promise<void> {
     // Wait for loading spinner to disappear
     try {
-      await this.loadingSpinner.waitFor({ state: 'hidden', timeout: TIMEOUTS.NETWORK });
+      await this.loadingSpinner.waitFor({state: 'hidden', timeout: TIMEOUTS.NETWORK});
     } catch {
       // Spinner might not be visible, which is fine
     }
 
     // Wait for either data to load or empty/error state
     await Promise.race([
-      this.activeBuddiesSection.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-      this.potentialMatchesSection.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-      this.emptyStateMessage.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT }),
-      this.errorAlert.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT })
+      this.activeBuddiesSection.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+      this.potentialMatchesSection.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+      this.emptyStateMessage.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT}),
+      this.errorAlert.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT})
     ]);
   }
 
@@ -319,7 +322,7 @@ export class BuddyPage {
    * Get list of active buddy cards
    */
   async getActiveBuddyCards(): Promise<Locator[]> {
-    await this.activeBuddiesSection.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT });
+    await this.activeBuddiesSection.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT});
     return await this.buddyCards.all();
   }
 
@@ -327,7 +330,7 @@ export class BuddyPage {
    * Get list of potential matches
    */
   async getPotentialMatches(): Promise<Locator[]> {
-    await this.potentialMatchesSection.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT });
+    await this.potentialMatchesSection.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT});
     return await this.potentialMatchesSection.locator('[data-testid="buddy-match-card"]').all();
   }
 
@@ -335,7 +338,7 @@ export class BuddyPage {
    * Get search results
    */
   async getSearchResults(): Promise<Locator[]> {
-    await this.searchResults.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT });
+    await this.searchResults.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT});
     return await this.searchResults.locator('[data-testid="search-result-item"]').all();
   }
 
@@ -343,7 +346,7 @@ export class BuddyPage {
    * Get upcoming sessions
    */
   async getUpcomingSessions(): Promise<Locator[]> {
-    await this.upcomingSessionsList.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT });
+    await this.upcomingSessionsList.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT});
     return await this.upcomingSessionsList.locator('[data-testid="session-item"]').all();
   }
 
@@ -426,10 +429,10 @@ export class BuddyPage {
   }): Promise<void> {
     // Rate mood (1-5)
     await this.checkinDialog.locator(`[data-testid="mood-rating-${checkin.moodRating}"]`).click();
-    
+
     // Rate progress (1-5)
     await this.checkinDialog.locator(`[data-testid="progress-rating-${checkin.progressRating}"]`).click();
-    
+
     // Fill text fields
     await this.checkinDialog.locator('[name="message"]').fill(checkin.message);
     await this.checkinDialog.locator('[name="currentFocus"]').fill(checkin.currentFocus);
@@ -467,14 +470,14 @@ export class BuddyPage {
     // Select buddy
     await this.sessionScheduleDialog.locator('[data-testid="buddy-select"]').click();
     await this.page.locator(`[data-value="${session.buddyId}"]`).click();
-    
+
     // Set date and time
     await this.sessionScheduleDialog.locator('[name="sessionDate"]').fill(session.sessionDate);
     await this.sessionScheduleDialog.locator('[name="sessionTime"]').fill(session.sessionTime);
-    
+
     // Set duration
     await this.sessionScheduleDialog.locator('[name="duration"]').fill(session.duration.toString());
-    
+
     // Fill agenda
     await this.sessionScheduleDialog.locator('[name="agenda"]').fill(session.agenda);
   }
@@ -527,7 +530,7 @@ export class BuddyPage {
   }): Promise<void> {
     await this.challengeCreateDialog.locator('[data-testid="challenge-type-select"]').click();
     await this.page.locator(`[data-value="${challenge.challengeType}"]`).click();
-    
+
     await this.challengeCreateDialog.locator('[name="title"]').fill(challenge.title);
     await this.challengeCreateDialog.locator('[name="description"]').fill(challenge.description);
     await this.challengeCreateDialog.locator('[name="duration"]').fill(challenge.duration.toString());
@@ -619,12 +622,12 @@ export class BuddyPage {
   }): Promise<void> {
     await this.helpRequestDialog.locator('[data-testid="urgency-select"]').click();
     await this.page.locator(`[data-value="${request.urgency}"]`).click();
-    
+
     await this.helpRequestDialog.locator('[data-testid="category-select"]').click();
     await this.page.locator(`[data-value="${request.category}"]`).click();
-    
+
     await this.helpRequestDialog.locator('[name="description"]').fill(request.description);
-    
+
     await this.helpRequestDialog.locator('[data-testid="response-select"]').click();
     await this.page.locator(`[data-value="${request.preferredResponse}"]`).click();
   }
@@ -653,15 +656,15 @@ export class BuddyPage {
   }): Promise<void> {
     // Overall rating
     await this.feedbackDialog.locator(`[data-testid="overall-rating-${feedback.rating}"]`).click();
-    
+
     // Category ratings
     for (const [category, rating] of Object.entries(feedback.categories)) {
       await this.feedbackDialog.locator(`[data-testid="${category}-rating-${rating}"]`).click();
     }
-    
+
     // Comment
     await this.feedbackDialog.locator('[name="comment"]').fill(feedback.comment);
-    
+
     // Recommendation
     const recommendCheckbox = this.feedbackDialog.locator('[data-testid="would-recommend"]');
     if (feedback.wouldRecommend && !await recommendCheckbox.isChecked()) {
@@ -691,13 +694,13 @@ export class BuddyPage {
   }): Promise<void> {
     await this.reportIssueDialog.locator('[data-testid="issue-type-select"]').click();
     await this.page.locator(`[data-value="${issue.issueType}"]`).click();
-    
+
     await this.reportIssueDialog.locator('[data-testid="severity-select"]').click();
     await this.page.locator(`[data-value="${issue.severity}"]`).click();
-    
+
     await this.reportIssueDialog.locator('[name="description"]').fill(issue.description);
     await this.reportIssueDialog.locator('[name="desiredOutcome"]').fill(issue.desiredOutcome);
-    
+
     const attemptedCheckbox = this.reportIssueDialog.locator('[data-testid="attempted-resolution"]');
     if (issue.hasAttemptedResolution && !await attemptedCheckbox.isChecked()) {
       await attemptedCheckbox.click();
@@ -743,7 +746,7 @@ export class BuddyPage {
   }): Promise<void> {
     await this.blockConfirmDialog.locator('[name="blockReason"]').fill(block.reason);
     await this.blockConfirmDialog.locator('[name="blockDetails"]').fill(block.details);
-    
+
     const reportCheckbox = this.blockConfirmDialog.locator('[data-testid="report-to-moderators"]');
     if (block.reportToModerators && !await reportCheckbox.isChecked()) {
       await reportCheckbox.click();
@@ -763,12 +766,12 @@ export class BuddyPage {
    */
   async verifyMobileLayout(): Promise<void> {
     // Set mobile viewport
-    await this.page.setViewportSize({ width: 375, height: 667 });
+    await this.page.setViewportSize({width: 375, height: 667});
     await this.waitForDataLoad();
-    
+
     // Verify dashboard adjusts to mobile layout
     await expect(this.dashboard).toBeVisible();
-    
+
     // Verify navigation might be collapsed or in tabs
     const tabContainer = this.page.locator('.MuiTabs-root, [role="tablist"]');
     if (await tabContainer.isVisible()) {
@@ -783,12 +786,12 @@ export class BuddyPage {
     // Check for proper heading structure
     const headings = this.page.locator('h1, h2, h3, h4, h5, h6');
     expect(await headings.count()).toBeGreaterThan(0);
-    
+
     // Check for aria-labels on interactive elements
     const interactiveElements = this.page.locator('button, [role="button"], input, [role="tab"]');
     const elementsCount = await interactiveElements.count();
     expect(elementsCount).toBeGreaterThan(0);
-    
+
     // Check for screen reader content
     const srElements = this.page.locator('[aria-live], .sr-only, [aria-hidden="true"]');
     expect(await srElements.count()).toBeGreaterThan(0);
@@ -803,13 +806,13 @@ export class BuddyPage {
     domContentLoaded: number;
   }> {
     const startTime = Date.now();
-    
+
     await this.goto();
     await this.waitForDataLoad();
-    
+
     const endTime = Date.now();
     const loadTime = endTime - startTime;
-    
+
     // Get performance metrics from the browser
     const performanceMetrics = await this.page.evaluate(() => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -818,7 +821,7 @@ export class BuddyPage {
         domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
       };
     });
-    
+
     return {
       loadTime,
       firstContentfulPaint: performanceMetrics.firstContentfulPaint,

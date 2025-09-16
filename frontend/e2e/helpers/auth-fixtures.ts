@@ -344,12 +344,12 @@ export const AUTH_PERFORMANCE_THRESHOLDS = {
  * Mobile viewport configurations for responsive testing
  */
 export const MOBILE_VIEWPORTS = {
-  IPHONE_SE: { width: 375, height: 667 },
-  IPHONE_12: { width: 390, height: 844 },
-  IPHONE_12_PRO_MAX: { width: 428, height: 926 },
-  SAMSUNG_S21: { width: 360, height: 800 },
-  IPAD: { width: 768, height: 1024 },
-  IPAD_PRO: { width: 1024, height: 1366 },
+  IPHONE_SE: {width: 375, height: 667},
+  IPHONE_12: {width: 390, height: 844},
+  IPHONE_12_PRO_MAX: {width: 428, height: 926},
+  SAMSUNG_S21: {width: 360, height: 800},
+  IPAD: {width: 768, height: 1024},
+  IPAD_PRO: {width: 1024, height: 1366},
 } as const;
 
 /**
@@ -389,7 +389,7 @@ export const ACCESSIBILITY_SCENARIOS = {
 export function generateUniqueAuthUser(baseUser: TestUser): TestUser {
   const timestamp = Date.now();
   const randomId = Math.random().toString(36).substring(2, 8);
-  
+
   return {
     ...baseUser,
     username: `${baseUser.username}_${timestamp}_${randomId}`,
@@ -401,14 +401,14 @@ export function generateUniqueAuthUser(baseUser: TestUser): TestUser {
  * Generate test data for bulk operations
  */
 export function generateTestUsers(count: number): TestUser[] {
-  return Array.from({ length: count }, (_, index) => 
-    generateUniqueAuthUser({
-      username: `bulk_test_user_${index}`,
-      email: `bulk.test.${index}@focushive.com`,
-      password: 'BulkTestPass123!',
-      firstName: 'Bulk',
-      lastName: `User${index}`,
-    })
+  return Array.from({length: count}, (_, index) =>
+      generateUniqueAuthUser({
+        username: `bulk_test_user_${index}`,
+        email: `bulk.test.${index}@focushive.com`,
+        password: 'BulkTestPass123!',
+        firstName: 'Bulk',
+        lastName: `User${index}`,
+      })
   );
 }
 

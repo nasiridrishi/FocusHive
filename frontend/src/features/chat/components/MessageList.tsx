@@ -1,15 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import {
-  Box,
-  CircularProgress,
-  Typography,
-  Button,
-  styled,
-  alpha,
-} from '@mui/material'
-import { ExpandLess as ExpandLessIcon } from '@mui/icons-material'
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
+import {alpha, Box, Button, CircularProgress, styled, Typography,} from '@mui/material'
+import {ExpandLess as ExpandLessIcon} from '@mui/icons-material'
 import MessageBubble from './MessageBubble'
-import { ChatMessage } from '../../../shared/types/chat'
+import {ChatMessage} from '../../../shared/types/chat'
 
 const MessageListContainer = styled(Box)(() => ({
   display: 'flex',
@@ -19,7 +12,7 @@ const MessageListContainer = styled(Box)(() => ({
   position: 'relative',
 }))
 
-const ScrollContainer = styled(Box)(({ theme }) => ({
+const ScrollContainer = styled(Box)(({theme}) => ({
   flex: 1,
   overflowY: 'auto',
   overflowX: 'hidden',
@@ -41,12 +34,12 @@ const ScrollContainer = styled(Box)(({ theme }) => ({
   },
 }))
 
-const LoadMoreButton = styled(Button)(({ theme }) => ({
+const LoadMoreButton = styled(Button)(({theme}) => ({
   margin: theme.spacing(1),
   borderRadius: theme.shape.borderRadius * 2,
 }))
 
-const DateDivider = styled(Box)(({ theme }) => ({
+const DateDivider = styled(Box)(({theme}) => ({
   display: 'flex',
   alignItems: 'center',
   margin: theme.spacing(2, 0),
@@ -58,7 +51,7 @@ const DateDivider = styled(Box)(({ theme }) => ({
   },
 }))
 
-const DateLabel = styled(Typography)(({ theme }) => ({
+const DateLabel = styled(Typography)(({theme}) => ({
   padding: theme.spacing(0, 2),
   backgroundColor: theme.palette.background.paper,
   color: theme.palette.text.secondary,
@@ -66,7 +59,7 @@ const DateLabel = styled(Typography)(({ theme }) => ({
   fontWeight: 500,
 }))
 
-const ScrollToBottomButton = styled(Button)(({ theme }) => ({
+const ScrollToBottomButton = styled(Button)(({theme}) => ({
   position: 'absolute',
   bottom: theme.spacing(2),
   right: theme.spacing(2),
@@ -84,7 +77,7 @@ const ScrollToBottomButton = styled(Button)(({ theme }) => ({
   },
 }))
 
-const TypingIndicatorContainer = styled(Box)(({ theme }) => ({
+const TypingIndicatorContainer = styled(Box)(({theme}) => ({
   padding: theme.spacing(1, 2),
   color: theme.palette.text.secondary,
   fontStyle: 'italic',
@@ -109,21 +102,21 @@ interface MessageListProps {
 }
 
 const MessageList: React.FC<MessageListProps> = ({
-  hiveId,
-  messages,
-  onLoadMore,
-  hasMore = false,
-  isLoading = false,
-  currentUserId,
-  onEditMessage,
-  onDeleteMessage,
-  onReplyMessage,
-  onReaction,
-  onRemoveReaction,
-  typingUsers = [],
-  autoScroll = true,
-  className,
-}) => {
+                                                   hiveId,
+                                                   messages,
+                                                   onLoadMore,
+                                                   hasMore = false,
+                                                   isLoading = false,
+                                                   currentUserId,
+                                                   onEditMessage,
+                                                   onDeleteMessage,
+                                                   onReplyMessage,
+                                                   onReaction,
+                                                   onRemoveReaction,
+                                                   typingUsers = [],
+                                                   autoScroll = true,
+                                                   className,
+                                                 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const lastMessageRef = useRef<HTMLDivElement>(null)
   const [showScrollToBottom, setShowScrollToBottom] = useState(false)
@@ -132,11 +125,11 @@ const MessageList: React.FC<MessageListProps> = ({
   // Group messages by date for date dividers
   const groupedMessages = useMemo(() => {
     const grouped: Array<{ date: string; messages: ChatMessage[] }> = []
-    
+
     messages.forEach((message) => {
       const messageDate = new Date(message.createdAt).toDateString()
       const lastGroup = grouped[grouped.length - 1]
-      
+
       if (lastGroup && lastGroup.date === messageDate) {
         lastGroup.messages.push(message)
       } else {
@@ -146,7 +139,7 @@ const MessageList: React.FC<MessageListProps> = ({
         })
       }
     })
-    
+
     return grouped
   }, [messages])
 
@@ -158,29 +151,29 @@ const MessageList: React.FC<MessageListProps> = ({
     }, {} as Record<string, ChatMessage>)
   }, [messages])
 
-  const formatDateLabel = (dateString: string) => {
+  const formatDateLabel = (dateString: string): string => {
     const date = new Date(dateString)
     const today = new Date()
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
-    
+
     if (date.toDateString() === today.toDateString()) {
       return 'Today'
     } else if (date.toDateString() === yesterday.toDateString()) {
       return 'Yesterday'
     } else {
-      return date.toLocaleDateString(undefined, { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       })
     }
   }
 
   const scrollToBottom = useCallback((smooth = true) => {
     if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ 
+      lastMessageRef.current.scrollIntoView({
         behavior: smooth ? 'smooth' : 'auto',
         block: 'end'
       })
@@ -191,7 +184,7 @@ const MessageList: React.FC<MessageListProps> = ({
     const container = scrollContainerRef.current
     if (!container) return
 
-    const { scrollTop, scrollHeight, clientHeight } = container
+    const {scrollTop, scrollHeight, clientHeight} = container
     const isAtBottom = scrollHeight - scrollTop - clientHeight < 50
     const isNearTop = scrollTop < 100
 
@@ -202,7 +195,7 @@ const MessageList: React.FC<MessageListProps> = ({
     if (isNearTop && hasMore && !isLoading && onLoadMore) {
       const currentScrollHeight = scrollHeight
       onLoadMore()
-      
+
       // Maintain scroll position after loading more messages
       setTimeout(() => {
         if (container) {
@@ -238,7 +231,7 @@ const MessageList: React.FC<MessageListProps> = ({
     return !nextMessage || nextMessage.authorId !== message.authorId || nextMessage.type === 'system'
   }, [])
 
-  const renderTypingIndicator = () => {
+  const renderTypingIndicator = (): React.ReactElement | null => {
     if (typingUsers.length === 0) return null
 
     const typingNames = typingUsers.map(user => user.user.name)
@@ -253,108 +246,108 @@ const MessageList: React.FC<MessageListProps> = ({
     }
 
     return (
-      <TypingIndicatorContainer>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            {[1, 2, 3].map((dot) => (
-              <Box
-                key={dot}
-                sx={{
-                  width: 4,
-                  height: 4,
-                  borderRadius: '50%',
-                  backgroundColor: 'text.secondary',
-                  animation: 'typingDot 1.4s infinite',
-                  animationDelay: `${(dot - 1) * 0.2}s`,
-                  '@keyframes typingDot': {
-                    '0%, 60%, 100%': { opacity: 0.3 },
-                    '30%': { opacity: 1 },
-                  },
-                }}
-              />
-            ))}
+        <TypingIndicatorContainer>
+          <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+            <Box sx={{display: 'flex', gap: 0.5}}>
+              {[1, 2, 3].map((dot) => (
+                  <Box
+                      key={dot}
+                      sx={{
+                        width: 4,
+                        height: 4,
+                        borderRadius: '50%',
+                        backgroundColor: 'text.secondary',
+                        animation: 'typingDot 1.4s infinite',
+                        animationDelay: `${(dot - 1) * 0.2}s`,
+                        '@keyframes typingDot': {
+                          '0%, 60%, 100%': {opacity: 0.3},
+                          '30%': {opacity: 1},
+                        },
+                      }}
+                  />
+              ))}
+            </Box>
+            <Typography variant="body2">{typingText}</Typography>
           </Box>
-          <Typography variant="body2">{typingText}</Typography>
-        </Box>
-      </TypingIndicatorContainer>
+        </TypingIndicatorContainer>
     )
   }
 
   if (messages.length === 0 && !isLoading) {
     return (
-      <MessageListContainer className={className}>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          height: '100%',
-          color: 'text.secondary'
-        }}>
-          <Typography variant="body1">
-            No messages yet. Start the conversation!
-          </Typography>
-        </Box>
-      </MessageListContainer>
+        <MessageListContainer className={className}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: 'text.secondary'
+          }}>
+            <Typography variant="body1">
+              No messages yet. Start the conversation!
+            </Typography>
+          </Box>
+        </MessageListContainer>
     )
   }
 
   return (
-    <MessageListContainer className={className}>
-      <ScrollContainer ref={scrollContainerRef} onScroll={handleScroll}>
-        {hasMore && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-            {isLoading ? (
-              <CircularProgress size={24} />
-            ) : (
-              <LoadMoreButton 
-                variant="outlined" 
-                size="small"
-                onClick={onLoadMore}
-              >
-                Load More Messages
-              </LoadMoreButton>
-            )}
-          </Box>
+      <MessageListContainer className={className}>
+        <ScrollContainer ref={scrollContainerRef} onScroll={handleScroll}>
+          {hasMore && (
+              <Box sx={{display: 'flex', justifyContent: 'center', py: 2}}>
+                {isLoading ? (
+                    <CircularProgress size={24}/>
+                ) : (
+                    <LoadMoreButton
+                        variant="outlined"
+                        size="small"
+                        onClick={onLoadMore}
+                    >
+                      Load More Messages
+                    </LoadMoreButton>
+                )}
+              </Box>
+          )}
+
+          {groupedMessages.map((group) => (
+              <Box key={group.date}>
+                <DateDivider>
+                  <DateLabel>{formatDateLabel(group.date)}</DateLabel>
+                </DateDivider>
+
+                {group.messages.map((message, messageIndex) => (
+                    <MessageBubble
+                        key={message.id}
+                        message={message}
+                        isOwn={message.authorId === currentUserId}
+                        showAvatar={shouldShowAvatar(message, messageIndex, group.messages)}
+                        showTimestamp={true}
+                        onEdit={onEditMessage}
+                        onDelete={onDeleteMessage}
+                        onReply={onReplyMessage}
+                        onReaction={onReaction}
+                        onRemoveReaction={onRemoveReaction}
+                        currentUserId={currentUserId}
+                        replyToMessage={message.replyTo ? messageMap[message.replyTo] : null}
+                    />
+                ))}
+              </Box>
+          ))}
+
+          {renderTypingIndicator()}
+
+          <div ref={lastMessageRef}/>
+        </ScrollContainer>
+
+        {showScrollToBottom && (
+            <ScrollToBottomButton
+                onClick={() => scrollToBottom(true)}
+            >
+              <ExpandLessIcon sx={{transform: 'rotate(180deg)'}}/>
+            </ScrollToBottomButton>
         )}
-
-        {groupedMessages.map((group) => (
-          <Box key={group.date}>
-            <DateDivider>
-              <DateLabel>{formatDateLabel(group.date)}</DateLabel>
-            </DateDivider>
-
-            {group.messages.map((message, messageIndex) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isOwn={message.authorId === currentUserId}
-                showAvatar={shouldShowAvatar(message, messageIndex, group.messages)}
-                showTimestamp={true}
-                onEdit={onEditMessage}
-                onDelete={onDeleteMessage}
-                onReply={onReplyMessage}
-                onReaction={onReaction}
-                onRemoveReaction={onRemoveReaction}
-                currentUserId={currentUserId}
-                replyToMessage={message.replyTo ? messageMap[message.replyTo] : null}
-              />
-            ))}
-          </Box>
-        ))}
-
-        {renderTypingIndicator()}
-        
-        <div ref={lastMessageRef} />
-      </ScrollContainer>
-
-      {showScrollToBottom && (
-        <ScrollToBottomButton
-          onClick={() => scrollToBottom(true)}
-        >
-          <ExpandLessIcon sx={{ transform: 'rotate(180deg)' }} />
-        </ScrollToBottomButton>
-      )}
-    </MessageListContainer>
+      </MessageListContainer>
   )
 }
 

@@ -1,11 +1,11 @@
 /**
  * Advanced Responsive Spacing System
- * 
+ *
  * Implements fluid spacing with device-aware sizing
  * Based on 4px base unit with responsive scaling
  */
 
-import { mediaQueries } from './breakpoints'
+import {mediaQueries} from './breakpoints'
 
 // Base spacing unit (4px)
 export const BASE_SPACING = 4
@@ -60,7 +60,7 @@ export const responsiveSpacing = {
     desktop: spacingScale[8],     // 32px
     desktopLg: spacingScale[10],  // 40px
   },
-  
+
   // Section spacing - vertical spacing between major sections
   sectionSpacing: {
     mobile: spacingScale[8],      // 32px
@@ -68,7 +68,7 @@ export const responsiveSpacing = {
     desktop: spacingScale[16],    // 64px
     desktopLg: spacingScale[20],  // 80px
   },
-  
+
   // Component spacing - spacing within components
   componentSpacing: {
     mobile: spacingScale[3],      // 12px
@@ -76,7 +76,7 @@ export const responsiveSpacing = {
     desktop: spacingScale[5],     // 20px
     desktopLg: spacingScale[6],   // 24px
   },
-  
+
   // Element spacing - small spacing between elements
   elementSpacing: {
     mobile: spacingScale[2],      // 8px
@@ -84,7 +84,7 @@ export const responsiveSpacing = {
     desktop: spacingScale[3],     // 12px
     desktopLg: spacingScale[3],   // 12px
   },
-  
+
   // Grid spacing - spacing between grid items
   gridSpacing: {
     mobile: spacingScale[2],      // 8px
@@ -98,22 +98,22 @@ export const responsiveSpacing = {
 export const fluidSpacing = {
   // Extra small spacing (2px → 4px)
   xs: 'clamp(0.125rem, 0.1vw + 0.1rem, 0.25rem)',
-  
+
   // Small spacing (4px → 8px)
   sm: 'clamp(0.25rem, 0.2vw + 0.2rem, 0.5rem)',
-  
+
   // Medium spacing (8px → 16px)
   md: 'clamp(0.5rem, 0.5vw + 0.25rem, 1rem)',
-  
+
   // Large spacing (16px → 24px)
   lg: 'clamp(1rem, 0.5vw + 0.75rem, 1.5rem)',
-  
+
   // Extra large spacing (24px → 40px)
   xl: 'clamp(1.5rem, 1vw + 1rem, 2.5rem)',
-  
+
   // Double extra large spacing (32px → 64px)
   xxl: 'clamp(2rem, 2vw + 1rem, 4rem)',
-  
+
   // Triple extra large spacing (48px → 96px)
   xxxl: 'clamp(3rem, 3vw + 1.5rem, 6rem)',
 } as const
@@ -138,20 +138,20 @@ export const componentSpacing = {
       desktop: spacingScale[5],   // 20px
     },
   },
-  
+
   // Button component spacing
   button: {
     padding: {
-      small: { x: spacingScale[3], y: spacingScale[1.5] },    // 12px, 6px
-      medium: { x: spacingScale[4], y: spacingScale[2] },     // 16px, 8px
-      large: { x: spacingScale[6], y: spacingScale[3] },      // 24px, 12px
+      small: {x: spacingScale[3], y: spacingScale[1.5]},    // 12px, 6px
+      medium: {x: spacingScale[4], y: spacingScale[2]},     // 16px, 8px
+      large: {x: spacingScale[6], y: spacingScale[3]},      // 24px, 12px
     },
     gap: {
       mobile: spacingScale[2],    // 8px
       desktop: spacingScale[3],   // 12px
     },
   },
-  
+
   // Form component spacing
   form: {
     fieldSpacing: {
@@ -167,7 +167,7 @@ export const componentSpacing = {
       desktop: spacingScale[8],   // 32px
     },
   },
-  
+
   // Navigation spacing
   navigation: {
     itemSpacing: {
@@ -189,16 +189,16 @@ export const componentSpacing = {
 export const spacingUtils = {
   // Convert spacing scale to pixels
   toPx: (scale: SpacingKey): number => spacingScale[scale] * BASE_SPACING,
-  
+
   // Convert spacing scale to rem
   toRem: (scale: SpacingKey): string => `${(spacingScale[scale] * BASE_SPACING) / 16}rem`,
-  
+
   // Get responsive spacing value
   responsive: (mobileScale: SpacingKey, desktopScale: SpacingKey) => ({
     [mediaQueries.down('tablet')]: spacingUtils.toRem(mobileScale),
     [mediaQueries.up('tablet')]: spacingUtils.toRem(desktopScale),
   }),
-  
+
   // Create fluid spacing between two values
   fluid: (minScale: SpacingKey, maxScale: SpacingKey, minVw = 320, maxVw = 1440) => {
     const minPx = spacingUtils.toPx(minScale)
@@ -207,24 +207,27 @@ export const spacingUtils = {
     const yAxisIntersection = -minVw * slope + minPx
     return `clamp(${minPx}px, ${yAxisIntersection.toFixed(2)}px + ${(slope * 100).toFixed(2)}vw, ${maxPx}px)`
   },
-  
+
   // Get spacing for specific device type
   forDevice: (device: 'mobile' | 'tablet' | 'desktop' | 'desktopLg', category: keyof typeof responsiveSpacing) => {
     return spacingUtils.toRem(responsiveSpacing[category][device] as SpacingKey)
   },
-  
+
   // Create consistent component spacing
   component: (componentType: keyof typeof componentSpacing, property: string) => {
     const component = componentSpacing[componentType]
-    const spacing = component[property as keyof typeof component] as SpacingKey | { mobile: SpacingKey; desktop: SpacingKey } | { mobile: SpacingKey; tablet: SpacingKey; desktop: SpacingKey }
-    
+    const spacing = component[property as keyof typeof component] as SpacingKey | {
+      mobile: SpacingKey;
+      desktop: SpacingKey
+    } | { mobile: SpacingKey; tablet: SpacingKey; desktop: SpacingKey }
+
     if (typeof spacing === 'object' && spacing && 'mobile' in spacing && 'desktop' in spacing) {
       return {
         [mediaQueries.down('tablet')]: spacingUtils.toRem(spacing.mobile as SpacingKey),
         [mediaQueries.up('tablet')]: spacingUtils.toRem(spacing.desktop as SpacingKey),
       }
     }
-    
+
     return spacing
   },
 } as const

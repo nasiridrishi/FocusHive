@@ -1,0 +1,194 @@
+groups:
+  - name: notification-service-alerts
+    rules:
+      # Service Health Alerts
+      - alert: NotificationServiceDown
+        expr: up{job="notification-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: notification-service
+        annotations:
+          summary: "Notification service is down"
+          description: "The notification service has been down for more than 1 minute"
+          runbook_url: "https://wiki.focushive.com/runbooks/notification-service-down"
+
+      - alert: NotificationServiceHighMemoryUsage
+        expr: process_resident_memory_bytes{job="notification-service"} / 1024 / 1024 > 512
+        for: 5m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "Notification service high memory usage"
+          description: "Memory usage is above 512MB for more than 5 minutes"
+
+      # Database and Dependencies
+      - alert: DatabaseConnectionFailed
+        expr: spring_datasource_active_connections{job="notification-service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: notification-service
+        annotations:
+          summary: "Database connection failed"
+          description: "No active database connections for more than 2 minutes"
+
+      - alert: RedisConnectionFailed
+        expr: increase(lettuce_command_completion_total{job="notification-service",command="PING",status="FAILED"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: notification-service
+        annotations:
+          summary: "Redis connection failed"
+          description: "Redis ping commands are failing"
+
+      # Business Metrics Alerts
+      - alert: HighNotificationFailureRate
+        expr: |
+          (
+            rate(notifications_failed_total[5m]) / 
+            (rate(notifications_created_total[5m]) + rate(notifications_failed_total[5m]))
+          ) * 100 > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High notification failure rate"
+          description: "Notification failure rate is above 5% for more than 3 minutes"
+
+      - alert: HighEmailFailureRate
+        expr: |
+          (
+            rate(emails_failed_total[5m]) / 
+            (rate(emails_sent_total[5m]) + rate(emails_failed_total[5m]))
+          ) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High email failure rate"
+          description: "Email failure rate is above 10% for more than 5 minutes"
+
+      - alert: SlowNotificationProcessing
+        expr: histogram_quantile(0.95, notifications_processing_time_seconds_bucket) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "Slow notification processing"
+          description: "95th percentile of notification processing time is above 2 seconds"
+
+      - alert: SlowEmailDelivery
+        expr: histogram_quantile(0.95, emails_delivery_time_seconds_bucket) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "Slow email delivery"
+          description: "95th percentile of email delivery time is above 10 seconds"
+
+      # HTTP Request Alerts
+      - alert: HighHTTPErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{job="notification-service",status=~"5.."}[5m])) /
+            sum(rate(http_server_requests_seconds_count{job="notification-service"}[5m]))
+          ) * 100 > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High HTTP error rate"
+          description: "HTTP 5xx error rate is above 5% for more than 3 minutes"
+
+      - alert: HighHTTPRequestLatency
+        expr: histogram_quantile(0.95, http_server_requests_seconds_bucket{job="notification-service"}) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High HTTP request latency"
+          description: "95th percentile of HTTP request latency is above 1 second"
+
+      # Rate Limiting Alerts
+      - alert: HighRateLimitViolations
+        expr: increase(rate_limit_violations_total[1h]) > 100
+        for: 0m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High rate limit violations"
+          description: "More than 100 rate limit violations in the last hour"
+
+      # Security Alerts
+      - alert: SuspiciousSecurityEvents
+        expr: increase(security_audit_events_total[1h]) > 1000
+        for: 0m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High number of security audit events"
+          description: "More than 1000 security audit events in the last hour"
+
+      # Queue and Processing Alerts
+      - alert: HighPendingDigestNotifications
+        expr: notifications_digest_pending_count > 10000
+        for: 10m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High number of pending digest notifications"
+          description: "More than 10,000 notifications are pending for digest processing"
+
+      - alert: DigestProcessingStalled
+        expr: increase(digests_processed_total[30m]) == 0 and hour() >= 8 and hour() <= 10
+        for: 15m
+        labels:
+          severity: critical
+          service: notification-service
+        annotations:
+          summary: "Digest processing appears to be stalled"
+          description: "No digest processing activity during expected processing hours (8-10 AM)"
+
+      # Resource Usage Alerts
+      - alert: HighCPUUsage
+        expr: process_cpu_usage{job="notification-service"} > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% for more than 10 minutes"
+
+      - alert: LowDiskSpace
+        expr: disk_free_bytes{job="notification-service"} / disk_total_bytes{job="notification-service"} < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: notification-service
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 10%"
+
+      # JVM Alerts
+      - alert: HighGCTime
+        expr: increase(jvm_gc_pause_seconds_sum{job="notification-service"}[5m]) / increase(jvm_gc_pause_seconds_count{job="notification-service"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: notification-service
+        annotations:
+          summary: "High garbage collection time"
+          description: "Average GC time is above 100ms over the last 5 minutes"

@@ -51,6 +51,11 @@ public interface OAuthRefreshTokenRepository extends JpaRepository<OAuthRefreshT
      * Find tokens by session ID.
      */
     List<OAuthRefreshToken> findBySessionId(String sessionId);
+
+    /**
+     * Find tokens that replaced a given token (children in rotation chain).
+     */
+    List<OAuthRefreshToken> findByReplacedToken(OAuthRefreshToken replacedToken);
     
     /**
      * Find token chain by following replaced tokens.
@@ -94,4 +99,9 @@ public interface OAuthRefreshTokenRepository extends JpaRepository<OAuthRefreshT
     @Modifying
     @Query("DELETE FROM OAuthRefreshToken t WHERE t.expiresAt IS NOT NULL AND t.expiresAt <= :threshold")
     int deleteExpiredTokens(@Param("threshold") Instant threshold);
+
+    /**
+     * Count tokens for a client.
+     */
+    Long countByClientId(UUID clientId);
 }

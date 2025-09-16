@@ -1,5 +1,5 @@
-import type { User } from '@shared/types/auth';
-import { QueryClient } from '@tanstack/react-query';
+import type {User} from '@shared/types/auth';
+import {QueryClient} from '@tanstack/react-query';
 
 // Mock user for testing
 export const mockUser: User = {
@@ -32,8 +32,8 @@ export const createTestQueryClient = () => {
 };
 
 // Common test utilities
-export const waitForAsync = (ms: number = 0) => 
-  new Promise(resolve => setTimeout(resolve, ms));
+export const waitForAsync = (ms: number = 0) =>
+    new Promise(resolve => setTimeout(resolve, ms));
 
 export const mockConsoleError = () => {
   const originalError = console.error;

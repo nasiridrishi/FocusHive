@@ -184,6 +184,20 @@ public class Persona extends BaseEncryptedEntity {
     }
     
     /**
+     * Getter for isActive field - explicitly defined to avoid Lombok issues with boolean fields starting with "is"
+     */
+    public boolean isActive() {
+        return isActive;
+    }
+
+    /**
+     * Getter for isDefault field - explicitly defined to avoid Lombok issues with boolean fields starting with "is"
+     */
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    /**
      * Activate this persona and deactivate others for the user.
      */
     @PrePersist

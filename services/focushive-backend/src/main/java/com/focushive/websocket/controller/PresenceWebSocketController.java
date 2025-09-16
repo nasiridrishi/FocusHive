@@ -197,15 +197,58 @@ public class PresenceWebSocketController {
     @MessageMapping("/presence/disconnect")
     public void disconnect(Principal principal) {
         Long userId = getUserIdFromPrincipal(principal);
-        
+
         presenceTrackingService.removeUserPresence(userId);
-        
+
         log.info("User {} manually disconnected", userId);
     }
-    
+
+    /**
+     * Recover presence state after reconnection
+     */
+    @MessageMapping("/presence/recover")
+    @SendToUser("/queue/presence/recovered")
+    public WebSocketMessage<PresenceUpdate> recoverPresenceState(
+            @Payload Map<String, Object> recoveryData,
+            Principal principal) {
+
+        Long userId = recoveryData.get("userId") != null ?
+            Long.parseLong(recoveryData.get("userId").toString()) :
+            getUserIdFromPrincipal(principal);
+
+        String sessionId = recoveryData.get("sessionId") != null ?
+            recoveryData.get("sessionId").toString() : "recovered-" + System.currentTimeMillis();
+
+        PresenceUpdate recoveredPresence = presenceTrackingService.recoverPresenceState(userId, sessionId);
+
+        if (recoveredPresence == null) {
+            // No state to recover, set as online
+            recoveredPresence = PresenceUpdate.builder()
+                .userId(userId)
+                .status(PresenceUpdate.PresenceStatus.ONLINE)
+                .lastSeen(LocalDateTime.now())
+                .build();
+        }
+
+        log.info("Recovered presence state for user {}", userId);
+
+        return WebSocketMessage.<PresenceUpdate>builder()
+            .id(UUID.randomUUID().toString())
+            .type(WebSocketMessage.MessageType.INFO)
+            .event("presence.state.recovered")
+            .payload(recoveredPresence)
+            .timestamp(LocalDateTime.now())
+            .build();
+    }
+
     // Helper method to extract user ID from principal
     private Long getUserIdFromPrincipal(Principal principal) {
         // In a real implementation, extract from authentication token
-        return Long.parseLong(principal.getName());
+        try {
+            return Long.parseLong(principal.getName());
+        } catch (NumberFormatException e) {
+            // Fallback for testing
+            return (long) principal.getName().hashCode();
+        }
     }
 }

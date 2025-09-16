@@ -1,6 +1,6 @@
 /**
  * Analytics Query Hooks (Placeholder)
- * 
+ *
  * TODO: Implement analytics-related query hooks
  */
 

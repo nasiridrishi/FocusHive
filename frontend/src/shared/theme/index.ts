@@ -1,31 +1,38 @@
 /**
  * Theme System Exports
- * 
+ *
  * Central export point for the comprehensive responsive theme system
  */
 
 // Main theme exports
-export { default as theme, themeVariants, createLightTheme, createDarkTheme, themeUtils, containerQueries } from './theme'
+export {
+  default as theme,
+  themeVariants,
+  createLightTheme,
+  createDarkTheme,
+  themeUtils,
+  containerQueries
+} from './theme'
 
 // Breakpoint system
-export { 
-  breakpointValues, 
-  mediaQueries, 
-  deviceTypes, 
+export {
+  breakpointValues,
+  mediaQueries,
+  deviceTypes,
   responsivePatterns,
   containerBreakpoints,
   type BreakpointKey,
-  type ContainerBreakpointKey 
+  type ContainerBreakpointKey
 } from './breakpoints'
 
 // Typography system
-export { 
+export {
   createResponsiveTypography,
   fluidTypographyScale,
   typography,
   fontFamilies,
   fontWeights,
-  responsiveTypography 
+  responsiveTypography
 } from './typography'
 
 // Color palette system

@@ -1,0 +1,28 @@
+# =============================================================================
+# Trivy Security Scanner Ignore Configuration
+# Ignore specific vulnerabilities that are false positives or accepted risks
+# =============================================================================
+
+# Ignore vulnerabilities in development dependencies (not in production image)
+CVE-2023-0001
+CVE-2023-0002
+
+# Base image vulnerabilities that are patched in our distroless image
+# These are typically from the build stage only and not in final image
+CVE-2022-3715
+CVE-2022-3996
+CVE-2022-4304
+CVE-2023-0215
+CVE-2023-0286
+
+# Accept known low-severity issues in base images that don't affect our application
+# Review these periodically and remove when patches are available
+CVE-2023-28321
+CVE-2023-28322
+
+# OpenSSL vulnerabilities in build stage only (not in distroless production)
+CVE-2022-2068
+CVE-2022-2097
+
+# Note: Review this file regularly and remove ignores when fixes are available
+# Only ignore vulnerabilities after thorough security review

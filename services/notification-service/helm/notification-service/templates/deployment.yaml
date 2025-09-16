@@ -1,0 +1,222 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "notification-service.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "notification-service.labels" . | nindent 4 }}
+  annotations:
+    deployment.kubernetes.io/revision: "{{ .Release.Revision }}"
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "notification-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "notification-service.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "notification-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8083
+              protocol: TCP
+            - name: management
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.config.profiles | quote }}
+            - name: JAVA_OPTS
+              value: >-
+                -Xmx1g -Xms512m
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=100
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/tmp/heapdump.hprof
+                -Dspring.profiles.active={{ .Values.config.profiles }}
+                -Dlogging.config=classpath:logback-k8s.xml
+            # Database configuration
+            - name: DB_HOST
+              {{- if .Values.postgresql.enabled }}
+              value: "{{ include "notification-service.fullname" . }}-postgresql"
+              {{- else }}
+              value: {{ .Values.config.database.host | quote }}
+              {{- end }}
+            - name: DB_PORT
+              value: {{ .Values.config.database.port | quote }}
+            - name: DB_NAME
+              value: {{ .Values.config.database.name | quote }}
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "notification-service.secretName" . }}
+                  key: database-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "notification-service.secretName" . }}
+                  key: database-password
+            # Redis configuration
+            - name: REDIS_HOST
+              {{- if .Values.redis.enabled }}
+              value: "{{ include "notification-service.fullname" . }}-redis-master"
+              {{- else }}
+              value: {{ .Values.config.redis.host | quote }}
+              {{- end }}
+            - name: REDIS_PORT
+              value: {{ .Values.config.redis.port | quote }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "notification-service.secretName" . }}
+                  key: redis-password
+            # RabbitMQ configuration
+            - name: RABBITMQ_HOST
+              {{- if .Values.rabbitmq.enabled }}
+              value: "{{ include "notification-service.fullname" . }}-rabbitmq"
+              {{- else }}
+              value: {{ .Values.config.rabbitmq.host | quote }}
+              {{- end }}
+            - name: RABBITMQ_PORT
+              value: {{ .Values.config.rabbitmq.port | quote }}
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "notification-service.secretName" . }}
+                  key: rabbitmq-username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "notification-service.secretName" . }}
+                  key: rabbitmq-password
+            # JWT configuration
+            - name: JWT_ISSUER_URI
+              value: {{ .Values.config.jwt.issuerUri | quote }}
+            - name: JWT_JWK_SET_URI
+              value: {{ .Values.config.jwt.jwkSetUri | quote }}
+            # AWS SES configuration
+            - name: AWS_SES_SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "notification-service.secretName" . }}
+                  key: aws-ses-username
+            - name: AWS_SES_SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "notification-service.secretName" . }}
+                  key: aws-ses-password
+            - name: EMAIL_FROM
+              value: {{ .Values.config.email.from | quote }}
+            # Monitoring configuration
+            - name: ZIPKIN_URL
+              value: {{ .Values.config.monitoring.zipkinUrl | quote }}
+            - name: CORS_ALLOWED_ORIGINS
+              value: {{ .Values.config.cors.allowedOrigins | quote }}
+            - name: PROMETHEUS_ENABLED
+              value: {{ .Values.config.monitoring.prometheusEnabled | quote }}
+            - name: LOG_LEVEL_MONITORING
+              value: {{ .Values.config.monitoring.logLevel | quote }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+              readOnly: true
+            {{- if .Values.volumes.logs.enabled }}
+            - name: logs-volume
+              mountPath: /app/logs
+            {{- end }}
+            - name: tmp-volume
+              mountPath: /tmp
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.healthChecks.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthChecks.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthChecks.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthChecks.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthChecks.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthChecks.liveness.failureThreshold }}
+            successThreshold: 1
+          {{- end }}
+          {{- if .Values.healthChecks.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthChecks.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthChecks.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthChecks.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthChecks.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthChecks.readiness.failureThreshold }}
+            successThreshold: 1
+          {{- end }}
+          {{- if .Values.healthChecks.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.healthChecks.startup.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthChecks.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthChecks.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthChecks.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthChecks.startup.failureThreshold }}
+            successThreshold: 1
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: {{ .Values.securityContext.allowPrivilegeEscalation }}
+            readOnlyRootFilesystem: {{ .Values.securityContext.readOnlyRootFilesystem }}
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "notification-service.fullname" . }}-config
+            items:
+              - key: application-k8s.yml
+                path: application-k8s.yml
+        {{- if .Values.volumes.logs.enabled }}
+        - name: logs-volume
+          persistentVolumeClaim:
+            claimName: {{ include "notification-service.fullname" . }}-logs-pvc
+        {{- end }}
+        - name: tmp-volume
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst

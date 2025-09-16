@@ -1,6 +1,6 @@
 /**
  * Timer Query Hooks (Placeholder)
- * 
+ *
  * TODO: Implement timer-related query hooks
  */
 

@@ -1,6 +1,6 @@
 /**
  * E2E Tests for Notification System (UOL-313 - HIGH PRIORITY)
- * 
+ *
  * Tests cover:
  * 1. Multi-Channel Notification Delivery
  * 2. Real-time Notification Features
@@ -12,23 +12,18 @@
  * 8. Performance and Accessibility
  */
 
-import { test, expect } from '@playwright/test';
-import { NotificationPage } from '../../pages/NotificationPage';
-import { NotificationHelper, MockNotification, NotificationPreferences } from '../../helpers/notification.helper';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { 
-  TEST_USERS, 
-  validateTestEnvironment,
-  PERFORMANCE_THRESHOLDS,
-  TIMEOUTS 
-} from '../../helpers/test-data';
+import {expect, test} from '@playwright/test';
+import {NotificationPage} from '../../pages/NotificationPage';
+import {NotificationHelper} from '../../helpers/notification.helper';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {PERFORMANCE_THRESHOLDS, TEST_USERS, validateTestEnvironment} from '../../helpers/test-data';
 
 test.describe('Notification System', () => {
   let notificationPage: NotificationPage;
   let notificationHelper: NotificationHelper;
   let authHelper: AuthHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     // Initialize page objects and helpers
     notificationPage = new NotificationPage(page);
     notificationHelper = new NotificationHelper(page);
@@ -39,22 +34,22 @@ test.describe('Notification System', () => {
 
     // Clear any existing authentication and data
     await authHelper.clearStorage();
-    
+
     // Set up notification API mocking
     await notificationHelper.mockNotificationAPI();
   });
 
-  test.afterEach(async ({ page: _page }) => {
+  test.afterEach(async ({page: _page}) => {
     // Cleanup after each test
     await notificationHelper.cleanup();
     await authHelper.clearStorage();
   });
 
   test.describe('Multi-Channel Notification Delivery', () => {
-    test('should display in-app notifications correctly', async ({ page }) => {
+    test('should display in-app notifications correctly', async ({page}) => {
       // Mock authentication
       await authHelper.mockAuthentication(TEST_USERS.regular);
-      
+
       // Navigate to app
       await page.goto('/');
       await page.waitForLoadState('networkidle');
@@ -71,18 +66,18 @@ test.describe('Notification System', () => {
       await notificationHelper.simulateRealtimeNotification(notification);
 
       // Verify in-app display
-      const toast = await notificationPage.waitForToast(notification.title);
+      const _toast = await notificationPage.waitForToast(notification.title);
       await notificationPage.validateToastDisplay(notification.title, notification.message);
-      
+
       // Check notification center
       await notificationPage.openNotificationCenter();
       await notificationPage.validateNotificationDisplay(notification.title, notification.message);
     });
 
-    test('should handle browser push notifications', async ({ page }) => {
+    test('should handle browser push notifications', async ({page}) => {
       // Mock push notification permission as granted
       await notificationHelper.mockPushNotificationPermission('granted');
-      
+
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -100,15 +95,15 @@ test.describe('Notification System', () => {
       // Verify push notification was created
       const pushNotifications = await notificationHelper.getPushNotifications();
       expect(pushNotifications.length).toBeGreaterThan(0);
-      
+
       const pushNotif = pushNotifications.find(n => n.title.includes('Achievement'));
       expect(pushNotif).toBeDefined();
       expect(pushNotif?.title).toContain(notification.title);
     });
 
-    test('should format email notifications correctly', async ({ page }) => {
+    test('should format email notifications correctly', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
-      
+
       const notification = notificationHelper.generateMockNotification({
         type: 'buddy_checkin',
         title: 'Buddy Check-in',
@@ -118,7 +113,7 @@ test.describe('Notification System', () => {
 
       // Mock email API
       await notificationHelper.mockEmailNotification(notification);
-      
+
       await page.goto('/');
       await notificationHelper.simulateRealtimeNotification(notification);
 
@@ -126,7 +121,7 @@ test.describe('Notification System', () => {
       await page.evaluate((notif) => {
         fetch('/api/notifications/email', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             to: 'test@example.com',
             subject: `FocusHive: ${notif.title}`,
@@ -139,7 +134,7 @@ test.describe('Notification System', () => {
       await page.waitForTimeout(500); // Brief wait for API call
     });
 
-    test('should handle SMS notifications for critical alerts', async ({ page }) => {
+    test('should handle SMS notifications for critical alerts', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -160,18 +155,18 @@ test.describe('Notification System', () => {
   });
 
   test.describe('Real-time Notification Features', () => {
-    test('should deliver notifications within 5 seconds', async ({ page }) => {
+    test('should deliver notifications within 5 seconds', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
       // Measure notification latency
       const latency = await notificationHelper.measureNotificationLatency();
-      
+
       expect(latency).toBeLessThan(5000); // 5 second requirement
       console.log(`Notification latency: ${latency}ms`);
     });
 
-    test('should display notification badge counts correctly', async ({ page }) => {
+    test('should display notification badge counts correctly', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -193,7 +188,7 @@ test.describe('Notification System', () => {
       expect(await notificationPage.getNotificationCount()).toBe(3);
     });
 
-    test('should update badge count when notifications are read', async ({ page }) => {
+    test('should update badge count when notifications are read', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -204,7 +199,7 @@ test.describe('Notification System', () => {
         read: false,
       });
       const notification2 = notificationHelper.generateMockNotification({
-        id: 'test-notif-2', 
+        id: 'test-notif-2',
         title: 'Test Notification 2',
         read: false,
       });
@@ -218,12 +213,12 @@ test.describe('Notification System', () => {
       // Mark one as read
       await notificationPage.openNotificationCenter();
       await notificationPage.markNotificationAsRead(notification1.id);
-      
+
       // Count should decrease
       expect(await notificationPage.getNotificationCount()).toBe(1);
     });
 
-    test('should display toast notifications with proper timing', async ({ page }) => {
+    test('should display toast notifications with proper timing', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -236,13 +231,13 @@ test.describe('Notification System', () => {
       await notificationHelper.simulateRealtimeNotification(notification);
 
       // Toast should appear
-      const toast = await notificationPage.waitForToast(notification.title);
+      const _toast = await notificationPage.waitForToast(notification.title);
       await expect(toast).toBeVisible();
 
       // Toast should auto-dismiss after reasonable time (or can be manually closed)
       const dismissTime = 8000; // 8 seconds
       await page.waitForTimeout(dismissTime);
-      
+
       // Check if toast auto-dismissed or has close button
       const isVisible = await toast.isVisible();
       if (isVisible) {
@@ -252,7 +247,7 @@ test.describe('Notification System', () => {
       }
     });
 
-    test('should play notification sounds', async ({ page }) => {
+    test('should play notification sounds', async ({page}) => {
       await notificationHelper.mockNotificationSound();
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
@@ -269,7 +264,7 @@ test.describe('Notification System', () => {
       expect(soundPlayed).toBe(true);
     });
 
-    test('should trigger vibration on mobile devices', async ({ page }) => {
+    test('should trigger vibration on mobile devices', async ({page}) => {
       await notificationHelper.mockVibrationAPI();
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
@@ -288,7 +283,7 @@ test.describe('Notification System', () => {
   });
 
   test.describe('Notification Types and Triggers', () => {
-    test('should handle focus session reminders', async ({ page }) => {
+    test('should handle focus session reminders', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -306,7 +301,7 @@ test.describe('Notification System', () => {
       await expect(toast).toHaveClass(/info|reminder/);
     });
 
-    test('should handle hive activity notifications', async ({ page }) => {
+    test('should handle hive activity notifications', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -321,12 +316,12 @@ test.describe('Notification System', () => {
 
       await notificationPage.openNotificationCenter();
       await notificationPage.validateNotificationDisplay(
-        hiveNotification.title,
-        hiveNotification.message
+          hiveNotification.title,
+          hiveNotification.message
       );
     });
 
-    test('should handle buddy system notifications', async ({ page }) => {
+    test('should handle buddy system notifications', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -344,7 +339,7 @@ test.describe('Notification System', () => {
       await expect(toast).toContainText('focus session');
     });
 
-    test('should handle achievement notifications', async ({ page }) => {
+    test('should handle achievement notifications', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -362,7 +357,7 @@ test.describe('Notification System', () => {
       await expect(toast).toContainText('50 focus sessions');
     });
 
-    test('should handle system maintenance notifications', async ({ page }) => {
+    test('should handle system maintenance notifications', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -383,10 +378,10 @@ test.describe('Notification System', () => {
   });
 
   test.describe('User Preferences and Controls', () => {
-    test('should load and display notification preferences', async ({ page }) => {
+    test('should load and display notification preferences', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/notifications/settings');
-      
+
       await page.waitForLoadState('networkidle');
 
       // Should display settings panel or demo page
@@ -396,7 +391,7 @@ test.describe('Notification System', () => {
 
       if (settingsExists) {
         await expect(notificationPage.settingsPanel).toBeVisible();
-        
+
         // Check all channel toggles are present
         for (const toggle of Object.values(notificationPage.channelToggles)) {
           await expect(toggle).toBeVisible();
@@ -418,27 +413,27 @@ test.describe('Notification System', () => {
           `;
           document.body.appendChild(container);
         });
-        
+
         await expect(page.locator('[data-testid="notifications-demo"]')).toBeVisible();
       }
     });
 
-    test('should allow toggling notification channels', async ({ page }) => {
+    test('should allow toggling notification channels', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/notifications/settings');
 
       const settingsExists = await notificationPage.settingsPanel.count() > 0;
-      
+
       if (settingsExists) {
         await notificationPage.openNotificationSettings();
 
         // Test toggling push notifications
         await notificationPage.toggleChannel('push', false);
         await notificationPage.toggleChannel('email', true);
-        
+
         // Save preferences
         await notificationPage.saveNotificationSettings();
-        
+
         // Verify settings persist
         const channelStatus = await notificationPage.getChannelStatus();
         expect(channelStatus.push).toBe(false);
@@ -448,12 +443,12 @@ test.describe('Notification System', () => {
       }
     });
 
-    test('should respect do not disturb mode', async ({ page }) => {
+    test('should respect do not disturb mode', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
       // Enable do not disturb
-      const preferences = await notificationHelper.enableDoNotDisturb({
+      const _preferences = await notificationHelper.enableDoNotDisturb({
         start: '22:00',
         end: '08:00',
       });
@@ -490,7 +485,7 @@ test.describe('Notification System', () => {
       await expect(criticalToast).toBeVisible();
     });
 
-    test('should allow configuring notification categories', async ({ page }) => {
+    test('should allow configuring notification categories', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/notifications/settings');
 
@@ -501,23 +496,23 @@ test.describe('Notification System', () => {
 
         // Disable focus session notifications
         await notificationPage.toggleCategory('focusSessions', false);
-        
+
         // Enable buddy system notifications
         await notificationPage.toggleCategory('buddySystem', true);
-        
+
         await notificationPage.saveNotificationSettings();
 
         // Test that preferences are applied
         await page.goto('/');
-        
+
         // Focus session notification should not appear
         const focusNotification = notificationHelper.generateMockNotification({
           type: 'focus_session_reminder',
           title: 'Focus Session',
         });
-        
+
         await notificationHelper.simulateRealtimeNotification(focusNotification);
-        
+
         // Should not show toast (category disabled)
         await page.waitForTimeout(2000);
         const toastCount = await notificationPage.getVisibleToastCount();
@@ -527,7 +522,7 @@ test.describe('Notification System', () => {
       }
     });
 
-    test('should support digest frequency settings', async ({ page }) => {
+    test('should support digest frequency settings', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/notifications/settings');
 
@@ -547,7 +542,7 @@ test.describe('Notification System', () => {
   });
 
   test.describe('Notification Management', () => {
-    test('should display notification history', async ({ page }) => {
+    test('should display notification history', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -579,7 +574,7 @@ test.describe('Notification System', () => {
 
       // Should show all notifications in chronological order
       await expect(notificationPage.notificationList).toBeVisible();
-      
+
       // Check that notifications are displayed
       for (const notification of notifications) {
         const notifElement = await notificationPage.getNotificationById(notification.id);
@@ -587,7 +582,7 @@ test.describe('Notification System', () => {
       }
     });
 
-    test('should allow marking notifications as read/unread', async ({ page }) => {
+    test('should allow marking notifications as read/unread', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -608,7 +603,7 @@ test.describe('Notification System', () => {
       await expect(notifElement).toHaveClass(/read/);
     });
 
-    test('should support bulk notification actions', async ({ page }) => {
+    test('should support bulk notification actions', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -627,7 +622,7 @@ test.describe('Notification System', () => {
       // Test mark all as read
       if (await notificationPage.markAllReadButton.count() > 0) {
         await notificationPage.markAllAsRead();
-        
+
         // Verify all marked as read
         const unreadCount = await notificationPage.getNotificationCount();
         expect(unreadCount).toBe(0);
@@ -636,14 +631,14 @@ test.describe('Notification System', () => {
       // Test clear all
       if (await notificationPage.clearAllButton.count() > 0) {
         await notificationPage.clearAllNotifications();
-        
+
         // Verify all cleared
         const remainingNotifications = notificationPage.notificationList.locator('[data-testid^="notification-"]');
         await expect(remainingNotifications).toHaveCount(0);
       }
     });
 
-    test('should provide notification search and filtering', async ({ page }) => {
+    test('should provide notification search and filtering', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -677,7 +672,7 @@ test.describe('Notification System', () => {
         // Test search functionality
         await searchInput.fill('Focus');
         await page.waitForTimeout(500);
-        
+
         // Should show only focus-related notifications
         const visibleNotifications = page.locator('[data-testid^="notification-"]:visible');
         const count = await visibleNotifications.count();
@@ -693,7 +688,7 @@ test.describe('Notification System', () => {
   });
 
   test.describe('Performance and Scalability', () => {
-    test('should handle high notification volume', async ({ page }) => {
+    test('should handle high notification volume', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -706,9 +701,9 @@ test.describe('Notification System', () => {
           id: `perf-notif-${i}`,
           title: `Performance Test ${i + 1}`,
         });
-        
+
         await notificationHelper.simulateRealtimeNotification(notification);
-        
+
         if (i % 10 === 0) {
           await page.waitForTimeout(100); // Brief pause every 10 notifications
         }
@@ -725,19 +720,19 @@ test.describe('Notification System', () => {
       await expect(notificationPage.notificationCenter).toBeVisible();
     });
 
-    test('should maintain performance with large notification history', async ({ page }) => {
+    test('should maintain performance with large notification history', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
       // Simulate large notification history
       await page.route('**/api/notifications**', async route => {
         if (route.request().method() === 'GET') {
-          const largeNotificationSet = Array.from({ length: 1000 }, (_, i) => 
-            notificationHelper.generateMockNotification({
-              id: `history-notif-${i}`,
-              title: `Historical Notification ${i + 1}`,
-              timestamp: new Date(Date.now() - (i * 60000)), // Spread over time
-            })
+          const largeNotificationSet = Array.from({length: 1000}, (_, i) =>
+              notificationHelper.generateMockNotification({
+                id: `history-notif-${i}`,
+                title: `Historical Notification ${i + 1}`,
+                timestamp: new Date(Date.now() - (i * 60000)), // Spread over time
+              })
           );
 
           await route.fulfill({
@@ -765,7 +760,7 @@ test.describe('Notification System', () => {
   });
 
   test.describe('Accessibility', () => {
-    test('should be keyboard navigable', async ({ page }) => {
+    test('should be keyboard navigable', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -773,15 +768,15 @@ test.describe('Notification System', () => {
       const notification = notificationHelper.generateMockNotification({
         title: 'Accessibility Test',
       });
-      
+
       await notificationHelper.simulateRealtimeNotification(notification);
 
       // Test keyboard navigation to notification center
       await page.keyboard.press('Tab');
       await page.keyboard.press('Tab');
-      
+
       const focused = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
-      
+
       // Should be able to reach notification elements via keyboard
       if (focused?.includes('notification')) {
         await page.keyboard.press('Enter');
@@ -790,11 +785,11 @@ test.describe('Notification System', () => {
       // Open notification center with keyboard
       await notificationPage.notificationToggle.focus();
       await page.keyboard.press('Enter');
-      
+
       await expect(notificationPage.notificationCenter).toBeVisible();
     });
 
-    test('should have proper ARIA attributes', async ({ page }) => {
+    test('should have proper ARIA attributes', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -804,13 +799,13 @@ test.describe('Notification System', () => {
       });
 
       await notificationHelper.simulateRealtimeNotification(notification);
-      
-      const toast = await notificationPage.waitForToast(notification.title);
+
+      const _toast = await notificationPage.waitForToast(notification.title);
       await notificationHelper.validateNotificationAccessibility(toast);
 
       // Open notification center and check accessibility
       await notificationPage.openNotificationCenter();
-      
+
       // Check notification center accessibility
       await expect(notificationPage.notificationCenter).toHaveAttribute('role');
       await expect(notificationPage.notificationCenter).toHaveAttribute('aria-label');
@@ -821,7 +816,7 @@ test.describe('Notification System', () => {
       }
     });
 
-    test('should support screen readers', async ({ page }) => {
+    test('should support screen readers', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -832,19 +827,19 @@ test.describe('Notification System', () => {
 
       await notificationHelper.simulateRealtimeNotification(notification);
 
-      const toast = await notificationPage.waitForToast(notification.title);
-      
+      const _toast = await notificationPage.waitForToast(notification.title);
+
       // Check for screen reader friendly attributes
       await expect(toast).toHaveAttribute('role', 'alert');
       await expect(toast).toHaveAttribute('aria-live', 'polite');
-      
+
       // Check that text is accessible
       const toastText = await toast.textContent();
       expect(toastText).toContain(notification.title);
       expect(toastText).toContain(notification.message);
     });
 
-    test('should have accessible settings interface', async ({ page }) => {
+    test('should have accessible settings interface', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/notifications/settings');
 
@@ -858,7 +853,7 @@ test.describe('Notification System', () => {
         const demoPage = page.locator('[data-testid="notifications-demo"]');
         if (await demoPage.count() > 0) {
           await expect(demoPage).toBeVisible();
-          
+
           // Check basic accessibility
           const headings = demoPage.locator('h1, h2, h3');
           if (await headings.count() > 0) {
@@ -870,7 +865,7 @@ test.describe('Notification System', () => {
   });
 
   test.describe('Edge Cases and Error Handling', () => {
-    test('should handle network failures gracefully', async ({ page }) => {
+    test('should handle network failures gracefully', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -885,18 +880,18 @@ test.describe('Notification System', () => {
       // Should show error message or fallback
       const errorMessage = page.locator('[data-testid="notification-error"]');
       const emptyState = page.locator('[data-testid="notifications-empty"]');
-      
+
       const hasError = await errorMessage.count() > 0;
       const hasEmptyState = await emptyState.count() > 0;
-      
+
       expect(hasError || hasEmptyState).toBe(true);
-      
+
       if (hasError) {
         await expect(errorMessage).toContainText(/error|failed|unavailable/i);
       }
     });
 
-    test('should handle malformed notification data', async ({ page }) => {
+    test('should handle malformed notification data', async ({page}) => {
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/');
 
@@ -915,19 +910,19 @@ test.describe('Notification System', () => {
 
       // Should not crash or show broken UI
       await page.waitForTimeout(1000);
-      
+
       const toastCount = await notificationPage.getVisibleToastCount();
       expect(toastCount).toBe(0); // Malformed notification should be rejected
     });
 
-    test('should handle permission denied for push notifications', async ({ page }) => {
+    test('should handle permission denied for push notifications', async ({page}) => {
       await notificationHelper.mockPushNotificationPermission('denied');
       await authHelper.mockAuthentication(TEST_USERS.regular);
       await page.goto('/notifications/settings');
 
       // Should show appropriate message for denied permissions
       const permissionMessage = page.locator('[data-testid="push-permission-denied"]');
-      
+
       if (await permissionMessage.count() > 0) {
         await expect(permissionMessage).toBeVisible();
         await expect(permissionMessage).toContainText(/denied|blocked|enable/i);
@@ -936,7 +931,7 @@ test.describe('Notification System', () => {
       }
     });
 
-    test('should handle browser without notification support', async ({ page }) => {
+    test('should handle browser without notification support', async ({page}) => {
       // Mock browser without Notification API
       await page.addInitScript(() => {
         // Remove Notification API
@@ -955,7 +950,7 @@ test.describe('Notification System', () => {
       await notificationHelper.simulateRealtimeNotification(notification);
 
       // Should show in-app notification as fallback
-      const toast = await notificationPage.waitForToast(notification.title);
+      const _toast = await notificationPage.waitForToast(notification.title);
       await expect(toast).toBeVisible();
     });
   });

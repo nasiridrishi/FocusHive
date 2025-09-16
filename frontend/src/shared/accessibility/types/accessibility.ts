@@ -2,14 +2,15 @@
  * TypeScript types for accessibility features
  */
 
-import { AriaProperties } from '../utils/ariaUtils';
-import { WCAGLevel } from '../constants/wcag';
+import {AriaProperties} from '../utils/ariaUtils';
+import {WCAGLevel} from '../constants/wcag';
 
 /**
  * Focus management types
  */
 export interface FocusableElement extends HTMLElement {
   focus(): void;
+
   blur(): void;
 }
 
@@ -147,16 +148,16 @@ export interface AccessibilityProps extends AriaProperties {
   tabIndex?: number;
   onFocus?: (event: React.FocusEvent) => void;
   onBlur?: (event: React.FocusEvent) => void;
-  
+
   // Keyboard interaction
   onKeyDown?: (event: React.KeyboardEvent) => void;
   onKeyUp?: (event: React.KeyboardEvent) => void;
-  
+
   // Screen reader
   screenReaderLabel?: string;
   announceOnChange?: boolean;
   announcementLevel?: AnnounceLevel;
-  
+
   // Visual accessibility
   highContrast?: boolean;
   reducedMotion?: boolean;
@@ -251,15 +252,15 @@ export interface PointerSupport {
 /**
  * Landmark and region types
  */
-export type LandmarkRole = 
-  | 'banner'
-  | 'complementary'
-  | 'contentinfo'
-  | 'form'
-  | 'main'
-  | 'navigation'
-  | 'region'
-  | 'search';
+export type LandmarkRole =
+    | 'banner'
+    | 'complementary'
+    | 'contentinfo'
+    | 'form'
+    | 'main'
+    | 'navigation'
+    | 'region'
+    | 'search';
 
 export interface LandmarkProps {
   role?: LandmarkRole;
@@ -347,16 +348,16 @@ export interface UseAccessibilityReturn {
   // User preferences
   preferences: UserPreferences;
   updatePreferences: (preferences: Partial<UserPreferences>) => void;
-  
+
   // Announcement system
   announce: (message: string, level?: AnnounceLevel) => void;
-  
+
   // Focus management
   focusTrap: UseFocusTrapReturn;
-  
+
   // Color and contrast
   validateContrast: (fg: string, bg: string) => ContrastRatio;
-  
+
   // Testing
   runAudit: (container?: HTMLElement) => Promise<AccessibilityAudit>;
 }
@@ -366,7 +367,17 @@ export interface UseAccessibilityReturn {
  */
 export interface AccessibilityEventMap {
   'accessibility:announce': CustomEvent<{ message: string; level: AnnounceLevel }>;
-  'accessibility:focus-change': CustomEvent<{ previous: HTMLElement | null; current: HTMLElement | null }>;
-  'accessibility:preference-change': CustomEvent<{ preference: keyof UserPreferences; value: unknown }>;
-  'accessibility:violation': CustomEvent<{ test: string; element: HTMLElement; severity: 'error' | 'warning' }>;
+  'accessibility:focus-change': CustomEvent<{
+    previous: HTMLElement | null;
+    current: HTMLElement | null
+  }>;
+  'accessibility:preference-change': CustomEvent<{
+    preference: keyof UserPreferences;
+    value: unknown
+  }>;
+  'accessibility:violation': CustomEvent<{
+    test: string;
+    element: HTMLElement;
+    severity: 'error' | 'warning'
+  }>;
 }

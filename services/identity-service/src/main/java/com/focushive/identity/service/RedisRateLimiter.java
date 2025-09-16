@@ -9,6 +9,7 @@ import io.github.bucket4j.EstimationProbe;
 import io.github.bucket4j.redis.jedis.cas.JedisBasedProxyManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -27,11 +28,12 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Profile("!test")
+@ConditionalOnProperty(name = "focushive.rate-limiting.enabled", havingValue = "true", matchIfMissing = true)
 public class RedisRateLimiter implements IRateLimiter {
-    
+
     private final JedisPool jedisPool;
     private final StringRedisTemplate redisTemplate;
-    private final JedisBasedProxyManager proxyManager;
+    private final JedisBasedProxyManager<String> proxyManager;
     
     private static final String RATE_LIMIT_KEY_PREFIX = "rate_limit:";
     private static final String VIOLATION_KEY_PREFIX = "rate_limit_violations:";
@@ -56,7 +58,7 @@ public class RedisRateLimiter implements IRateLimiter {
             
             // Get the bucket from Redis
             Bucket bucket = proxyManager.builder()
-                    .build(bucketKey.getBytes(), config);
+                    .build(bucketKey, config);
             
             // Check if request is allowed
             boolean allowed = bucket.tryConsume(1);
@@ -79,7 +81,7 @@ public class RedisRateLimiter implements IRateLimiter {
     
     /**
      * Gets the remaining tokens in the bucket.
-     * 
+     *
      * @param key unique identifier for the rate limit bucket
      * @param rateLimit rate limit configuration
      * @return number of remaining tokens
@@ -88,9 +90,9 @@ public class RedisRateLimiter implements IRateLimiter {
         try {
             String bucketKey = RATE_LIMIT_KEY_PREFIX + key;
             BucketConfiguration config = getBucketConfiguration(rateLimit);
-            
+
             Bucket bucket = proxyManager.builder()
-                    .build(bucketKey.getBytes(), config);
+                    .build(bucketKey, config);
             
             return bucket.getAvailableTokens();
             
@@ -102,7 +104,7 @@ public class RedisRateLimiter implements IRateLimiter {
     
     /**
      * Gets the time until the next token is available.
-     * 
+     *
      * @param key unique identifier for the rate limit bucket
      * @param rateLimit rate limit configuration
      * @return seconds until next token is available
@@ -111,9 +113,9 @@ public class RedisRateLimiter implements IRateLimiter {
         try {
             String bucketKey = RATE_LIMIT_KEY_PREFIX + key;
             BucketConfiguration config = getBucketConfiguration(rateLimit);
-            
+
             Bucket bucket = proxyManager.builder()
-                    .build(bucketKey.getBytes(), config);
+                    .build(bucketKey, config);
             
             EstimationProbe probe = bucket.estimateAbilityToConsume(1);
             // Return seconds to wait for refill, or 0 if tokens are available
@@ -172,7 +174,7 @@ public class RedisRateLimiter implements IRateLimiter {
                         .addLimit(Bandwidth.simple(1, Duration.ofSeconds(penaltyWindow)))
                         .build();
                 
-                proxyManager.builder().build(penaltyKey.getBytes(), penaltyConfig);
+                proxyManager.builder().build(penaltyKey, penaltyConfig);
                 
                 log.warn("Applied progressive penalty for key: {} (violation count: {})", key, violationCount);
             }
@@ -253,6 +255,102 @@ public class RedisRateLimiter implements IRateLimiter {
         } catch (Exception e) {
             log.error("Error getting violation count for key: {}", key, e);
             return 0;
+        }
+    }
+
+    /**
+     * Increments violation count and returns the new count.
+     */
+    public long incrementViolationCount(String key) {
+        try {
+            Long count = redisTemplate.opsForValue().increment(key);
+            // Set expiry for violation count (1 hour)
+            redisTemplate.expire(key, Duration.ofHours(1));
+            return count != null ? count : 1;
+        } catch (Exception e) {
+            log.error("Error incrementing violation count for key: {}", key, e);
+            return 1;
+        }
+    }
+
+    /**
+     * Suspends a client for a specified duration.
+     */
+    public void suspendClient(String suspensionKey, long durationSeconds) {
+        try {
+            redisTemplate.opsForValue().set(suspensionKey, "suspended", Duration.ofSeconds(durationSeconds));
+            log.warn("Client suspended: {} for {} seconds", suspensionKey, durationSeconds);
+        } catch (Exception e) {
+            log.error("Error suspending client: {}", suspensionKey, e);
+        }
+    }
+
+    /**
+     * Checks if a client is currently suspended.
+     */
+    public boolean isSuspended(String suspensionKey) {
+        try {
+            return redisTemplate.hasKey(suspensionKey);
+        } catch (Exception e) {
+            log.error("Error checking suspension for key: {}", suspensionKey, e);
+            return false;
+        }
+    }
+
+    /**
+     * Gets the reset time for a rate limit window.
+     */
+    public long getResetTime(String key, int windowMinutes) {
+        try {
+            Long ttl = redisTemplate.getExpire(RATE_LIMIT_KEY_PREFIX + key, TimeUnit.MILLISECONDS);
+            if (ttl != null && ttl > 0) {
+                return System.currentTimeMillis() + ttl;
+            } else {
+                // If no TTL or key doesn't exist, return window time from now
+                return System.currentTimeMillis() + (windowMinutes * 60 * 1000L);
+            }
+        } catch (Exception e) {
+            log.error("Error getting reset time for key: {}", key, e);
+            return System.currentTimeMillis() + (windowMinutes * 60 * 1000L);
+        }
+    }
+
+    /**
+     * Resets rate limit for a specific key.
+     */
+    public void resetLimit(String key) {
+        try {
+            redisTemplate.delete(key);
+            log.info("Reset rate limit for key: {}", key);
+        } catch (Exception e) {
+            log.error("Error resetting rate limit for key: {}", key, e);
+        }
+    }
+
+    /**
+     * Clears violations matching a pattern.
+     */
+    public void clearViolations(String pattern) {
+        try {
+            var keys = redisTemplate.keys(pattern);
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+                log.info("Cleared {} violation keys matching pattern: {}", keys.size(), pattern);
+            }
+        } catch (Exception e) {
+            log.error("Error clearing violations for pattern: {}", pattern, e);
+        }
+    }
+
+    /**
+     * Clears suspension for a client.
+     */
+    public void clearSuspension(String suspensionKey) {
+        try {
+            redisTemplate.delete(suspensionKey);
+            log.info("Cleared suspension for key: {}", suspensionKey);
+        } catch (Exception e) {
+            log.error("Error clearing suspension for key: {}", suspensionKey, e);
         }
     }
 }

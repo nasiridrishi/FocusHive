@@ -1,9 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig as _AxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
-import { tokenStorage } from './authApi';
+import axios, {AxiosError, AxiosInstance, AxiosResponse} from 'axios';
+import {tokenStorage} from './authApi';
 
 /**
  * HTTP Interceptors Service
- * 
+ *
  * Provides centralized HTTP interceptors for:
  * - Automatic JWT token attachment
  * - Token refresh on 401 responses
@@ -38,111 +38,111 @@ export function createAuthenticatedAxiosInstance(baseURL: string = API_BASE_URL)
 
   // Request interceptor
   instance.interceptors.request.use(
-    (config) => {
-      // Add authentication token if available
-      const token = tokenStorage.getAccessToken();
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+      (config) => {
+        // Add authentication token if available
+        const token = tokenStorage.getAccessToken();
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
 
-      // Add correlation ID for request tracking
-      const correlationId = generateCorrelationId();
-      if (config.headers) {
-        config.headers['X-Correlation-ID'] = correlationId;
-      }
+        // Add correlation ID for request tracking
+        const correlationId = generateCorrelationId();
+        if (config.headers) {
+          config.headers['X-Correlation-ID'] = correlationId;
+        }
 
-      // Development logging
-      if (import.meta.env.DEV) {
-        // HTTP request logged in development only
-      }
+        // Development logging
+        if (import.meta.env.DEV) {
+          // HTTP request logged in development only
+        }
 
-      return config;
-    },
-    (error) => {
-      // HTTP request error logged by error boundary
-      return Promise.reject(error);
-    }
+        return config;
+      },
+      (error) => {
+        // HTTP request error logged by error boundary
+        return Promise.reject(error);
+      }
   );
 
   // Response interceptor
   instance.interceptors.response.use(
-    (response: AxiosResponse) => {
-      // Development logging
-      if (import.meta.env.DEV) {
-        // HTTP response logged in development only
-      }
+      (response: AxiosResponse) => {
+        // Development logging
+        if (import.meta.env.DEV) {
+          // HTTP response logged in development only
+        }
 
-      return response;
-    },
-    async (error: AxiosError) => {
-      const originalRequest = error.config;
-      const _correlationId = originalRequest?.headers?.['X-Correlation-ID'];
+        return response;
+      },
+      async (error: AxiosError) => {
+        const originalRequest = error.config;
+        const _correlationId = originalRequest?.headers?.['X-Correlation-ID'];
 
-      // Development logging
-      if (import.meta.env.DEV) {
-        // HTTP response error logged in development only
-      }
+        // Development logging
+        if (import.meta.env.DEV) {
+          // HTTP response error logged in development only
+        }
 
-      // Handle 401 Unauthorized - attempt token refresh
-      if (error.response?.status === 401 && originalRequest && !originalRequest._isRetry) {
-        if (isRefreshing) {
-          // If a refresh is already in progress, queue this request
-          return new Promise((resolve, reject) => {
-            failedRequestQueue.push({ resolve, reject });
-          }).then(() => {
-            // Update the authorization header and retry
-            const newToken = tokenStorage.getAccessToken();
-            if (newToken && originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        // Handle 401 Unauthorized - attempt token refresh
+        if (error.response?.status === 401 && originalRequest && !originalRequest._isRetry) {
+          if (isRefreshing) {
+            // If a refresh is already in progress, queue this request
+            return new Promise((resolve, reject) => {
+              failedRequestQueue.push({resolve, reject});
+            }).then(() => {
+              // Update the authorization header and retry
+              const newToken = tokenStorage.getAccessToken();
+              if (newToken && originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              }
+              return instance(originalRequest);
+            }).catch((refreshError) => {
+              return Promise.reject(refreshError);
+            });
+          }
+
+          originalRequest._isRetry = true;
+          isRefreshing = true;
+
+          try {
+            const newTokens = await refreshTokenRequest();
+
+            // Update stored tokens
+            tokenStorage.setAccessToken(newTokens.token);
+            tokenStorage.setRefreshToken(newTokens.refreshToken);
+
+            // Process queued requests
+            failedRequestQueue.forEach(({resolve}) => resolve());
+            failedRequestQueue = [];
+
+            // Update the authorization header and retry the original request
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newTokens.token}`;
             }
+
             return instance(originalRequest);
-          }).catch((refreshError) => {
+          } catch (refreshError) {
+            // Refresh failed, clear tokens and reject queued requests
+            failedRequestQueue.forEach(({reject}) => reject(refreshError));
+            failedRequestQueue = [];
+
+            tokenStorage.clearAllTokens();
+
+            // Redirect to login if in browser environment
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
+
             return Promise.reject(refreshError);
-          });
+          } finally {
+            isRefreshing = false;
+          }
         }
 
-        originalRequest._isRetry = true;
-        isRefreshing = true;
-
-        try {
-          const newTokens = await refreshTokenRequest();
-          
-          // Update stored tokens
-          tokenStorage.setAccessToken(newTokens.token);
-          tokenStorage.setRefreshToken(newTokens.refreshToken);
-
-          // Process queued requests
-          failedRequestQueue.forEach(({ resolve }) => resolve());
-          failedRequestQueue = [];
-
-          // Update the authorization header and retry the original request
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newTokens.token}`;
-          }
-
-          return instance(originalRequest);
-        } catch (refreshError) {
-          // Refresh failed, clear tokens and reject queued requests
-          failedRequestQueue.forEach(({ reject }) => reject(refreshError));
-          failedRequestQueue = [];
-          
-          tokenStorage.clearAllTokens();
-          
-          // Redirect to login if in browser environment
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
-          
-          return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
-        }
+        // Standardize error response
+        const standardizedError = standardizeError(error);
+        return Promise.reject(standardizedError);
       }
-
-      // Standardize error response
-      const standardizedError = standardizeError(error);
-      return Promise.reject(standardizedError);
-    }
   );
 
   return instance;
@@ -153,19 +153,19 @@ export function createAuthenticatedAxiosInstance(baseURL: string = API_BASE_URL)
  */
 async function refreshTokenRequest(): Promise<{ token: string; refreshToken: string }> {
   const refreshToken = tokenStorage.getRefreshToken();
-  
+
   if (!refreshToken) {
     throw new Error('No refresh token available');
   }
 
   const response = await axios.post<{ token: string; refreshToken: string }>(
-    `${API_BASE_URL}/api/auth/refresh`,
-    { refreshToken },
-    {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: REQUEST_TIMEOUT,
-      withCredentials: true
-    }
+      `${API_BASE_URL}/api/auth/refresh`,
+      {refreshToken},
+      {
+        headers: {'Content-Type': 'application/json'},
+        timeout: REQUEST_TIMEOUT,
+        withCredentials: true
+      }
   );
 
   return response.data;
@@ -226,21 +226,33 @@ function getErrorCode(status: number, data: unknown): string {
     const obj = data as Record<string, unknown>;
     if (typeof obj.code === 'string') return obj.code;
   }
-  
+
   // Default codes based on HTTP status
   switch (status) {
-    case 400: return 'BAD_REQUEST';
-    case 401: return 'UNAUTHORIZED';
-    case 403: return 'FORBIDDEN';
-    case 404: return 'NOT_FOUND';
-    case 409: return 'CONFLICT';
-    case 422: return 'VALIDATION_ERROR';
-    case 429: return 'TOO_MANY_REQUESTS';
-    case 500: return 'INTERNAL_SERVER_ERROR';
-    case 502: return 'BAD_GATEWAY';
-    case 503: return 'SERVICE_UNAVAILABLE';
-    case 504: return 'GATEWAY_TIMEOUT';
-    default: return 'HTTP_ERROR';
+    case 400:
+      return 'BAD_REQUEST';
+    case 401:
+      return 'UNAUTHORIZED';
+    case 403:
+      return 'FORBIDDEN';
+    case 404:
+      return 'NOT_FOUND';
+    case 409:
+      return 'CONFLICT';
+    case 422:
+      return 'VALIDATION_ERROR';
+    case 429:
+      return 'TOO_MANY_REQUESTS';
+    case 500:
+      return 'INTERNAL_SERVER_ERROR';
+    case 502:
+      return 'BAD_GATEWAY';
+    case 503:
+      return 'SERVICE_UNAVAILABLE';
+    case 504:
+      return 'GATEWAY_TIMEOUT';
+    default:
+      return 'HTTP_ERROR';
   }
 }
 

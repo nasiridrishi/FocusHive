@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Define properties -->
+    <springProfile name="!prod">
+        <property name="CONSOLE_LOG_PATTERN" value="%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"/>
+    </springProfile>
+
+    <springProfile name="prod">
+        <property name="CONSOLE_LOG_PATTERN" value="%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n"/>
+    </springProfile>
+
+    <!-- Console appender for local development -->
+    <springProfile name="!prod">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- JSON Console appender for production -->
+    <springProfile name="prod">
+        <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp>
+                        <fieldName>timestamp</fieldName>
+                        <pattern>yyyy-MM-dd'T'HH:mm:ss.SSSZ</pattern>
+                    </timestamp>
+                    <version/>
+                    <logLevel>
+                        <fieldName>level</fieldName>
+                    </logLevel>
+                    <loggerName>
+                        <fieldName>logger</fieldName>
+                    </loggerName>
+                    <mdc/>
+                    <message>
+                        <fieldName>message</fieldName>
+                    </message>
+                    <stackTrace>
+                        <fieldName>stackTrace</fieldName>
+                    </stackTrace>
+                    <pattern>
+                        <pattern>
+                            {
+                                "service": "buddy-service",
+                                "environment": "${ENVIRONMENT:-prod}",
+                                "version": "${APP_VERSION:-unknown}",
+                                "hostname": "${HOSTNAME:-unknown}",
+                                "thread": "%thread"
+                            }
+                        </pattern>
+                    </pattern>
+                </providers>
+                <!-- Sanitize sensitive data -->
+                <jsonGeneratorDecorator class="net.logstash.logback.decorate.CompositeJsonGeneratorDecorator">
+                    <decorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
+                        <defaultMask>***MASKED***</defaultMask>
+                        <path>password</path>
+                        <path>token</path>
+                        <path>authorization</path>
+                        <path>secret</path>
+                        <path>key</path>
+                        <path>jwt</path>
+                        <path>apiKey</path>
+                        <path>access_token</path>
+                        <path>refresh_token</path>
+                        <path>credential</path>
+                        <path>auth</path>
+                        <path>*.password</path>
+                        <path>*.token</path>
+                        <path>*.secret</path>
+                        <path>*.key</path>
+                        <path>*.credential</path>
+                    </decorator>
+                </jsonGeneratorDecorator>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- Async wrapper for better performance in production -->
+    <springProfile name="prod">
+        <appender name="ASYNC_STDOUT_JSON" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="STDOUT_JSON"/>
+            <queueSize>1024</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <includeCallerData>false</includeCallerData>
+            <neverBlock>true</neverBlock>
+        </appender>
+    </springProfile>
+
+    <!-- Root logger configuration -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="ASYNC_STDOUT_JSON"/>
+        </root>
+        
+        <!-- Application-specific logger -->
+        <logger name="com.focushive.buddy" level="INFO" additivity="false">
+            <appender-ref ref="ASYNC_STDOUT_JSON"/>
+        </logger>
+        
+        <!-- Security audit logger -->
+        <logger name="org.springframework.security" level="WARN" additivity="false">
+            <appender-ref ref="ASYNC_STDOUT_JSON"/>
+        </logger>
+        
+        <!-- Access log equivalent -->
+        <logger name="org.springframework.web.servlet.DispatcherServlet" level="INFO" additivity="false">
+            <appender-ref ref="ASYNC_STDOUT_JSON"/>
+        </logger>
+    </springProfile>
+
+    <!-- Health check and actuator endpoints - less verbose -->
+    <logger name="org.springframework.boot.actuate" level="WARN"/>
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="WARN"/>
+    
+    <!-- Database connection logging -->
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl" level="WARN"/>
+    
+    <!-- Reduce Redis noise -->
+    <logger name="io.lettuce.core.protocol" level="WARN"/>
+    <logger name="org.springframework.data.redis" level="WARN"/>
+    
+    <!-- Circuit breaker logging -->
+    <logger name="io.github.resilience4j" level="INFO"/>
+</configuration>

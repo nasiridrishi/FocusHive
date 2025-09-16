@@ -11,25 +11,36 @@ declare global {
 export namespace Spotify {
   class Player {
     constructor(options: SpotifyPlayerOptions);
-    
+
     // Connection
     connect(): Promise<boolean>;
+
     disconnect(): void;
-    
+
     // Listeners
     addListener(event: PlayerEventName, callback: PlayerEventCallback): boolean;
+
     removeListener(event: PlayerEventName, callback?: PlayerEventCallback): boolean;
-    
+
     // Playback
     getCurrentState(): Promise<PlaybackState | null>;
+
     setName(name: string): Promise<void>;
+
     getVolume(): Promise<number>;
+
     setVolume(volume: number): Promise<void>;
+
     pause(): Promise<void>;
+
     resume(): Promise<void>;
+
     togglePlay(): Promise<void>;
+
     seek(positionMs: number): Promise<void>;
+
     previousTrack(): Promise<void>;
+
     nextTrack(): Promise<void>;
   }
 
@@ -102,20 +113,20 @@ export namespace Spotify {
     device_id: string;
   }
 
-  type PlayerEventName = 
-    | 'ready'
-    | 'not_ready'
-    | 'player_state_changed'
-    | 'initialization_error'
-    | 'authentication_error'
-    | 'account_error'
-    | 'playback_error';
+  type PlayerEventName =
+      | 'ready'
+      | 'not_ready'
+      | 'player_state_changed'
+      | 'initialization_error'
+      | 'authentication_error'
+      | 'account_error'
+      | 'playback_error';
 
-  type PlayerEventCallback = 
-    | ((event: ReadyEvent) => void)
-    | ((event: NotReadyEvent) => void)
-    | ((state: PlaybackState | null) => void)
-    | ((event: ErrorEvent) => void);
+  type PlayerEventCallback =
+      | ((event: ReadyEvent) => void)
+      | ((event: NotReadyEvent) => void)
+      | ((state: PlaybackState | null) => void)
+      | ((event: ErrorEvent) => void);
 }
 
 // Spotify Web API types

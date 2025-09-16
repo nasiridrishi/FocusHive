@@ -3,21 +3,20 @@
  * Comprehensive OAuth testing including Google, GitHub, account linking, and error scenarios
  */
 
-import { test, expect } from '@playwright/test';
-import { EnhancedAuthHelper } from '../../helpers/auth-helpers';
-import { 
-  AUTH_TEST_USERS, 
-  OAUTH_PROVIDERS,
-  MOCK_OAUTH_PROFILES,
+import {expect, test} from '@playwright/test';
+import {EnhancedAuthHelper} from '../../helpers/auth-helpers';
+import {
+  AUTH_PERFORMANCE_THRESHOLDS,
+  AUTH_TEST_USERS,
   generateUniqueAuthUser,
   MOBILE_VIEWPORTS,
-  AUTH_PERFORMANCE_THRESHOLDS
+  MOCK_OAUTH_PROFILES
 } from '../../helpers/auth-fixtures';
 
 test.describe('OAuth2 Login Integration', () => {
   let authHelper: EnhancedAuthHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new EnhancedAuthHelper(page);
     await authHelper.clearStorage();
   });
@@ -34,8 +33,8 @@ test.describe('OAuth2 Login Integration', () => {
       const googleButton = authHelper.page.locator('button:has-text("Google"), a:has-text("Google"), [data-testid="google-oauth"]');
       const githubButton = authHelper.page.locator('button:has-text("GitHub"), a:has-text("GitHub"), [data-testid="github-oauth"]');
 
-      const hasGoogleButton = await googleButton.isVisible({ timeout: 5000 }).catch(() => false);
-      const hasGithubButton = await githubButton.isVisible({ timeout: 5000 }).catch(() => false);
+      const hasGoogleButton = await googleButton.isVisible({timeout: 5000}).catch(() => false);
+      const hasGithubButton = await githubButton.isVisible({timeout: 5000}).catch(() => false);
 
       // At least one OAuth provider should be available
       expect(hasGoogleButton || hasGithubButton).toBeTruthy();
@@ -56,7 +55,7 @@ test.describe('OAuth2 Login Integration', () => {
 
       if (buttonCount > 0) {
         const firstButton = oauthButtons.first();
-        
+
         // Button should be visible and clickable
         await expect(firstButton).toBeVisible();
         await expect(firstButton).toBeEnabled();
@@ -75,12 +74,12 @@ test.describe('OAuth2 Login Integration', () => {
   });
 
   test.describe('Google OAuth Flow', () => {
-    test('should initiate Google OAuth login', async ({ page }) => {
+    test('should initiate Google OAuth login', async ({page}) => {
       await authHelper.mockOAuthResponse('GOOGLE', true);
       await authHelper.navigateToLogin();
 
       const googleButton = authHelper.page.locator('button:has-text("Google"), a:has-text("Google"), [data-testid="google-oauth"]');
-      const hasGoogleButton = await googleButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasGoogleButton = await googleButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasGoogleButton) {
         test.skip('Google OAuth button not found');
@@ -100,10 +99,10 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should redirect to OAuth provider (or callback)
       await authHelper.page.waitForTimeout(2000);
-      
+
       const currentUrl = authHelper.page.url();
       const isOAuthFlow = currentUrl.includes('oauth') || currentUrl.includes('google') || currentUrl.includes('/dashboard');
-      
+
       expect(isOAuthFlow).toBeTruthy();
     });
 
@@ -124,19 +123,19 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should show Google profile information
       const profileInfo = authHelper.page.locator(':text("Google Test User"), :text("oauth.google@example.com")');
-      const hasProfileInfo = await profileInfo.first().isVisible({ timeout: 2000 }).catch(() => false);
+      const hasProfileInfo = await profileInfo.first().isVisible({timeout: 2000}).catch(() => false);
 
       if (hasProfileInfo) {
         console.log('✅ Google profile data populated');
       }
     });
 
-    test('should handle Google OAuth errors', async ({ page }) => {
+    test('should handle Google OAuth errors', async ({page: _page}) => {
       await authHelper.mockOAuthResponse('GOOGLE', false);
       await authHelper.navigateToLogin();
 
       const googleButton = authHelper.page.locator('button:has-text("Google"), a:has-text("Google")');
-      const hasGoogleButton = await googleButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasGoogleButton = await googleButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasGoogleButton) {
         test.skip('Google OAuth button not found');
@@ -147,16 +146,16 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should show OAuth error
       await authHelper.verifyErrorMessage();
-      
+
       // Should stay on login page or show error page
       const currentUrl = authHelper.page.url();
       expect(currentUrl.includes('/login') || currentUrl.includes('/error')).toBeTruthy();
     });
 
-    test('should link Google account to existing user', async ({ page }) => {
+    test('should link Google account to existing user', async ({page}) => {
       // First, create a regular user account
       const existingUser = generateUniqueAuthUser(AUTH_TEST_USERS.OAUTH_LINK_USER);
-      
+
       // Register user first (mock registration)
       await page.route('**/api/v1/auth/register', route => {
         route.fulfill({
@@ -197,7 +196,7 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should show confirmation that account was linked
       const linkMessage = authHelper.page.locator(':text("linked"), :text("connected")');
-      const hasLinkMessage = await linkMessage.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasLinkMessage = await linkMessage.isVisible({timeout: 2000}).catch(() => false);
 
       if (hasLinkMessage) {
         console.log('✅ Account linking confirmation shown');
@@ -206,12 +205,12 @@ test.describe('OAuth2 Login Integration', () => {
   });
 
   test.describe('GitHub OAuth Flow', () => {
-    test('should initiate GitHub OAuth login', async ({ page }) => {
+    test('should initiate GitHub OAuth login', async ({page}) => {
       await authHelper.mockOAuthResponse('GITHUB', true);
       await authHelper.navigateToLogin();
 
       const githubButton = authHelper.page.locator('button:has-text("GitHub"), a:has-text("GitHub"), [data-testid="github-oauth"]');
-      const hasGithubButton = await githubButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasGithubButton = await githubButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasGithubButton) {
         test.skip('GitHub OAuth button not found');
@@ -231,10 +230,10 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should redirect to OAuth provider
       await authHelper.page.waitForTimeout(2000);
-      
+
       const currentUrl = authHelper.page.url();
       const isOAuthFlow = currentUrl.includes('oauth') || currentUrl.includes('github') || currentUrl.includes('/dashboard');
-      
+
       expect(isOAuthFlow).toBeTruthy();
     });
 
@@ -250,18 +249,18 @@ test.describe('OAuth2 Login Integration', () => {
       await userMenu.click();
 
       const profileInfo = authHelper.page.locator(':text("GitHub Test User"), :text("oauth.github@example.com")');
-      const hasProfileInfo = await profileInfo.first().isVisible({ timeout: 2000 }).catch(() => false);
+      const hasProfileInfo = await profileInfo.first().isVisible({timeout: 2000}).catch(() => false);
 
       if (hasProfileInfo) {
         console.log('✅ GitHub profile data populated');
       }
     });
 
-    test('should handle GitHub OAuth permission denied', async ({ page }) => {
+    test('should handle GitHub OAuth permission denied', async ({page}) => {
       await authHelper.navigateToLogin();
 
       const githubButton = authHelper.page.locator('button:has-text("GitHub"), a:has-text("GitHub")');
-      const hasGithubButton = await githubButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasGithubButton = await githubButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasGithubButton) {
         test.skip('GitHub OAuth button not found');
@@ -284,18 +283,18 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should show appropriate error message
       const errorMessage = authHelper.page.locator(':text("access denied"), :text("authorization denied"), [role="alert"]');
-      const hasErrorMessage = await errorMessage.isVisible({ timeout: 3000 }).catch(() => false);
+      const hasErrorMessage = await errorMessage.isVisible({timeout: 3000}).catch(() => false);
 
       expect(hasErrorMessage).toBeTruthy();
     });
   });
 
   test.describe('OAuth Error Scenarios', () => {
-    test('should handle OAuth server unavailable', async ({ page }) => {
+    test('should handle OAuth server unavailable', async ({page}) => {
       await authHelper.navigateToLogin();
 
       const oauthButton = authHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-      const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasOAuthButton) {
         test.skip('OAuth buttons not found');
@@ -320,11 +319,11 @@ test.describe('OAuth2 Login Integration', () => {
       await authHelper.verifyErrorMessage();
     });
 
-    test('should handle malformed OAuth response', async ({ page }) => {
+    test('should handle malformed OAuth response', async ({page}) => {
       await authHelper.navigateToLogin();
 
       const oauthButton = authHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-      const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasOAuthButton) {
         test.skip('OAuth buttons not found');
@@ -346,7 +345,7 @@ test.describe('OAuth2 Login Integration', () => {
       await authHelper.verifyErrorMessage();
     });
 
-    test('should handle OAuth CSRF protection', async ({ page }) => {
+    test('should handle OAuth CSRF protection', async ({page}) => {
       await authHelper.navigateToLogin();
 
       // Mock CSRF error
@@ -362,7 +361,7 @@ test.describe('OAuth2 Login Integration', () => {
       });
 
       const oauthButton = authHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-      const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasOAuthButton) {
         test.skip('OAuth buttons not found');
@@ -373,21 +372,21 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should show security error
       const securityError = authHelper.page.locator(':text("security"), :text("csrf"), :text("invalid state"), [role="alert"]');
-      const hasSecurityError = await securityError.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasSecurityError = await securityError.isVisible({timeout: 2000}).catch(() => false);
 
       expect(hasSecurityError).toBeTruthy();
     });
 
-    test('should handle network timeouts during OAuth', async ({ page }) => {
+    test('should handle network timeouts during OAuth', async ({page}) => {
       await authHelper.navigateToLogin();
 
       // Mock network timeout
-      await page.route('**/auth/oauth2/**', route => {
+      await page.route('**/auth/oauth2/**', _route => {
         // Never respond (simulate timeout)
       });
 
       const oauthButton = authHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-      const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasOAuthButton) {
         test.skip('OAuth buttons not found');
@@ -397,14 +396,14 @@ test.describe('OAuth2 Login Integration', () => {
 
       // Should show timeout error after reasonable wait
       const timeoutError = authHelper.page.locator(':text("timeout"), :text("network error"), [role="alert"]');
-      const hasTimeoutError = await timeoutError.isVisible({ timeout: 15000 }).catch(() => false);
+      const hasTimeoutError = await timeoutError.isVisible({timeout: 15000}).catch(() => false);
 
       expect(hasTimeoutError).toBeTruthy();
     });
   });
 
   test.describe('OAuth Security Features', () => {
-    test('should use PKCE for OAuth flows', async ({ page }) => {
+    test('should use PKCE for OAuth flows', async ({page}) => {
       await authHelper.navigateToLogin();
 
       interface CapturedRequest {
@@ -426,7 +425,7 @@ test.describe('OAuth2 Login Integration', () => {
       });
 
       const oauthButton = authHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-      const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasOAuthButton) {
         test.skip('OAuth buttons not found');
@@ -451,7 +450,7 @@ test.describe('OAuth2 Login Integration', () => {
       }
     });
 
-    test('should validate OAuth state parameter', async ({ page }) => {
+    test('should validate OAuth state parameter', async ({page}) => {
       await authHelper.navigateToLogin();
 
       let stateParameter: string | null = null;
@@ -464,7 +463,7 @@ test.describe('OAuth2 Login Integration', () => {
       });
 
       const oauthButton = authHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-      const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasOAuthButton) {
         test.skip('OAuth buttons not found');
@@ -483,7 +482,7 @@ test.describe('OAuth2 Login Integration', () => {
       }
     });
 
-    test('should handle OAuth scope permissions properly', async ({ page }) => {
+    test('should handle OAuth scope permissions properly', async ({page}) => {
       await authHelper.navigateToLogin();
 
       let capturedScopes: string[] = [];
@@ -499,7 +498,7 @@ test.describe('OAuth2 Login Integration', () => {
       });
 
       const googleButton = authHelper.page.locator('button:has-text("Google"), a:has-text("Google")');
-      const hasGoogleButton = await googleButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasGoogleButton = await googleButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasGoogleButton) {
         test.skip('Google OAuth button not found');
@@ -512,20 +511,20 @@ test.describe('OAuth2 Login Integration', () => {
       if (capturedScopes.length > 0) {
         expect(capturedScopes).toContain('email');
         expect(capturedScopes).toContain('profile');
-        
+
         // Should not request excessive permissions
         const excessiveScopes = ['https://www.googleapis.com/auth/admin', 'https://www.googleapis.com/auth/drive'];
         for (const scope of excessiveScopes) {
           expect(capturedScopes).not.toContain(scope);
         }
-        
+
         console.log(`✅ OAuth scopes: ${capturedScopes.join(', ')}`);
       }
     });
   });
 
   test.describe('Profile Data Handling', () => {
-    test('should populate user profile from OAuth provider', async ({ page }) => {
+    test('should populate user profile from OAuth provider', async ({page}) => {
       // Mock successful OAuth with profile data
       await page.route('**/auth/oauth2/google**', route => {
         route.fulfill({
@@ -559,13 +558,13 @@ test.describe('OAuth2 Login Integration', () => {
       const profileName = authHelper.page.locator(':text("OAuth Test User")');
       const profileEmail = authHelper.page.locator(':text("oauth.test@example.com")');
 
-      const hasProfileName = await profileName.isVisible({ timeout: 2000 }).catch(() => false);
-      const hasProfileEmail = await profileEmail.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasProfileName = await profileName.isVisible({timeout: 2000}).catch(() => false);
+      const hasProfileEmail = await profileEmail.isVisible({timeout: 2000}).catch(() => false);
 
       expect(hasProfileName || hasProfileEmail).toBeTruthy();
     });
 
-    test('should handle missing profile data gracefully', async ({ page }) => {
+    test('should handle missing profile data gracefully', async ({page}) => {
       // Mock OAuth response with minimal profile data
       await page.route('**/auth/oauth2/google**', route => {
         route.fulfill({
@@ -592,7 +591,7 @@ test.describe('OAuth2 Login Integration', () => {
       await expect(userMenu).toBeVisible();
     });
 
-    test('should allow profile completion after OAuth login', async ({ page }) => {
+    test('should allow profile completion after OAuth login', async ({page}) => {
       // Mock OAuth login with incomplete profile
       await page.route('**/auth/oauth2/google**', route => {
         route.fulfill({
@@ -620,7 +619,7 @@ test.describe('OAuth2 Login Integration', () => {
 
       if (onProfilePage) {
         console.log('✅ Redirected to profile completion');
-        
+
         // Should show profile completion form
         const profileForm = authHelper.page.locator('form, [role="form"]');
         await expect(profileForm).toBeVisible();
@@ -634,16 +633,16 @@ test.describe('OAuth2 Login Integration', () => {
 
   test.describe('Mobile OAuth Experience', () => {
     Object.entries(MOBILE_VIEWPORTS).forEach(([deviceName, viewport]) => {
-      test(`should work on ${deviceName}`, async ({ page }) => {
+      test(`should work on ${deviceName}`, async ({page}) => {
         await page.setViewportSize(viewport);
-        
+
         const mobileAuthHelper = new EnhancedAuthHelper(page);
         await mobileAuthHelper.clearStorage();
         await mobileAuthHelper.navigateToLogin();
 
         // OAuth buttons should be visible on mobile
         const oauthButton = mobileAuthHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-        const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+        const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
         if (!hasOAuthButton) {
           test.skip('OAuth buttons not found on mobile');
@@ -671,7 +670,7 @@ test.describe('OAuth2 Login Integration', () => {
   });
 
   test.describe('Performance', () => {
-    test('should complete OAuth flow within performance threshold', async ({ page }) => {
+    test('should complete OAuth flow within performance threshold', async ({page}) => {
       const startTime = Date.now();
 
       // Mock fast OAuth response
@@ -697,7 +696,7 @@ test.describe('OAuth2 Login Integration', () => {
       console.log(`OAuth flow completed in ${oauthTime}ms`);
     });
 
-    test('should handle slow OAuth responses', async ({ page }) => {
+    test('should handle slow OAuth responses', async ({page}) => {
       await authHelper.navigateToLogin();
 
       // Mock slow OAuth response
@@ -730,7 +729,7 @@ test.describe('OAuth2 Login Integration', () => {
       await authHelper.navigateToLogin();
 
       const oauthButton = authHelper.page.locator('button:has-text("Google"), button:has-text("GitHub")').first();
-      const hasOAuthButton = await oauthButton.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasOAuthButton = await oauthButton.isVisible({timeout: 2000}).catch(() => false);
 
       if (!hasOAuthButton) {
         test.skip('OAuth buttons not found');
@@ -761,11 +760,11 @@ test.describe('OAuth2 Login Integration', () => {
 
       for (let i = 0; i < buttonCount; i++) {
         const button = oauthButtons.nth(i);
-        
+
         // Button should have accessible text
         const buttonText = await button.textContent();
         const ariaLabel = await button.getAttribute('aria-label');
-        
+
         expect(buttonText?.trim() || ariaLabel?.trim()).toBeTruthy();
 
         // Should indicate it's for login/sign in

@@ -1,13 +1,13 @@
 /**
  * Environment Validation Tests for FocusHive Frontend
- * 
+ *
  * Comprehensive test suite for environment variable validation logic
  * including edge cases, error handling, and validation messages.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { z } from 'zod';
-import { validateEnvironment, isDevelopment, isProduction, getEnvironment } from '../envValidation';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {z} from 'zod';
+import {getEnvironment, isDevelopment, isProduction, validateEnvironment} from '../envValidation';
 
 // Mock import.meta.env
 const mockImportMeta = {
@@ -16,42 +16,60 @@ const mockImportMeta = {
   PROD: false,
 };
 
-// Store original import.meta
-const originalImportMeta = globalThis.import.meta;
+// Store original import.meta (might be undefined)
+const originalImportMeta = globalThis.import?.meta;
 
 describe('Environment Validation', () => {
   beforeEach(() => {
-    // Mock import.meta for testing
+    // Ensure globalThis.import exists before setting meta
+    if (!globalThis.import) {
+      globalThis.import = {} as unknown;
+    }
+    // Set up the mock import.meta with our mock environment
     globalThis.import.meta = mockImportMeta;
-    
+
     // Clear console methods
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+    vi.spyOn(console, 'info').mockImplementation(() => {
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {
+    });
+
     // Reset environment
     mockImportMeta.env = {};
     mockImportMeta.DEV = false;
     mockImportMeta.PROD = false;
+    
+    // Clear all environment variables to start fresh
+    vi.unstubAllEnvs();
   });
 
   afterEach(() => {
-    // Restore original import.meta
-    globalThis.import.meta = originalImportMeta;
-    
+    // Restore original import.meta if it existed
+    if (originalImportMeta) {
+      if (!globalThis.import) {
+        globalThis.import = {} as unknown;
+      }
+      globalThis.import.meta = originalImportMeta;
+    } else if (globalThis.import) {
+      delete globalThis.import.meta;
+      // Remove globalThis.import if it was created by us and is now empty
+      if (Object.keys(globalThis.import).length === 0) {
+        delete globalThis.import;
+      }
+    }
+
     // Restore console methods
     vi.restoreAllMocks();
   });
 
   describe('validateEnvironment', () => {
     it('should validate successfully with all required variables', () => {
-      // Arrange
-      mockImportMeta.env = {
-        VITE_API_URL: 'https://api.focushive.com',
-        VITE_WS_URL: 'wss://api.focushive.com',
-        VITE_AUTH_DOMAIN: 'auth.focushive.com',
-        VITE_SPOTIFY_CLIENT_ID: 'abc123def456',
-        VITE_ENV: 'production',
-      };
+      // Arrange - Use vi.stubEnv to mock environment variables
+      vi.stubEnv('VITE_API_URL', 'https://api.focushive.com');
+      vi.stubEnv('VITE_WS_URL', 'wss://api.focushive.com');
+      vi.stubEnv('VITE_AUTH_DOMAIN', 'auth.focushive.com');
+      vi.stubEnv('VITE_SPOTIFY_CLIENT_ID', 'abc123def456');
+      vi.stubEnv('VITE_ENV', 'production');
 
       // Act
       const result = validateEnvironment();
@@ -242,7 +260,8 @@ describe('Environment Validation', () => {
 
     it('should log configuration summary on successful validation', () => {
       // Arrange
-      const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {
+      });
       mockImportMeta.env = {
         VITE_API_URL: 'http://localhost:8080',
         VITE_WS_URL: 'ws://localhost:8080',
@@ -329,7 +348,7 @@ describe('Environment Validation', () => {
   describe('Error Handling', () => {
     it('should handle non-Zod errors gracefully', () => {
       // Arrange - Mock Zod to throw a non-Zod error
-      const originalParse = z.object({}).parse;
+      const _originalParse = z.object({}).parse;
       vi.spyOn(z.object({}), 'parse').mockImplementation(() => {
         throw new Error('Unexpected error');
       });

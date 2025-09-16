@@ -66,6 +66,12 @@ public interface OAuthAccessTokenRepository extends JpaRepository<OAuthAccessTok
      */
     @Query("SELECT COUNT(t) FROM OAuthAccessToken t WHERE t.userId = :userId AND t.revoked = false AND t.expiresAt > :now")
     long countActiveTokensByUser(@Param("userId") UUID userId, @Param("now") Instant now);
+
+    /**
+     * Count active tokens for a client.
+     */
+    @Query("SELECT COUNT(t) FROM OAuthAccessToken t WHERE t.clientId = :clientId AND t.revoked = false AND t.expiresAt > CURRENT_TIMESTAMP")
+    long countActiveTokensByClient(@Param("clientId") UUID clientId);
     
     /**
      * Update usage information.
@@ -80,4 +86,9 @@ public interface OAuthAccessTokenRepository extends JpaRepository<OAuthAccessTok
     @Modifying
     @Query("DELETE FROM OAuthAccessToken t WHERE t.expiresAt <= :threshold")
     int deleteExpiredTokens(@Param("threshold") Instant threshold);
+
+    /**
+     * Find all access tokens associated with a refresh token.
+     */
+    List<OAuthAccessToken> findByRefreshTokenId(UUID refreshTokenId);
 }

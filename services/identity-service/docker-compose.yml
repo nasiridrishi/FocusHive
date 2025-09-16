@@ -1,0 +1,197 @@
+services:
+  # PostgreSQL Database - ALL configuration from .env
+  postgres:
+    image: ${IDENTITY_POSTGRES_IMAGE}
+    container_name: ${IDENTITY_POSTGRES_CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${IDENTITY_DB_NAME}
+      POSTGRES_USER: ${IDENTITY_DB_USER}
+      POSTGRES_PASSWORD: ${IDENTITY_DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: ${IDENTITY_POSTGRES_INITDB_ARGS}
+      PGDATA: ${IDENTITY_POSTGRES_PGDATA}
+    # Ports removed - PostgreSQL only accessible within Docker network
+    # ports:
+    #   - "${IDENTITY_DB_EXTERNAL_PORT}:${IDENTITY_DB_PORT}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - ${IDENTITY_NETWORK_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${IDENTITY_DB_USER} -d ${IDENTITY_DB_NAME}"]
+      interval: ${IDENTITY_POSTGRES_HEALTHCHECK_INTERVAL}
+      timeout: ${IDENTITY_POSTGRES_HEALTHCHECK_TIMEOUT}
+      retries: ${IDENTITY_POSTGRES_HEALTHCHECK_RETRIES}
+      start_period: ${IDENTITY_POSTGRES_HEALTHCHECK_START_PERIOD}
+    deploy:
+      resources:
+        limits:
+          cpus: "${IDENTITY_POSTGRES_CPU_LIMIT}"
+          memory: ${IDENTITY_POSTGRES_MEMORY_LIMIT}
+        reservations:
+          cpus: "${IDENTITY_POSTGRES_CPU_RESERVATION}"
+          memory: ${IDENTITY_POSTGRES_MEMORY_RESERVATION}
+
+  # Redis Cache - ALL configuration from .env
+  redis:
+    image: ${IDENTITY_REDIS_IMAGE}
+    container_name: ${IDENTITY_REDIS_CONTAINER_NAME}
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${IDENTITY_REDIS_PASSWORD}
+      --appendonly ${IDENTITY_REDIS_APPEND_ONLY}
+      --maxmemory ${IDENTITY_REDIS_MAX_MEMORY}
+      --maxmemory-policy ${IDENTITY_REDIS_MEMORY_POLICY}
+      --tcp-backlog ${IDENTITY_REDIS_TCP_BACKLOG}
+      --timeout ${IDENTITY_REDIS_TIMEOUT}
+      --tcp-keepalive ${IDENTITY_REDIS_TCP_KEEPALIVE}
+    # Ports removed - Redis only accessible within Docker network
+    # ports:
+    #   - "${IDENTITY_REDIS_EXTERNAL_PORT}:${IDENTITY_REDIS_PORT}"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ${IDENTITY_NETWORK_NAME}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${IDENTITY_REDIS_PASSWORD}", "ping"]
+      interval: ${IDENTITY_REDIS_HEALTHCHECK_INTERVAL}
+      timeout: ${IDENTITY_REDIS_HEALTHCHECK_TIMEOUT}
+      retries: ${IDENTITY_REDIS_HEALTHCHECK_RETRIES}
+      start_period: ${IDENTITY_REDIS_HEALTHCHECK_START_PERIOD}
+    deploy:
+      resources:
+        limits:
+          cpus: "${IDENTITY_REDIS_CPU_LIMIT}"
+          memory: ${IDENTITY_REDIS_MEMORY_LIMIT}
+        reservations:
+          cpus: "${IDENTITY_REDIS_CPU_RESERVATION}"
+          memory: ${IDENTITY_REDIS_MEMORY_RESERVATION}
+
+  # Identity Service Application - ALL configuration from .env
+  focushive-identity-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${IDENTITY_APP_IMAGE}
+    container_name: ${IDENTITY_APP_CONTAINER_NAME}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Spring profiles
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+
+      # Server configuration
+      SERVER_PORT: ${IDENTITY_PORT}
+
+      # Database configuration - ALL from .env
+      DB_HOST: ${IDENTITY_DB_HOST}
+      DB_PORT: ${IDENTITY_DB_PORT}
+      DB_NAME: ${IDENTITY_DB_NAME}
+      DB_USER: ${IDENTITY_DB_USER}
+      DB_PASSWORD: ${IDENTITY_DB_PASSWORD}
+
+      # Redis configuration - ALL from .env
+      REDIS_HOST: ${IDENTITY_REDIS_HOST}
+      REDIS_PORT: ${IDENTITY_REDIS_PORT}
+      REDIS_PASSWORD: ${IDENTITY_REDIS_PASSWORD}
+
+      # JWT configuration - ALL from .env
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
+      JWT_ISSUER: ${JWT_ISSUER}
+      JWT_ISSUER_URI: ${JWT_ISSUER_URI}
+      JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
+
+      # Security Keys - ALL from .env
+      KEY_STORE_PASSWORD: ${KEY_STORE_PASSWORD}
+      PRIVATE_KEY_PASSWORD: ${PRIVATE_KEY_PASSWORD}
+      FOCUSHIVE_CLIENT_SECRET: ${FOCUSHIVE_CLIENT_SECRET}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT}
+
+      # OAuth2 and Auth Configuration - ALL from .env
+      APP_BASE_URL: ${APP_BASE_URL}
+      AUTH_ISSUER: ${AUTH_ISSUER}
+      OAUTH2_ISSUER: ${AUTH_ISSUER}
+
+      # Admin user configuration - ALL from .env
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME}
+      ADMIN_AUTO_CREATE: ${ADMIN_AUTO_CREATE}
+
+      # External service URLs - from .env
+      NOTIFICATION_SERVICE_URL: ${IDENTITY_NOTIFICATION_SERVICE_URL}
+
+      # JVM Memory settings - from .env
+      JAVA_OPTS: ${IDENTITY_JAVA_OPTS}
+
+      # Flyway configuration - from .env
+      FLYWAY_ENABLED: ${FLYWAY_ENABLED}
+      FLYWAY_BASELINE_ON_MIGRATE: ${FLYWAY_BASELINE_ON_MIGRATE}
+
+      # Actuator configuration - ALL from .env
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${IDENTITY_MANAGEMENT_ENDPOINTS}
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: ${IDENTITY_MANAGEMENT_HEALTH_SHOW_DETAILS}
+      MANAGEMENT_TRACING_ENABLED: ${IDENTITY_MANAGEMENT_TRACING_ENABLED}
+
+      # Logging - ALL from .env
+      LOGGING_LEVEL_ROOT: ${IDENTITY_LOG_LEVEL_ROOT}
+      LOGGING_LEVEL_COM_FOCUSHIVE: ${IDENTITY_LOG_LEVEL_APPLICATION}
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: ${IDENTITY_LOG_LEVEL_HIBERNATE_SQL}
+      LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL: ${IDENTITY_LOG_LEVEL_HIBERNATE_TYPE}
+      LOGGING_LEVEL_ORG_HIBERNATE: ${IDENTITY_LOG_LEVEL_HIBERNATE}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC: ${IDENTITY_LOG_LEVEL_JDBC}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC_CORE_JDBCTEMPLATE: ${IDENTITY_LOG_LEVEL_JDBC_TEMPLATE}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC_CORE_STATEMENTCREATORUTILS: ${IDENTITY_LOG_LEVEL_JDBC_UTILS}
+      SPRING_JPA_SHOW_SQL: ${IDENTITY_JPA_SHOW_SQL}
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: ${IDENTITY_JPA_FORMAT_SQL}
+      SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: ${IDENTITY_JPA_USE_SQL_COMMENTS}
+
+      # CORS configuration - from .env
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+    ports:
+      - "${IDENTITY_PORT}:${IDENTITY_PORT}"
+      - "${IDENTITY_APP_JMX_PORT}:${IDENTITY_APP_JMX_PORT}"
+    volumes:
+      - ${IDENTITY_APP_LOGS_PATH}:/app/logs
+      - ${IDENTITY_APP_CONFIG_PATH}:/app/config
+    networks:
+      - ${IDENTITY_NETWORK_NAME}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${IDENTITY_PORT}${IDENTITY_APP_HEALTHCHECK_ENDPOINT}"]
+      interval: ${IDENTITY_APP_HEALTHCHECK_INTERVAL}
+      timeout: ${IDENTITY_APP_HEALTHCHECK_TIMEOUT}
+      retries: ${IDENTITY_APP_HEALTHCHECK_RETRIES}
+      start_period: ${IDENTITY_APP_HEALTHCHECK_START_PERIOD}
+    deploy:
+      resources:
+        limits:
+          cpus: "${IDENTITY_APP_CPU_LIMIT}"
+          memory: ${IDENTITY_APP_MEMORY_LIMIT}
+        reservations:
+          cpus: "${IDENTITY_APP_CPU_RESERVATION}"
+          memory: ${IDENTITY_APP_MEMORY_RESERVATION}
+
+networks:
+  focushive-shared-network:
+    external: true
+    name: ${IDENTITY_NETWORK_NAME}
+
+volumes:
+  postgres-data:
+    driver: local
+    name: ${IDENTITY_POSTGRES_DATA_VOLUME}
+  redis-data:
+    driver: local
+    name: ${IDENTITY_REDIS_DATA_VOLUME}

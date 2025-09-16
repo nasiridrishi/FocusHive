@@ -1,6 +1,6 @@
 /**
  * API Configuration for FocusHive Microservices
- * 
+ *
  * Centralized configuration for all microservice endpoints with:
  * - Environment-based URL configuration
  * - Service-specific endpoint definitions
@@ -12,25 +12,25 @@
 export const SERVICE_URLS = {
   // Core FocusHive Backend Service (Port 8080)
   BACKEND: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080',
-  
+
   // Identity Service - OAuth2 & Persona Management (Port 8081)
   IDENTITY: import.meta.env.VITE_IDENTITY_URL || 'http://localhost:8081',
-  
+
   // Music Service - Spotify Integration (Port 8082)
   MUSIC: import.meta.env.VITE_MUSIC_URL || 'http://localhost:8082',
-  
+
   // Notification Service - Multi-channel Notifications (Port 8083)
   NOTIFICATION: import.meta.env.VITE_NOTIFICATION_URL || 'http://localhost:8083',
-  
+
   // Chat Service - Real-time Messaging (Port 8084)
   CHAT: import.meta.env.VITE_CHAT_URL || 'http://localhost:8084',
-  
+
   // Analytics Service - Productivity Tracking (Port 8085)
   ANALYTICS: import.meta.env.VITE_ANALYTICS_URL || 'http://localhost:8085',
-  
+
   // Forum Service - Community Discussions (Port 8086)
   FORUM: import.meta.env.VITE_FORUM_URL || 'http://localhost:8086',
-  
+
   // Buddy Service - Accountability Partners (Port 8087)
   BUDDY: import.meta.env.VITE_BUDDY_URL || 'http://localhost:8087'
 } as const;
@@ -39,19 +39,19 @@ export const SERVICE_URLS = {
 export const WS_ENDPOINTS = {
   // Main WebSocket connection for core features
   MAIN: import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws',
-  
+
   // Chat-specific WebSocket connection
   CHAT: import.meta.env.VITE_CHAT_WS_URL || 'ws://localhost:8084/ws',
-  
+
   // Music service WebSocket for collaborative playlists
   MUSIC: import.meta.env.VITE_MUSIC_WS_URL || 'ws://localhost:8082/ws',
-  
+
   // Analytics WebSocket for real-time metrics
   ANALYTICS: import.meta.env.VITE_ANALYTICS_WS_URL || 'ws://localhost:8085/ws',
-  
+
   // Forum WebSocket for real-time updates
   FORUM: import.meta.env.VITE_FORUM_WS_URL || 'ws://localhost:8086/ws',
-  
+
   // Buddy WebSocket for accountability features
   BUDDY: import.meta.env.VITE_BUDDY_WS_URL || 'ws://localhost:8087/ws'
 } as const;
@@ -70,7 +70,7 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: '/api/v1/auth/change-password',
     FORGOT_PASSWORD: '/api/v1/auth/forgot-password'
   },
-  
+
   PERSONAS: {
     BASE: '/api/v1/personas',
     BY_ID: '/api/v1/personas/:id',
@@ -79,7 +79,7 @@ export const API_ENDPOINTS = {
     UPDATE: '/api/v1/personas/:id',
     DELETE: '/api/v1/personas/:id'
   },
-  
+
   PRIVACY: {
     BASE: '/api/v1/privacy',
     SETTINGS: '/api/v1/privacy/settings',
@@ -175,7 +175,9 @@ export const API_ENDPOINTS = {
     START_SESSION: '/api/v1/analytics/sessions/start',
     END_SESSION: '/api/v1/analytics/sessions/:sessionId/end',
     USER_STATS: '/api/v1/analytics/users/:userId/stats',
+    USER_STATS_ME: '/api/v1/analytics/users/me/stats',
     HIVE_LEADERBOARD: '/api/v1/analytics/hives/:hiveId/leaderboard',
+    LEADERBOARD: '/api/v1/analytics/leaderboard',
     PERSONAL_DASHBOARD: '/api/v1/analytics/dashboard',
     PRODUCTIVITY_TRENDS: '/api/v1/analytics/trends',
     FOCUS_PATTERNS: '/api/v1/analytics/focus-patterns',
@@ -253,11 +255,11 @@ export const SERVICE_ENDPOINTS = {
 // Utility function to build endpoint URLs with parameters
 export function buildEndpoint(endpoint: string, params: Record<string, string | number> = {}): string {
   let url = endpoint;
-  
+
   Object.entries(params).forEach(([key, value]) => {
     url = url.replace(`:${key}`, String(value));
   });
-  
+
   return url;
 }
 
@@ -274,7 +276,7 @@ export const WEBSOCKET_CONFIG = {
   RECONNECT_DELAY: parseInt(import.meta.env.VITE_WEBSOCKET_RECONNECT_DELAY || '1000'),
   HEARTBEAT_INTERVAL: parseInt(import.meta.env.VITE_WEBSOCKET_HEARTBEAT_INTERVAL || '30000'),
   MAX_RECONNECT_DELAY: 30000, // 30 seconds max
-  
+
   // Service-specific WebSocket URLs
   URLS: WS_ENDPOINTS
 } as const;

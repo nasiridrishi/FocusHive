@@ -1,0 +1,173 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: notification-service-netpol
+  namespace: focushive-notification
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: focushive
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+      app.kubernetes.io/component: backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow ingress from NGINX Ingress Controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: nginx-ingress
+    ports:
+    - protocol: TCP
+      port: 8083
+  # Allow ingress from Prometheus for metrics scraping
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+    ports:
+    - protocol: TCP
+      port: 8083
+  # Allow ingress from other services in the same namespace
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/part-of: focushive
+    ports:
+    - protocol: TCP
+      port: 8083
+  # Allow ingress from load balancers and API gateways
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system
+    - namespaceSelector:
+        matchLabels:
+          name: kong
+    ports:
+    - protocol: TCP
+      port: 8083
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow connection to PostgreSQL database
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow connection to Redis cache
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow connection to RabbitMQ
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: rabbitmq
+    ports:
+    - protocol: TCP
+      port: 5672
+    - protocol: TCP
+      port: 15672
+  # Allow connection to Zipkin for distributed tracing
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: zipkin
+    ports:
+    - protocol: TCP
+      port: 9411
+  # Allow connection to Identity service for JWT validation
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: focushive-identity
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: identity-service
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+  # Allow HTTPS connections to external services (AWS SES, etc.)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 587  # SMTP TLS
+    - protocol: TCP
+      port: 465  # SMTPS
+  # Allow HTTP connections for health checks and webhooks
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-default
+  namespace: focushive-notification
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/component: security-default
+    app.kubernetes.io/part-of: focushive
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-ingress
+  namespace: focushive-notification
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/component: monitoring-security
+    app.kubernetes.io/part-of: focushive
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow monitoring tools (Prometheus, Grafana, AlertManager)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8083
+  # Allow internal monitoring and debugging
+  - from:
+    - podSelector:
+        matchLabels:
+          role: monitoring
+    ports:
+    - protocol: TCP
+      port: 8083

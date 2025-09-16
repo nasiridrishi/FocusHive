@@ -1,6 +1,6 @@
 /**
  * Large Data Performance Tests with Virtualization
- * 
+ *
  * Tests for handling large datasets efficiently in the FocusHive frontend:
  * - Virtual scrolling performance with large lists
  * - Pagination vs infinite scroll efficiency
@@ -11,10 +11,10 @@
  * - Component rendering optimization for large collections
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { PerformanceTestHelper, LargeDataPerformanceMetrics } from './performance-helpers';
-import { performanceCollector, PerformanceMetrics } from './performance-metrics';
-import { AuthHelper } from '../../helpers/auth.helper';
+import {expect, test} from '@playwright/test';
+import {LargeDataPerformanceMetrics, PerformanceTestHelper} from './performance-helpers';
+import {performanceCollector, PerformanceMetrics} from './performance-metrics';
+import {AuthHelper} from '../../helpers/auth.helper';
 
 // Extended performance interface for memory access
 interface ExtendedPerformance extends Performance {
@@ -39,12 +39,12 @@ interface DataPoint {
 // Large data performance test configuration
 const LARGE_DATA_TEST_CONFIG = {
   datasetSizes: [
-    { name: 'Small', size: 1000, expectedRenderTime: 500 },
-    { name: 'Medium', size: 5000, expectedRenderTime: 1000 },
-    { name: 'Large', size: 10000, expectedRenderTime: 2000 },
-    { name: 'Extra Large', size: 50000, expectedRenderTime: 5000 }
+    {name: 'Small', size: 1000, expectedRenderTime: 500},
+    {name: 'Medium', size: 5000, expectedRenderTime: 1000},
+    {name: 'Large', size: 10000, expectedRenderTime: 2000},
+    {name: 'Extra Large', size: 50000, expectedRenderTime: 5000}
   ],
-  
+
   virtualizationThresholds: {
     renderTime: 1000,        // 1 second max initial render
     scrollPerformance: 100,  // 100ms max scroll latency
@@ -52,7 +52,7 @@ const LARGE_DATA_TEST_CONFIG = {
     searchTime: 500,         // 500ms max search time
     filterTime: 300          // 300ms max filter time
   },
-  
+
   testComponents: [
     {
       name: 'HiveList',
@@ -87,7 +87,7 @@ const LARGE_DATA_TEST_CONFIG = {
       filterSelector: '[data-testid="notification-filter"]'
     }
   ],
-  
+
   visualizationTests: [
     {
       name: 'AnalyticsChart',
@@ -107,7 +107,7 @@ const LARGE_DATA_TEST_CONFIG = {
   ]
 };
 
-interface DataGenerationConfig {
+interface _DataGenerationConfig {
   size: number;
   complexity: 'simple' | 'medium' | 'complex';
   includeImages: boolean;
@@ -118,7 +118,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
   let authHelper: AuthHelper;
   let performanceHelper: PerformanceTestHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
     performanceHelper = new PerformanceTestHelper(page);
     await performanceHelper.initializePerformanceMonitoring();
@@ -131,14 +131,14 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
 
   // Test virtual scrolling performance with different dataset sizes
   for (const dataset of LARGE_DATA_TEST_CONFIG.datasetSizes) {
-    test(`Virtual Scrolling - ${dataset.name} Dataset (${dataset.size} items)`, async ({ page }) => {
+    test(`Virtual Scrolling - ${dataset.name} Dataset (${dataset.size} items)`, async ({page}) => {
       performanceCollector.startTest(`Virtual Scrolling - ${dataset.name}`);
 
       await page.goto('http://localhost:3000/hives');
       await page.waitForLoadState('networkidle');
 
       // Generate large dataset
-      const largeDataMetrics = await performanceHelper.measureLargeDataPerformance(dataset.size);
+      const _largeDataMetrics = await performanceHelper.measureLargeDataPerformance(dataset.size);
 
       // Test virtual scrolling performance
       const scrollPerformance = await page.evaluate((size) => {
@@ -152,9 +152,9 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
           virtualizationActive: boolean;
         }>((resolve) => {
           const startTime = performance.now();
-          
+
           // Create a large dataset
-          const dataset = Array.from({ length: size }, (_, i) => ({
+          const dataset = Array.from({length: size}, (_, i) => ({
             id: i,
             name: `Item ${i}`,
             description: `Description for item ${i}`,
@@ -178,24 +178,24 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
           const itemHeight = 60;
           const containerHeight = 400;
           const visibleCount = Math.ceil(containerHeight / itemHeight);
-          
+
           let scrollTop = 0;
           let startIndex = 0;
           let endIndex = Math.min(visibleCount, dataset.length);
-          
-          const renderVisibleItems = () => {
+
+          const renderVisibleItems = (): void => {
             startIndex = Math.floor(scrollTop / itemHeight);
             endIndex = Math.min(startIndex + visibleCount + 1, dataset.length);
-            
+
             container.innerHTML = '';
-            
+
             // Create spacer for items above
             if (startIndex > 0) {
               const topSpacer = document.createElement('div');
               topSpacer.style.height = `${startIndex * itemHeight}px`;
               container.appendChild(topSpacer);
             }
-            
+
             // Render visible items
             for (let i = startIndex; i < endIndex; i++) {
               const item = dataset[i];
@@ -210,7 +210,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
               `;
               container.appendChild(itemEl);
             }
-            
+
             // Create spacer for items below
             const remainingItems = dataset.length - endIndex;
             if (remainingItems > 0) {
@@ -221,22 +221,22 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
           };
 
           const memoryBefore = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
-          
+
           // Initial render
           renderVisibleItems();
           const initialRenderTime = performance.now() - startTime;
-          
+
           // Test scrolling performance
           const scrollLatencies: number[] = [];
           let scrollTests = 0;
           const maxScrollTests = 10;
-          
-          const testScroll = () => {
+
+          const testScroll = (): void => {
             if (scrollTests >= maxScrollTests) {
               const memoryAfter = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
-              
+
               document.body.removeChild(container);
-              
+
               resolve({
                 initialRenderTime,
                 scrollLatency: scrollLatencies,
@@ -248,53 +248,53 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
               });
               return;
             }
-            
+
             const scrollStart = performance.now();
             scrollTop += itemHeight * 5; // Scroll by 5 items
-            
+
             if (scrollTop > (dataset.length - visibleCount) * itemHeight) {
               scrollTop = 0; // Reset to top
             }
-            
+
             container.scrollTop = scrollTop;
-            
+
             requestAnimationFrame(() => {
               renderVisibleItems();
               const scrollLatency = performance.now() - scrollStart;
               scrollLatencies.push(scrollLatency);
               scrollTests++;
-              
+
               setTimeout(testScroll, 100); // Wait before next scroll
             });
           };
-          
+
           setTimeout(testScroll, 500); // Start scroll testing
         });
       }, dataset.size);
 
       // Validate virtual scrolling performance
       expect(scrollPerformance.initialRenderTime, `${dataset.name} initial render should be fast`)
-        .toBeLessThan(dataset.expectedRenderTime);
+      .toBeLessThan(dataset.expectedRenderTime);
 
       expect(scrollPerformance.virtualizationActive, 'Virtualization should be active for large datasets')
-        .toBe(dataset.size > 100);
+      .toBe(dataset.size > 100);
 
       const avgScrollLatency = scrollPerformance.scrollLatency.reduce((a, b) => a + b, 0) / scrollPerformance.scrollLatency.length;
       expect(avgScrollLatency, 'Scroll performance should be smooth')
-        .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.scrollPerformance);
+      .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.scrollPerformance);
 
       // Test memory efficiency of virtualization
       const memoryGrowth = scrollPerformance.memoryAfter - scrollPerformance.memoryBefore;
       const expectedMemoryWithoutVirtualization = dataset.size * 0.5; // Estimate 0.5KB per item
       const memoryEfficiency = Math.max(0, (expectedMemoryWithoutVirtualization - memoryGrowth) / expectedMemoryWithoutVirtualization * 100);
-      
+
       if (dataset.size > 1000) {
         expect(memoryEfficiency, 'Virtualization should provide memory efficiency')
-          .toBeGreaterThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.memoryEfficiency);
+        .toBeGreaterThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.memoryEfficiency);
       }
 
       // Record results
-      const largeDataMetrics_result: LargeDataPerformanceMetrics = {
+      const largeDataMetricsResult: LargeDataPerformanceMetrics = {
         initialRenderTime: scrollPerformance.initialRenderTime,
         scrollPerformance: avgScrollLatency,
         searchPerformance: 0, // Not tested in this specific test
@@ -308,10 +308,10 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
       };
 
       const metrics: PerformanceMetrics = {
-        largeDataMetrics: largeDataMetrics_result
+        largeDataMetrics: largeDataMetricsResult
       };
 
-      const result = performanceCollector.endTest(`Virtual Scrolling - ${dataset.name}`, metrics);
+      const _result = performanceCollector.endTest(`Virtual Scrolling - ${dataset.name}`, metrics);
 
       console.log(`📜 Virtual Scrolling Performance - ${dataset.name}:`);
       console.log(`  Dataset Size: ${dataset.size} items`);
@@ -326,7 +326,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
 
   // Test search and filtering performance on large datasets
   for (const component of LARGE_DATA_TEST_CONFIG.testComponents) {
-    test(`Search & Filter Performance - ${component.name}`, async ({ page }) => {
+    test(`Search & Filter Performance - ${component.name}`, async ({page}) => {
       performanceCollector.startTest(`Search Filter - ${component.name}`);
 
       await page.goto(`http://localhost:3000${component.route}`);
@@ -343,7 +343,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
           memoryImpact: number;
         }>((resolve) => {
           // Generate dataset
-          const dataset = Array.from({ length: 10000 }, (_, i) => ({
+          const dataset = Array.from({length: 10000}, (_, i) => ({
             id: i,
             name: `${config.name} Item ${i}`,
             description: `Description for ${config.name.toLowerCase()} item ${i}`,
@@ -356,57 +356,57 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
           }));
 
           const memoryBefore = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
-          
-          let filteredData = [...dataset];
+
+          const _filteredData = [...dataset];
           const searchTimes: number[] = [];
           const filterTimes: number[] = [];
 
           // Test search performance
           const searchTerms = ['Item 100', 'work', 'description', 'high', 'tag-5'];
-          
+
           searchTerms.forEach(term => {
             const searchStart = performance.now();
-            
-            const searchResults = dataset.filter(item => 
-              item.name.toLowerCase().includes(term.toLowerCase()) ||
-              item.description.toLowerCase().includes(term.toLowerCase()) ||
-              item.category.toLowerCase().includes(term.toLowerCase()) ||
-              item.status.toLowerCase().includes(term.toLowerCase()) ||
-              item.tags.some(tag => tag.toLowerCase().includes(term.toLowerCase()))
+
+            const _searchResults = dataset.filter(item =>
+                item.name.toLowerCase().includes(term.toLowerCase()) ||
+                item.description.toLowerCase().includes(term.toLowerCase()) ||
+                item.category.toLowerCase().includes(term.toLowerCase()) ||
+                item.status.toLowerCase().includes(term.toLowerCase()) ||
+                item.tags.some(tag => tag.toLowerCase().includes(term.toLowerCase()))
             );
-            
+
             const searchTime = performance.now() - searchStart;
             searchTimes.push(searchTime);
           });
 
           // Test filter performance
           const filterConfigs = [
-            { category: 'work' },
-            { status: 'active' },
-            { priority: 'high' },
-            { category: 'work', status: 'active' },
-            { priority: 'high', status: 'completed' }
+            {category: 'work'},
+            {status: 'active'},
+            {priority: 'high'},
+            {category: 'work', status: 'active'},
+            {priority: 'high', status: 'completed'}
           ];
 
           filterConfigs.forEach(filter => {
             const filterStart = performance.now();
-            
-            const filterResults = dataset.filter(item => {
-              return Object.entries(filter).every(([key, value]) => 
-                item[key as keyof typeof item] === value
+
+            const _filterResults = dataset.filter(item => {
+              return Object.entries(filter).every(([key, value]) =>
+                  item[key as keyof typeof item] === value
               );
             });
-            
+
             const filterTime = performance.now() - filterStart;
             filterTimes.push(filterTime);
           });
 
           // Test combined search and filter
           const combinedStart = performance.now();
-          const combinedResults = dataset
-            .filter(item => item.category === 'work')
-            .filter(item => item.name.toLowerCase().includes('item'))
-            .filter(item => item.priority === 'high');
+          const _combinedResults = dataset
+          .filter(item => item.category === 'work')
+          .filter(item => item.name.toLowerCase().includes('item'))
+          .filter(item => item.priority === 'high');
           const combinedTime = performance.now() - combinedStart;
 
           const memoryAfter = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
@@ -427,13 +427,13 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
       const avgFilterTime = searchFilterPerformance.filterTime.reduce((a, b) => a + b, 0) / searchFilterPerformance.filterTime.length;
 
       expect(avgSearchTime, `${component.name} search should be fast`)
-        .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.searchTime);
+      .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.searchTime);
 
       expect(avgFilterTime, `${component.name} filtering should be fast`)
-        .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.filterTime);
+      .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.filterTime);
 
       expect(searchFilterPerformance.combinedSearchFilter, 'Combined search and filter should be efficient')
-        .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.searchTime + LARGE_DATA_TEST_CONFIG.virtualizationThresholds.filterTime);
+      .toBeLessThan(LARGE_DATA_TEST_CONFIG.virtualizationThresholds.searchTime + LARGE_DATA_TEST_CONFIG.virtualizationThresholds.filterTime);
 
       // Record results
       const largeDataMetrics: LargeDataPerformanceMetrics = {
@@ -453,7 +453,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
         largeDataMetrics: largeDataMetrics
       };
 
-      const result = performanceCollector.endTest(`Search Filter - ${component.name}`, metrics);
+      const _result = performanceCollector.endTest(`Search Filter - ${component.name}`, metrics);
 
       console.log(`🔍 Search & Filter Performance - ${component.name}:`);
       console.log(`  Dataset Size: ${searchFilterPerformance.datasetSize} items`);
@@ -471,7 +471,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
       const dataPoints = visualization.dataPoints[i];
       const expectedTime = visualization.expectedRenderTime[i];
 
-      test(`Data Visualization - ${visualization.name} with ${dataPoints} data points`, async ({ page }) => {
+      test(`Data Visualization - ${visualization.name} with ${dataPoints} data points`, async ({page}) => {
         performanceCollector.startTest(`Visualization - ${visualization.name} - ${dataPoints}pts`);
 
         await page.goto('http://localhost:3000/analytics');
@@ -485,21 +485,21 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
             animationFPS: number;
             dataProcessingTime: number;
           }>((resolve) => {
-            const { name, dataPoints } = config;
-            
+            const {name, dataPoints} = config;
+
             // Generate visualization data
-            const generateData = () => {
+            const generateData = (): unknown[] => {
               switch (name) {
                 case 'AnalyticsChart':
-                  return Array.from({ length: dataPoints }, (_, i) => ({
+                  return Array.from({length: dataPoints}, (_, i) => ({
                     x: i,
                     y: Math.sin(i / 10) * 50 + Math.random() * 20,
                     label: `Point ${i}`,
                     category: `Cat ${i % 5}`
                   }));
-                
+
                 case 'ActivityHeatmap':
-                  return Array.from({ length: dataPoints }, (_, i) => {
+                  return Array.from({length: dataPoints}, (_, i) => {
                     const date = new Date(2023, 0, 1);
                     date.setDate(date.getDate() + i);
                     return {
@@ -508,15 +508,15 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
                       activities: Math.floor(Math.random() * 10)
                     };
                   });
-                
-                case 'NetworkGraph':
-                  const nodes = Array.from({ length: dataPoints }, (_, i) => ({
+
+                case 'NetworkGraph': {
+                  const nodes = Array.from({length: dataPoints}, (_, i) => ({
                     id: i,
                     name: `Node ${i}`,
                     group: i % 10,
                     connections: Math.floor(Math.random() * 5)
                   }));
-                  
+
                   const edges = [];
                   for (let i = 0; i < dataPoints * 1.5; i++) {
                     edges.push({
@@ -525,35 +525,36 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
                       weight: Math.random()
                     });
                   }
-                  
-                  return { nodes, edges };
-                
+
+                  return {nodes, edges};
+                }
+
                 default:
                   return [];
               }
             };
 
             const memoryBefore = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
-            
+
             // Data processing time
             const dataProcessStart = performance.now();
             const data = generateData();
             const dataProcessingTime = performance.now() - dataProcessStart;
-            
+
             // Render time
             const renderStart = performance.now();
-            
+
             // Simulate chart rendering
             const canvas = document.createElement('canvas');
             canvas.width = 800;
             canvas.height = 600;
             document.body.appendChild(canvas);
-            const ctx = canvas.getContext('2d')!;
-            
+            const ctx = canvas.getContext('2d') || new CanvasRenderingContext2D();
+
             // Simple visualization rendering simulation
             ctx.fillStyle = '#f0f0f0';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             if (Array.isArray(data)) {
               data.forEach((point: DataPoint, index: number) => {
                 ctx.fillStyle = `hsl(${(index / data.length) * 360}, 70%, 50%)`;
@@ -562,28 +563,28 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
                 ctx.fillRect(x, y, 2, canvas.height - y);
               });
             }
-            
+
             const renderTime = performance.now() - renderStart;
-            
+
             // Test interaction latency
             const interactionStart = performance.now();
-            canvas.dispatchEvent(new MouseEvent('click', { clientX: 400, clientY: 300 }));
+            canvas.dispatchEvent(new MouseEvent('click', {clientX: 400, clientY: 300}));
             const interactionLatency = performance.now() - interactionStart;
-            
+
             // Test animation FPS
             let frameCount = 0;
             const animationStart = performance.now();
-            
-            const animate = () => {
+
+            const animate = (): void => {
               frameCount++;
               if (performance.now() - animationStart < 1000) {
                 requestAnimationFrame(animate);
               } else {
                 const animationFPS = frameCount;
                 const memoryAfter = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
-                
+
                 document.body.removeChild(canvas);
-                
+
                 resolve({
                   renderTime,
                   interactionLatency,
@@ -593,23 +594,23 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
                 });
               }
             };
-            
+
             animate();
           });
-        }, { name: visualization.name, dataPoints });
+        }, {name: visualization.name, dataPoints});
 
         // Validate visualization performance
         expect(visualizationPerformance.renderTime, `${visualization.name} render time should be acceptable`)
-          .toBeLessThan(expectedTime);
+        .toBeLessThan(expectedTime);
 
         expect(visualizationPerformance.dataProcessingTime, 'Data processing should be efficient')
-          .toBeLessThan(expectedTime / 2);
+        .toBeLessThan(expectedTime / 2);
 
         expect(visualizationPerformance.interactionLatency, 'Interactions should be responsive')
-          .toBeLessThan(100);
+        .toBeLessThan(100);
 
         expect(visualizationPerformance.animationFPS, 'Animation should be smooth')
-          .toBeGreaterThan(30);
+        .toBeGreaterThan(30);
 
         // Record results
         const largeDataMetrics: LargeDataPerformanceMetrics = {
@@ -629,7 +630,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
           largeDataMetrics: largeDataMetrics
         };
 
-        const result = performanceCollector.endTest(`Visualization - ${visualization.name} - ${dataPoints}pts`, metrics);
+        const _result = performanceCollector.endTest(`Visualization - ${visualization.name} - ${dataPoints}pts`, metrics);
 
         console.log(`📊 Data Visualization Performance - ${visualization.name}:`);
         console.log(`  Data Points: ${dataPoints}`);
@@ -643,7 +644,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
   }
 
   // Test pagination vs infinite scroll performance comparison
-  test('Data Loading Strategy Comparison - Pagination vs Infinite Scroll', async ({ page }) => {
+  test('Data Loading Strategy Comparison - Pagination vs Infinite Scroll', async ({page}) => {
     performanceCollector.startTest('Data Loading - Strategy Comparison');
 
     await page.goto('http://localhost:3000/hives');
@@ -666,7 +667,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
       }>((resolve) => {
         const dataSize = 10000;
         const pageSize = 20;
-        const data = Array.from({ length: dataSize }, (_, i) => ({
+        const data = Array.from({length: dataSize}, (_, i) => ({
           id: i,
           name: `Item ${i}`,
           description: `Description ${i}`,
@@ -674,31 +675,31 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
         }));
 
         // Test Pagination Strategy
-        const testPagination = () => {
+        const testPagination = (): void => {
           const memoryBefore = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
           const loadStart = performance.now();
-          
-          let currentPage = 0;
+
+          const _currentPage = 0;
           let totalRequests = 0;
-          
-          const loadPage = (page: number) => {
+
+          const loadPage = (page: number): void => {
             totalRequests++;
             const start = page * pageSize;
             const end = start + pageSize;
             return data.slice(start, end);
           };
-          
+
           // Simulate loading first 5 pages
           const loadedData = [];
           for (let i = 0; i < 5; i++) {
             const pageData = loadPage(i);
             loadedData.push(...pageData);
           }
-          
+
           const loadTime = performance.now() - loadStart;
           const memoryAfter = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
           const memoryUsage = memoryAfter - memoryBefore;
-          
+
           return {
             loadTime,
             memoryUsage,
@@ -708,32 +709,32 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
         };
 
         // Test Infinite Scroll Strategy
-        const testInfiniteScroll = () => {
+        const testInfiniteScroll = (): void => {
           const memoryBefore = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
           const loadStart = performance.now();
-          
+
           let loadedItems = 0;
           let totalRequests = 0;
           const batchSize = 20;
-          
-          const loadBatch = () => {
+
+          const loadBatch = (): void => {
             totalRequests++;
             const batch = data.slice(loadedItems, loadedItems + batchSize);
             loadedItems += batchSize;
             return batch;
           };
-          
+
           // Simulate loading 5 batches (equivalent to pagination test)
           const loadedData = [];
           for (let i = 0; i < 5; i++) {
             const batch = loadBatch();
             loadedData.push(...batch);
           }
-          
+
           const loadTime = performance.now() - loadStart;
           const memoryAfter = (performance as ExtendedPerformance).memory?.usedJSHeapSize / 1024 / 1024 || 0;
           const memoryUsage = memoryAfter - memoryBefore;
-          
+
           return {
             loadTime,
             memoryUsage,
@@ -753,13 +754,13 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
     });
 
     // Analyze strategy comparison
-    const paginationScore = strategyComparison.pagination.userExperience - 
-      (strategyComparison.pagination.loadTime / 100) - 
-      (strategyComparison.pagination.memoryUsage * 2);
+    const paginationScore = strategyComparison.pagination.userExperience -
+        (strategyComparison.pagination.loadTime / 100) -
+        (strategyComparison.pagination.memoryUsage * 2);
 
-    const infiniteScrollScore = strategyComparison.infiniteScroll.userExperience - 
-      (strategyComparison.infiniteScroll.loadTime / 100) - 
-      (strategyComparison.infiniteScroll.memoryUsage * 2);
+    const infiniteScrollScore = strategyComparison.infiniteScroll.userExperience -
+        (strategyComparison.infiniteScroll.loadTime / 100) -
+        (strategyComparison.infiniteScroll.memoryUsage * 2);
 
     // Record results
     const largeDataMetrics: LargeDataPerformanceMetrics = {
@@ -779,7 +780,7 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
       largeDataMetrics: largeDataMetrics
     };
 
-    const result = performanceCollector.endTest('Data Loading - Strategy Comparison', metrics);
+    const _result = performanceCollector.endTest('Data Loading - Strategy Comparison', metrics);
 
     console.log(`⚖️ Data Loading Strategy Comparison:`);
     console.log(`  Pagination:`);
@@ -788,14 +789,14 @@ test.describe('Large Data Performance Tests with Virtualization', () => {
     console.log(`    UX Score: ${strategyComparison.pagination.userExperience}`);
     console.log(`    Network Requests: ${strategyComparison.pagination.networkRequests}`);
     console.log(`    Overall Score: ${paginationScore.toFixed(2)}`);
-    
+
     console.log(`  Infinite Scroll:`);
     console.log(`    Load Time: ${strategyComparison.infiniteScroll.loadTime.toFixed(2)}ms`);
     console.log(`    Memory Usage: ${strategyComparison.infiniteScroll.memoryUsage.toFixed(2)}MB`);
     console.log(`    UX Score: ${strategyComparison.infiniteScroll.userExperience}`);
     console.log(`    Network Requests: ${strategyComparison.infiniteScroll.networkRequests}`);
     console.log(`    Overall Score: ${infiniteScrollScore.toFixed(2)}`);
-    
+
     console.log(`  Recommended Strategy: ${infiniteScrollScore > paginationScore ? 'Infinite Scroll' : 'Pagination'}`);
   });
 });

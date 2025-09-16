@@ -2,8 +2,8 @@
  * Page Object Model for Signup/Register Page
  */
 
-import { Page, expect, Locator } from '@playwright/test';
-import { SELECTORS, TIMEOUTS, TEST_URLS } from '../helpers/test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {SELECTORS, TEST_URLS, TIMEOUTS} from '../helpers/test-data';
 
 export interface SignupFormData {
   username: string;
@@ -53,19 +53,19 @@ export class SignupPage {
    * Wait for signup page to fully load
    */
   async waitForPageLoad(): Promise<void> {
-    await expect(this.usernameInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await expect(this.emailInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await expect(this.passwordInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await expect(this.firstNameInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await expect(this.lastNameInput).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await expect(this.signupButton).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.usernameInput).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+    await expect(this.emailInput).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+    await expect(this.passwordInput).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+    await expect(this.firstNameInput).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+    await expect(this.lastNameInput).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+    await expect(this.signupButton).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
    * Fill username field
    */
   async fillUsername(username: string): Promise<void> {
-    await this.usernameInput.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+    await this.usernameInput.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
     await this.usernameInput.fill(username);
   }
 
@@ -73,7 +73,7 @@ export class SignupPage {
    * Fill email field
    */
   async fillEmail(email: string): Promise<void> {
-    await this.emailInput.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+    await this.emailInput.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
     await this.emailInput.fill(email);
   }
 
@@ -81,7 +81,7 @@ export class SignupPage {
    * Fill password field
    */
   async fillPassword(password: string): Promise<void> {
-    await this.passwordInput.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+    await this.passwordInput.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
     await this.passwordInput.fill(password);
   }
 
@@ -89,7 +89,7 @@ export class SignupPage {
    * Fill first name field
    */
   async fillFirstName(firstName: string): Promise<void> {
-    await this.firstNameInput.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+    await this.firstNameInput.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
     await this.firstNameInput.fill(firstName);
   }
 
@@ -97,7 +97,7 @@ export class SignupPage {
    * Fill last name field
    */
   async fillLastName(lastName: string): Promise<void> {
-    await this.lastNameInput.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+    await this.lastNameInput.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
     await this.lastNameInput.fill(lastName);
   }
 
@@ -105,7 +105,7 @@ export class SignupPage {
    * Click signup button
    */
   async clickSignup(): Promise<void> {
-    await this.signupButton.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+    await this.signupButton.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
     await this.signupButton.click();
   }
 
@@ -113,7 +113,7 @@ export class SignupPage {
    * Click login link to navigate to login page
    */
   async clickLoginLink(): Promise<void> {
-    await this.loginLink.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+    await this.loginLink.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
     await this.loginLink.click();
   }
 
@@ -171,23 +171,23 @@ export class SignupPage {
   async waitForLoading(): Promise<void> {
     try {
       // Wait for loading spinner to appear if present
-      await this.loadingSpinner.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT });
+      await this.loadingSpinner.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT});
       // Then wait for it to disappear
-      await this.loadingSpinner.waitFor({ state: 'hidden', timeout: TIMEOUTS.NETWORK });
+      await this.loadingSpinner.waitFor({state: 'hidden', timeout: TIMEOUTS.NETWORK});
     } catch {
       // Loading spinner might not appear, which is fine
     }
-    
+
     // Wait for network idle
-    await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
+    await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
   }
 
   /**
    * Verify error message is displayed
    */
   async verifyErrorMessage(expectedMessage?: string): Promise<void> {
-    await expect(this.errorMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.errorMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     if (expectedMessage) {
       await expect(this.errorMessage).toContainText(expectedMessage);
     }
@@ -197,8 +197,8 @@ export class SignupPage {
    * Verify success message is displayed
    */
   async verifySuccessMessage(expectedMessage?: string): Promise<void> {
-    await expect(this.successMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.successMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     if (expectedMessage) {
       await expect(this.successMessage).toContainText(expectedMessage);
     }
@@ -217,7 +217,7 @@ export class SignupPage {
   async verifyValidationErrors(): Promise<void> {
     // Check that validation errors are visible
     const errorElements = this.page.locator(SELECTORS.ERROR_MESSAGE);
-    await expect(errorElements.first()).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(errorElements.first()).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -225,7 +225,7 @@ export class SignupPage {
    */
   async verifySuccessfulSignup(): Promise<void> {
     // Should redirect to dashboard or login page depending on auto-login setting
-    await expect(this.page).toHaveURL(/\/dashboard|\/login|\/home/, { timeout: TIMEOUTS.NETWORK });
+    await expect(this.page).toHaveURL(/\/dashboard|\/login|\/home/, {timeout: TIMEOUTS.NETWORK});
   }
 
   /**
@@ -245,8 +245,8 @@ export class SignupPage {
     const password = await this.passwordInput.inputValue();
     const firstName = await this.firstNameInput.inputValue();
     const lastName = await this.lastNameInput.inputValue();
-    
-    return { username, email, password, firstName, lastName };
+
+    return {username, email, password, firstName, lastName};
   }
 
   /**
@@ -297,7 +297,7 @@ export class SignupPage {
    */
   async verifyFieldError(fieldName: keyof SignupFormData, expectedError: string): Promise<void> {
     let fieldLocator: Locator;
-    
+
     switch (fieldName) {
       case 'username':
         fieldLocator = this.usernameInput;
@@ -315,7 +315,7 @@ export class SignupPage {
         fieldLocator = this.lastNameInput;
         break;
     }
-    
+
     // Look for error message near the field or general error message
     const fieldError = this.page.locator(`${fieldLocator} ~ .error, ${fieldLocator} ~ .MuiFormHelperText-error`);
     await expect(fieldError.first()).toContainText(expectedError);

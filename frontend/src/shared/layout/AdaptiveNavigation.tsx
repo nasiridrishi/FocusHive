@@ -1,50 +1,50 @@
 /**
  * Adaptive Navigation System
- * 
+ *
  * Intelligent navigation that adapts to screen size, device type, and user context
  * Includes bottom navigation for mobile, sidebar for desktop, and smart transitions
  */
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, {useEffect, useMemo, useState} from 'react'
 import {
-  Box,
+  alpha,
+  AppBar,
+  Avatar,
+  Badge,
   BottomNavigation,
   BottomNavigationAction,
+  Box,
+  Chip,
+  Collapse,
   Drawer,
+  Fab,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  AppBar,
   Toolbar,
-  IconButton,
   Typography,
-  Badge,
-  Fab,
-  Collapse,
-  Avatar,
-  Chip,
   useTheme,
-  alpha,
 } from '@mui/material'
 import {
-  Home as HomeIcon,
-  Dashboard as DashboardIcon,
-  Group as GroupIcon,
+  Add as AddIcon,
   Chat as ChatIcon,
-  Timer as TimerIcon,
-  Settings as SettingsIcon,
+  Dashboard as DashboardIcon,
+  ExpandLess,
+  ExpandMore,
+  Group as GroupIcon,
+  Home as HomeIcon,
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
   Search as SearchIcon,
-  Add as AddIcon,
-  ExpandLess,
-  ExpandMore,
+  Settings as SettingsIcon,
+  Timer as TimerIcon,
 } from '@mui/icons-material'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { styled } from '@mui/material/styles'
-import { useResponsive, useScrollDirection } from '../hooks'
+import {useLocation, useNavigate} from 'react-router-dom'
+import {styled} from '@mui/material/styles'
+import {useResponsive, useScrollDirection} from '../hooks'
 
 // Types for navigation items
 interface NavigationItem {
@@ -73,7 +73,7 @@ interface AdaptiveNavigationProps {
 }
 
 // Styled components
-const StyledBottomNavigation = styled(BottomNavigation)(({ theme }) => ({
+const StyledBottomNavigation = styled(BottomNavigation)(({theme}) => ({
   position: 'fixed',
   bottom: 0,
   left: 0,
@@ -95,7 +95,7 @@ const StyledBottomNavigation = styled(BottomNavigation)(({ theme }) => ({
   },
 }))
 
-const SidebarDrawer = styled(Drawer)(({ theme }) => ({
+const SidebarDrawer = styled(Drawer)(({theme}) => ({
   '& .MuiDrawer-paper': {
     width: 280,
     backgroundColor: theme.palette.background.default,
@@ -105,7 +105,7 @@ const SidebarDrawer = styled(Drawer)(({ theme }) => ({
   },
 }))
 
-const SidebarHeader = styled(Box)(({ theme }) => ({
+const SidebarHeader = styled(Box)(({theme}) => ({
   padding: theme.spacing(2),
   borderBottom: `1px solid ${theme.palette.divider}`,
   display: 'flex',
@@ -113,7 +113,7 @@ const SidebarHeader = styled(Box)(({ theme }) => ({
   gap: theme.spacing(2),
 }))
 
-const FloatingFab = styled(Fab)(({ theme }) => ({
+const FloatingFab = styled(Fab)(({theme}) => ({
   position: 'fixed',
   bottom: theme.spacing(10), // Above bottom navigation
   right: theme.spacing(2),
@@ -129,43 +129,43 @@ const MobileBottomNav: React.FC<{
   items: NavigationItem[]
   currentPath: string
   onItemClick: (item: NavigationItem) => void
-}> = ({ items, currentPath, onItemClick }) => {
+}> = ({items, currentPath, onItemClick}) => {
   const scrollDirection = useScrollDirection()
-  
+
   // Filter items for mobile display (max 5 items)
   const mobileItems = useMemo(() => {
     return items
-      .filter(item => !item.desktopOnly)
-      .slice(0, 5) // Limit to 5 items for better UX
+    .filter(item => !item.desktopOnly)
+    .slice(0, 5) // Limit to 5 items for better UX
   }, [items])
-  
+
   const currentValue = mobileItems.findIndex(item => item.path === currentPath)
-  
+
   return (
-    <StyledBottomNavigation
-      value={currentValue >= 0 ? currentValue : false}
-      sx={{
-        transform: scrollDirection === 'down' ? 'translateY(100%)' : 'translateY(0)',
-        transition: 'transform 0.3s ease-in-out',
-      }}
-    >
-      {mobileItems.map((item) => (
-        <BottomNavigationAction
-          key={item.id}
-          label={item.label}
-          icon={
-            item.badge ? (
-              <Badge badgeContent={item.badge} color="error">
-                {item.icon}
-              </Badge>
-            ) : (
-              item.icon
-            )
-          }
-          onClick={() => onItemClick(item)}
-        />
-      ))}
-    </StyledBottomNavigation>
+      <StyledBottomNavigation
+          value={currentValue >= 0 ? currentValue : false}
+          sx={{
+            transform: scrollDirection === 'down' ? 'translateY(100%)' : 'translateY(0)',
+            transition: 'transform 0.3s ease-in-out',
+          }}
+      >
+        {mobileItems.map((item) => (
+            <BottomNavigationAction
+                key={item.id}
+                label={item.label}
+                icon={
+                  item.badge ? (
+                      <Badge badgeContent={item.badge} color="error">
+                        {item.icon}
+                      </Badge>
+                  ) : (
+                      item.icon
+                  )
+                }
+                onClick={() => onItemClick(item)}
+            />
+        ))}
+      </StyledBottomNavigation>
   )
 }
 
@@ -177,10 +177,10 @@ const DesktopSidebar: React.FC<{
   currentUser?: AdaptiveNavigationProps['currentUser']
   isOpen: boolean
   onClose: () => void
-}> = ({ items, currentPath, onItemClick, currentUser, isOpen, onClose }) => {
+}> = ({items, currentPath, onItemClick, currentUser, isOpen, onClose}) => {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
-  
-  const toggleExpanded = (itemId: string) => {
+
+  const toggleExpanded = (itemId: string): void => {
     setExpandedItems(prev => {
       const newSet = new Set(prev)
       if (newSet.has(itemId)) {
@@ -191,121 +191,121 @@ const DesktopSidebar: React.FC<{
       return newSet
     })
   }
-  
-  const renderNavigationItem = (item: NavigationItem, depth = 0) => {
+
+  const renderNavigationItem = (item: NavigationItem, depth = 0): React.ReactNode => {
     const isActive = currentPath === item.path
     const isExpanded = expandedItems.has(item.id)
     const hasChildren = item.children && item.children.length > 0
-    
+
     return (
-      <Box key={item.id}>
-        <ListItem disablePadding>
-          <ListItemButton
-            selected={isActive}
-            onClick={() => {
-              if (hasChildren) {
-                toggleExpanded(item.id)
-              } else {
-                onItemClick(item)
-              }
-            }}
-            sx={{
-              pl: 2 + (depth * 2),
-              borderRadius: 1,
-              mx: 1,
-              mb: 0.5,
-              '&.Mui-selected': {
-                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.12),
-                color: (theme) => theme.palette.primary.main,
-                '&:hover': {
-                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.16),
-                },
-              },
-            }}
-          >
-            <ListItemIcon
-              sx={{
-                color: 'inherit',
-                minWidth: 40,
-              }}
+        <Box key={item.id}>
+          <ListItem disablePadding>
+            <ListItemButton
+                selected={isActive}
+                onClick={() => {
+                  if (hasChildren) {
+                    toggleExpanded(item.id)
+                  } else {
+                    onItemClick(item)
+                  }
+                }}
+                sx={{
+                  pl: 2 + (depth * 2),
+                  borderRadius: 1,
+                  mx: 1,
+                  mb: 0.5,
+                  '&.Mui-selected': {
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.12),
+                    color: (theme) => theme.palette.primary.main,
+                    '&:hover': {
+                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.16),
+                    },
+                  },
+                }}
             >
-              {item.badge ? (
-                <Badge badgeContent={item.badge} color="error">
-                  {item.icon}
-                </Badge>
-              ) : (
-                item.icon
+              <ListItemIcon
+                  sx={{
+                    color: 'inherit',
+                    minWidth: 40,
+                  }}
+              >
+                {item.badge ? (
+                    <Badge badgeContent={item.badge} color="error">
+                      {item.icon}
+                    </Badge>
+                ) : (
+                    item.icon
+                )}
+              </ListItemIcon>
+              <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    variant: 'body2',
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+              />
+              {hasChildren && (
+                  isExpanded ? <ExpandLess/> : <ExpandMore/>
               )}
-            </ListItemIcon>
-            <ListItemText 
-              primary={item.label}
-              primaryTypographyProps={{
-                variant: 'body2',
-                fontWeight: isActive ? 600 : 400,
-              }}
-            />
-            {hasChildren && (
-              isExpanded ? <ExpandLess /> : <ExpandMore />
-            )}
-          </ListItemButton>
-        </ListItem>
-        
-        {hasChildren && (
-          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              {item.children!.map(child => renderNavigationItem(child, depth + 1))}
-            </List>
-          </Collapse>
-        )}
-      </Box>
+            </ListItemButton>
+          </ListItem>
+
+          {hasChildren && (
+              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {item.children?.map(child => renderNavigationItem(child, depth + 1))}
+                </List>
+              </Collapse>
+          )}
+        </Box>
     )
   }
-  
+
   return (
-    <SidebarDrawer
-      variant="persistent"
-      anchor="left"
-      open={isOpen}
-      onClose={onClose}
-    >
-      {/* Sidebar Header */}
-      <SidebarHeader>
-        <Avatar
-          src={currentUser?.avatar}
-          alt={currentUser?.name}
-          sx={{ width: 40, height: 40 }}
-        >
-          {currentUser?.name?.[0]}
-        </Avatar>
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          <Typography variant="subtitle2" noWrap>
-            {currentUser?.name || 'User'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {currentUser?.email || 'user@example.com'}
-          </Typography>
-        </Box>
-      </SidebarHeader>
-      
-      {/* Navigation Items */}
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', py: 1 }}>
-        <List>
-          {items
+      <SidebarDrawer
+          variant="persistent"
+          anchor="left"
+          open={isOpen}
+          onClose={onClose}
+      >
+        {/* Sidebar Header */}
+        <SidebarHeader>
+          <Avatar
+              src={currentUser?.avatar}
+              alt={currentUser?.name}
+              sx={{width: 40, height: 40}}
+          >
+            {currentUser?.name?.[0]}
+          </Avatar>
+          <Box sx={{flexGrow: 1, minWidth: 0}}>
+            <Typography variant="subtitle2" noWrap>
+              {currentUser?.name || 'User'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {currentUser?.email || 'user@example.com'}
+            </Typography>
+          </Box>
+        </SidebarHeader>
+
+        {/* Navigation Items */}
+        <Box sx={{flexGrow: 1, overflowY: 'auto', py: 1}}>
+          <List>
+            {items
             .filter(item => !item.mobileOnly)
             .map(item => renderNavigationItem(item))}
-        </List>
-      </Box>
-      
-      {/* Sidebar Footer */}
-      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-        <Chip
-          size="small"
-          label="FocusHive v1.0"
-          variant="outlined"
-          sx={{ width: '100%' }}
-        />
-      </Box>
-    </SidebarDrawer>
+          </List>
+        </Box>
+
+        {/* Sidebar Footer */}
+        <Box sx={{p: 2, borderTop: 1, borderColor: 'divider'}}>
+          <Chip
+              size="small"
+              label="FocusHive v1.0"
+              variant="outlined"
+              sx={{width: '100%'}}
+          />
+        </Box>
+      </SidebarDrawer>
   )
 }
 
@@ -316,80 +316,80 @@ const AdaptiveHeader: React.FC<{
   notificationCount?: number
   isConnected?: boolean
   showMenuButton: boolean
-}> = ({ onMenuClick, onNotificationClick, notificationCount, isConnected, showMenuButton }) => {
+}> = ({onMenuClick, onNotificationClick, notificationCount, isConnected, showMenuButton}) => {
   const theme = useTheme()
   const scrollDirection = useScrollDirection()
-  
+
   return (
-    <AppBar
-      position="fixed"
-      elevation={1}
-      sx={{
-        transform: scrollDirection === 'down' ? 'translateY(-100%)' : 'translateY(0)',
-        transition: 'transform 0.3s ease-in-out',
-        backgroundColor: alpha(theme.palette.background.paper, 0.9),
-        backdropFilter: 'blur(10px)',
-        color: theme.palette.text.primary,
-        borderBottom: `1px solid ${theme.palette.divider}`,
-      }}
-    >
-      <Toolbar>
-        {showMenuButton && (
+      <AppBar
+          position="fixed"
+          elevation={1}
+          sx={{
+            transform: scrollDirection === 'down' ? 'translateY(-100%)' : 'translateY(0)',
+            transition: 'transform 0.3s ease-in-out',
+            backgroundColor: alpha(theme.palette.background.paper, 0.9),
+            backdropFilter: 'blur(10px)',
+            color: theme.palette.text.primary,
+            borderBottom: `1px solid ${theme.palette.divider}`,
+          }}
+      >
+        <Toolbar>
+          {showMenuButton && (
+              <IconButton
+                  edge="start"
+                  color="inherit"
+                  aria-label="menu"
+                  onClick={onMenuClick}
+                  sx={{mr: 2}}
+              >
+                <MenuIcon/>
+              </IconButton>
+          )}
+
+          <Typography variant="h6" component="div" sx={{flexGrow: 1, fontWeight: 600}}>
+            FocusHive
+          </Typography>
+
+          {/* Connection Status */}
+          <Chip
+              size="small"
+              label={isConnected ? 'Online' : 'Offline'}
+              color={isConnected ? 'success' : 'error'}
+              variant="outlined"
+              sx={{mr: 1, display: {xs: 'none', sm: 'flex'}}}
+          />
+
+          {/* Notifications */}
           <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={onMenuClick}
-            sx={{ mr: 2 }}
+              color="inherit"
+              onClick={onNotificationClick}
+              aria-label="notifications"
           >
-            <MenuIcon />
+            <Badge badgeContent={notificationCount} color="error">
+              <NotificationsIcon/>
+            </Badge>
           </IconButton>
-        )}
-        
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-          FocusHive
-        </Typography>
-        
-        {/* Connection Status */}
-        <Chip
-          size="small"
-          label={isConnected ? 'Online' : 'Offline'}
-          color={isConnected ? 'success' : 'error'}
-          variant="outlined"
-          sx={{ mr: 1, display: { xs: 'none', sm: 'flex' } }}
-        />
-        
-        {/* Notifications */}
-        <IconButton
-          color="inherit"
-          onClick={onNotificationClick}
-          aria-label="notifications"
-        >
-          <Badge badgeContent={notificationCount} color="error">
-            <NotificationsIcon />
-          </Badge>
-        </IconButton>
-      </Toolbar>
-    </AppBar>
+        </Toolbar>
+      </AppBar>
   )
 }
 
 // Main Adaptive Navigation Component
 export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({
-  items,
-  currentUser,
-  onItemClick,
-  onNotificationClick,
-  notificationCount = 0,
-  isConnected = true,
-}) => {
+                                                                        items,
+                                                                        currentUser,
+                                                                        onItemClick,
+                                                                        onNotificationClick,
+                                                                        notificationCount = 0,
+                                                                        isConnected = true,
+                                                                      }) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isMobile, isTablet } = useResponsive()
+  const {isMobile, isTablet} = useResponsive()
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const [fabVisible, setFabVisible] = useState(true)
   const scrollDirection = useScrollDirection()
-  
+
   // Auto-close sidebar on mobile/tablet
   useEffect(() => {
     if (isMobile || isTablet) {
@@ -398,62 +398,62 @@ export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({
       setSidebarOpen(true)
     }
   }, [isMobile, isTablet])
-  
+
   // Hide FAB when scrolling down on mobile
   useEffect(() => {
     if (isMobile) {
       setFabVisible(scrollDirection !== 'down')
     }
   }, [scrollDirection, isMobile])
-  
-  const handleItemClick = (item: NavigationItem) => {
+
+  const handleItemClick = (item: NavigationItem): void => {
     if (onItemClick) {
       onItemClick(item)
     }
     navigate(item.path)
-    
+
     // Close sidebar on mobile after navigation
     if (isMobile || isTablet) {
       setSidebarOpen(false)
     }
   }
-  
-  const handleMenuToggle = () => {
+
+  const handleMenuToggle = (): void => {
     setSidebarOpen(!sidebarOpen)
   }
-  
+
   // Default navigation items
   const defaultItems: NavigationItem[] = [
     {
       id: 'home',
       label: 'Home',
-      icon: <HomeIcon />,
+      icon: <HomeIcon/>,
       path: '/',
     },
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: <DashboardIcon />,
+      icon: <DashboardIcon/>,
       path: '/dashboard',
       requiresAuth: true,
     },
     {
       id: 'hives',
       label: 'Hives',
-      icon: <GroupIcon />,
+      icon: <GroupIcon/>,
       path: '/hives',
       requiresAuth: true,
       children: [
         {
           id: 'my-hives',
           label: 'My Hives',
-          icon: <GroupIcon />,
+          icon: <GroupIcon/>,
           path: '/hives/my',
         },
         {
           id: 'discover',
           label: 'Discover',
-          icon: <SearchIcon />,
+          icon: <SearchIcon/>,
           path: '/hives/discover',
         },
       ],
@@ -461,7 +461,7 @@ export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({
     {
       id: 'chat',
       label: 'Chat',
-      icon: <ChatIcon />,
+      icon: <ChatIcon/>,
       path: '/chat',
       badge: 3, // Example badge
       requiresAuth: true,
@@ -469,89 +469,89 @@ export const AdaptiveNavigation: React.FC<AdaptiveNavigationProps> = ({
     {
       id: 'timer',
       label: 'Timer',
-      icon: <TimerIcon />,
+      icon: <TimerIcon/>,
       path: '/timer',
       requiresAuth: true,
     },
     {
       id: 'settings',
       label: 'Settings',
-      icon: <SettingsIcon />,
+      icon: <SettingsIcon/>,
       path: '/settings',
       requiresAuth: true,
       desktopOnly: true, // Show only on desktop
     },
   ]
-  
+
   const navigationItems = items.length > 0 ? items : defaultItems
-  
+
   return (
-    <>
-      {/* Adaptive Header */}
-      <AdaptiveHeader
-        onMenuClick={handleMenuToggle}
-        onNotificationClick={onNotificationClick}
-        notificationCount={notificationCount}
-        isConnected={isConnected}
-        showMenuButton={isMobile || isTablet || !sidebarOpen}
-      />
-      
-      {/* Desktop Sidebar */}
-      {!isMobile && (
-        <DesktopSidebar
-          items={navigationItems}
-          currentPath={location.pathname}
-          onItemClick={handleItemClick}
-          currentUser={currentUser}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+      <>
+        {/* Adaptive Header */}
+        <AdaptiveHeader
+            onMenuClick={handleMenuToggle}
+            onNotificationClick={onNotificationClick}
+            notificationCount={notificationCount}
+            isConnected={isConnected}
+            showMenuButton={isMobile || isTablet || !sidebarOpen}
         />
-      )}
-      
-      {/* Mobile Bottom Navigation */}
-      {isMobile && (
-        <MobileBottomNav
-          items={navigationItems}
-          currentPath={location.pathname}
-          onItemClick={handleItemClick}
-        />
-      )}
-      
-      {/* Mobile Drawer */}
-      {(isMobile || isTablet) && (
-        <Drawer
-          anchor="left"
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile
-          }}
-        >
-          <Box sx={{ width: 280 }}>
+
+        {/* Desktop Sidebar */}
+        {!isMobile && (
             <DesktopSidebar
-              items={navigationItems}
-              currentPath={location.pathname}
-              onItemClick={handleItemClick}
-              currentUser={currentUser}
-              isOpen={true}
-              onClose={() => setSidebarOpen(false)}
+                items={navigationItems}
+                currentPath={location.pathname}
+                onItemClick={handleItemClick}
+                currentUser={currentUser}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
             />
-          </Box>
-        </Drawer>
-      )}
-      
-      {/* Floating Action Button for Quick Actions */}
-      {isMobile && (
-        <FloatingFab
-          color="primary"
-          aria-label="quick action"
-          className={!fabVisible ? 'hidden' : ''}
-          onClick={() => navigate('/create')}
-        >
-          <AddIcon />
-        </FloatingFab>
-      )}
-    </>
+        )}
+
+        {/* Mobile Bottom Navigation */}
+        {isMobile && (
+            <MobileBottomNav
+                items={navigationItems}
+                currentPath={location.pathname}
+                onItemClick={handleItemClick}
+            />
+        )}
+
+        {/* Mobile Drawer */}
+        {(isMobile || isTablet) && (
+            <Drawer
+                anchor="left"
+                open={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                ModalProps={{
+                  keepMounted: true, // Better open performance on mobile
+                }}
+            >
+              <Box sx={{width: 280}}>
+                <DesktopSidebar
+                    items={navigationItems}
+                    currentPath={location.pathname}
+                    onItemClick={handleItemClick}
+                    currentUser={currentUser}
+                    isOpen={true}
+                    onClose={() => setSidebarOpen(false)}
+                />
+              </Box>
+            </Drawer>
+        )}
+
+        {/* Floating Action Button for Quick Actions */}
+        {isMobile && (
+            <FloatingFab
+                color="primary"
+                aria-label="quick action"
+                className={!fabVisible ? 'hidden' : ''}
+                onClick={() => navigate('/create')}
+            >
+              <AddIcon/>
+            </FloatingFab>
+        )}
+      </>
   )
 }
 

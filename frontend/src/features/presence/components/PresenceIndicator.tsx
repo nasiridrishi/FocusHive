@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react'
-import { Badge, Avatar, styled, keyframes, Theme } from '@mui/material'
-import { PresenceStatus } from '../../../shared/types/presence'
+import React, {useMemo} from 'react'
+import {Avatar, Badge, keyframes, styled, Theme} from '@mui/material'
+import {PresenceStatus} from '../../../shared/types/presence'
 
 const ripple = keyframes`
   0% {
@@ -25,7 +25,7 @@ const pulse = keyframes`
   }
 `
 
-const getStatusColor = (status: PresenceStatus, theme: Theme) => {
+const getStatusColor = (status: PresenceStatus, theme: Theme): string => {
   switch (status) {
     case 'online':
       return theme.palette.success.main
@@ -42,12 +42,12 @@ const getStatusColor = (status: PresenceStatus, theme: Theme) => {
   }
 }
 
-const StyledBadge = styled(Badge)<{ 
-  presenceStatus: PresenceStatus 
-  showAnimation?: boolean 
-}>(({ theme, presenceStatus, showAnimation }) => {
+const StyledBadge = styled(Badge)<{
+  presenceStatus: PresenceStatus
+  showAnimation?: boolean
+}>(({theme, presenceStatus, showAnimation}) => {
   const statusColor = getStatusColor(presenceStatus, theme)
-  
+
   return {
     '& .MuiBadge-badge': {
       backgroundColor: statusColor,
@@ -64,9 +64,9 @@ const StyledBadge = styled(Badge)<{
         width: '100%',
         height: '100%',
         borderRadius: '50%',
-        animation: presenceStatus === 'focusing' 
-          ? `${pulse} 2s infinite ease-in-out`
-          : `${ripple} 2s infinite ease-in-out`,
+        animation: presenceStatus === 'focusing'
+            ? `${pulse} 2s infinite ease-in-out`
+            : `${ripple} 2s infinite ease-in-out`,
         border: `1px solid ${statusColor}`,
         content: '""',
       } : {},
@@ -91,13 +91,16 @@ interface PresenceIndicatorProps {
 }
 
 const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
-  status,
-  children,
-  showAnimation = true,
-  overlap = 'circular',
-  anchorOrigin = { vertical: 'bottom', horizontal: 'right' },
-  className,
-}) => {
+                                                               status,
+                                                               children,
+                                                               showAnimation = true,
+                                                               overlap = 'circular',
+                                                               anchorOrigin = {
+                                                                 vertical: 'bottom',
+                                                                 horizontal: 'right'
+                                                               },
+                                                               className,
+                                                             }) => {
 
   // Memoize badge properties to prevent unnecessary re-renders
   const badgeProps = useMemo(() => {
@@ -122,9 +125,9 @@ const PresenceIndicator: React.FC<PresenceIndicatorProps> = ({
   }, [status, showAnimation, overlap, anchorOrigin, className])
 
   return (
-    <StyledBadge {...badgeProps}>
-      {children}
-    </StyledBadge>
+      <StyledBadge {...badgeProps}>
+        {children}
+      </StyledBadge>
   )
 }
 
@@ -139,24 +142,24 @@ export const PresenceAvatar = React.memo<{
   size?: number
   showAnimation?: boolean
   onClick?: () => void
-}>(({ 
-  status, 
-  src, 
-  alt, 
-  name, 
-  size = 40, 
-  showAnimation = true,
-  onClick 
-}) => {
+}>(({
+      status,
+      src,
+      alt,
+      name,
+      size = 40,
+      showAnimation = true,
+      onClick
+    }) => {
   // Memoize initials calculation
   const initials = useMemo(() => {
     if (!name) return '?'
     return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
   }, [name])
 
   // Memoize avatar styles
@@ -171,15 +174,15 @@ export const PresenceAvatar = React.memo<{
   }), [size, onClick])
 
   return (
-    <PresenceIndicator status={status} showAnimation={showAnimation}>
-      <Avatar
-        src={src}
-        alt={alt}
-        onClick={onClick}
-        sx={avatarStyles}
-      >
-        {!src && initials}
-      </Avatar>
-    </PresenceIndicator>
+      <PresenceIndicator status={status} showAnimation={showAnimation}>
+        <Avatar
+            src={src}
+            alt={alt}
+            onClick={onClick}
+            sx={avatarStyles}
+        >
+          {!src && initials}
+        </Avatar>
+      </PresenceIndicator>
   )
 })

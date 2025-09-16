@@ -1,0 +1,381 @@
+spring:
+  application:
+    name: notification-service
+
+  profiles:
+    active: dev
+
+  aop:
+    proxy-target-class: true
+    
+  datasource:
+    url: jdbc:postgresql://localhost:5432/focushive_notifications
+    username: ${DB_USERNAME:focushive_user}
+    password: ${DB_PASSWORD:focushive_pass}
+    driver-class-name: org.postgresql.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        # Slow query logging
+        generate_statistics: true
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: 1000
+        jdbc:
+          batch_size: 25
+          fetch_size: 100
+          time_zone: UTC
+        
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+          
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    jedis:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  # Cache configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hour in milliseconds
+      cache-null-values: false
+      key-prefix: "notification:"
+      use-key-prefix: true
+    template:
+      enabled: ${CACHE_TEMPLATE_ENABLED:true}
+      ttl:
+        hours: ${CACHE_TEMPLATE_TTL_HOURS:24}
+      rendered:
+        ttl:
+          hours: ${CACHE_RENDERED_TTL_HOURS:1}
+      metadata:
+        ttl:
+          hours: ${CACHE_METADATA_TTL_HOURS:48}
+      prefix: ${CACHE_TEMPLATE_PREFIX:notification:template:}
+    warming:
+      enabled: ${CACHE_WARMING_ENABLED:true}
+      batch-size: ${CACHE_WARMING_BATCH_SIZE:50}
+      critical-only: ${CACHE_WARMING_CRITICAL_ONLY:false}
+      async: ${CACHE_WARMING_ASYNC:true}
+      schedule:
+        enabled: ${CACHE_WARMING_SCHEDULE_ENABLED:false}
+        cron: ${CACHE_WARMING_SCHEDULE_CRON:0 0 3 * * ?}
+      frequent-templates:
+        count: ${CACHE_WARMING_FREQUENT_COUNT:10}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:focushive}
+    
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# AWS SES SMTP Configuration
+aws:
+  ses:
+    smtp:
+      username: ${AWS_SES_SMTP_USERNAME:AKIAXJOJSC7CYT4XZDI5}
+      password: ${AWS_SES_SMTP_PASSWORD:BMqZdKaBZrRqwbdwa6m4XFJoyQjYjt+Mq96e3eVLTTGZ}
+    from-email: ${EMAIL_FROM:no-reply@focushive.app}
+            
+server:
+  port: 8083
+  servlet:
+    context-path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers,env,configprops,beans
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    configprops:
+      enabled: true
+      show-values: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 10s
+        descriptions: true
+    enable:
+      all: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        notifications.processing.time: true
+        emails.delivery.time: true
+      percentiles:
+        http.server.requests: 0.5,0.75,0.95,0.99
+        notifications.processing.time: 0.5,0.75,0.95,0.99
+      slo:
+        http.server.requests: 100ms,250ms,500ms,1s,2s
+        notifications.processing.time: 50ms,100ms,250ms,500ms
+  observations:
+    http:
+      server:
+        requests:
+          name: http_server_requests
+    key-values:
+      application: notification-service
+      environment: "${spring.profiles.active:default}"
+  tracing:
+    sampling:
+      probability: 1.0
+    zipkin:
+      endpoint: "${ZIPKIN_URL:http://localhost:9411/api/v2/spans}"
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    try-it-out-enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    disable-swagger-default-url: true
+  show-actuator: false
+  packages-to-scan: com.focushive.notification.controller
+  paths-to-match: /api/**
+        
+logging:
+  level:
+    com.focushive.notification: INFO
+    com.focushive.notification.monitoring: DEBUG
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    io.micrometer: INFO
+    zipkin2: WARN
+  pattern:
+    # Structured logging with correlation IDs and tracing info
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId:-},%X{userId:-},%X{operation:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId:-},%X{userId:-},%X{operation:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/notification-service.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 1GB
+    
+# Service-specific configuration
+notification:
+  queue:
+    name: notifications
+    exchange: focushive.notifications
+    routing-key: notification.created
+  template:
+    default-language: en
+  cleanup:
+    enabled: true
+    schedule: "0 0 2 * * ?" # Daily at 2 AM
+    retention-days: 90
+    batch-size: 1000
+    export-limit: 10000
+  delivery:
+    max-retries: 3
+    retry-delay-ms: 1000
+  rate-limit:
+    enabled: true
+    read-limit: 100        # Requests per minute for read operations
+    write-limit: 50        # Requests per minute for write operations
+    admin-limit: 20        # Requests per minute for admin operations
+    unauthenticated-limit: 200  # Requests per minute for unauthenticated requests
+    window-minutes: 1      # Time window in minutes
+    redis-key-prefix: "rate_limit:"
+    excluded-endpoints:
+      - "/actuator/health"
+      - "/actuator/info"
+      - "/error"
+      - "/swagger-ui/**"
+      - "/v3/api-docs/**"
+  cors:
+    allowed-origins: "http://localhost:3000,http://localhost:5173"
+  # Monitoring configuration
+  monitoring:
+    slow-query-threshold-ms: 1000
+    enable-query-statistics: true
+    log-all-queries: false
+  # Read/Write Splitting Configuration (disabled by default)
+  datasource:
+    read-write-splitting:
+      enabled: false # Set to true to enable read/write splitting
+    # Configure when read-write-splitting.enabled=true
+    write:
+      url: ${WRITE_DB_URL:jdbc:postgresql://localhost:5432/focushive_notifications}
+      username: ${WRITE_DB_USERNAME:focushive_user}
+      password: ${WRITE_DB_PASSWORD:focushive_pass}
+    read:
+      url: ${READ_DB_URL:jdbc:postgresql://localhost:5432/focushive_notifications_replica}
+      username: ${READ_DB_USERNAME:focushive_user}
+      password: ${READ_DB_PASSWORD:focushive_pass}
+  # Security configuration
+  security:
+    authentication:
+      max-failed-attempts: ${SECURITY_MAX_FAILED_ATTEMPTS:5}
+      lockout-duration: ${SECURITY_LOCKOUT_DURATION:PT15M}
+      track-by-ip: ${SECURITY_TRACK_BY_IP:true}
+      track-by-username: ${SECURITY_TRACK_BY_USERNAME:true}
+      failed-attempts-window: ${SECURITY_FAILED_ATTEMPTS_WINDOW:PT5M}
+      auto-unlock: ${SECURITY_AUTO_UNLOCK:true}
+    rate-limiting:
+      enabled: ${RATE_LIMITING_ENABLED:true}
+      default-requests-per-minute: ${RATE_LIMIT_DEFAULT:60}
+      anonymous-requests-per-minute: ${RATE_LIMIT_ANONYMOUS:20}
+      admin-requests-per-minute: ${RATE_LIMIT_ADMIN:300}
+      burst-capacity: ${RATE_LIMIT_BURST:10}
+      cache-ttl: ${RATE_LIMIT_CACHE_TTL:PT1M}
+      excluded-paths:
+        - /health
+        - /actuator/**
+        - /swagger-ui/**
+        - /v3/api-docs/**
+    jwt:
+      access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:PT1H}
+      refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:P7D}
+      validate-issuer: ${JWT_VALIDATE_ISSUER:true}
+      validate-audience: ${JWT_VALIDATE_AUDIENCE:true}
+      clock-skew: ${JWT_CLOCK_SKEW:PT30S}
+      blacklisting-enabled: ${JWT_BLACKLISTING_ENABLED:true}
+      blacklist-ttl: ${JWT_BLACKLIST_TTL:PT2H}
+    headers:
+      enabled: ${SECURITY_HEADERS_ENABLED:true}
+      frame-options: ${SECURITY_FRAME_OPTIONS:DENY}
+      content-type-options: ${SECURITY_CONTENT_TYPE_OPTIONS:nosniff}
+      xss-protection: ${SECURITY_XSS_PROTECTION:1; mode=block}
+      referrer-policy: ${SECURITY_REFERRER_POLICY:strict-origin-when-cross-origin}
+      content-security-policy: ${SECURITY_CSP:default-src 'self'}
+      strict-transport-security: ${SECURITY_HSTS:max-age=31536000; includeSubDomains}
+    audit:
+      enabled: ${AUDIT_ENABLED:true}
+      log-successful-auth: ${AUDIT_LOG_SUCCESS:true}
+      log-failed-auth: ${AUDIT_LOG_FAILURES:true}
+      log-admin-actions: ${AUDIT_LOG_ADMIN:true}
+      log-data-access: ${AUDIT_LOG_DATA_ACCESS:false}
+      include-request-body: ${AUDIT_INCLUDE_REQUEST:false}
+      include-response-body: ${AUDIT_INCLUDE_RESPONSE:false}
+      retention-days: ${AUDIT_RETENTION_DAYS:90}
+    cors-security:
+      enabled: ${CORS_ENABLED:true}
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+      allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,PATCH,OPTIONS}
+      allowed-headers: ${CORS_ALLOWED_HEADERS:Content-Type,Authorization,X-Requested-With,Accept,X-Correlation-Id}
+      exposed-headers: ${CORS_EXPOSED_HEADERS:X-Total-Count,X-Correlation-Id}
+      allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+      max-age: ${CORS_MAX_AGE:3600}
+
+# Circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      identity-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+      
+  datasource:
+    url: jdbc:postgresql://localhost:5432/focushive_notifications_dev
+    
+logging:
+  level:
+    com.focushive.notification: DEBUG
+    
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  flyway:
+    enabled: false
+
+cache:
+  warming:
+    enabled: false
+    
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+      
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:focushive_notifications}
+    
+logging:
+  level:
+    com.focushive.notification: WARN
+    org.springframework: WARN

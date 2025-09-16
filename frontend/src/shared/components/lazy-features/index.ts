@@ -6,23 +6,23 @@ export {
   LazyHiveActivityHeatmap,
   LazyMemberEngagement,
   LazyGoalProgress,
-  
+
   // Gamification components
   LazyGamificationDemo,
   LazyLeaderboardCard,
   LazyAchievementBadge,
   LazyStreakCounter,
   LazyPointsDisplay,
-  
+
   // Music components
   LazyMusicPlayer,
   LazySpotifyConnect,
-  
+
   // Communication components
   LazyChatWindow,
   LazyForumHome,
   LazyBuddyDashboard,
-  
+
   // Fallback component
   FeatureLoadingFallback
 } from './LazyFeatureComponents'
@@ -33,4 +33,4 @@ export {
   featureBundleInfo
 } from './featureUtils'
 
-export type { } from './LazyFeatureComponents'
+export type {} from './LazyFeatureComponents'

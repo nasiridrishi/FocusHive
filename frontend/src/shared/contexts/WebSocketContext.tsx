@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
-import { io, Socket } from 'socket.io-client'
+import React, {createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react'
+import {io, Socket} from 'socket.io-client'
 
 // eslint-disable-next-line react-refresh/only-export-components
 export enum ConnectionState {
@@ -43,18 +43,22 @@ const DEFAULT_OPTIONS = {
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
-  children,
-  url = 'http://localhost:8080',
-  autoConnect = true,
-  options = DEFAULT_OPTIONS,
-}) => {
+                                                                      children,
+                                                                      url = 'http://localhost:8080',
+                                                                      autoConnect = true,
+                                                                      options = DEFAULT_OPTIONS,
+                                                                    }) => {
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.DISCONNECTED)
   const [reconnectCount, setReconnectCount] = useState(0)
   const [lastError, setLastError] = useState<string | null>(null)
-  
+
+  // Use refs for values that need to be accessed in callbacks
+  const reconnectCountRef = useRef(0)
+
   const socketRef = useRef<Socket | null>(null)
-  const reconnectTimeoutRef = useRef<number | null>(null)
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isManualDisconnect = useRef(false)
+  const isSocketInitialized = useRef(false)
 
   const clearReconnectTimeout = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -72,79 +76,25 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     setLastError(null)
     isManualDisconnect.current = false
 
-    const socket = io(url, {
-      timeout: options.timeout || DEFAULT_OPTIONS.timeout,
-      reconnection: false, // We handle reconnection manually
-      autoConnect: false,
-    })
-
-    socket.on('connect', () => {
-      setConnectionState(ConnectionState.CONNECTED)
-      setReconnectCount(0)
-      setLastError(null)
-      clearReconnectTimeout()
-    })
-
-    socket.on('disconnect', (reason) => {
-      setConnectionState(ConnectionState.DISCONNECTED)
-      
-      if (!isManualDisconnect.current && reason !== 'io client disconnect') {
-        if (scheduleReconnectRef.current) {
-          scheduleReconnectRef.current()
-        }
-      }
-    })
-
-    socket.on('connect_error', (error) => {
-      setConnectionState(ConnectionState.ERROR)
-      setLastError(error.message)
-      
-      if (!isManualDisconnect.current) {
-        if (scheduleReconnectRef.current) {
-          scheduleReconnectRef.current()
-        }
-      }
-    })
-
-    socketRef.current = socket
-    socket.connect()
-  }, [url, options.timeout, clearReconnectTimeout])
-
-  const scheduleReconnectRef = useRef<() => void>()
-  
-  const scheduleReconnect = useCallback(() => {
-    if (isManualDisconnect.current || reconnectCount >= (options.reconnectionAttempts || DEFAULT_OPTIONS.reconnectionAttempts)) {
-      return
+    if (socketRef.current) {
+      socketRef.current.connect()
     }
+  }, [])
 
-    clearReconnectTimeout()
-    
-    // Exponential backoff with jitter
-    const baseDelay = options.reconnectionDelay || DEFAULT_OPTIONS.reconnectionDelay
-    const exponentialDelay = Math.min(baseDelay * Math.pow(2, reconnectCount), 30000)
-    const jitter = Math.random() * 1000
-    const delay = exponentialDelay + jitter
-
-    setConnectionState(ConnectionState.RECONNECTING)
-    
-    reconnectTimeoutRef.current = window.setTimeout(() => {
-      setReconnectCount(prev => prev + 1)
-      connect()
-    }, delay)
-  }, [reconnectCount, options.reconnectionDelay, options.reconnectionAttempts, clearReconnectTimeout, connect])
-  
-  scheduleReconnectRef.current = scheduleReconnect
+  // Note: scheduleReconnect is defined inside the socket initialization useEffect
+  // to ensure stable references and avoid circular dependencies
 
   const disconnect = useCallback(() => {
     isManualDisconnect.current = true
     clearReconnectTimeout()
-    
+
     if (socketRef.current) {
       socketRef.current.disconnect()
-      socketRef.current = null
+      // Don't null the socket reference - we can reuse it for reconnection
     }
-    
+
     setConnectionState(ConnectionState.DISCONNECTED)
+    reconnectCountRef.current = 0
     setReconnectCount(0)
     setLastError(null)
   }, [clearReconnectTimeout])
@@ -159,7 +109,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     if (socketRef.current) {
       socketRef.current.on(event, handler)
     }
-    
+
     // Return cleanup function
     return () => {
       if (socketRef.current) {
@@ -178,22 +128,108 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, [])
 
-  // Auto-connect on mount
+  // Initialize socket on mount and auto-connect if needed
   useEffect(() => {
+    // Define clearReconnectTimeout inside useEffect
+    const clearReconnectTimeoutInternal = () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
+    }
+
+    // Define scheduleReconnect inside useEffect for stable reference
+    const scheduleReconnectInternal = () => {
+      if (isManualDisconnect.current || reconnectCountRef.current >= (options.reconnectionAttempts || DEFAULT_OPTIONS.reconnectionAttempts)) {
+        return
+      }
+
+      clearReconnectTimeoutInternal()
+
+      // Exponential backoff with jitter
+      const baseDelay = options.reconnectionDelay || DEFAULT_OPTIONS.reconnectionDelay
+      const exponentialDelay = Math.min(baseDelay * Math.pow(2, reconnectCountRef.current), 30000)
+      const jitter = Math.random() * 1000
+      const delay = exponentialDelay + jitter
+
+      reconnectTimeoutRef.current = setTimeout(() => {
+        setConnectionState(ConnectionState.RECONNECTING)
+        reconnectCountRef.current += 1
+        setReconnectCount(prev => prev + 1)
+        // Direct socket connection
+        if (socketRef.current && !socketRef.current.connected) {
+          socketRef.current.connect()
+        }
+      }, delay)
+    }
+
+    // Initialize socket immediately on mount if not already initialized
+    if (!isSocketInitialized.current && !socketRef.current) {
+      const socket = io(url, {
+        timeout: options.timeout || DEFAULT_OPTIONS.timeout,
+        reconnection: false, // We handle reconnection manually
+        autoConnect: false,
+      })
+
+      socket.on('connect', () => {
+        setConnectionState(ConnectionState.CONNECTED)
+        reconnectCountRef.current = 0
+        setReconnectCount(0)
+        setLastError(null)
+        clearReconnectTimeoutInternal()
+      })
+
+      socket.on('disconnect', (reason) => {
+        setConnectionState(ConnectionState.DISCONNECTED)
+
+        if (!isManualDisconnect.current && reason !== 'io client disconnect') {
+          scheduleReconnectInternal()
+        }
+      })
+
+      socket.on('connect_error', (error) => {
+        setConnectionState(ConnectionState.ERROR)
+        setLastError(error.message)
+
+        if (!isManualDisconnect.current) {
+          scheduleReconnectInternal()
+        }
+      })
+
+      socketRef.current = socket
+      isSocketInitialized.current = true
+    }
+
     if (autoConnect) {
       connect()
     }
 
     return () => {
-      disconnect()
+      // Don't disconnect on unmount, just cleanup
+      clearReconnectTimeoutInternal()
+      if (socketRef.current) {
+        // Remove all listeners (removeAllListeners may not exist in mock)
+        if (typeof socketRef.current.removeAllListeners === 'function') {
+          socketRef.current.removeAllListeners()
+        } else if (typeof socketRef.current.off === 'function') {
+          // Fallback for mocked sockets
+          socketRef.current.off('connect')
+          socketRef.current.off('disconnect')
+          socketRef.current.off('connect_error')
+        }
+        socketRef.current.disconnect()
+        socketRef.current = null
+        isSocketInitialized.current = false
+      }
     }
-  }, [autoConnect, connect, disconnect])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Handle visibility change for reconnection
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && 
-          connectionState === ConnectionState.DISCONNECTED && 
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === 'visible' &&
+          connectionState === ConnectionState.DISCONNECTED &&
           !isManualDisconnect.current) {
         connect()
       }
@@ -217,9 +253,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   }
 
   return (
-    <WebSocketContext.Provider value={value}>
-      {children}
-    </WebSocketContext.Provider>
+      <WebSocketContext.Provider value={value}>
+        {children}
+      </WebSocketContext.Provider>
   )
 }
 

@@ -1,8 +1,10 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
-import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { ThemeProvider, createTheme } from '@mui/material'
-import type { Track, MusicState } from '../../types'
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react'
+import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {createTheme, ThemeProvider} from '@mui/material'
+import type {MusicState, Track} from '../../types'
+// Import after mocking
+import MusicPlayer from './MusicPlayer'
 
 // Mock data
 const mockTrack: Track = {
@@ -53,7 +55,7 @@ const mockPlaybackControl = {
   toggleShuffle: vi.fn(),
   toggleRepeat: vi.fn(),
   history: [],
-  crossfadeState: { isActive: false, progress: 0 },
+  crossfadeState: {isActive: false, progress: 0},
   clearHistory: vi.fn(),
 }
 
@@ -170,31 +172,31 @@ vi.mock('../../context/useSpotifyContext', () => ({
 
 // Mock the SpotifyConnectButton component
 vi.mock('../spotify-connect', () => ({
-  SpotifyConnectButton: ({ onConnect, onDisconnect }: { onConnect: () => void; onDisconnect: () => void }) => (
-    <div>
-      <button onClick={onConnect}>Connect</button>
-      <button onClick={onDisconnect}>Disconnect</button>
-    </div>
+  SpotifyConnectButton: ({onConnect, onDisconnect}: {
+    onConnect: () => void;
+    onDisconnect: () => void
+  }) => (
+      <div>
+        <button onClick={onConnect}>Connect</button>
+        <button onClick={onDisconnect}>Disconnect</button>
+      </div>
   ),
 }))
-
-// Import after mocking
-import MusicPlayer from './MusicPlayer'
 
 // Create theme for testing
 const theme = createTheme()
 
 // Test wrapper component
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ThemeProvider theme={theme}>
-    {children}
-  </ThemeProvider>
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({children}) => (
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
 )
 
 describe('MusicPlayer', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    
+
     // Reset mock state
     mockMusicContext.state = {
       ...mockMusicState,
@@ -205,11 +207,11 @@ describe('MusicPlayer', () => {
         isBuffering: false,
       },
     }
-    
+
     // Reset playback control mocks
     mockPlaybackControl.isShuffling = false
     mockPlaybackControl.repeatMode = 'none'
-    
+
     // Reset Spotify mocks
     mockSpotifyPlayer.isConnected = false
     mockSpotifyPlayer.isPremium = false
@@ -219,9 +221,9 @@ describe('MusicPlayer', () => {
   describe('Mini Mode', () => {
     it('renders mini player with track info', () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       expect(screen.getByText('Test Song')).toBeInTheDocument()
@@ -230,9 +232,9 @@ describe('MusicPlayer', () => {
 
     it('shows play button when not playing', () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       // The play button has PlayArrow icon when not playing
@@ -245,9 +247,9 @@ describe('MusicPlayer', () => {
       mockMusicContext.state.playbackState.isPlaying = true
 
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       // The pause button has Pause icon when playing
@@ -257,9 +259,9 @@ describe('MusicPlayer', () => {
 
     it('calls playback functions when controls are clicked', async () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       // Test play button - click the parent button of the PlayArrow icon
@@ -295,13 +297,13 @@ describe('MusicPlayer', () => {
 
     it('shows progress bar with correct position', () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       // Progress should be 60/180 = 33.33%
-      const progressSlider = screen.getByRole('slider', { name: /seek/i })
+      const progressSlider = screen.getByRole('slider', {name: /seek/i})
       expect(progressSlider).toHaveAttribute('aria-valuenow')
       const ariaNow = progressSlider.getAttribute('aria-valuenow')
       expect(ariaNow).not.toBeNull()
@@ -310,9 +312,9 @@ describe('MusicPlayer', () => {
 
     it('can expand to full view', async () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       // Find expand button by its aria-label
@@ -328,9 +330,9 @@ describe('MusicPlayer', () => {
   describe('Full Mode', () => {
     it('renders full player with all controls', () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="full" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="full"/>
+          </TestWrapper>
       )
 
       expect(screen.getByText('Now Playing')).toBeInTheDocument()
@@ -341,9 +343,9 @@ describe('MusicPlayer', () => {
 
     it('shows time display', () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="full" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="full"/>
+          </TestWrapper>
       )
 
       expect(screen.getByText('1:00')).toBeInTheDocument() // current time
@@ -352,16 +354,16 @@ describe('MusicPlayer', () => {
 
     it('shows shuffle and repeat controls', () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="full" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="full"/>
+          </TestWrapper>
       )
 
       // Find buttons by their icons
       const shuffleIcon = screen.getByTestId('ShuffleIcon')
       const shuffleButton = shuffleIcon.closest('button')
       expect(shuffleButton).not.toBeNull()
-      
+
       const repeatIcon = screen.getByTestId('RepeatIcon')
       const repeatButton = repeatIcon.closest('button')
       expect(repeatButton).not.toBeNull()
@@ -378,16 +380,16 @@ describe('MusicPlayer', () => {
 
     it('handles seek interaction', async () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="full" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="full"/>
+          </TestWrapper>
       )
 
-      const progressSlider = screen.getByRole('slider', { name: /seek/i })
-      
+      const progressSlider = screen.getByRole('slider', {name: /seek/i})
+
       // Simulate user interaction with the slider (change and commit events)
-      fireEvent.change(progressSlider, { target: { value: 50 } })
-      
+      fireEvent.change(progressSlider, {target: {value: 50}})
+
       // Fire the mouse up to trigger the onChangeCommitted event
       fireEvent.mouseUp(progressSlider)
 
@@ -404,9 +406,9 @@ describe('MusicPlayer', () => {
       mockMusicContext.state.playbackState.isBuffering = true
 
       render(
-        <TestWrapper>
-          <MusicPlayer mode="full" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="full"/>
+          </TestWrapper>
       )
 
       expect(screen.getByRole('progressbar')).toBeInTheDocument()
@@ -417,9 +419,9 @@ describe('MusicPlayer', () => {
       mockMusicContext.state.currentTrack = null
 
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       expect(screen.getByText('No track selected')).toBeInTheDocument()
@@ -431,20 +433,20 @@ describe('MusicPlayer', () => {
       mockMusicContext.state.currentTrack = null
 
       render(
-        <TestWrapper>
-          <MusicPlayer mode="mini" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="mini"/>
+          </TestWrapper>
       )
 
       // Find buttons by their icons and check if disabled
       const playIcon = screen.getByTestId('PlayArrowIcon')
       const playButton = playIcon.closest('button')
       expect(playButton).not.toBeNull()
-      
+
       const nextIcon = screen.getByTestId('SkipNextIcon')
       const nextButton = nextIcon.closest('button')
       expect(nextButton).not.toBeNull()
-      
+
       const previousIcon = screen.getByTestId('SkipPreviousIcon')
       const previousButton = previousIcon.closest('button')
       expect(previousButton).not.toBeNull()
@@ -458,32 +460,32 @@ describe('MusicPlayer', () => {
   describe('Accessibility', () => {
     it('has proper ARIA labels', () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="full" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="full"/>
+          </TestWrapper>
       )
 
       // Check that buttons exist by finding their icons
       expect(screen.getByTestId('PlayArrowIcon')).toBeInTheDocument()
       // There are multiple SkipNext icons (regular next + skip forward 10s), so use getAllByTestId
       expect(screen.getAllByTestId('SkipNextIcon')).toHaveLength(2)
-      expect(screen.getAllByTestId('SkipPreviousIcon')).toHaveLength(2) 
+      expect(screen.getAllByTestId('SkipPreviousIcon')).toHaveLength(2)
       expect(screen.getByTestId('VolumeUpIcon')).toBeInTheDocument()
       expect(screen.getByTestId('ShuffleIcon')).toBeInTheDocument()
     })
 
     it('supports keyboard navigation', async () => {
       render(
-        <TestWrapper>
-          <MusicPlayer mode="full" />
-        </TestWrapper>
+          <TestWrapper>
+            <MusicPlayer mode="full"/>
+          </TestWrapper>
       )
 
       // Find play button by its icon
       const playIcon = screen.getByTestId('PlayArrowIcon')
       const playButton = playIcon.closest('button')
       expect(playButton).not.toBeNull()
-      
+
       act(() => {
         playButton.focus()
       })
@@ -493,7 +495,7 @@ describe('MusicPlayer', () => {
       act(() => {
         fireEvent.click(playButton)
       })
-      
+
       await waitFor(() => {
         expect(mockPlaybackControl.playWithCrossfade).toHaveBeenCalled()
       })

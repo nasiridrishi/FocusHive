@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useWebSocket } from './useWebSocket';
-import type { WebSocketMessage, PresenceUpdate } from '../services/websocket/WebSocketService';
-import webSocketService, { PresenceStatus } from '../services/websocket/WebSocketService';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {act, renderHook, waitFor} from '@testing-library/react';
+import {useWebSocket} from './useWebSocket';
+import type {PresenceUpdate, WebSocketMessage} from '../services/websocket/WebSocketService';
+import webSocketService, {MessageType, PresenceStatus} from '../services/websocket/WebSocketService';
 
 // Mock the WebSocketService module
 vi.mock('../services/websocket/WebSocketService', () => ({
@@ -14,7 +14,7 @@ vi.mock('../services/websocket/WebSocketService', () => ({
     unsubscribe: vi.fn(),
     setAuthTokenProvider: vi.fn(),
     getConnectionState: vi.fn(() => 'DISCONNECTED'),
-    getReconnectionInfo: vi.fn(() => ({ attempts: 0, maxAttempts: 10, isReconnecting: false })),
+    getReconnectionInfo: vi.fn(() => ({attempts: 0, maxAttempts: 10, isReconnecting: false})),
     onConnectionChange: vi.fn(),
     onMessage: vi.fn(),
     onPresenceUpdate: vi.fn(),
@@ -49,6 +49,13 @@ vi.mock('../services/websocket/WebSocketService', () => ({
     IN_BUDDY_SESSION: 'IN_BUDDY_SESSION',
     DO_NOT_DISTURB: 'DO_NOT_DISTURB',
     OFFLINE: 'OFFLINE'
+  },
+  MessageType: {
+    NOTIFICATION: 'NOTIFICATION',
+    ERROR: 'ERROR',
+    SUCCESS: 'SUCCESS',
+    WARNING: 'WARNING',
+    INFO: 'INFO'
   }
 }));
 
@@ -60,7 +67,7 @@ describe('useWebSocket', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset service state
     mockService.getConnectionState.mockReturnValue('DISCONNECTED');
     mockService.getReconnectionInfo.mockReturnValue({
@@ -68,18 +75,18 @@ describe('useWebSocket', () => {
       maxAttempts: 10,
       isReconnecting: false
     });
-    
+
     // Capture handlers when they are registered
     mockService.onConnectionChange.mockImplementation((handler) => {
       connectionChangeHandler = handler;
     });
-    
+
     mockService.onMessage.mockImplementation((type, handler) => {
       if (type === 'general') {
         _messageHandler = handler;
       }
     });
-    
+
     mockService.onPresenceUpdate.mockImplementation((handler) => {
       _presenceHandler = handler;
     });
@@ -90,8 +97,8 @@ describe('useWebSocket', () => {
   });
 
   it('should initialize with correct default values', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     expect(result.current.connectionState).toBe('DISCONNECTED');
@@ -107,26 +114,26 @@ describe('useWebSocket', () => {
   });
 
   it('should auto-connect when autoConnect is true', () => {
-    renderHook(() => useWebSocket({ autoConnect: true }));
+    renderHook(() => useWebSocket({autoConnect: true}));
 
     expect(mockService.connect).toHaveBeenCalled();
   });
-  
+
   it('should not auto-connect when autoConnect is false', () => {
-    renderHook(() => useWebSocket({ autoConnect: false }));
+    renderHook(() => useWebSocket({autoConnect: false}));
 
     expect(mockService.connect).not.toHaveBeenCalled();
   });
 
   it('should handle connection state changes', async () => {
     const onConnect = vi.fn();
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false, onConnect })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false, onConnect})
     );
 
     // Simulate connection established
     mockService.getConnectionState.mockReturnValue('CONNECTED');
-    
+
     act(() => {
       connectionChangeHandler(true);
     });
@@ -140,13 +147,13 @@ describe('useWebSocket', () => {
 
   it('should handle connection disconnection', async () => {
     const onDisconnect = vi.fn();
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false, onDisconnect })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false, onDisconnect})
     );
 
     // First establish connection
     mockService.getConnectionState.mockReturnValue('CONNECTED');
-    
+
     act(() => {
       connectionChangeHandler(true);
     });
@@ -157,7 +164,7 @@ describe('useWebSocket', () => {
 
     // Then simulate disconnection
     mockService.getConnectionState.mockReturnValue('DISCONNECTED');
-    
+
     act(() => {
       connectionChangeHandler(false);
     });
@@ -171,11 +178,11 @@ describe('useWebSocket', () => {
 
   it('should call onDisconnect on connection loss', async () => {
     const onDisconnect = vi.fn();
-    renderHook(() => 
-      useWebSocket({ 
-        onDisconnect,
-        autoConnect: false 
-      })
+    renderHook(() =>
+        useWebSocket({
+          onDisconnect,
+          autoConnect: false
+        })
     );
 
     // Simulate disconnection
@@ -190,11 +197,11 @@ describe('useWebSocket', () => {
 
   it('should handle incoming messages through service', async () => {
     const onMessage = vi.fn();
-    renderHook(() => 
-      useWebSocket({
-        onMessage,
-        autoConnect: false
-      })
+    renderHook(() =>
+        useWebSocket({
+          onMessage,
+          autoConnect: false
+        })
     );
 
     expect(mockService.onMessage).toHaveBeenCalledWith('general', onMessage);
@@ -204,7 +211,7 @@ describe('useWebSocket', () => {
       id: 'test-id',
       type: 'TEST_MESSAGE' as WebSocketMessage['type'],
       event: 'test',
-      payload: { data: 'hello' },
+      payload: {data: 'hello'},
       timestamp: new Date().toISOString()
     };
 
@@ -215,33 +222,33 @@ describe('useWebSocket', () => {
   });
 
   it('should delegate sendMessage to service', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     const destination = '/app/test';
-    const message = { type: 'test', payload: 'hello' };
+    const message = {type: 'test', payload: 'hello'};
     result.current.sendMessage(destination, message);
 
     expect(mockService.sendMessage).toHaveBeenCalledWith(destination, message);
   });
 
   it('should always delegate sendMessage regardless of connection state', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     // Service handles connection state internally
     const destination = '/app/test';
-    const message = { type: 'test', payload: 'hello' };
+    const message = {type: 'test', payload: 'hello'};
     result.current.sendMessage(destination, message);
 
     expect(mockService.sendMessage).toHaveBeenCalledWith(destination, message);
   });
 
   it('should handle string messages through service', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     const destination = '/app/test';
@@ -252,17 +259,17 @@ describe('useWebSocket', () => {
   });
 
   it('should provide retryConnection method', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     result.current.retryConnection();
     expect(mockService.retryConnection).toHaveBeenCalled();
   });
-  
+
   it('should provide reconnectWithNewToken method', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     result.current.reconnectWithNewToken();
@@ -271,11 +278,11 @@ describe('useWebSocket', () => {
 
   it('should handle presence updates', async () => {
     const onPresenceUpdate = vi.fn();
-    renderHook(() => 
-      useWebSocket({ 
-        onPresenceUpdate,
-        autoConnect: false 
-      })
+    renderHook(() =>
+        useWebSocket({
+          onPresenceUpdate,
+          autoConnect: false
+        })
     );
 
     expect(mockService.onPresenceUpdate).toHaveBeenCalledWith(onPresenceUpdate);
@@ -293,8 +300,8 @@ describe('useWebSocket', () => {
   });
 
   it('should clean up subscriptions on unmount', () => {
-    const { result, unmount } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result, unmount} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     // Add a subscription
@@ -313,15 +320,15 @@ describe('useWebSocket', () => {
       maxAttempts: 10,
       isReconnecting: true
     };
-    
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     // Update mock to return specific reconnection info
     mockService.getReconnectionInfo.mockReturnValue(reconnectionInfo);
     mockService.getConnectionState.mockReturnValue('CONNECTING');
-    
+
     // Trigger connection change handler to update connection info
     act(() => {
       connectionChangeHandler(false);
@@ -336,86 +343,86 @@ describe('useWebSocket', () => {
 
   it('should handle notifications', async () => {
     const onNotification = vi.fn();
-    const { result } = renderHook(() => 
-      useWebSocket({
-        onNotification,
-        autoConnect: false
-      })
+    const {result} = renderHook(() =>
+        useWebSocket({
+          onNotification,
+          autoConnect: false
+        })
     );
 
     expect(mockService.onMessage).toHaveBeenCalledWith(
-      'notification', 
-      expect.any(Function)
+        'notification',
+        expect.any(Function)
     );
 
     expect(result.current.notifications).toEqual([]);
     expect(typeof result.current.clearNotification).toBe('function');
     expect(typeof result.current.clearAllNotifications).toBe('function');
   });
-  
+
   it('should set auth token provider', () => {
     const authTokenProvider = vi.fn(() => 'test-token');
-    renderHook(() => 
-      useWebSocket({ 
-        authTokenProvider,
-        autoConnect: false 
-      })
+    renderHook(() =>
+        useWebSocket({
+          authTokenProvider,
+          autoConnect: false
+        })
     );
 
     expect(mockService.setAuthTokenProvider).toHaveBeenCalledWith(authTokenProvider);
   });
-  
+
   it('should provide presence management methods', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     expect(result.current.presenceStatus).toBe(PresenceStatus.OFFLINE);
     expect(typeof result.current.updatePresence).toBe('function');
     expect(typeof result.current.startFocusSession).toBe('function');
-    
+
     // Test updatePresence
     act(() => {
       result.current.updatePresence(PresenceStatus.ONLINE, 1, 'Working');
     });
     expect(mockService.updatePresenceStatus).toHaveBeenCalledWith(
-      PresenceStatus.ONLINE, 1, 'Working'
+        PresenceStatus.ONLINE, 1, 'Working'
     );
-    
+
     // Test startFocusSession
     act(() => {
       result.current.startFocusSession(1, 25);
     });
     expect(mockService.startFocusSession).toHaveBeenCalledWith(1, 25);
   });
-  
+
   it('should provide subscribe/unsubscribe methods', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     const callback = vi.fn();
     const subId = result.current.subscribe('/test/destination', callback);
-    
+
     expect(mockService.subscribe).toHaveBeenCalledWith('/test/destination', callback);
     expect(subId).toBe('mock-subscription-id');
-    
+
     result.current.unsubscribe(subId);
     expect(mockService.unsubscribe).toHaveBeenCalledWith(subId);
   });
 
   it('should handle notification management', async () => {
     const onNotification = vi.fn();
-    const { result } = renderHook(() => 
-      useWebSocket({
-        onNotification,
-        autoConnect: false
-      })
+    const {result} = renderHook(() =>
+        useWebSocket({
+          onNotification,
+          autoConnect: false
+        })
     );
 
     // Mock notification handler call
     const mockNotificationHandler = vi.mocked(mockService.onMessage).mock.calls
-      .find(([type]) => type === 'notification')?.[1];
+    .find(([type]) => type === 'notification')?.[1];
 
     expect(mockNotificationHandler).toBeDefined();
 
@@ -431,14 +438,14 @@ describe('useWebSocket', () => {
 
     const notificationMessage = {
       id: 'msg-1',
-      type: 'NOTIFICATION' as const,
+      type: MessageType.NOTIFICATION,
       event: 'notification',
       payload: testNotification,
       timestamp: new Date().toISOString()
     };
 
     act(() => {
-      mockNotificationHandler!(notificationMessage);
+      mockNotificationHandler?.(notificationMessage);
     });
 
     await waitFor(() => {
@@ -459,15 +466,15 @@ describe('useWebSocket', () => {
 
   it('should handle multiple notifications and clear all', async () => {
     const onNotification = vi.fn();
-    const { result } = renderHook(() => 
-      useWebSocket({ 
-        autoConnect: false,
-        onNotification 
-      })
+    const {result} = renderHook(() =>
+        useWebSocket({
+          autoConnect: false,
+          onNotification
+        })
     );
 
     const mockNotificationHandler = vi.mocked(mockService.onMessage).mock.calls
-      .find(([type]) => type === 'notification')?.[1];
+    .find(([type]) => type === 'notification')?.[1];
 
     expect(mockNotificationHandler).toBeDefined();
 
@@ -493,9 +500,9 @@ describe('useWebSocket', () => {
 
     for (const notif of notifications) {
       act(() => {
-        mockNotificationHandler!({
+        mockNotificationHandler?.({
           id: 'msg-' + notif.id,
-          type: 'NOTIFICATION' as const,
+          type: MessageType.NOTIFICATION,
           event: 'notification',
           payload: notif,
           timestamp: new Date().toISOString()
@@ -520,13 +527,13 @@ describe('useWebSocket', () => {
   it('should handle reconnection scenarios', async () => {
     const onConnect = vi.fn();
     const onDisconnect = vi.fn();
-    
-    const { result } = renderHook(() => 
-      useWebSocket({ 
-        onConnect, 
-        onDisconnect,
-        autoConnect: false 
-      })
+
+    const {result} = renderHook(() =>
+        useWebSocket({
+          onConnect,
+          onDisconnect,
+          autoConnect: false
+        })
     );
 
     // Initial connection
@@ -578,17 +585,17 @@ describe('useWebSocket', () => {
   });
 
   it('should handle multiple subscriptions cleanup', () => {
-    const { result, unmount } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result, unmount} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     // Create multiple subscriptions
     const callback1 = vi.fn();
     const callback2 = vi.fn();
     const callback3 = vi.fn();
-    
+
     const subId1 = result.current.subscribe('/test/1', callback1);
-    const subId2 = result.current.subscribe('/test/2', callback2);  
+    const subId2 = result.current.subscribe('/test/2', callback2);
     const subId3 = result.current.subscribe('/test/3', callback3);
 
     expect(mockService.subscribe).toHaveBeenCalledTimes(3);
@@ -599,14 +606,14 @@ describe('useWebSocket', () => {
 
     // Unmount should cleanup remaining subscriptions
     unmount();
-    
+
     expect(mockService.unsubscribe).toHaveBeenCalledWith(subId1);
     expect(mockService.unsubscribe).toHaveBeenCalledWith(subId3);
   });
 
   it('should handle edge case where subscription returns null', () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     // Mock subscribe to return null (error case)
@@ -614,14 +621,14 @@ describe('useWebSocket', () => {
 
     const callback = vi.fn();
     const subId = result.current.subscribe('/test/destination', callback);
-    
+
     expect(subId).toBeNull();
     expect(mockService.subscribe).toHaveBeenCalledWith('/test/destination', callback);
   });
 
   it('should handle connection state during different phases', async () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     // Test CONNECTING state
@@ -665,8 +672,8 @@ describe('useWebSocket', () => {
   });
 
   it('should update presence status locally when calling updatePresence', async () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     expect(result.current.presenceStatus).toBe(PresenceStatus.OFFLINE);
@@ -680,13 +687,13 @@ describe('useWebSocket', () => {
     });
 
     expect(mockService.updatePresenceStatus).toHaveBeenCalledWith(
-      PresenceStatus.BUSY, 123, 'In a meeting'
+        PresenceStatus.BUSY, 123, 'In a meeting'
     );
   });
 
   it('should update presence status when starting focus session', async () => {
-    const { result } = renderHook(() => 
-      useWebSocket({ autoConnect: false })
+    const {result} = renderHook(() =>
+        useWebSocket({autoConnect: false})
     );
 
     act(() => {

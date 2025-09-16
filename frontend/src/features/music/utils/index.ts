@@ -20,7 +20,7 @@ export const formatTime = (seconds: number): string => {
 export const formatDuration = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m`
   }
@@ -32,11 +32,11 @@ export const formatDuration = (seconds: number): string => {
  */
 export const formatTimeAgo = (dateString?: string): string => {
   if (!dateString) return 'Recently'
-  
+
   const date = new Date(dateString)
   const now = new Date()
   const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-  
+
   if (diffMinutes < 1) return 'Just now'
   if (diffMinutes < 60) return `${diffMinutes}m ago`
   if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`
@@ -65,11 +65,11 @@ export const generateRandomColor = (): string => {
  * Debounce function for search inputs
  */
 export const debounce = <T extends (...args: unknown[]) => unknown>(
-  func: T,
-  wait: number
+    func: T,
+    wait: number
 ): ((...args: Parameters<T>) => void) => {
   let timeout: NodeJS.Timeout
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => func(...args), wait)
@@ -125,7 +125,7 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 export const formatFileSize = (bytes: number): string => {
   const sizes = ['B', 'KB', 'MB', 'GB']
   if (bytes === 0) return '0 B'
-  
+
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
 }
@@ -135,10 +135,10 @@ export const formatFileSize = (bytes: number): string => {
  */
 export const cleanSearchQuery = (query: string): string => {
   return query
-    .trim()
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+  .trim()
+  .toLowerCase()
+  .replace(/[^\w\s-]/g, '') // Remove special characters except spaces and hyphens
+  .replace(/\s+/g, ' ') // Replace multiple spaces with single space
 }
 
 /**
@@ -146,11 +146,11 @@ export const cleanSearchQuery = (query: string): string => {
  */
 export const generateSlug = (text: string): string => {
   return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+  .toLowerCase()
+  .trim()
+  .replace(/[^\w\s-]/g, '') // Remove special characters
+  .replace(/\s+/g, '-') // Replace spaces with hyphens
+  .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
 }
 
 /**
@@ -180,12 +180,15 @@ export const getAudioFormatPriority = (mimeType: string): number => {
 /**
  * Calculate listening statistics
  */
-export const calculateListeningStats = (history: Array<{ duration: number; completed: boolean }>) => {
+export const calculateListeningStats = (history: Array<{
+  duration: number;
+  completed: boolean
+}>) => {
   const totalTracks = history.length
   const completedTracks = history.filter(h => h.completed).length
   const totalTime = history.reduce((sum, h) => sum + h.duration, 0)
   const completionRate = totalTracks > 0 ? (completedTracks / totalTracks) * 100 : 0
-  
+
   return {
     totalTracks,
     completedTracks,

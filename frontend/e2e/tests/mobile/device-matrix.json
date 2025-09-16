@@ -10,11 +10,18 @@
             "name": "iPhone SE (3rd gen)",
             "screenSize": "4.7\"",
             "resolution": "750x1334",
-            "viewport": { "width": 375, "height": 667 },
+            "viewport": {
+              "width": 375,
+              "height": 667
+            },
             "deviceScaleFactor": 2,
             "iosVersion": "17.0+",
             "priority": "high",
-            "testScenarios": ["compact_layout", "single_column", "minimal_chrome"],
+            "testScenarios": [
+              "compact_layout",
+              "single_column",
+              "minimal_chrome"
+            ],
             "marketShare": 3.2
           },
           {
@@ -22,54 +29,101 @@
             "name": "iPhone 14",
             "screenSize": "6.1\"",
             "resolution": "1170x2532",
-            "viewport": { "width": 390, "height": 844 },
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
             "deviceScaleFactor": 3,
             "iosVersion": "17.0+",
             "priority": "critical",
-            "testScenarios": ["notch_handling", "safe_area", "standard_layout"],
+            "testScenarios": [
+              "notch_handling",
+              "safe_area",
+              "standard_layout"
+            ],
             "marketShare": 15.8,
-            "safeArea": { "top": 47, "bottom": 34 }
+            "safeArea": {
+              "top": 47,
+              "bottom": 34
+            }
           },
           {
             "id": "iphone_14_pro",
             "name": "iPhone 14 Pro",
             "screenSize": "6.1\"",
             "resolution": "1179x2556",
-            "viewport": { "width": 393, "height": 852 },
+            "viewport": {
+              "width": 393,
+              "height": 852
+            },
             "deviceScaleFactor": 3,
             "iosVersion": "17.0+",
             "priority": "critical",
-            "testScenarios": ["dynamic_island", "always_on_display", "pro_features"],
+            "testScenarios": [
+              "dynamic_island",
+              "always_on_display",
+              "pro_features"
+            ],
             "marketShare": 12.4,
-            "safeArea": { "top": 59, "bottom": 34 },
-            "specialFeatures": ["dynamic_island", "promotion_120hz"]
+            "safeArea": {
+              "top": 59,
+              "bottom": 34
+            },
+            "specialFeatures": [
+              "dynamic_island",
+              "promotion_120hz"
+            ]
           },
           {
             "id": "iphone_15_pro",
             "name": "iPhone 15 Pro",
             "screenSize": "6.1\"",
             "resolution": "1179x2556",
-            "viewport": { "width": 393, "height": 852 },
+            "viewport": {
+              "width": 393,
+              "height": 852
+            },
             "deviceScaleFactor": 3,
             "iosVersion": "17.1+",
             "priority": "critical",
-            "testScenarios": ["usb_c", "action_button", "titanium_design"],
+            "testScenarios": [
+              "usb_c",
+              "action_button",
+              "titanium_design"
+            ],
             "marketShare": 8.7,
-            "safeArea": { "top": 59, "bottom": 34 },
-            "specialFeatures": ["action_button", "usb_c", "promotion_120hz"]
+            "safeArea": {
+              "top": 59,
+              "bottom": 34
+            },
+            "specialFeatures": [
+              "action_button",
+              "usb_c",
+              "promotion_120hz"
+            ]
           },
           {
             "id": "iphone_15_pro_max",
             "name": "iPhone 15 Pro Max",
             "screenSize": "6.7\"",
             "resolution": "1290x2796",
-            "viewport": { "width": 430, "height": 932 },
+            "viewport": {
+              "width": 430,
+              "height": 932
+            },
             "deviceScaleFactor": 3,
             "iosVersion": "17.1+",
             "priority": "high",
-            "testScenarios": ["large_screen", "one_handed_use", "extended_content"],
+            "testScenarios": [
+              "large_screen",
+              "one_handed_use",
+              "extended_content"
+            ],
             "marketShare": 6.3,
-            "safeArea": { "top": 59, "bottom": 34 }
+            "safeArea": {
+              "top": 59,
+              "bottom": 34
+            }
           }
         ],
         "android": [
@@ -78,11 +132,18 @@
             "name": "Google Pixel 5",
             "screenSize": "6.0\"",
             "resolution": "1080x2340",
-            "viewport": { "width": 393, "height": 851 },
+            "viewport": {
+              "width": 393,
+              "height": 851
+            },
             "deviceScaleFactor": 2.75,
             "androidVersion": "14",
             "priority": "high",
-            "testScenarios": ["pure_android", "material_you", "adaptive_brightness"],
+            "testScenarios": [
+              "pure_android",
+              "material_you",
+              "adaptive_brightness"
+            ],
             "marketShare": 2.1
           },
           {
@@ -90,52 +151,95 @@
             "name": "Google Pixel 7",
             "screenSize": "6.3\"",
             "resolution": "1080x2400",
-            "viewport": { "width": 412, "height": 915 },
+            "viewport": {
+              "width": 412,
+              "height": 915
+            },
             "deviceScaleFactor": 2.625,
             "androidVersion": "14",
             "priority": "critical",
-            "testScenarios": ["material_you", "adaptive_theming", "modern_android"],
+            "testScenarios": [
+              "material_you",
+              "adaptive_theming",
+              "modern_android"
+            ],
             "marketShare": 3.8,
-            "specialFeatures": ["material_you", "adaptive_brightness"]
+            "specialFeatures": [
+              "material_you",
+              "adaptive_brightness"
+            ]
           },
           {
             "id": "galaxy_s21",
             "name": "Samsung Galaxy S21",
             "screenSize": "6.2\"",
             "resolution": "1080x2400",
-            "viewport": { "width": 360, "height": 800 },
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
             "deviceScaleFactor": 3,
             "androidVersion": "14",
             "priority": "critical",
-            "testScenarios": ["samsung_ui", "edge_panels", "bixby_integration"],
+            "testScenarios": [
+              "samsung_ui",
+              "edge_panels",
+              "bixby_integration"
+            ],
             "marketShare": 18.5,
-            "specialFeatures": ["one_ui", "edge_display", "samsung_knox"]
+            "specialFeatures": [
+              "one_ui",
+              "edge_display",
+              "samsung_knox"
+            ]
           },
           {
             "id": "galaxy_s23_ultra",
             "name": "Samsung Galaxy S23 Ultra",
             "screenSize": "6.8\"",
             "resolution": "1440x3088",
-            "viewport": { "width": 384, "height": 854 },
+            "viewport": {
+              "width": 384,
+              "height": 854
+            },
             "deviceScaleFactor": 3.5,
             "androidVersion": "14",
             "priority": "high",
-            "testScenarios": ["s_pen", "ultra_wide", "professional_features"],
+            "testScenarios": [
+              "s_pen",
+              "ultra_wide",
+              "professional_features"
+            ],
             "marketShare": 7.2,
-            "specialFeatures": ["s_pen", "ultra_wide_camera", "dex_mode"]
+            "specialFeatures": [
+              "s_pen",
+              "ultra_wide_camera",
+              "dex_mode"
+            ]
           },
           {
             "id": "oneplus_9",
             "name": "OnePlus 9",
             "screenSize": "6.55\"",
             "resolution": "1080x2400",
-            "viewport": { "width": 412, "height": 915 },
+            "viewport": {
+              "width": 412,
+              "height": 915
+            },
             "deviceScaleFactor": 2.625,
             "androidVersion": "14",
             "priority": "medium",
-            "testScenarios": ["oxygen_os", "fast_charging", "performance_mode"],
+            "testScenarios": [
+              "oxygen_os",
+              "fast_charging",
+              "performance_mode"
+            ],
             "marketShare": 2.9,
-            "specialFeatures": ["oxygen_os", "warp_charge", "gaming_mode"]
+            "specialFeatures": [
+              "oxygen_os",
+              "warp_charge",
+              "gaming_mode"
+            ]
           }
         ]
       },
@@ -146,52 +250,98 @@
             "name": "iPad Mini (6th gen)",
             "screenSize": "8.3\"",
             "resolution": "1488x2266",
-            "viewport": { "width": 744, "height": 1133 },
+            "viewport": {
+              "width": 744,
+              "height": 1133
+            },
             "deviceScaleFactor": 2,
             "iosVersion": "17.0+",
             "priority": "high",
-            "testScenarios": ["compact_tablet", "one_handed_tablet", "portrait_focus"],
+            "testScenarios": [
+              "compact_tablet",
+              "one_handed_tablet",
+              "portrait_focus"
+            ],
             "marketShare": 4.1,
-            "specialFeatures": ["apple_pencil_2", "usb_c", "touch_id"]
+            "specialFeatures": [
+              "apple_pencil_2",
+              "usb_c",
+              "touch_id"
+            ]
           },
           {
             "id": "ipad_air",
             "name": "iPad Air (5th gen)",
             "screenSize": "10.9\"",
             "resolution": "1640x2360",
-            "viewport": { "width": 820, "height": 1180 },
+            "viewport": {
+              "width": 820,
+              "height": 1180
+            },
             "deviceScaleFactor": 2,
             "iosVersion": "17.0+",
             "priority": "critical",
-            "testScenarios": ["standard_tablet", "keyboard_support", "multitasking"],
+            "testScenarios": [
+              "standard_tablet",
+              "keyboard_support",
+              "multitasking"
+            ],
             "marketShare": 8.7,
-            "specialFeatures": ["apple_pencil_2", "magic_keyboard", "usb_c"]
+            "specialFeatures": [
+              "apple_pencil_2",
+              "magic_keyboard",
+              "usb_c"
+            ]
           },
           {
             "id": "ipad_pro_11",
             "name": "iPad Pro 11\" (4th gen)",
             "screenSize": "11\"",
             "resolution": "1668x2388",
-            "viewport": { "width": 834, "height": 1194 },
+            "viewport": {
+              "width": 834,
+              "height": 1194
+            },
             "deviceScaleFactor": 2,
             "iosVersion": "17.0+",
             "priority": "critical",
-            "testScenarios": ["pro_features", "desktop_class", "professional_workflows"],
+            "testScenarios": [
+              "pro_features",
+              "desktop_class",
+              "professional_workflows"
+            ],
             "marketShare": 6.3,
-            "specialFeatures": ["m2_chip", "promotion_120hz", "thunderbolt", "face_id"]
+            "specialFeatures": [
+              "m2_chip",
+              "promotion_120hz",
+              "thunderbolt",
+              "face_id"
+            ]
           },
           {
             "id": "ipad_pro_12_9",
             "name": "iPad Pro 12.9\" (6th gen)",
             "screenSize": "12.9\"",
             "resolution": "2048x2732",
-            "viewport": { "width": 1024, "height": 1366 },
+            "viewport": {
+              "width": 1024,
+              "height": 1366
+            },
             "deviceScaleFactor": 2,
             "iosVersion": "17.0+",
             "priority": "high",
-            "testScenarios": ["large_tablet", "desktop_replacement", "creative_workflows"],
+            "testScenarios": [
+              "large_tablet",
+              "desktop_replacement",
+              "creative_workflows"
+            ],
             "marketShare": 3.8,
-            "specialFeatures": ["m2_chip", "promotion_120hz", "thunderbolt", "mini_led"]
+            "specialFeatures": [
+              "m2_chip",
+              "promotion_120hz",
+              "thunderbolt",
+              "mini_led"
+            ]
           }
         ],
         "android": [
@@ -200,39 +350,73 @@
             "name": "Samsung Galaxy Tab S8",
             "screenSize": "11\"",
             "resolution": "1600x2560",
-            "viewport": { "width": 753, "height": 1037 },
+            "viewport": {
+              "width": 753,
+              "height": 1037
+            },
             "deviceScaleFactor": 2.4,
             "androidVersion": "14",
             "priority": "critical",
-            "testScenarios": ["android_tablet", "dex_mode", "s_pen"],
+            "testScenarios": [
+              "android_tablet",
+              "dex_mode",
+              "s_pen"
+            ],
             "marketShare": 12.4,
-            "specialFeatures": ["s_pen", "dex_mode", "one_ui_tablet"]
+            "specialFeatures": [
+              "s_pen",
+              "dex_mode",
+              "one_ui_tablet"
+            ]
           },
           {
             "id": "galaxy_tab_s8_ultra",
             "name": "Samsung Galaxy Tab S8 Ultra",
             "screenSize": "14.6\"",
             "resolution": "1848x2960",
-            "viewport": { "width": 924, "height": 1480 },
+            "viewport": {
+              "width": 924,
+              "height": 1480
+            },
             "deviceScaleFactor": 2,
             "androidVersion": "14",
             "priority": "medium",
-            "testScenarios": ["ultra_large", "laptop_replacement", "multitasking"],
+            "testScenarios": [
+              "ultra_large",
+              "laptop_replacement",
+              "multitasking"
+            ],
             "marketShare": 2.1,
-            "specialFeatures": ["notch_display", "s_pen", "dex_mode", "ultra_wide"]
+            "specialFeatures": [
+              "notch_display",
+              "s_pen",
+              "dex_mode",
+              "ultra_wide"
+            ]
           },
           {
             "id": "pixel_tablet",
             "name": "Google Pixel Tablet",
             "screenSize": "10.95\"",
             "resolution": "1600x2560",
-            "viewport": { "width": 800, "height": 1280 },
+            "viewport": {
+              "width": 800,
+              "height": 1280
+            },
             "deviceScaleFactor": 2,
             "androidVersion": "14",
             "priority": "high",
-            "testScenarios": ["pure_android_tablet", "hub_mode", "casting"],
+            "testScenarios": [
+              "pure_android_tablet",
+              "hub_mode",
+              "casting"
+            ],
             "marketShare": 1.8,
-            "specialFeatures": ["hub_mode", "charging_dock", "material_you"]
+            "specialFeatures": [
+              "hub_mode",
+              "charging_dock",
+              "material_you"
+            ]
           }
         ]
       },
@@ -243,52 +427,97 @@
             "name": "Samsung Galaxy Z Fold 4 (Inner)",
             "screenSize": "7.6\"",
             "resolution": "1812x2176",
-            "viewport": { "width": 344, "height": 748 },
+            "viewport": {
+              "width": 344,
+              "height": 748
+            },
             "deviceScaleFactor": 3.5,
             "androidVersion": "14",
             "priority": "high",
-            "testScenarios": ["foldable_inner", "tablet_mode", "multitasking"],
+            "testScenarios": [
+              "foldable_inner",
+              "tablet_mode",
+              "multitasking"
+            ],
             "marketShare": 1.2,
-            "specialFeatures": ["foldable", "multi_window", "flex_mode", "s_pen"]
+            "specialFeatures": [
+              "foldable",
+              "multi_window",
+              "flex_mode",
+              "s_pen"
+            ]
           },
           {
             "id": "galaxy_fold_4_outer",
             "name": "Samsung Galaxy Z Fold 4 (Cover)",
             "screenSize": "6.2\"",
             "resolution": "904x2316",
-            "viewport": { "width": 344, "height": 748 },
+            "viewport": {
+              "width": 344,
+              "height": 748
+            },
             "deviceScaleFactor": 3.5,
             "androidVersion": "14",
             "priority": "medium",
-            "testScenarios": ["foldable_cover", "narrow_screen", "quick_tasks"],
+            "testScenarios": [
+              "foldable_cover",
+              "narrow_screen",
+              "quick_tasks"
+            ],
             "marketShare": 1.2,
-            "specialFeatures": ["cover_screen", "narrow_aspect", "quick_reply"]
+            "specialFeatures": [
+              "cover_screen",
+              "narrow_aspect",
+              "quick_reply"
+            ]
           },
           {
             "id": "galaxy_flip_4",
             "name": "Samsung Galaxy Z Flip 4",
             "screenSize": "6.7\"",
             "resolution": "1080x2640",
-            "viewport": { "width": 360, "height": 748 },
+            "viewport": {
+              "width": 360,
+              "height": 748
+            },
             "deviceScaleFactor": 3,
             "androidVersion": "14",
             "priority": "medium",
-            "testScenarios": ["flip_phone", "compact_mode", "flex_mode"],
+            "testScenarios": [
+              "flip_phone",
+              "compact_mode",
+              "flex_mode"
+            ],
             "marketShare": 0.8,
-            "specialFeatures": ["flip_design", "flex_mode", "cover_display"]
+            "specialFeatures": [
+              "flip_design",
+              "flex_mode",
+              "cover_display"
+            ]
           },
           {
             "id": "pixel_fold",
             "name": "Google Pixel Fold",
             "screenSize": "7.6\"",
             "resolution": "1840x2208",
-            "viewport": { "width": 384, "height": 806 },
+            "viewport": {
+              "width": 384,
+              "height": 806
+            },
             "deviceScaleFactor": 2.625,
             "androidVersion": "14",
             "priority": "medium",
-            "testScenarios": ["google_foldable", "pure_android", "photography"],
+            "testScenarios": [
+              "google_foldable",
+              "pure_android",
+              "photography"
+            ],
             "marketShare": 0.3,
-            "specialFeatures": ["pure_android", "foldable", "pixel_camera"]
+            "specialFeatures": [
+              "pure_android",
+              "foldable",
+              "pixel_camera"
+            ]
           }
         ]
       }
@@ -323,21 +552,42 @@
     "orientations": {
       "portrait": {
         "primary": true,
-        "testScenarios": ["standard_navigation", "vertical_scrolling", "stacked_content"]
+        "testScenarios": [
+          "standard_navigation",
+          "vertical_scrolling",
+          "stacked_content"
+        ]
       },
       "landscape": {
         "primary": false,
-        "testScenarios": ["horizontal_navigation", "side_by_side", "extended_content"]
+        "testScenarios": [
+          "horizontal_navigation",
+          "side_by_side",
+          "extended_content"
+        ]
       }
     },
     "accessibility": {
       "screenReaders": {
-        "ios": ["VoiceOver"],
-        "android": ["TalkBack", "Voice Assistant"],
-        "testScenarios": ["navigation_with_screenreader", "form_completion", "content_reading"]
+        "ios": [
+          "VoiceOver"
+        ],
+        "android": [
+          "TalkBack",
+          "Voice Assistant"
+        ],
+        "testScenarios": [
+          "navigation_with_screenreader",
+          "form_completion",
+          "content_reading"
+        ]
       },
       "motorImpairments": {
-        "testScenarios": ["switch_control", "voice_control", "large_touch_targets"],
+        "testScenarios": [
+          "switch_control",
+          "voice_control",
+          "large_touch_targets"
+        ],
         "requirements": {
           "touchTargetSize": {
             "minimum": 44,
@@ -350,7 +600,12 @@
         }
       },
       "visualImpairments": {
-        "testScenarios": ["high_contrast", "large_text", "zoom", "color_blind"],
+        "testScenarios": [
+          "high_contrast",
+          "large_text",
+          "zoom",
+          "color_blind"
+        ],
         "requirements": {
           "contrast": {
             "normal": 4.5,
@@ -366,15 +621,35 @@
     "testPriorities": {
       "critical": {
         "description": "Must pass on these devices - highest market share",
-        "devices": ["iphone_14", "iphone_14_pro", "galaxy_s21", "ipad_air", "galaxy_tab_s8", "pixel_7"]
+        "devices": [
+          "iphone_14",
+          "iphone_14_pro",
+          "galaxy_s21",
+          "ipad_air",
+          "galaxy_tab_s8",
+          "pixel_7"
+        ]
       },
       "high": {
         "description": "Important devices with significant usage",
-        "devices": ["iphone_se_3rd", "iphone_15_pro_max", "pixel_5", "galaxy_s23_ultra", "ipad_mini", "ipad_pro_11"]
+        "devices": [
+          "iphone_se_3rd",
+          "iphone_15_pro_max",
+          "pixel_5",
+          "galaxy_s23_ultra",
+          "ipad_mini",
+          "ipad_pro_11"
+        ]
       },
       "medium": {
         "description": "Nice to have - emerging or niche devices",
-        "devices": ["oneplus_9", "galaxy_fold_4_outer", "galaxy_flip_4", "pixel_fold", "galaxy_tab_s8_ultra"]
+        "devices": [
+          "oneplus_9",
+          "galaxy_fold_4_outer",
+          "galaxy_flip_4",
+          "pixel_fold",
+          "galaxy_tab_s8_ultra"
+        ]
       }
     }
   }

@@ -191,14 +191,14 @@ export interface MusicContextType {
   toggleMute: () => void
   skipNext: () => void
   skipPrevious: () => void
-  
+
   // Queue management
   addToQueue: (track: Track, position?: number) => Promise<void>
   removeFromQueue: (queueId: string) => Promise<void>
   reorderQueue: (fromIndex: number, toIndex: number) => Promise<void>
   clearQueue: () => Promise<void>
   voteOnTrack: (queueId: string, vote: 'up' | 'down') => Promise<void>
-  
+
   // Playlist management
   loadPlaylists: () => Promise<void>
   createPlaylist: (request: CreatePlaylistRequest) => Promise<Playlist>
@@ -207,14 +207,14 @@ export interface MusicContextType {
   addTracksToPlaylist: (playlistId: string, trackIds: string[]) => Promise<void>
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => Promise<void>
   loadPlaylist: (id: string) => Promise<Playlist>
-  
+
   // Recommendations
   getRecommendations: (request: SessionRecommendationRequest) => Promise<Track[]>
   setMood: (mood: MoodState) => void
-  
+
   // Search
   searchTracks: (request: SearchTracksRequest) => Promise<SearchTracksResponse>
-  
+
   // WebSocket
   connectToHive: (hiveId: string) => void
   disconnectFromHive: () => void
@@ -290,16 +290,16 @@ export interface MusicError extends Error {
   timestamp: string
 }
 
-export type MusicErrorCode = 
-  | 'PLAYBACK_FAILED'
-  | 'TRACK_NOT_FOUND'
-  | 'PLAYLIST_NOT_FOUND'
-  | 'SPOTIFY_ERROR'
-  | 'NETWORK_ERROR'
-  | 'AUTHENTICATION_ERROR'
-  | 'PERMISSION_DENIED'
-  | 'QUEUE_FULL'
-  | 'UNSUPPORTED_FORMAT'
+export type MusicErrorCode =
+    | 'PLAYBACK_FAILED'
+    | 'TRACK_NOT_FOUND'
+    | 'PLAYLIST_NOT_FOUND'
+    | 'SPOTIFY_ERROR'
+    | 'NETWORK_ERROR'
+    | 'AUTHENTICATION_ERROR'
+    | 'PERMISSION_DENIED'
+    | 'QUEUE_FULL'
+    | 'UNSUPPORTED_FORMAT'
 
 // Audio features (Spotify API)
 export interface AudioFeatures {

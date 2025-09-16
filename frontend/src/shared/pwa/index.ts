@@ -1,6 +1,6 @@
 /**
  * PWA (Progressive Web App) Module
- * 
+ *
  * Provides comprehensive PWA functionality for FocusHive including:
  * - Service Worker registration and management
  * - Install prompts and app installation
@@ -8,13 +8,13 @@
  * - Offline functionality and caching
  * - Background sync capabilities
  * - Push notification foundation
- * 
+ *
  * Architecture:
  * - Hooks for state management (useServiceWorkerRegistration, usePWAInstall)
  * - Components for UI (PWAInstallPrompt, PWAUpdateNotification)
  * - Provider for context management (PWAProvider)
  * - Types for TypeScript support
- * 
+ *
  * Usage:
  * 1. Wrap your app with PWAProvider
  * 2. Use PWAUpdateNotification for automatic update handling
@@ -23,13 +23,13 @@
  */
 
 // Hooks
-export { useServiceWorkerRegistration } from './hooks/useServiceWorkerRegistration';
-export { usePWAInstall } from './hooks/usePWAInstall';
+export {useServiceWorkerRegistration} from './hooks/useServiceWorkerRegistration';
+export {usePWAInstall} from './hooks/usePWAInstall';
 
 // Components
-export { PWAProvider, usePWA, withPWA } from './components/PWAProvider';
-export { PWAInstallPrompt } from './components/PWAInstallPrompt';
-export { PWAUpdateNotification } from './components/PWAUpdateNotification';
+export {PWAProvider, usePWA, withPWA} from './components/PWAProvider';
+export {PWAInstallPrompt} from './components/PWAInstallPrompt';
+export {PWAUpdateNotification} from './components/PWAUpdateNotification';
 
 // Types
 export type {

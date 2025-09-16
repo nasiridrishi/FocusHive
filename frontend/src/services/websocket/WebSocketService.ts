@@ -1,8 +1,8 @@
-import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
+import {Client, IMessage, StompSubscription} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import type { BuddyCheckin, BuddyGoal } from '@features/buddy/types';
-import type { ForumPost, ForumReply } from '@features/forum/types';
-import { getWebSocketConfig } from '../config/environmentConfig';
+import type {BuddyCheckin, BuddyGoal} from '@features/buddy/types';
+import type {ForumPost, ForumReply} from '@features/forum/types';
+import {getWebSocketConfig} from '../config/environmentConfig';
 
 // WebSocket configuration from validated environment variables
 const WEBSOCKET_CONFIG = {
@@ -31,7 +31,7 @@ export enum MessageType {
   BUDDY_SESSION_START = 'BUDDY_SESSION_START',
   BUDDY_SESSION_END = 'BUDDY_SESSION_END',
   BUDDY_SESSION_REMINDER = 'BUDDY_SESSION_REMINDER',
-  
+
   // Forum Events
   FORUM_NEW_POST = 'FORUM_NEW_POST',
   FORUM_NEW_REPLY = 'FORUM_NEW_REPLY',
@@ -41,19 +41,19 @@ export enum MessageType {
   FORUM_MENTION = 'FORUM_MENTION',
   FORUM_POST_EDITED = 'FORUM_POST_EDITED',
   FORUM_POST_DELETED = 'FORUM_POST_DELETED',
-  
+
   // Presence Events
   USER_ONLINE = 'USER_ONLINE',
   USER_OFFLINE = 'USER_OFFLINE',
   USER_AWAY = 'USER_AWAY',
   USER_TYPING = 'USER_TYPING',
   USER_STOPPED_TYPING = 'USER_STOPPED_TYPING',
-  
+
   // Hive Events
   HIVE_USER_JOINED = 'HIVE_USER_JOINED',
   HIVE_USER_LEFT = 'HIVE_USER_LEFT',
   HIVE_ANNOUNCEMENT = 'HIVE_ANNOUNCEMENT',
-  
+
   // System Events
   NOTIFICATION = 'NOTIFICATION',
   ERROR = 'ERROR',
@@ -119,105 +119,6 @@ class WebSocketService {
     this.authTokenProvider = provider;
   }
 
-  private setupClient() {
-    // Get auth token from provider or localStorage
-    const getToken = () => {
-      return this.authTokenProvider?.() || localStorage.getItem('auth_token');
-    };
-
-    // Build WebSocket URL - convert http/https to ws/wss if needed
-    const wsUrl = this.buildWebSocketUrl();
-    
-    this.client = new Client({
-      webSocketFactory: () => new SockJS(`${wsUrl}/ws`),
-      connectHeaders: {
-        Authorization: `Bearer ${getToken()}`
-      },
-      debug: (_str) => {
-        // Debug logging only in development
-        if (import.meta.env.DEV) {
-          // STOMP debug messages in development only
-        }
-      },
-      reconnectDelay: WEBSOCKET_CONFIG.reconnectDelay,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      
-      onConnect: (_frame) => {
-        // WebSocket connected - handled by connection handlers
-        this.isConnected = true;
-        this.reconnectAttempts = 0;
-        this.setupSubscriptions();
-        this.startHeartbeat();
-        this.notifyConnectionHandlers(true);
-      },
-      
-      onDisconnect: (_frame) => {
-        // WebSocket disconnected - handled by connection handlers
-        this.isConnected = false;
-        this.stopHeartbeat();
-        this.notifyConnectionHandlers(false);
-      },
-      
-      onStompError: (_frame) => {
-        // WebSocket STOMP error handled by reconnection logic
-        this.handleReconnection();
-      },
-
-      onWebSocketClose: (_event) => {
-        // WebSocket closed - handled by reconnection logic
-        this.handleReconnection();
-      },
-
-      onWebSocketError: (_event) => {
-        // WebSocket error handled by reconnection logic
-        this.handleReconnection();
-      }
-    });
-  }
-
-  private buildWebSocketUrl(): string {
-    let wsUrl = WEBSOCKET_CONFIG.url;
-    
-    // Auto-detect protocol based on page protocol if not specified
-    if (wsUrl.startsWith('//')) {
-      wsUrl = window.location.protocol === 'https:' ? `wss:${wsUrl}` : `ws:${wsUrl}`;
-    } else if (wsUrl.startsWith('http://')) {
-      wsUrl = wsUrl.replace('http://', 'ws://');
-    } else if (wsUrl.startsWith('https://')) {
-      wsUrl = wsUrl.replace('https://', 'wss://');
-    }
-    
-    return wsUrl;
-  }
-
-  private handleReconnection(): void {
-    if (this.reconnectAttempts < WEBSOCKET_CONFIG.reconnectAttempts) {
-      this.reconnectAttempts++;
-      
-      // Exponential backoff with jitter
-      const baseDelay = WEBSOCKET_CONFIG.reconnectDelay;
-      const exponentialDelay = Math.min(
-        baseDelay * Math.pow(2, this.reconnectAttempts - 1),
-        WEBSOCKET_CONFIG.maxReconnectDelay
-      );
-      // Add jitter (±25%)
-      const jitter = exponentialDelay * 0.25 * (Math.random() * 2 - 1);
-      const delay = exponentialDelay + jitter;
-
-      // Reconnection attempt scheduled
-      
-      setTimeout(() => {
-        if (!this.isConnected) {
-          this.connect();
-        }
-      }, delay);
-    } else {
-      // Maximum reconnection attempts reached - user notification required
-      this.notifyConnectionHandlers(false);
-    }
-  }
-
   connect(): void {
     if (this.client && !this.isConnected) {
       this.client.activate();
@@ -238,44 +139,12 @@ class WebSocketService {
     this.stopHeartbeat();
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions.clear();
-    
+
     if (this.client) {
       this.client.deactivate();
     }
-    
+
     this.isConnected = false;
-  }
-
-  private setupSubscriptions() {
-    // Subscribe to user-specific notifications
-    this.subscribe('/user/queue/notifications', (message) => {
-      this.handleNotification(message);
-    });
-
-    // Subscribe to presence updates
-    this.subscribe('/topic/presence', (message) => {
-      this.handlePresenceUpdate(message);
-    });
-
-    // Subscribe to system announcements
-    this.subscribe('/topic/system/announcements', (message) => {
-      this.handleSystemAnnouncement(message);
-    });
-  }
-
-  private startHeartbeat() {
-    this.heartbeatInterval = window.setInterval(() => {
-      if (this.isConnected) {
-        this.sendMessage('/app/presence/heartbeat', {});
-      }
-    }, WEBSOCKET_CONFIG.heartbeatInterval);
-  }
-
-  private stopHeartbeat() {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = null;
-    }
   }
 
   subscribe(destination: string, callback: (message: IMessage) => void): string {
@@ -287,7 +156,7 @@ class WebSocketService {
     const subscription = this.client.subscribe(destination, callback);
     const subId = subscription.id;
     this.subscriptions.set(subId, subscription);
-    
+
     return subId;
   }
 
@@ -451,34 +320,6 @@ class WebSocketService {
     handler(this.isConnected);
   }
 
-  // Private handler methods
-  private handleNotification(message: IMessage): void {
-    const wsMessage: WebSocketMessage<NotificationMessage> = JSON.parse(message.body);
-    this.notifyHandlers('notification', wsMessage);
-  }
-
-  private handlePresenceUpdate(message: IMessage): void {
-    const wsMessage: WebSocketMessage<PresenceUpdate> = JSON.parse(message.body);
-    const presence = wsMessage.payload;
-    
-    this.presenceHandlers.forEach(handler => handler(presence));
-    this.notifyHandlers('presence', wsMessage);
-  }
-
-  private handleSystemAnnouncement(message: IMessage): void {
-    const wsMessage: WebSocketMessage = JSON.parse(message.body);
-    this.notifyHandlers('system', wsMessage);
-  }
-
-  private notifyHandlers(type: string, message: WebSocketMessage): void {
-    const handlers = this.messageHandlers.get(type) || [];
-    handlers.forEach(handler => handler(message));
-  }
-
-  private notifyConnectionHandlers(connected: boolean): void {
-    this.connectionHandlers.forEach(handler => handler(connected));
-  }
-
   // Utility methods
   isConnectedStatus(): boolean {
     return this.isConnected;
@@ -508,6 +349,165 @@ class WebSocketService {
     this.reconnectAttempts = 0;
     this.setupClient();
     this.connect();
+  }
+
+  private setupClient(): void {
+    // Get auth token from provider or localStorage
+    const getToken = () => {
+      return this.authTokenProvider?.() || localStorage.getItem('auth_token');
+    };
+
+    // Build WebSocket URL - convert http/https to ws/wss if needed
+    const wsUrl = this.buildWebSocketUrl();
+
+    this.client = new Client({
+      webSocketFactory: () => new SockJS(`${wsUrl}/ws`),
+      connectHeaders: {
+        Authorization: `Bearer ${getToken()}`
+      },
+      debug: (_str) => {
+        // Debug logging only in development
+        if (import.meta.env.DEV) {
+          // STOMP debug messages in development only
+        }
+      },
+      reconnectDelay: WEBSOCKET_CONFIG.reconnectDelay,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+
+      onConnect: (_frame) => {
+        // WebSocket connected - handled by connection handlers
+        this.isConnected = true;
+        this.reconnectAttempts = 0;
+        this.setupSubscriptions();
+        this.startHeartbeat();
+        this.notifyConnectionHandlers(true);
+      },
+
+      onDisconnect: (_frame) => {
+        // WebSocket disconnected - handled by connection handlers
+        this.isConnected = false;
+        this.stopHeartbeat();
+        this.notifyConnectionHandlers(false);
+      },
+
+      onStompError: (_frame) => {
+        // WebSocket STOMP error handled by reconnection logic
+        this.handleReconnection();
+      },
+
+      onWebSocketClose: (_event) => {
+        // WebSocket closed - handled by reconnection logic
+        this.handleReconnection();
+      },
+
+      onWebSocketError: (_event) => {
+        // WebSocket error handled by reconnection logic
+        this.handleReconnection();
+      }
+    });
+  }
+
+  private buildWebSocketUrl(): string {
+    let wsUrl = WEBSOCKET_CONFIG.url;
+
+    // Auto-detect protocol based on page protocol if not specified
+    if (wsUrl.startsWith('//')) {
+      wsUrl = window.location.protocol === 'https:' ? `wss:${wsUrl}` : `ws:${wsUrl}`;
+    } else if (wsUrl.startsWith('http://')) {
+      wsUrl = wsUrl.replace('http://', 'ws://');
+    } else if (wsUrl.startsWith('https://')) {
+      wsUrl = wsUrl.replace('https://', 'wss://');
+    }
+
+    return wsUrl;
+  }
+
+  private handleReconnection(): void {
+    if (this.reconnectAttempts < WEBSOCKET_CONFIG.reconnectAttempts) {
+      this.reconnectAttempts++;
+
+      // Exponential backoff with jitter
+      const baseDelay = WEBSOCKET_CONFIG.reconnectDelay;
+      const exponentialDelay = Math.min(
+          baseDelay * Math.pow(2, this.reconnectAttempts - 1),
+          WEBSOCKET_CONFIG.maxReconnectDelay
+      );
+      // Add jitter (±25%)
+      const jitter = exponentialDelay * 0.25 * (Math.random() * 2 - 1);
+      const delay = exponentialDelay + jitter;
+
+      // Reconnection attempt scheduled
+
+      setTimeout(() => {
+        if (!this.isConnected) {
+          this.connect();
+        }
+      }, delay);
+    } else {
+      // Maximum reconnection attempts reached - user notification required
+      this.notifyConnectionHandlers(false);
+    }
+  }
+
+  private setupSubscriptions(): void {
+    // Subscribe to user-specific notifications
+    this.subscribe('/user/queue/notifications', (message) => {
+      this.handleNotification(message);
+    });
+
+    // Subscribe to presence updates
+    this.subscribe('/topic/presence', (message) => {
+      this.handlePresenceUpdate(message);
+    });
+
+    // Subscribe to system announcements
+    this.subscribe('/topic/system/announcements', (message) => {
+      this.handleSystemAnnouncement(message);
+    });
+  }
+
+  private startHeartbeat(): void {
+    this.heartbeatInterval = window.setInterval(() => {
+      if (this.isConnected) {
+        this.sendMessage('/app/presence/heartbeat', {});
+      }
+    }, WEBSOCKET_CONFIG.heartbeatInterval);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  // Private handler methods
+  private handleNotification(message: IMessage): void {
+    const wsMessage: WebSocketMessage<NotificationMessage> = JSON.parse(message.body);
+    this.notifyHandlers('notification', wsMessage);
+  }
+
+  private handlePresenceUpdate(message: IMessage): void {
+    const wsMessage: WebSocketMessage<PresenceUpdate> = JSON.parse(message.body);
+    const presence = wsMessage.payload;
+
+    this.presenceHandlers.forEach(handler => handler(presence));
+    this.notifyHandlers('presence', wsMessage);
+  }
+
+  private handleSystemAnnouncement(message: IMessage): void {
+    const wsMessage: WebSocketMessage = JSON.parse(message.body);
+    this.notifyHandlers('system', wsMessage);
+  }
+
+  private notifyHandlers(type: string, message: WebSocketMessage): void {
+    const handlers = this.messageHandlers.get(type) || [];
+    handlers.forEach(handler => handler(message));
+  }
+
+  private notifyConnectionHandlers(connected: boolean): void {
+    this.connectionHandlers.forEach(handler => handler(connected));
   }
 }
 

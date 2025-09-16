@@ -8,15 +8,15 @@ export interface SkipLinkTarget {
 }
 
 const DEFAULT_SKIP_TARGETS: SkipLinkTarget[] = [
-  { id: 'main', label: 'Skip to main content', selector: '#main-content', order: 1 },
-  { id: 'nav', label: 'Skip to navigation', selector: '#main-nav', order: 2 },
-  { id: 'search', label: 'Skip to search', selector: '#search', order: 3 },
+  {id: 'main', label: 'Skip to main content', selector: '#main-content', order: 1},
+  {id: 'nav', label: 'Skip to navigation', selector: '#main-nav', order: 2},
+  {id: 'search', label: 'Skip to search', selector: '#search', order: 3},
 ];
 
 /**
  * Hook for managing skip navigation targets
  */
-export function useSkipNavigation() {
+export function useSkipNavigation(): unknown[] {
   const [targets, setTargets] = React.useState<SkipLinkTarget[]>(DEFAULT_SKIP_TARGETS);
 
   const addTarget = React.useCallback((target: SkipLinkTarget) => {
@@ -34,8 +34,8 @@ export function useSkipNavigation() {
   }, []);
 
   const updateTarget = React.useCallback((targetId: string, updates: Partial<SkipLinkTarget>) => {
-    setTargets(prev => prev.map(target => 
-      target.id === targetId ? { ...target, ...updates } : target
+    setTargets(prev => prev.map(target =>
+        target.id === targetId ? {...target, ...updates} : target
     ));
   }, []);
 

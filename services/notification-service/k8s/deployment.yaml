@@ -1,0 +1,232 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: focushive-notification
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: focushive
+    app.kubernetes.io/version: "1.0.0"
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notification-service
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/part-of: focushive
+        app.kubernetes.io/version: "1.0.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8083"
+        prometheus.io/path: "/actuator/prometheus"
+        co.elastic.logs/enabled: "true"
+        co.elastic.logs/json.keys_under_root: "true"
+        co.elastic.logs/json.add_error_key: "true"
+    spec:
+      serviceAccountName: notification-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+      - name: notification-service
+        image: focushive/notification-service:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8083
+          protocol: TCP
+        - name: management
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod,k8s"
+        - name: JAVA_OPTS
+          value: >-
+            -Xmx1g -Xms512m
+            -XX:+UseG1GC
+            -XX:MaxGCPauseMillis=100
+            -XX:+HeapDumpOnOutOfMemoryError
+            -XX:HeapDumpPath=/tmp/heapdump.hprof
+            -Dspring.profiles.active=prod,k8s
+            -Dlogging.config=classpath:logback-k8s.xml
+        # Database configuration
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "focushive_notifications"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: DB_PASSWORD
+        # Redis configuration
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: REDIS_PASSWORD
+        # RabbitMQ configuration
+        - name: RABBITMQ_HOST
+          value: "rabbitmq-service"
+        - name: RABBITMQ_PORT
+          value: "5672"
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: RABBITMQ_USER
+        - name: RABBITMQ_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: RABBITMQ_PASSWORD
+        # JWT configuration
+        - name: JWT_ISSUER_URI
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: JWT_ISSUER_URI
+        - name: JWT_JWK_SET_URI
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: JWT_JWK_SET_URI
+        # AWS SES configuration
+        - name: AWS_SES_SMTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: AWS_SES_SMTP_USERNAME
+        - name: AWS_SES_SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: AWS_SES_SMTP_PASSWORD
+        - name: EMAIL_FROM
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: EMAIL_FROM
+        # Monitoring configuration
+        - name: ZIPKIN_URL
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: ZIPKIN_URL
+        - name: CORS_ALLOWED_ORIGINS
+          valueFrom:
+            secretKeyRef:
+              name: notification-service-secrets
+              key: CORS_ALLOWED_ORIGINS
+        - name: PROMETHEUS_ENABLED
+          value: "true"
+        - name: LOG_LEVEL_MONITORING
+          value: "INFO"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+          readOnly: true
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: tmp-volume
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1.5Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+          successThreshold: 1
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: config-volume
+        configMap:
+          name: notification-service-config
+          items:
+          - key: application-k8s.yml
+            path: application-k8s.yml
+      - name: logs-volume
+        emptyDir: {}
+      - name: tmp-volume
+        emptyDir: {}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - notification-service
+              topologyKey: kubernetes.io/hostname
+      tolerations:
+      - key: "node.kubernetes.io/memory-pressure"
+        operator: "Exists"
+        effect: "NoSchedule"
+      - key: "node.kubernetes.io/disk-pressure"
+        operator: "Exists"
+        effect: "NoSchedule"

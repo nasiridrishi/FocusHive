@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
  * Provides visibility into circuit breaker status for monitoring.
  */
 @Slf4j
+@Profile("!test")
 @Component("circuitBreaker")
 @RequiredArgsConstructor
 public class CircuitBreakerHealthIndicator implements HealthIndicator {

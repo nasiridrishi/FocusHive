@@ -9,6 +9,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -48,10 +49,13 @@ import java.util.UUID;
 @EnableWebSecurity
 @RequiredArgsConstructor
 @Slf4j
-@Profile("!test")
+@Profile({"!test", "!owasp-test"})
 public class AuthorizationServerConfig {
 
     private final OAuthClientRepository clientRepository;
+
+    @Value("${auth.issuer}")
+    private String issuer;
 
     /**
      * Configure the authorization server security filter chain.
@@ -82,9 +86,8 @@ public class AuthorizationServerConfig {
                     .requestMatchers("/api/v1/oauth2/**").permitAll() // Allow our custom OAuth2 endpoints
                     .anyRequest().authenticated()
             )
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/v1/oauth2/**", "/oauth2/**", "/.well-known/**")
-            )
+            // Disable CSRF for stateless authentication
+            .csrf(csrf -> csrf.disable())
             .exceptionHandling(exceptions -> exceptions
                 .defaultAuthenticationEntryPointFor(
                     new LoginUrlAuthenticationEntryPoint("/login"),
@@ -106,15 +109,18 @@ public class AuthorizationServerConfig {
     @Order(2)
     public SecurityFilterChain formLoginSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher(request -> 
-                // Only handle web UI endpoints, not API endpoints
-                !request.getRequestURI().startsWith("/api/") &&
-                !request.getRequestURI().startsWith("/oauth2/") &&
-                !request.getRequestURI().startsWith("/.well-known/") &&
-                !request.getRequestURI().equals("/health") &&
-                !request.getRequestURI().equals("/actuator/health")
-            )
+            .securityMatcher(request -> {
+                String uri = request.getRequestURI();
+                // Only handle specific web UI endpoints - form login, consent, etc.
+                // MUST NOT handle API endpoints which are handled by defaultSecurityFilterChain
+                return uri.equals("/login") ||
+                       uri.equals("/logout") ||
+                       uri.equals("/oauth2/consent") ||
+                       uri.equals("/") ||
+                       (uri.startsWith("/static/") || uri.startsWith("/css/") || uri.startsWith("/js/"));
+            })
             .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/login", "/static/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/oauth2/consent").authenticated()
                 .anyRequest().authenticated()
             )
@@ -126,9 +132,8 @@ public class AuthorizationServerConfig {
                 .logoutSuccessUrl("/")
                 .permitAll()
             )
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/oauth2/**", "/.well-known/**")
-            );
+            // Disable CSRF for stateless JWT authentication
+            .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
@@ -198,11 +203,13 @@ public class AuthorizationServerConfig {
 
     /**
      * Authorization Server Settings configuration.
+     * Uses configured issuer to ensure consistent token generation.
      */
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
+        log.info("Configuring Authorization Server with issuer: {}", issuer);
         return AuthorizationServerSettings.builder()
-            .issuer("https://identity.focushive.com")
+            .issuer(issuer) // Use configured issuer from environment/properties
             .authorizationEndpoint("/oauth2/authorize")
             .deviceAuthorizationEndpoint("/oauth2/device_authorization")
             .deviceVerificationEndpoint("/oauth2/device_verification")

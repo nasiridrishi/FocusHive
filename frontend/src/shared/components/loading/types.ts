@@ -1,4 +1,4 @@
-import { CircularProgressProps, SkeletonProps, ButtonProps, BackdropProps } from '@mui/material'
+import {BackdropProps, ButtonProps, CircularProgressProps, SkeletonProps} from '@mui/material'
 
 /**
  * Loading component type definitions
@@ -71,22 +71,22 @@ export interface LazyLoadingFallbackProps {
    * - feature: Feature-specific loading state
    */
   variant?: 'spinner' | 'skeleton' | 'page' | 'feature'
-  
+
   /**
    * Custom loading message
    */
   message?: string
-  
+
   /**
    * Minimum height for the loading area
    */
   minHeight?: string | number
-  
+
   /**
    * Show loading message alongside indicator
    */
   showMessage?: boolean
-  
+
   /**
    * Feature name for contextual loading (used with 'feature' variant)
    */

@@ -1,6 +1,6 @@
 /**
  * API Query Hooks Index
- * 
+ *
  * Centralized exports for all TanStack Query hooks with:
  * - Organized by domain/service
  * - TypeScript support
@@ -113,7 +113,7 @@ export {
 // Extended types with computed properties  
 export type {
   UserPresence,
-  Hive, 
+  Hive,
   User,
   PresenceStatus,
   HiveMembershipStatus
@@ -131,13 +131,18 @@ export {
 } from '@tanstack/react-query';
 
 // Import useAuth specifically for useApiHooks
-import { useAuth as useAuthImported } from './useAuthQueries';
+import {useAuth as useAuthImported} from './useAuthQueries';
 // Import useQueryClient for utility functions
-import { useQueryClient } from '@tanstack/react-query';
+import {useQueryClient} from '@tanstack/react-query';
 // Import queryClient functions for cacheUtils
-import { 
-  prefetchQueries as prefetchQueriesImported, 
-  invalidateQueries as invalidateQueriesImported 
+// Import all required items from lib/queryClient
+import {
+  CACHE_TIMES as CACHE_TIMES_IMPORTED,
+  invalidateQueries as invalidateQueriesImported,
+  prefetchQueries as prefetchQueriesImported,
+  queryClient as queryClientImported,
+  queryKeys as queryKeysImported,
+  STALE_TIMES as STALE_TIMES_IMPORTED
 } from '../../lib/queryClient';
 
 // Hook composition utilities
@@ -152,22 +157,22 @@ export const useApiHooks = () => {
 // Development utilities
 export const useQueryDevtools = () => {
   const queryClientInstance = useQueryClient();
-  
+
   return {
     // Get query cache information
     getCacheInfo: () => ({
       queries: queryClientInstance.getQueryCache().getAll().length,
       mutations: queryClientInstance.getMutationCache().getAll().length,
     }),
-    
+
     // Clear specific cache sections
-    clearAuthCache: () => queryClientInstance.removeQueries({ queryKey: ['auth'] }),
-    clearHiveCache: () => queryClientInstance.removeQueries({ queryKey: ['hives'] }),
-    clearPresenceCache: () => queryClientInstance.removeQueries({ queryKey: ['presence'] }),
-    
+    clearAuthCache: () => queryClientInstance.removeQueries({queryKey: ['auth']}),
+    clearHiveCache: () => queryClientInstance.removeQueries({queryKey: ['hives']}),
+    clearPresenceCache: () => queryClientInstance.removeQueries({queryKey: ['presence']}),
+
     // Force refetch all queries
     refetchAll: () => queryClientInstance.refetchQueries(),
-    
+
     // Reset entire cache
     resetCache: () => queryClientInstance.clear(),
   };
@@ -202,17 +207,17 @@ export const cacheUtils = {
       prefetchQueriesImported.userData(),
       // Add more common prefetch operations
     ];
-    
+
     await Promise.allSettled(promises);
   },
-  
+
   // Clear cache on logout
   clearUserData: () => {
     invalidateQueriesImported.auth();
     invalidateQueriesImported.user();
     // Clear other user-specific data
   },
-  
+
   // Background sync for offline support
   syncOfflineData: async () => {
     // Implementation for offline data synchronization
@@ -224,22 +229,22 @@ export const cacheUtils = {
 export const useSlowQueries = (threshold = 1000) => {
   const queryClientInstance = useQueryClient();
   return queryClientInstance
-    .getQueryCache()
-    .getAll()
-    .filter(query => {
-      const state = query.state;
-      // Use dataUpdatedAt and fetchFailureCount as proxy for slow queries
-      const lastFetch = state.dataUpdatedAt ? Date.now() - state.dataUpdatedAt : 0;
-      return lastFetch > threshold;
-    })
-    .map(query => ({
-      queryKey: query.queryKey,
-      duration: query.state.dataUpdatedAt ? Date.now() - query.state.dataUpdatedAt : 0,
-      dataSize: JSON.stringify(query.state.data).length,
-    }));
+  .getQueryCache()
+  .getAll()
+  .filter(query => {
+    const state = query.state;
+    // Use dataUpdatedAt and fetchFailureCount as proxy for slow queries
+    const lastFetch = state.dataUpdatedAt ? Date.now() - state.dataUpdatedAt : 0;
+    return lastFetch > threshold;
+  })
+  .map(query => ({
+    queryKey: query.queryKey,
+    duration: query.state.dataUpdatedAt ? Date.now() - query.state.dataUpdatedAt : 0,
+    dataSize: JSON.stringify(query.state.data).length,
+  }));
 };
 
-export const useCacheSize = () => {
+export const useCacheSize = (): number => {
   const queryClientInstance = useQueryClient();
   const allData = queryClientInstance.getQueryCache().getAll().map(q => q.state.data);
   return JSON.stringify(allData).length;
@@ -249,14 +254,6 @@ export const useOptimizeCache = () => {
   const queryClientInstance = useQueryClient();
   return () => queryClientInstance.getQueryCache().clear();
 };
-
-// Import all required items from lib/queryClient
-import {
-  queryClient as queryClientImported,
-  queryKeys as queryKeysImported,
-  CACHE_TIMES as CACHE_TIMES_IMPORTED,
-  STALE_TIMES as STALE_TIMES_IMPORTED,
-} from '../../lib/queryClient';
 
 // Default export with commonly used utilities
 export default {

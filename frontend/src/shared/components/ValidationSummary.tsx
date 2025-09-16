@@ -1,21 +1,21 @@
-import { Alert, Box } from '@mui/material'
-import { FieldErrors } from 'react-hook-form'
+import {Alert, Box} from '@mui/material'
+import {FieldErrors} from 'react-hook-form'
 
 interface ValidationSummaryProps {
   errors: FieldErrors
   fieldLabels?: Record<string, string>
 }
 
-export default function ValidationSummary({ errors, fieldLabels = {} }: ValidationSummaryProps) {
+export default function ValidationSummary({errors, fieldLabels = {}}: ValidationSummaryProps) {
   const errorFields = Object.keys(errors)
-  
+
   // Separate acceptTerms from other field errors
   const hasTermsError = errorFields.includes('acceptTerms')
   const fieldErrors = errorFields.filter(field => field !== 'acceptTerms')
   const fieldErrorCount = fieldErrors.length
-  
+
   if (errorFields.length === 0) return null
-  
+
   // Default field labels if not provided
   const defaultLabels: Record<string, string> = {
     email: 'Email',
@@ -26,9 +26,9 @@ export default function ValidationSummary({ errors, fieldLabels = {} }: Validati
     username: 'Username',
     ...fieldLabels
   }
-  
+
   let message = ''
-  
+
   // First check if there are field errors (not including terms)
   if (fieldErrorCount > 0) {
     if (fieldErrorCount >= 3) {
@@ -47,12 +47,12 @@ export default function ValidationSummary({ errors, fieldLabels = {} }: Validati
     // Only show terms error if all other fields are filled
     message = 'You must accept the terms and conditions'
   }
-  
+
   return (
-    <Box sx={{ mb: 2 }}>
-      <Alert severity="error" variant="outlined">
-        {message}
-      </Alert>
-    </Box>
+      <Box sx={{mb: 2}}>
+        <Alert severity="error" variant="outlined">
+          {message}
+        </Alert>
+      </Box>
   )
 }

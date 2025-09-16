@@ -31,19 +31,19 @@ export interface Achievement {
   rarity: AchievementRarity;
 }
 
-export type AchievementCategory = 
-  | 'focus' 
-  | 'collaboration' 
-  | 'consistency' 
-  | 'milestone' 
-  | 'special';
+export type AchievementCategory =
+    | 'focus'
+    | 'collaboration'
+    | 'consistency'
+    | 'milestone'
+    | 'special';
 
-export type AchievementRarity = 
-  | 'common' 
-  | 'uncommon' 
-  | 'rare' 
-  | 'epic' 
-  | 'legendary';
+export type AchievementRarity =
+    | 'common'
+    | 'uncommon'
+    | 'rare'
+    | 'epic'
+    | 'legendary';
 
 export interface Streak {
   id: string;
@@ -54,11 +54,11 @@ export interface Streak {
   isActive: boolean;
 }
 
-export type StreakType = 
-  | 'daily_login' 
-  | 'focus_session' 
-  | 'goal_completion' 
-  | 'hive_participation';
+export type StreakType =
+    | 'daily_login'
+    | 'focus_session'
+    | 'goal_completion'
+    | 'hive_participation';
 
 export interface LeaderboardEntry {
   user: User;
@@ -75,11 +75,11 @@ export interface Leaderboard {
   lastUpdated: Date;
 }
 
-export type LeaderboardPeriod = 
-  | 'daily' 
-  | 'weekly' 
-  | 'monthly' 
-  | 'all_time';
+export type LeaderboardPeriod =
+    | 'daily'
+    | 'weekly'
+    | 'monthly'
+    | 'all_time';
 
 export interface GamificationStats {
   points: Points;
@@ -94,7 +94,7 @@ export interface GamificationContextValue {
   stats: GamificationStats | null;
   loading: boolean;
   error: string | null;
-  
+
   // Actions
   addPoints: (amount: number, source: string) => Promise<void>;
   unlockAchievement: (achievementId: string) => Promise<void>;

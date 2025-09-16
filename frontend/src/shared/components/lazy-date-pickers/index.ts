@@ -14,6 +14,6 @@ export {
   StaticDatePickerWrapper
 } from './LazyDatePickers'
 
-export { preloadDatePickers, datePickerBundleInfo } from './datePickerUtils'
+export {preloadDatePickers, datePickerBundleInfo} from './datePickerUtils'
 
-export type { LazyDatePickerWrapperProps } from './LazyDatePickers'
+export type {LazyDatePickerWrapperProps} from './LazyDatePickers'

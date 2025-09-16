@@ -1,13 +1,13 @@
 /**
  * Focus Trap Hook
- * 
+ *
  * Provides focus trapping functionality for modal dialogs,
  * dropdown menus, and other overlay components.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
-import { FocusTrap } from '../utils/focusManagement';
-import type { FocusTrapConfig, UseFocusTrapReturn } from '../types/accessibility';
+import {useCallback, useEffect, useRef} from 'react';
+import {FocusTrap} from '../utils/focusManagement';
+import type {FocusTrapConfig, UseFocusTrapReturn} from '../types/accessibility';
 
 export interface UseFocusTrapOptions extends FocusTrapConfig {
   isActive?: boolean;
@@ -41,12 +41,12 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
   const getFocusableElements = useCallback((): HTMLElement[] => {
     const container = getContainer();
     if (!container || !focusTrapRef.current) return [];
-    
+
     // Import getFocusableElements dynamically to avoid circular dependencies
-    import('../utils/focusManagement').then(({ getFocusableElements }) => {
+    import('../utils/focusManagement').then(({getFocusableElements}) => {
       return getFocusableElements(container);
     });
-    
+
     return [];
   }, [getContainer]);
 
@@ -56,19 +56,19 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
 
     const container = getContainer();
     if (!container) {
-      console.warn('useFocusTrap: No container element found');
+      // console.warn('useFocusTrap: No container element found');
       return;
     }
 
     // Create focus trap if it doesn't exist
     if (!focusTrapRef.current) {
       focusTrapRef.current = new FocusTrap(container, {
-        initialFocusElement: typeof initialFocus === 'string' 
-          ? document.querySelector(initialFocus) as HTMLElement
-          : initialFocus,
+        initialFocusElement: typeof initialFocus === 'string'
+            ? document.querySelector(initialFocus) as HTMLElement
+            : initialFocus,
         restoreFocusElement: typeof restoreFocus === 'string'
-          ? document.querySelector(restoreFocus) as HTMLElement
-          : restoreFocus,
+            ? document.querySelector(restoreFocus) as HTMLElement
+            : restoreFocus,
         onEscape,
         allowOutsideClick
       });
@@ -118,7 +118,7 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
 
   // Effect to handle escape key globally (fallback)
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
+    const handleEscape = (event: KeyboardEvent): void => {
       if (event.key === 'Escape' && isActiveRef.current && onEscape) {
         event.preventDefault();
         event.stopPropagation();
@@ -144,7 +144,7 @@ export function useFocusTrap(options: UseFocusTrapOptions = {}): UseFocusTrapRet
 /**
  * Simplified focus trap hook for basic modal usage
  */
-export function useModalFocusTrap(isOpen: boolean, onClose?: () => void) {
+export function useModalFocusTrap(isOpen: boolean, onClose?: () => void): void {
   return useFocusTrap({
     isActive: isOpen,
     onEscape: onClose,
@@ -157,9 +157,9 @@ export function useModalFocusTrap(isOpen: boolean, onClose?: () => void) {
  * Focus trap hook for dropdown menus
  */
 export function useDropdownFocusTrap(
-  isOpen: boolean, 
-  onClose?: () => void,
-  containerRef?: React.RefObject<HTMLElement>
+    isOpen: boolean,
+    onClose?: () => void,
+    containerRef?: React.RefObject<HTMLElement>
 ) {
   return useFocusTrap({
     isActive: isOpen,

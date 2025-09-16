@@ -1,0 +1,486 @@
+{
+  "total_files": 234,
+  "category_distribution": {
+    "cache": 1,
+    "compliance": 3,
+    "concurrency": 1,
+    "config": 40,
+    "controller": 14,
+    "diagnosis": 3,
+    "dto": 21,
+    "entity": 15,
+    "exception": 1,
+    "integration": 29,
+    "integrity": 1,
+    "interceptor": 1,
+    "monitoring": 4,
+    "network": 6,
+    "other": 7,
+    "performance": 12,
+    "repository": 3,
+    "resilience": 9,
+    "security": 22,
+    "service": 34,
+    "startup": 1,
+    "unit": 1,
+    "util": 1,
+    "validation": 4
+  },
+  "potential_duplicates": [],
+  "config_overload": [
+    {
+      "pattern": "test_config",
+      "count": 23,
+      "tests": [
+        "ApplicationConfigTest",
+        "AuthControllerTestConfig",
+        "BaseTestConfig",
+        "CacheConfigTest",
+        "ComprehensiveTestConfig",
+        "EnvironmentConfigTest",
+        "IntegrationTestConfig",
+        "JpaEntityTestConfig",
+        "MinimalAuthTestConfig",
+        "MinimalTestConfig",
+        "NotificationIntegrationTestConfig",
+        "OWASPTestConfig",
+        "PostgreSQLTestContainerConfig",
+        "QueryCountTestConfiguration",
+        "SSLConfigurationTest",
+        "TestApplicationConfig",
+        "TestConfig",
+        "TestContainersConfig",
+        "TestDatabaseConfig",
+        "TestEncryptionConfig",
+        "TestMetricsConfig",
+        "TestRateLimiterConfig",
+        "UnifiedTestConfig"
+      ],
+      "reason": "Too many test_config configuration classes"
+    },
+    {
+      "pattern": "security",
+      "count": 8,
+      "tests": [
+        "BaseSecurityTest",
+        "MinimalWebSecurityTest",
+        "SecurityHeadersConfigTest",
+        "SecurityTestConfig",
+        "SecurityTestRateLimitingConfig",
+        "SecurityTestSecurityConfig",
+        "SimpleSecurityTest",
+        "TestSecurityConfig"
+      ],
+      "reason": "Too many security configuration classes"
+    },
+    {
+      "pattern": "other",
+      "count": 4,
+      "tests": [
+        "EnvironmentValidationTest",
+        "HealthCheckTest",
+        "SecretManagementTest",
+        "StandaloneOWASPTest"
+      ],
+      "reason": "Too many other configuration classes"
+    }
+  ],
+  "container_test_redundancy": {
+    "count": 12,
+    "tests": [
+      "PostgreSQLTestContainerConfig",
+      "TestContainersConfig",
+      "AuthenticationTestContainersIntegrationTest",
+      "SimpleTestContainersIntegrationTest",
+      "TestContainersBasicTest",
+      "TestContainersDemoTest",
+      "WorkingTestContainersIntegrationTest",
+      "BasicTestContainersTest",
+      "PostgreSQLTestContainersTest",
+      "SimplePostgreSQLContainerTest",
+      "TestContainersSmokeTest",
+      "TestContainersVerificationTest"
+    ],
+    "reason": "Excessive TestContainer setup/verification tests"
+  },
+  "unit_vs_integration_duplicates": [],
+  "oversized_test_files": [
+    {
+      "class_name": "AuthenticationServiceTest",
+      "line_count": 2317,
+      "category": "service"
+    },
+    {
+      "class_name": "PersonaManagementServiceTest",
+      "line_count": 1558,
+      "category": "service"
+    },
+    {
+      "class_name": "PersonaServiceTest",
+      "line_count": 1361,
+      "category": "service"
+    },
+    {
+      "class_name": "TokenManagementServiceTest",
+      "line_count": 1226,
+      "category": "service"
+    },
+    {
+      "class_name": "PersonaProfileUnitTest",
+      "line_count": 1140,
+      "category": "entity"
+    },
+    {
+      "class_name": "OAuth2AuthorizationServiceTest",
+      "line_count": 1133,
+      "category": "service"
+    },
+    {
+      "class_name": "InputValidationTest",
+      "line_count": 1062,
+      "category": "validation"
+    },
+    {
+      "class_name": "CachingLayerTest",
+      "line_count": 994,
+      "category": "cache"
+    },
+    {
+      "class_name": "DataIntegrityTestSuite",
+      "line_count": 993,
+      "category": "integrity"
+    },
+    {
+      "class_name": "AuthControllerMvcTest",
+      "line_count": 987,
+      "category": "controller"
+    },
+    {
+      "class_name": "ConsentRecordUnitTest",
+      "line_count": 977,
+      "category": "entity"
+    },
+    {
+      "class_name": "ComprehensivePerformanceTestSuite",
+      "line_count": 911,
+      "category": "performance"
+    },
+    {
+      "class_name": "PrivacyControlsServiceTest",
+      "line_count": 887,
+      "category": "service"
+    },
+    {
+      "class_name": "DataExportRequestUnitTest",
+      "line_count": 880,
+      "category": "entity"
+    },
+    {
+      "class_name": "PrivacyPreferencesResponseUnitTest",
+      "line_count": 860,
+      "category": "dto"
+    },
+    {
+      "class_name": "CascadingFailurePreventionResilienceTest",
+      "line_count": 854,
+      "category": "resilience"
+    },
+    {
+      "class_name": "AuditLogUnitTest",
+      "line_count": 825,
+      "category": "entity"
+    },
+    {
+      "class_name": "OAuth2ClientResponseUnitTest",
+      "line_count": 816,
+      "category": "dto"
+    },
+    {
+      "class_name": "UpdatePrivacyPreferencesRequestUnitTest",
+      "line_count": 803,
+      "category": "dto"
+    },
+    {
+      "class_name": "ConcurrentAccessTest",
+      "line_count": 793,
+      "category": "concurrency"
+    },
+    {
+      "class_name": "ValidateTokenResponseUnitTest",
+      "line_count": 771,
+      "category": "dto"
+    },
+    {
+      "class_name": "SecurityAttackPreventionTest",
+      "line_count": 771,
+      "category": "security"
+    },
+    {
+      "class_name": "OAuth2ClientRegistrationRequestUnitTest",
+      "line_count": 760,
+      "category": "dto"
+    },
+    {
+      "class_name": "PoisonMessageHandlingResilienceTest",
+      "line_count": 735,
+      "category": "resilience"
+    },
+    {
+      "class_name": "UserUnitTest",
+      "line_count": 701,
+      "category": "entity"
+    },
+    {
+      "class_name": "CookieAuthenticationTest",
+      "line_count": 695,
+      "category": "security"
+    },
+    {
+      "class_name": "OAuth2AuthorizationServiceImplTest",
+      "line_count": 685,
+      "category": "service"
+    },
+    {
+      "class_name": "DataExportResponseUnitTest",
+      "line_count": 684,
+      "category": "dto"
+    },
+    {
+      "class_name": "AuthControllerTest",
+      "line_count": 678,
+      "category": "controller"
+    },
+    {
+      "class_name": "PasswordResetConfirmRequestUnitTest",
+      "line_count": 668,
+      "category": "dto"
+    },
+    {
+      "class_name": "OAuth2AuthorizeRequestUnitTest",
+      "line_count": 667,
+      "category": "dto"
+    },
+    {
+      "class_name": "DatabasePerformanceTest",
+      "line_count": 662,
+      "category": "performance"
+    },
+    {
+      "class_name": "SslCertificateIssuesTest",
+      "line_count": 657,
+      "category": "network"
+    },
+    {
+      "class_name": "PerformanceTestSuite",
+      "line_count": 654,
+      "category": "performance"
+    },
+    {
+      "class_name": "OAuth2TokenRevocationTest",
+      "line_count": 645,
+      "category": "service"
+    },
+    {
+      "class_name": "MemoryLeakDetectionTest",
+      "line_count": 639,
+      "category": "performance"
+    },
+    {
+      "class_name": "UserManagementServiceTest",
+      "line_count": 631,
+      "category": "service"
+    },
+    {
+      "class_name": "OAuth2PKCETest",
+      "line_count": 628,
+      "category": "service"
+    },
+    {
+      "class_name": "AuthenticationResponseUnitTest",
+      "line_count": 626,
+      "category": "dto"
+    },
+    {
+      "class_name": "ScopeEnforcementServiceImplTest",
+      "line_count": 625,
+      "category": "service"
+    },
+    {
+      "class_name": "RegisterRequestUnitTest",
+      "line_count": 607,
+      "category": "dto"
+    },
+    {
+      "class_name": "GDPRDataPortabilityComplianceTest",
+      "line_count": 606,
+      "category": "compliance"
+    },
+    {
+      "class_name": "OAuth2AuthorizationControllerTest",
+      "line_count": 606,
+      "category": "controller"
+    },
+    {
+      "class_name": "OAuth2TokenResponseUnitTest",
+      "line_count": 605,
+      "category": "dto"
+    },
+    {
+      "class_name": "OWASPComplianceStandaloneTest",
+      "line_count": 605,
+      "category": "security"
+    },
+    {
+      "class_name": "OAuth2FlowIntegrationTest",
+      "line_count": 604,
+      "category": "integration"
+    },
+    {
+      "class_name": "DatabaseOperationsTest",
+      "line_count": 603,
+      "category": "repository"
+    },
+    {
+      "class_name": "CircuitBreakerRecoveryResilienceTest",
+      "line_count": 603,
+      "category": "resilience"
+    },
+    {
+      "class_name": "CookieJwtServiceTest",
+      "line_count": 600,
+      "category": "service"
+    },
+    {
+      "class_name": "OAuth2TokenIntrospectionTest",
+      "line_count": 598,
+      "category": "service"
+    },
+    {
+      "class_name": "OAuth2TokenRequestUnitTest",
+      "line_count": 597,
+      "category": "dto"
+    },
+    {
+      "class_name": "PCIDSSNoCardStorageComplianceTest",
+      "line_count": 594,
+      "category": "compliance"
+    },
+    {
+      "class_name": "DataExportRequestUnitTest",
+      "line_count": 582,
+      "category": "dto"
+    },
+    {
+      "class_name": "OAuth2ClientCredentialsTest",
+      "line_count": 579,
+      "category": "service"
+    },
+    {
+      "class_name": "NetworkTimeoutTest",
+      "line_count": 567,
+      "category": "network"
+    },
+    {
+      "class_name": "OAuth2IntrospectionRequestUnitTest",
+      "line_count": 557,
+      "category": "dto"
+    },
+    {
+      "class_name": "PersonaDtoUnitTest",
+      "line_count": 541,
+      "category": "dto"
+    },
+    {
+      "class_name": "JwtTokenProviderUnitTest",
+      "line_count": 539,
+      "category": "security"
+    },
+    {
+      "class_name": "OAuth2AuthorizationFlowTest",
+      "line_count": 535,
+      "category": "integration"
+    },
+    {
+      "class_name": "PersonaServiceUnitTest",
+      "line_count": 532,
+      "category": "service"
+    },
+    {
+      "class_name": "JwtTokenProviderTest",
+      "line_count": 530,
+      "category": "security"
+    },
+    {
+      "class_name": "PersonaWorkflowIntegrationTest",
+      "line_count": 526,
+      "category": "integration"
+    },
+    {
+      "class_name": "TokenRefreshRequestUnitTest",
+      "line_count": 521,
+      "category": "dto"
+    },
+    {
+      "class_name": "PersonaUnitTest",
+      "line_count": 521,
+      "category": "entity"
+    },
+    {
+      "class_name": "SecurityAttackPreventionUnitTest",
+      "line_count": 521,
+      "category": "security"
+    },
+    {
+      "class_name": "RedisUnavailableTest",
+      "line_count": 517,
+      "category": "network"
+    },
+    {
+      "class_name": "DnsResolutionFailureTest",
+      "line_count": 514,
+      "category": "network"
+    },
+    {
+      "class_name": "OAuth2TokenOperationsTest",
+      "line_count": 513,
+      "category": "integration"
+    },
+    {
+      "class_name": "GracefulShutdownResilienceTest",
+      "line_count": 505,
+      "category": "resilience"
+    }
+  ],
+  "test_config_proliferation": [],
+  "recommended_deletions": [],
+  "recommended_consolidations": [],
+  "cleanup_summary": {
+    "current_file_count": 234,
+    "potential_file_reduction": 42,
+    "percentage_reduction": "17.9%",
+    "recommended_final_count": 192
+  },
+  "recommendations": [
+    {
+      "type": "CONFIG_CONSOLIDATION",
+      "priority": "HIGH",
+      "description": "Consolidate redundant test configuration classes",
+      "action": "Merge similar config classes into unified configurations",
+      "estimated_savings": "32 files"
+    },
+    {
+      "type": "CONTAINER_TEST_CLEANUP",
+      "priority": "MEDIUM",
+      "description": "Consolidate TestContainer setup tests",
+      "action": "Keep 1-2 comprehensive container tests, remove verification/demo tests",
+      "estimated_savings": "10 files"
+    },
+    {
+      "type": "LARGE_FILE_REFACTORING",
+      "priority": "LOW",
+      "description": "Break down oversized test files",
+      "action": "Split large test files into focused test classes",
+      "estimated_savings": "Better maintainability, not fewer files"
+    }
+  ]
+}

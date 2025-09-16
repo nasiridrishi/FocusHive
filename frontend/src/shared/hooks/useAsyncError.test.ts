@@ -1,7 +1,7 @@
-import { renderHook, act } from '@testing-library/react'
-import { useAsyncError } from './useAsyncError'
-import { errorLogger } from '@shared/services/errorLogging'
-import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
+import {act, renderHook} from '@testing-library/react'
+import {useAsyncError} from './useAsyncError'
+import {errorLogger} from '@shared/services/errorLogging'
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
 
 // Mock the error logger
 vi.mock('@shared/services/errorLogging', () => ({
@@ -20,8 +20,9 @@ vi.mock('react-error-boundary', () => ({
 describe('useAsyncError', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Suppress console.error during tests
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    // Suppress // console.error during tests
+    vi.spyOn(console, 'error').mockImplementation(() => {
+    })
   })
 
   afterEach(() => {
@@ -30,7 +31,7 @@ describe('useAsyncError', () => {
 
   describe('captureError', () => {
     it('logs async errors with default options', () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const testError = new Error('Test async error')
 
       act(() => {
@@ -38,16 +39,16 @@ describe('useAsyncError', () => {
       })
 
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        testError,
-        {},
-        'medium'
+          testError,
+          {},
+          'medium'
       )
     })
 
     it('logs async errors with custom context and severity', () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const testError = new Error('Critical error')
-      const context = { userId: '123', action: 'save' }
+      const context = {userId: '123', action: 'save'}
 
       act(() => {
         result.current.captureError(testError, {
@@ -57,23 +58,23 @@ describe('useAsyncError', () => {
       })
 
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        testError,
-        context,
-        'critical'
+          testError,
+          context,
+          'critical'
       )
     })
 
     it('converts non-Error objects to Error objects', () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
 
       act(() => {
         result.current.captureError('String error')
       })
 
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        expect.any(Error),
-        {},
-        'medium'
+          expect.any(Error),
+          {},
+          'medium'
       )
 
       const loggedError = (errorLogger.logAsyncError as ReturnType<typeof vi.fn>).mock.calls[0][0]
@@ -81,17 +82,17 @@ describe('useAsyncError', () => {
     })
 
     it('only logs when logOnly option is true', () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const testError = new Error('Log only error')
 
       act(() => {
-        result.current.captureError(testError, { logOnly: true })
+        result.current.captureError(testError, {logOnly: true})
       })
 
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        testError,
-        {},
-        'medium'
+          testError,
+          {},
+          'medium'
       )
       expect(console.error).toHaveBeenCalledWith('Async error (log only):', testError)
     })
@@ -99,7 +100,7 @@ describe('useAsyncError', () => {
 
   describe('wrapPromise', () => {
     it('returns resolved value for successful promises', async () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const successPromise = Promise.resolve('success')
 
       const wrappedPromise = result.current.wrapPromise(successPromise)
@@ -109,28 +110,28 @@ describe('useAsyncError', () => {
     })
 
     it('catches and logs rejected promises', async () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const testError = new Error('Promise rejection')
       const failurePromise = Promise.reject(testError)
 
       const wrappedPromise = result.current.wrapPromise(failurePromise, {
-        context: { source: 'api' },
+        context: {source: 'api'},
         severity: 'high',
       })
       const value = await wrappedPromise
 
       expect(value).toBeNull()
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        testError,
-        expect.objectContaining({ source: 'promise' }),
-        'high'
+          testError,
+          expect.objectContaining({source: 'promise'}),
+          'high'
       )
     })
   })
 
   describe('wrapAsyncFunction', () => {
     it('wraps async functions to catch errors', async () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const asyncFunction = async (input: string) => {
         if (input === 'error') {
           throw new Error('Function error')
@@ -139,7 +140,7 @@ describe('useAsyncError', () => {
       }
 
       const wrappedFunction = result.current.wrapAsyncFunction(asyncFunction, {
-        context: { type: 'user_action' },
+        context: {type: 'user_action'},
       })
 
       // Test successful call
@@ -150,18 +151,18 @@ describe('useAsyncError', () => {
       const errorResult = await wrappedFunction('error')
       expect(errorResult).toBeNull()
       expect(errorLogger.logAsyncError).toHaveBeenCalled()
-      
+
       const [[error, context, severity]] = (errorLogger.logAsyncError as ReturnType<typeof vi.fn>).mock.calls
       expect(error).toBeInstanceOf(Error)
       expect(error.message).toBe('Function error')
-      expect(context).toEqual({ source: 'async_function', type: 'user_action' })
+      expect(context).toEqual({source: 'async_function', type: 'user_action'})
       expect(severity).toBe('medium')
     })
   })
 
   describe('wrapEventHandler', () => {
     it('wraps synchronous event handlers', () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const eventHandler = (data: string) => {
         if (data === 'error') {
           throw new Error('Handler error')
@@ -179,14 +180,14 @@ describe('useAsyncError', () => {
       const errorResult = wrappedHandler('error')
       expect(errorResult).toBeNull()
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        expect.any(Error),
-        { source: 'event_handler' },
-        'medium'
+          expect.any(Error),
+          {source: 'event_handler'},
+          'medium'
       )
     })
 
     it('wraps asynchronous event handlers', async () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const asyncEventHandler = async (data: string) => {
         if (data === 'error') {
           throw new Error('Async handler error')
@@ -209,63 +210,63 @@ describe('useAsyncError', () => {
 
   describe('safeApiCall', () => {
     it('executes API calls successfully', async () => {
-      const { result } = renderHook(() => useAsyncError())
-      const apiCall = async () => ({ data: 'success' })
+      const {result} = renderHook(() => useAsyncError())
+      const apiCall = async () => ({data: 'success'})
 
       const response = await result.current.safeApiCall(apiCall)
 
-      expect(response).toEqual({ data: 'success' })
+      expect(response).toEqual({data: 'success'})
     })
 
     it('catches and logs API call errors', async () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const failingApiCall = async () => {
         throw new Error('API call failed')
       }
 
       const response = await result.current.safeApiCall(failingApiCall, {
-        context: { endpoint: '/api/users' },
+        context: {endpoint: '/api/users'},
       })
 
       expect(response).toBeNull()
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.objectContaining({
-          source: 'api_call',
-          endpoint: '/api/users',
-          timestamp: expect.any(String),
-        }),
-        'high'
+          expect.any(Error),
+          expect.objectContaining({
+            source: 'api_call',
+            endpoint: '/api/users',
+            timestamp: expect.any(String),
+          }),
+          'high'
       )
     })
   })
 
   describe('handleWebSocketError', () => {
     it('logs WebSocket errors with URL and context', () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const wsEvent = new Event('error')
       const wsUrl = 'wss://example.com/ws'
 
       act(() => {
         result.current.handleWebSocketError(wsEvent, wsUrl, {
-          context: { reconnectAttempt: 3 },
+          context: {reconnectAttempt: 3},
         })
       })
 
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.objectContaining({
-          source: 'websocket',
-          wsUrl,
-          reconnectAttempt: 3,
-          timestamp: expect.any(String),
-        }),
-        'high'
+          expect.any(Error),
+          expect.objectContaining({
+            source: 'websocket',
+            wsUrl,
+            reconnectAttempt: 3,
+            timestamp: expect.any(String),
+          }),
+          'high'
       )
     })
 
     it('handles WebSocket errors without URL', () => {
-      const { result } = renderHook(() => useAsyncError())
+      const {result} = renderHook(() => useAsyncError())
       const wsEvent = new Event('error')
 
       act(() => {
@@ -273,12 +274,12 @@ describe('useAsyncError', () => {
       })
 
       expect(errorLogger.logAsyncError).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.objectContaining({
-          source: 'websocket',
-          wsUrl: undefined,
-        }),
-        'high'
+          expect.any(Error),
+          expect.objectContaining({
+            source: 'websocket',
+            wsUrl: undefined,
+          }),
+          'high'
       )
 
       const loggedError = (errorLogger.logAsyncError as ReturnType<typeof vi.fn>).mock.calls[0][0]

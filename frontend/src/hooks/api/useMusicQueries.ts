@@ -1,6 +1,6 @@
 /**
  * Music Query Hooks (Placeholder)
- * 
+ *
  * TODO: Implement music-related query hooks
  */
 

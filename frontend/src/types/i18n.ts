@@ -1,4 +1,4 @@
-import { defaultNS, resources } from '../lib/i18n'
+import {defaultNS, resources} from '../lib/i18n'
 
 // Type definitions for i18next
 declare module 'i18next' {
@@ -25,24 +25,24 @@ export type ErrorKeys = keyof typeof resources.en.error
 export type ValidationKeys = keyof typeof resources.en.validation
 
 // Union type for all translation keys
-export type TranslationKey = 
-  | CommonKeys
-  | `auth:${AuthKeys}`
-  | `hive:${HiveKeys}`
-  | `timer:${TimerKeys}`
-  | `analytics:${AnalyticsKeys}`
-  | `gamification:${GamificationKeys}`
-  | `music:${MusicKeys}`
-  | `chat:${ChatKeys}`
-  | `presence:${PresenceKeys}`
-  | `error:${ErrorKeys}`
-  | `validation:${ValidationKeys}`
+export type TranslationKey =
+    | CommonKeys
+    | `auth:${AuthKeys}`
+    | `hive:${HiveKeys}`
+    | `timer:${TimerKeys}`
+    | `analytics:${AnalyticsKeys}`
+    | `gamification:${GamificationKeys}`
+    | `music:${MusicKeys}`
+    | `chat:${ChatKeys}`
+    | `presence:${PresenceKeys}`
+    | `error:${ErrorKeys}`
+    | `validation:${ValidationKeys}`
 
 // Nested key types for type-safe translation access
 export type NestedKeyOf<ObjectType extends Record<string, unknown>> = {
   [Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends Record<string, unknown>
-    ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
-    : `${Key}`
+      ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
+      : `${Key}`
 }[keyof ObjectType & (string | number)]
 
 // Type-safe translation keys for each namespace
@@ -89,27 +89,27 @@ export interface LocaleFormatOptions {
 export interface TypedTFunction {
   // Default namespace (common)
   (key: CommonTranslationKeys, options?: InterpolationValues): string
-  
+
   // Namespaced translations
   <T extends Namespace>(
-    key: T extends 'auth' ? AuthTranslationKeys :
-         T extends 'hive' ? HiveTranslationKeys :
-         T extends 'timer' ? TimerTranslationKeys :
-         T extends 'analytics' ? AnalyticsTranslationKeys :
-         T extends 'gamification' ? GamificationTranslationKeys :
-         T extends 'music' ? MusicTranslationKeys :
-         T extends 'chat' ? ChatTranslationKeys :
-         T extends 'presence' ? PresenceTranslationKeys :
-         T extends 'error' ? ErrorTranslationKeys :
-         T extends 'validation' ? ValidationTranslationKeys :
-         string,
-    options?: InterpolationValues & { ns?: T }
+      key: T extends 'auth' ? AuthTranslationKeys :
+          T extends 'hive' ? HiveTranslationKeys :
+              T extends 'timer' ? TimerTranslationKeys :
+                  T extends 'analytics' ? AnalyticsTranslationKeys :
+                      T extends 'gamification' ? GamificationTranslationKeys :
+                          T extends 'music' ? MusicTranslationKeys :
+                              T extends 'chat' ? ChatTranslationKeys :
+                                  T extends 'presence' ? PresenceTranslationKeys :
+                                      T extends 'error' ? ErrorTranslationKeys :
+                                          T extends 'validation' ? ValidationTranslationKeys :
+                                              string,
+      options?: InterpolationValues & { ns?: T }
   ): string
 
   // With explicit namespace
   <T extends Namespace>(
-    key: string,
-    options: InterpolationValues & { ns: T }
+      key: string,
+      options: InterpolationValues & { ns: T }
   ): string
 }
 
@@ -171,10 +171,10 @@ export interface TranslationStatus {
 // Error types for translation system
 export class TranslationError extends Error {
   constructor(
-    message: string,
-    public key: string,
-    public namespace?: Namespace,
-    public locale?: SupportedLocale
+      message: string,
+      public key: string,
+      public namespace?: Namespace,
+      public locale?: SupportedLocale
   ) {
     super(message)
     this.name = 'TranslationError'

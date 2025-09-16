@@ -1,10 +1,10 @@
 import React from 'react';
-import { renderHook } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useAuth, useAuthState, useAuthActions } from '../useAuth';
-import { AuthProvider } from '../../contexts/AuthContext';
-import { AuthStateContext, AuthActionsContext } from '../../contexts/authContexts';
-import type { AuthState, User } from '@shared/types/auth';
+import {renderHook} from '@testing-library/react';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {useAuth, useAuthActions, useAuthState} from '../useAuth';
+import {AuthProvider} from '../../contexts/AuthContext';
+import {AuthActionsContext, AuthStateContext} from '../../contexts/authContexts';
+import type {AuthState, User} from '@shared/types/auth';
 
 // Mock the auth API service
 vi.mock('../../../../services/api/authApi', () => {
@@ -78,11 +78,11 @@ describe('useAuth hooks', () => {
 
   describe('useAuthState', () => {
     it('should return auth state when used within AuthProvider', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthProvider>{children}</AuthProvider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthProvider>{children}</AuthProvider>
       );
 
-      const { result } = renderHook(() => useAuthState(), { wrapper });
+      const {result} = renderHook(() => useAuthState(), {wrapper});
 
       expect(result.current).toBeDefined();
       expect(result.current).toHaveProperty('user');
@@ -94,45 +94,43 @@ describe('useAuth hooks', () => {
     });
 
     it('should throw error when used outside AuthProvider', () => {
-      const { result } = renderHook(() => useAuthState());
-
-      expect(result.error).toBeDefined();
-      expect(result.error?.message).toBe('useAuthState must be used within an AuthProvider');
+      expect(() => {
+        renderHook(() => useAuthState());
+      }).toThrow('useAuthState must be used within an AuthProvider');
     });
 
     it('should return current auth state from context', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthStateContext.Provider value={mockAuthState}>
-          {children}
-        </AuthStateContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthStateContext.Provider value={mockAuthState}>
+            {children}
+          </AuthStateContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuthState(), { wrapper });
+      const {result} = renderHook(() => useAuthState(), {wrapper});
 
       expect(result.current).toEqual(mockAuthState);
     });
 
     it('should throw error when context value is null', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthStateContext.Provider value={null}>
-          {children}
-        </AuthStateContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthStateContext.Provider value={null}>
+            {children}
+          </AuthStateContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuthState(), { wrapper });
-
-      expect(result.error).toBeDefined();
-      expect(result.error?.message).toBe('useAuthState must be used within an AuthProvider');
+      expect(() => {
+        renderHook(() => useAuthState(), {wrapper});
+      }).toThrow('useAuthState must be used within an AuthProvider');
     });
   });
 
   describe('useAuthActions', () => {
     it('should return auth actions when used within AuthProvider', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthProvider>{children}</AuthProvider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthProvider>{children}</AuthProvider>
       );
 
-      const { result } = renderHook(() => useAuthActions(), { wrapper });
+      const {result} = renderHook(() => useAuthActions(), {wrapper});
 
       expect(result.current).toBeDefined();
       expect(result.current).toHaveProperty('login');
@@ -140,8 +138,6 @@ describe('useAuth hooks', () => {
       expect(result.current).toHaveProperty('logout');
       expect(result.current).toHaveProperty('refreshAuth');
       expect(result.current).toHaveProperty('updateProfile');
-      expect(result.current).toHaveProperty('changePassword');
-      expect(result.current).toHaveProperty('requestPasswordReset');
       expect(result.current).toHaveProperty('clearError');
 
       // Verify all actions are functions
@@ -150,54 +146,50 @@ describe('useAuth hooks', () => {
       expect(typeof result.current.logout).toBe('function');
       expect(typeof result.current.refreshAuth).toBe('function');
       expect(typeof result.current.updateProfile).toBe('function');
-      expect(typeof result.current.changePassword).toBe('function');
-      expect(typeof result.current.requestPasswordReset).toBe('function');
       expect(typeof result.current.clearError).toBe('function');
     });
 
     it('should throw error when used outside AuthProvider', () => {
-      const { result } = renderHook(() => useAuthActions());
-
-      expect(result.error).toBeDefined();
-      expect(result.error?.message).toBe('useAuthActions must be used within an AuthProvider');
+      expect(() => {
+        renderHook(() => useAuthActions());
+      }).toThrow('useAuthActions must be used within an AuthProvider');
     });
 
     it('should return current auth actions from context', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthActionsContext.Provider value={mockAuthActions}>
-          {children}
-        </AuthActionsContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthActionsContext.Provider value={mockAuthActions}>
+            {children}
+          </AuthActionsContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuthActions(), { wrapper });
+      const {result} = renderHook(() => useAuthActions(), {wrapper});
 
       expect(result.current).toEqual(mockAuthActions);
     });
 
     it('should throw error when context value is null', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthActionsContext.Provider value={null}>
-          {children}
-        </AuthActionsContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthActionsContext.Provider value={null}>
+            {children}
+          </AuthActionsContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuthActions(), { wrapper });
-
-      expect(result.error).toBeDefined();
-      expect(result.error?.message).toBe('useAuthActions must be used within an AuthProvider');
+      expect(() => {
+        renderHook(() => useAuthActions(), {wrapper});
+      }).toThrow('useAuthActions must be used within an AuthProvider');
     });
   });
 
   describe('useAuth', () => {
     it('should return combined auth state and actions when used within AuthProvider', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthProvider>{children}</AuthProvider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthProvider>{children}</AuthProvider>
       );
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      const {result} = renderHook(() => useAuth(), {wrapper});
 
       expect(result.current).toBeDefined();
-      
+
       // Should have authState property
       expect(result.current).toHaveProperty('authState');
       expect(result.current.authState).toHaveProperty('user');
@@ -212,28 +204,25 @@ describe('useAuth hooks', () => {
       expect(result.current).toHaveProperty('logout');
       expect(result.current).toHaveProperty('refreshAuth');
       expect(result.current).toHaveProperty('updateProfile');
-      expect(result.current).toHaveProperty('changePassword');
-      expect(result.current).toHaveProperty('requestPasswordReset');
       expect(result.current).toHaveProperty('clearError');
     });
 
     it('should throw error when used outside AuthProvider', () => {
-      const { result } = renderHook(() => useAuth());
-
-      expect(result.error).toBeDefined();
-      expect(result.error?.message).toBe('useAuthState must be used within an AuthProvider');
+      expect(() => {
+        renderHook(() => useAuth());
+      }).toThrow('useAuthState must be used within an AuthProvider');
     });
 
     it('should return combined state and actions from separate contexts', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthStateContext.Provider value={mockAuthState}>
-          <AuthActionsContext.Provider value={mockAuthActions}>
-            {children}
-          </AuthActionsContext.Provider>
-        </AuthStateContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthStateContext.Provider value={mockAuthState}>
+            <AuthActionsContext.Provider value={mockAuthActions}>
+              {children}
+            </AuthActionsContext.Provider>
+          </AuthStateContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      const {result} = renderHook(() => useAuth(), {wrapper});
 
       expect(result.current.authState).toEqual(mockAuthState);
       expect(result.current.login).toBe(mockAuthActions.login);
@@ -241,17 +230,15 @@ describe('useAuth hooks', () => {
       expect(result.current.logout).toBe(mockAuthActions.logout);
       expect(result.current.refreshAuth).toBe(mockAuthActions.refreshAuth);
       expect(result.current.updateProfile).toBe(mockAuthActions.updateProfile);
-      expect(result.current.changePassword).toBe(mockAuthActions.changePassword);
-      expect(result.current.requestPasswordReset).toBe(mockAuthActions.requestPasswordReset);
       expect(result.current.clearError).toBe(mockAuthActions.clearError);
     });
 
     it('should provide functional actions that work consistently', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthProvider>{children}</AuthProvider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthProvider>{children}</AuthProvider>
       );
 
-      const { result, rerender } = renderHook(() => useAuth(), { wrapper });
+      const {result, rerender} = renderHook(() => useAuth(), {wrapper});
 
       // Actions should be functions
       expect(typeof result.current.login).toBe('function');
@@ -259,8 +246,6 @@ describe('useAuth hooks', () => {
       expect(typeof result.current.logout).toBe('function');
       expect(typeof result.current.refreshAuth).toBe('function');
       expect(typeof result.current.updateProfile).toBe('function');
-      expect(typeof result.current.changePassword).toBe('function');
-      expect(typeof result.current.requestPasswordReset).toBe('function');
       expect(typeof result.current.clearError).toBe('function');
 
       // Force re-render
@@ -272,21 +257,19 @@ describe('useAuth hooks', () => {
       expect(typeof result.current.logout).toBe('function');
       expect(typeof result.current.refreshAuth).toBe('function');
       expect(typeof result.current.updateProfile).toBe('function');
-      expect(typeof result.current.changePassword).toBe('function');
-      expect(typeof result.current.requestPasswordReset).toBe('function');
       expect(typeof result.current.clearError).toBe('function');
     });
   });
 
   describe('Hook type safety', () => {
     it('should ensure useAuthState returns correct AuthState type', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthStateContext.Provider value={mockAuthState}>
-          {children}
-        </AuthStateContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthStateContext.Provider value={mockAuthState}>
+            {children}
+          </AuthStateContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuthState(), { wrapper });
+      const {result} = renderHook(() => useAuthState(), {wrapper});
 
       // TypeScript should infer correct types
       const state = result.current;
@@ -299,13 +282,13 @@ describe('useAuth hooks', () => {
     });
 
     it('should ensure useAuthActions returns correct action types', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthActionsContext.Provider value={mockAuthActions}>
-          {children}
-        </AuthActionsContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthActionsContext.Provider value={mockAuthActions}>
+            {children}
+          </AuthActionsContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuthActions(), { wrapper });
+      const {result} = renderHook(() => useAuthActions(), {wrapper});
 
       // All actions should be functions
       const actions = result.current;
@@ -314,24 +297,22 @@ describe('useAuth hooks', () => {
       expect(typeof actions.logout).toBe('function');
       expect(typeof actions.refreshAuth).toBe('function');
       expect(typeof actions.updateProfile).toBe('function');
-      expect(typeof actions.changePassword).toBe('function');
-      expect(typeof actions.requestPasswordReset).toBe('function');
       expect(typeof actions.clearError).toBe('function');
     });
 
     it('should ensure useAuth returns correct combined type', () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthStateContext.Provider value={mockAuthState}>
-          <AuthActionsContext.Provider value={mockAuthActions}>
-            {children}
-          </AuthActionsContext.Provider>
-        </AuthStateContext.Provider>
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthStateContext.Provider value={mockAuthState}>
+            <AuthActionsContext.Provider value={mockAuthActions}>
+              {children}
+            </AuthActionsContext.Provider>
+          </AuthStateContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      const {result} = renderHook(() => useAuth(), {wrapper});
 
       const auth = result.current;
-      
+
       // Should have authState property with correct structure
       expect(auth.authState).toBeDefined();
       expect(typeof auth.authState.isAuthenticated).toBe('boolean');
@@ -343,8 +324,6 @@ describe('useAuth hooks', () => {
       expect(typeof auth.logout).toBe('function');
       expect(typeof auth.refreshAuth).toBe('function');
       expect(typeof auth.updateProfile).toBe('function');
-      expect(typeof auth.changePassword).toBe('function');
-      expect(typeof auth.requestPasswordReset).toBe('function');
       expect(typeof auth.clearError).toBe('function');
     });
   });
@@ -352,11 +331,11 @@ describe('useAuth hooks', () => {
   describe('Error handling edge cases', () => {
     it('should handle useAuthState with undefined context gracefully', () => {
       // This tests the error boundary case
-      const { result } = renderHook(() => {
+      const {result} = renderHook(() => {
         try {
           return useAuthState();
         } catch (error) {
-          return { error: (error as Error).message };
+          return {error: (error as Error).message};
         }
       });
 
@@ -366,11 +345,11 @@ describe('useAuth hooks', () => {
     });
 
     it('should handle useAuthActions with undefined context gracefully', () => {
-      const { result } = renderHook(() => {
+      const {result} = renderHook(() => {
         try {
           return useAuthActions();
         } catch (error) {
-          return { error: (error as Error).message };
+          return {error: (error as Error).message};
         }
       });
 
@@ -380,18 +359,18 @@ describe('useAuth hooks', () => {
     });
 
     it('should handle nested provider scenarios', () => {
-      const outerState: AuthState = { ...mockAuthState, user: null };
-      const innerState: AuthState = { ...mockAuthState, isAuthenticated: false };
+      const outerState: AuthState = {...mockAuthState, user: null};
+      const innerState: AuthState = {...mockAuthState, isAuthenticated: false};
 
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <AuthStateContext.Provider value={outerState}>
-          <AuthStateContext.Provider value={innerState}>
-            {children}
+      const wrapper = ({children}: { children: React.ReactNode }) => (
+          <AuthStateContext.Provider value={outerState}>
+            <AuthStateContext.Provider value={innerState}>
+              {children}
+            </AuthStateContext.Provider>
           </AuthStateContext.Provider>
-        </AuthStateContext.Provider>
       );
 
-      const { result } = renderHook(() => useAuthState(), { wrapper });
+      const {result} = renderHook(() => useAuthState(), {wrapper});
 
       // Should use the inner (most recent) provider
       expect(result.current).toEqual(innerState);

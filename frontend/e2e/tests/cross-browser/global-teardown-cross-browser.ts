@@ -3,13 +3,12 @@
  * Cleans up test environment and generates final reports
  */
 
-import { FullConfig } from '@playwright/test';
+import {FullConfig} from '@playwright/test';
 import * as fs from 'fs/promises';
-import * as path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import {exec} from 'child_process';
+import {promisify} from 'util';
 
-const execAsync = promisify(exec);
+const _execAsync = promisify(exec);
 
 interface TestResult {
   browser: string;
@@ -41,7 +40,7 @@ interface CompatibilityReport {
   recommendations: string[];
 }
 
-async function globalTeardown(config: FullConfig) {
+async function globalTeardown(_config: FullConfig): Promise<unknown> {
   console.log('🧹 Starting Cross-Browser Test Environment Teardown...');
 
   const setupTime = process.env.CROSS_BROWSER_SETUP_TIME || Date.now().toString();
@@ -50,7 +49,7 @@ async function globalTeardown(config: FullConfig) {
   try {
     // Collect test results from all browsers
     console.log('📊 Collecting test results...');
-    const testResults: TestResult[] = [];
+    const _testResults: TestResult[] = [];
     const compatibilityIssues: Array<{
       browser: string;
       category: string;
@@ -103,8 +102,8 @@ async function globalTeardown(config: FullConfig) {
 
     // Write final compatibility report
     await fs.writeFile(
-      'cross-browser-compatibility-report.json',
-      JSON.stringify(compatibilityReport, null, 2)
+        'cross-browser-compatibility-report.json',
+        JSON.stringify(compatibilityReport, null, 2)
     );
 
     // Generate HTML report
@@ -144,7 +143,7 @@ async function collectBrowserResults(browser: string): Promise<TestResult> {
       try {
         const resultData = await fs.readFile(testPath, 'utf8');
         const results = JSON.parse(resultData);
-        
+
         return {
           browser,
           passed: results.passed || 0,
@@ -155,7 +154,7 @@ async function collectBrowserResults(browser: string): Promise<TestResult> {
         };
       } catch {
         // File doesn't exist or is invalid, try next path
-        continue;
+
       }
     }
 
@@ -181,7 +180,9 @@ async function collectBrowserResults(browser: string): Promise<TestResult> {
   }
 }
 
-async function analyzeFeatureCompatibility(): Promise<{ [key: string]: { [browser: string]: boolean } }> {
+async function analyzeFeatureCompatibility(): Promise<{
+  [key: string]: { [browser: string]: boolean }
+}> {
   const compatibility: { [key: string]: { [browser: string]: boolean } } = {};
 
   try {
@@ -190,7 +191,9 @@ async function analyzeFeatureCompatibility(): Promise<{ [key: string]: { [browse
 
     // Analyze each feature category
     for (const [category, categoryFeatures] of Object.entries(features)) {
-      for (const [feature, featureData] of Object.entries(categoryFeatures as Record<string, { results: { [browser: string]: boolean } }>)) {
+      for (const [feature, featureData] of Object.entries(categoryFeatures as Record<string, {
+        results: { [browser: string]: boolean }
+      }>)) {
         const featureKey = `${category}.${feature}`;
         compatibility[featureKey] = featureData.results || {
           chrome: true,
@@ -208,8 +211,8 @@ async function analyzeFeatureCompatibility(): Promise<{ [key: string]: { [browse
 }
 
 async function identifyCompatibilityIssues(
-  browserResults: { [browser: string]: TestResult },
-  featureCompatibility: { [key: string]: { [browser: string]: boolean } }
+    browserResults: { [browser: string]: TestResult },
+    featureCompatibility: { [key: string]: { [browser: string]: boolean } }
 ): Promise<Array<{
   browser: string;
   category: string;
@@ -227,7 +230,7 @@ async function identifyCompatibilityIssues(
   for (const [browser, results] of Object.entries(browserResults)) {
     if (results.failed > 0) {
       const failureRate = (results.failed / results.total) * 100;
-      
+
       let severity: 'low' | 'medium' | 'high' | 'critical';
       if (failureRate > 50) severity = 'critical';
       else if (failureRate > 25) severity = 'high';
@@ -246,12 +249,12 @@ async function identifyCompatibilityIssues(
   // Analyze feature compatibility
   for (const [feature, browserSupport] of Object.entries(featureCompatibility)) {
     const unsupportedBrowsers = Object.entries(browserSupport)
-      .filter(([_, supported]) => !supported)
-      .map(([browser]) => browser);
+    .filter(([_, supported]) => !supported)
+    .map(([browser]) => browser);
 
     if (unsupportedBrowsers.length > 0) {
       const severity = unsupportedBrowsers.length >= 3 ? 'high' : 'medium';
-      
+
       unsupportedBrowsers.forEach(browser => {
         issues.push({
           browser,
@@ -297,8 +300,8 @@ async function identifyCompatibilityIssues(
 }
 
 function generateRecommendations(
-  issues: Array<{ browser: string; category: string; description: string; severity: string }>,
-  featureCompatibility: { [key: string]: { [browser: string]: boolean } }
+    issues: Array<{ browser: string; category: string; description: string; severity: string }>,
+    featureCompatibility: { [key: string]: { [browser: string]: boolean } }
 ): string[] {
   const recommendations: string[] = [];
 
@@ -310,7 +313,7 @@ function generateRecommendations(
 
   // Feature-specific recommendations
   const unsupportedFeatures = Object.entries(featureCompatibility)
-    .filter(([_, support]) => Object.values(support).includes(false));
+  .filter(([_, support]) => Object.values(support).includes(false));
 
   if (unsupportedFeatures.length > 0) {
     recommendations.push('Implement polyfills or fallbacks for unsupported features');
@@ -530,12 +533,12 @@ function printFinalSummary(report: CompatibilityReport): void {
   console.log(`⏭️  Skipped: ${report.summary.skipped}`);
   console.log(`📈 Success Rate: ${report.summary.successRate.toFixed(1)}%`);
   console.log(`⏱️  Duration: ${(report.duration / 1000 / 60).toFixed(1)} minutes`);
-  
+
   if (report.issues.length > 0) {
     console.log(`\n⚠️  Issues Found: ${report.issues.length}`);
     const criticalIssues = report.issues.filter(i => i.severity === 'critical').length;
     const highIssues = report.issues.filter(i => i.severity === 'high').length;
-    
+
     if (criticalIssues > 0) console.log(`   🔴 Critical: ${criticalIssues}`);
     if (highIssues > 0) console.log(`   🟡 High: ${highIssues}`);
   }

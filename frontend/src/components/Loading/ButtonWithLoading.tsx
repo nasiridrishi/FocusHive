@@ -1,20 +1,19 @@
 import React from 'react';
 import {
-  Button,
-  IconButton,
-  Fab,
-  LoadingButton,
-  CircularProgress,
   Box,
+  Button,
   ButtonProps,
-  IconButtonProps,
+  CircularProgress,
+  Fab,
   FabProps,
+  IconButton,
+  IconButtonProps,
   styled,
   useTheme,
 } from '@mui/material';
-import { LoadingButtonProps } from '@mui/lab';
+import {LoadingButton, LoadingButtonProps} from '@mui/lab';
 
-export type ButtonWithLoadingVariant = 'button' | 'icon-button' | 'fab' | 'loading-button';
+export type ButtonWithLoadingVariant = 'text' | 'outlined' | 'contained' | 'loading-button';
 
 export interface BaseButtonWithLoadingProps {
   /** Whether the button is in loading state */
@@ -37,26 +36,30 @@ export interface BaseButtonWithLoadingProps {
   successIcon?: React.ReactNode;
   /** Success duration in ms */
   successDuration?: number;
+  /** Whether the button is disabled */
+  disabled?: boolean;
 }
 
-export interface ButtonWithLoadingProps 
-  extends Omit<ButtonProps, 'disabled'>, 
-          BaseButtonWithLoadingProps {
+export interface ButtonWithLoadingProps
+    extends Omit<ButtonProps, 'disabled' | 'variant'>,
+        BaseButtonWithLoadingProps {
   variant?: ButtonWithLoadingVariant;
 }
 
-export interface IconButtonWithLoadingProps 
-  extends Omit<IconButtonProps, 'disabled'>, 
-          BaseButtonWithLoadingProps {}
+export interface IconButtonWithLoadingProps
+    extends Omit<IconButtonProps, 'disabled'>,
+        BaseButtonWithLoadingProps {
+}
 
-export interface FabWithLoadingProps 
-  extends Omit<FabProps, 'disabled'>, 
-          BaseButtonWithLoadingProps {}
+export interface FabWithLoadingProps
+    extends Omit<FabProps, 'disabled'>,
+        BaseButtonWithLoadingProps {
+}
 
 // Styled components
 const ButtonContainer = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'maintainWidth',
-})<{ maintainWidth: boolean }>(({ maintainWidth }) => ({
+})<{ maintainWidth: boolean }>(({maintainWidth}) => ({
   display: 'inline-flex',
   position: 'relative',
   ...(maintainWidth && {
@@ -64,7 +67,7 @@ const ButtonContainer = styled(Box, {
   }),
 }));
 
-const SpinnerContainer = styled(Box)(({ theme }) => ({
+const SpinnerContainer = styled(Box)(({theme: _theme}) => ({
   position: 'absolute',
   top: '50%',
   left: '50%',
@@ -76,7 +79,7 @@ const SpinnerContainer = styled(Box)(({ theme }) => ({
 
 const LoadingContent = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'loading',
-})<{ loading: boolean }>(({ loading }) => ({
+})<{ loading: boolean }>(({loading}) => ({
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
@@ -87,7 +90,7 @@ const LoadingContent = styled(Box, {
 /**
  * Custom hook for managing button loading state with minimum display time
  */
-const useButtonLoading = (loading: boolean, minLoadingTime: number = 0) => {
+const useButtonLoading = (loading: boolean, minLoadingTime: number = 0): boolean => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [showLoading, setShowLoading] = React.useState(false);
   const loadingStartTime = React.useRef<number | null>(null);
@@ -116,7 +119,7 @@ const useButtonLoading = (loading: boolean, minLoadingTime: number = 0) => {
 
 /**
  * ButtonWithLoading component that shows loading state
- * 
+ *
  * @example
  * ```tsx
  * <ButtonWithLoading
@@ -129,23 +132,23 @@ const useButtonLoading = (loading: boolean, minLoadingTime: number = 0) => {
  * ```
  */
 export const ButtonWithLoading: React.FC<ButtonWithLoadingProps> = ({
-  loading = false,
-  loadingText,
-  spinnerSize = 20,
-  spinnerPosition = 'start',
-  maintainWidth = true,
-  loadingIndicator,
-  minLoadingTime = 0,
-  success = false,
-  successIcon,
-  successDuration = 2000,
-  variant = 'button',
-  children,
-  onClick,
-  disabled,
-  sx,
-  ...props
-}) => {
+                                                                      loading = false,
+                                                                      loadingText,
+                                                                      spinnerSize = 20,
+                                                                      spinnerPosition = 'start',
+                                                                      maintainWidth = true,
+                                                                      loadingIndicator,
+                                                                      minLoadingTime = 0,
+                                                                      success = false,
+                                                                      successIcon,
+                                                                      successDuration = 2000,
+                                                                      variant = 'button',
+                                                                      children,
+                                                                      onClick,
+                                                                      disabled,
+                                                                      sx,
+                                                                      ...props
+                                                                    }) => {
   const theme = useTheme();
   const [showSuccess, setShowSuccess] = React.useState(false);
   const showLoading = useButtonLoading(loading, minLoadingTime);
@@ -170,30 +173,34 @@ export const ButtonWithLoading: React.FC<ButtonWithLoadingProps> = ({
     }
   }, [maintainWidth, showLoading, children]);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     if (!showLoading && !disabled && onClick) {
-      onClick(event);
+      const result = onClick(event);
+      // Handle any return value if needed
+      if (result !== undefined) {
+        // onClick might return a value, but we don't need to do anything with it
+      }
     }
   };
 
   const isDisabled = disabled || showLoading;
 
-  const renderSpinner = () => {
+  const renderSpinner = (): React.ReactElement | null => {
     if (loadingIndicator) {
-      return loadingIndicator;
+      return loadingIndicator as React.ReactElement;
     }
 
     return (
-      <CircularProgress
-        size={spinnerSize}
-        sx={{
-          color: theme.palette.primary.contrastText,
-        }}
-      />
+        <CircularProgress
+            size={spinnerSize}
+            sx={{
+              color: theme.palette.primary.contrastText,
+            }}
+        />
     );
   };
 
-  const renderContent = () => {
+  const renderContent = (): React.ReactNode => {
     if (showSuccess && successIcon) {
       return successIcon;
     }
@@ -201,23 +208,23 @@ export const ButtonWithLoading: React.FC<ButtonWithLoadingProps> = ({
     if (showLoading) {
       if (spinnerPosition === 'center') {
         return (
-          <>
-            <LoadingContent loading={true}>
-              {loadingText || children}
-            </LoadingContent>
-            <SpinnerContainer>
-              {renderSpinner()}
-            </SpinnerContainer>
-          </>
+            <>
+              <LoadingContent loading={true}>
+                {loadingText || children}
+              </LoadingContent>
+              <SpinnerContainer>
+                {renderSpinner()}
+              </SpinnerContainer>
+            </>
         );
       }
 
       return (
-        <>
-          {spinnerPosition === 'start' && renderSpinner()}
-          {loadingText || (spinnerPosition === 'end' && children)}
-          {spinnerPosition === 'end' && renderSpinner()}
-        </>
+          <>
+            {spinnerPosition === 'start' && renderSpinner()}
+            {loadingText || (spinnerPosition === 'end' && children)}
+            {spinnerPosition === 'end' && renderSpinner()}
+          </>
       );
     }
 
@@ -226,40 +233,40 @@ export const ButtonWithLoading: React.FC<ButtonWithLoadingProps> = ({
 
   if (variant === 'loading-button') {
     return (
-      <LoadingButton
-        loading={showLoading}
-        loadingPosition={spinnerPosition}
-        loadingIndicator={loadingIndicator}
-        disabled={isDisabled}
-        onClick={handleClick}
-        ref={buttonRef}
-        sx={{
-          ...(maintainWidth && buttonWidth && { minWidth: buttonWidth }),
-          ...sx,
-        }}
-        {...(props as LoadingButtonProps)}
-      >
-        {showSuccess && successIcon ? successIcon : (loadingText && showLoading ? loadingText : children)}
-      </LoadingButton>
+        <LoadingButton
+            loading={showLoading}
+            loadingPosition={spinnerPosition}
+            loadingIndicator={loadingIndicator}
+            disabled={isDisabled}
+            onClick={handleClick}
+            ref={buttonRef}
+            sx={{
+              ...(maintainWidth && buttonWidth && {minWidth: buttonWidth}),
+              ...sx,
+            }}
+            {...(props as LoadingButtonProps)}
+        >
+          {showSuccess && successIcon ? successIcon : (loadingText && showLoading ? loadingText : children)}
+        </LoadingButton>
     );
   }
 
   return (
-    <ButtonContainer maintainWidth={maintainWidth}>
-      <Button
-        disabled={isDisabled}
-        onClick={handleClick}
-        ref={buttonRef}
-        sx={{
-          ...(maintainWidth && buttonWidth && { minWidth: buttonWidth }),
-          position: 'relative',
-          ...sx,
-        }}
-        {...props}
-      >
-        {renderContent()}
-      </Button>
-    </ButtonContainer>
+      <ButtonContainer maintainWidth={maintainWidth}>
+        <Button
+            disabled={isDisabled}
+            onClick={handleClick}
+            ref={buttonRef}
+            sx={{
+              ...(maintainWidth && buttonWidth && {minWidth: buttonWidth}),
+              position: 'relative',
+              ...sx,
+            }}
+            {...props}
+        >
+          {renderContent()}
+        </Button>
+      </ButtonContainer>
   );
 };
 
@@ -267,20 +274,20 @@ export const ButtonWithLoading: React.FC<ButtonWithLoadingProps> = ({
  * IconButtonWithLoading component
  */
 export const IconButtonWithLoading: React.FC<IconButtonWithLoadingProps> = ({
-  loading = false,
-  spinnerSize = 20,
-  loadingIndicator,
-  minLoadingTime = 0,
-  success = false,
-  successIcon,
-  successDuration = 2000,
-  children,
-  onClick,
-  disabled,
-  sx,
-  ...props
-}) => {
-  const theme = useTheme();
+                                                                              loading = false,
+                                                                              spinnerSize = 20,
+                                                                              loadingIndicator,
+                                                                              minLoadingTime = 0,
+                                                                              success = false,
+                                                                              successIcon,
+                                                                              successDuration = 2000,
+                                                                              children,
+                                                                              onClick,
+                                                                              disabled,
+                                                                              sx,
+                                                                              ...props
+                                                                            }) => {
+  const _theme = useTheme();
   const [showSuccess, setShowSuccess] = React.useState(false);
   const showLoading = useButtonLoading(loading, minLoadingTime);
 
@@ -294,23 +301,27 @@ export const IconButtonWithLoading: React.FC<IconButtonWithLoadingProps> = ({
     }
   }, [success, loading, successDuration]);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     if (!showLoading && !disabled && onClick) {
-      onClick(event);
+      const result = onClick(event);
+      // Handle any return value if needed
+      if (result !== undefined) {
+        // onClick might return a value, but we don't need to do anything with it
+      }
     }
   };
 
-  const renderContent = () => {
+  const renderContent = (): React.ReactNode => {
     if (showSuccess && successIcon) {
       return successIcon;
     }
 
     if (showLoading) {
       return loadingIndicator || (
-        <CircularProgress
-          size={spinnerSize}
-          sx={{ color: 'inherit' }}
-        />
+          <CircularProgress
+              size={spinnerSize}
+              sx={{color: 'inherit'}}
+          />
       );
     }
 
@@ -318,17 +329,17 @@ export const IconButtonWithLoading: React.FC<IconButtonWithLoadingProps> = ({
   };
 
   return (
-    <IconButton
-      disabled={disabled || showLoading}
-      onClick={handleClick}
-      sx={{
-        position: 'relative',
-        ...sx,
-      }}
-      {...props}
-    >
-      {renderContent()}
-    </IconButton>
+      <IconButton
+          disabled={disabled || showLoading}
+          onClick={handleClick}
+          sx={{
+            position: 'relative',
+            ...sx,
+          }}
+          {...props}
+      >
+        {renderContent()}
+      </IconButton>
   );
 };
 
@@ -336,19 +347,19 @@ export const IconButtonWithLoading: React.FC<IconButtonWithLoadingProps> = ({
  * FabWithLoading component
  */
 export const FabWithLoading: React.FC<FabWithLoadingProps> = ({
-  loading = false,
-  spinnerSize = 24,
-  loadingIndicator,
-  minLoadingTime = 0,
-  success = false,
-  successIcon,
-  successDuration = 2000,
-  children,
-  onClick,
-  disabled,
-  sx,
-  ...props
-}) => {
+                                                                loading = false,
+                                                                spinnerSize = 24,
+                                                                loadingIndicator,
+                                                                minLoadingTime = 0,
+                                                                success = false,
+                                                                successIcon,
+                                                                successDuration = 2000,
+                                                                children,
+                                                                onClick,
+                                                                disabled,
+                                                                sx,
+                                                                ...props
+                                                              }) => {
   const [showSuccess, setShowSuccess] = React.useState(false);
   const showLoading = useButtonLoading(loading, minLoadingTime);
 
@@ -362,23 +373,27 @@ export const FabWithLoading: React.FC<FabWithLoadingProps> = ({
     }
   }, [success, loading, successDuration]);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>): void => {
     if (!showLoading && !disabled && onClick) {
-      onClick(event);
+      const result = onClick(event);
+      // Handle any return value if needed
+      if (result !== undefined) {
+        // onClick might return a value, but we don't need to do anything with it
+      }
     }
   };
 
-  const renderContent = () => {
+  const renderContent = (): React.ReactNode => {
     if (showSuccess && successIcon) {
       return successIcon;
     }
 
     if (showLoading) {
       return loadingIndicator || (
-        <CircularProgress
-          size={spinnerSize}
-          sx={{ color: 'inherit' }}
-        />
+          <CircularProgress
+              size={spinnerSize}
+              sx={{color: 'inherit'}}
+          />
       );
     }
 
@@ -386,17 +401,17 @@ export const FabWithLoading: React.FC<FabWithLoadingProps> = ({
   };
 
   return (
-    <Fab
-      disabled={disabled || showLoading}
-      onClick={handleClick}
-      sx={{
-        position: 'relative',
-        ...sx,
-      }}
-      {...props}
-    >
-      {renderContent()}
-    </Fab>
+      <Fab
+          disabled={disabled || showLoading}
+          onClick={handleClick}
+          sx={{
+            position: 'relative',
+            ...sx,
+          }}
+          {...props}
+      >
+        {renderContent()}
+      </Fab>
   );
 };
 

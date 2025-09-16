@@ -1,6 +1,6 @@
 /**
  * Focus Management Utilities for Accessibility
- * 
+ *
  * Provides utilities for managing focus, keyboard navigation,
  * and focus trapping according to accessibility best practices.
  */
@@ -37,24 +37,24 @@ export const FOCUSABLE_ELEMENTS = [
  */
 export function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return Array.from(container.querySelectorAll(FOCUSABLE_ELEMENTS))
-    .filter((el): el is HTMLElement => {
-      const element = el as HTMLElement;
-      
-      // Check if element is visible
-      if (element.offsetWidth === 0 && element.offsetHeight === 0) return false;
-      if (window.getComputedStyle(element).visibility === 'hidden') return false;
-      if (window.getComputedStyle(element).display === 'none') return false;
-      
-      // Check if element is within a hidden parent
-      let parent = element.parentElement;
-      while (parent) {
-        const style = window.getComputedStyle(parent);
-        if (style.display === 'none' || style.visibility === 'hidden') return false;
-        parent = parent.parentElement;
-      }
-      
-      return true;
-    });
+  .filter((el): el is HTMLElement => {
+    const element = el as HTMLElement;
+
+    // Check if element is visible
+    if (element.offsetWidth === 0 && element.offsetHeight === 0) return false;
+    if (window.getComputedStyle(element).visibility === 'hidden') return false;
+    if (window.getComputedStyle(element).display === 'none') return false;
+
+    // Check if element is within a hidden parent
+    let parent = element.parentElement;
+    while (parent) {
+      const style = window.getComputedStyle(parent);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      parent = parent.parentElement;
+    }
+
+    return true;
+  });
 }
 
 /**
@@ -88,70 +88,70 @@ export class FocusTrap {
   private options: FocusTrapOptions;
   private previousActiveElement: Element | null = null;
   private isActive = false;
-  
+
   constructor(container: HTMLElement, options: FocusTrapOptions = {}) {
     this.container = container;
     this.options = options;
   }
-  
-  activate() {
+
+  activate(): void {
     if (this.isActive) return;
-    
+
     this.isActive = true;
     this.previousActiveElement = document.activeElement;
-    
+
     // Set initial focus
     const initialFocus = this.options.initialFocusElement || getFirstFocusableElement(this.container);
     if (initialFocus) {
       initialFocus.focus();
     }
-    
+
     // Add event listeners
     document.addEventListener('keydown', this.handleKeyDown);
     document.addEventListener('focusin', this.handleFocusIn);
-    
+
     if (this.options.allowOutsideClick) {
       document.addEventListener('click', this.handleOutsideClick);
     }
   }
-  
-  deactivate() {
+
+  deactivate(): void {
     if (!this.isActive) return;
-    
+
     this.isActive = false;
-    
+
     // Remove event listeners
     document.removeEventListener('keydown', this.handleKeyDown);
     document.removeEventListener('focusin', this.handleFocusIn);
     document.removeEventListener('click', this.handleOutsideClick);
-    
+
     // Restore focus
     const restoreElement = this.options.restoreFocusElement || this.previousActiveElement;
     if (restoreElement && 'focus' in restoreElement) {
       (restoreElement as HTMLElement).focus();
     }
   }
-  
+
   private handleKeyDown = (event: KeyboardEvent) => {
     if (!this.isActive) return;
-    
+
     if (event.key === 'Escape' && this.options.onEscape) {
       event.preventDefault();
       this.options.onEscape();
       return;
     }
-    
+
     if (event.key === 'Tab') {
       const focusableElements = getFocusableElements(this.container);
-      
+
       if (focusableElements.length === 0) {
         event.preventDefault();
         return;
       }
-      
+
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
-      
+
       if (event.shiftKey) {
         // Shift + Tab (backwards)
         if (document.activeElement === firstElement) {
@@ -167,10 +167,10 @@ export class FocusTrap {
       }
     }
   }
-  
+
   private handleFocusIn = (event: FocusEvent) => {
     if (!this.isActive) return;
-    
+
     const target = event.target as HTMLElement;
     if (!this.container.contains(target)) {
       // Focus escaped, bring it back
@@ -180,10 +180,10 @@ export class FocusTrap {
       }
     }
   }
-  
+
   private handleOutsideClick = (event: MouseEvent) => {
     if (!this.isActive) return;
-    
+
     const target = event.target as HTMLElement;
     if (!this.container.contains(target) && this.options.onEscape) {
       this.options.onEscape();
@@ -196,32 +196,32 @@ export class FocusTrap {
  */
 export class FocusManager {
   private focusStack: Element[] = [];
-  
-  push(element?: Element | null) {
+
+  push(element?: Element | null): void {
     const elementToSave = element || document.activeElement;
     if (elementToSave) {
       this.focusStack.push(elementToSave);
     }
   }
-  
+
   pop(): boolean {
     const element = this.focusStack.pop();
     if (element && 'focus' in element && typeof element.focus === 'function') {
       try {
         (element as HTMLElement).focus();
         return true;
-      } catch (error) {
-        console.warn('Failed to restore focus:', error);
+      } catch {
+        // console.warn('Failed to restore focus');
         return false;
       }
     }
     return false;
   }
-  
-  clear() {
+
+  clear(): void {
     this.focusStack = [];
   }
-  
+
   peek(): Element | null {
     return this.focusStack.length > 0 ? this.focusStack[this.focusStack.length - 1] : null;
   }
@@ -248,7 +248,7 @@ export class KeyboardNavigator {
   private config: KeyboardNavigationConfig;
   private currentIndex = -1;
   private elements: HTMLElement[] = [];
-  
+
   constructor(container: HTMLElement, config: KeyboardNavigationConfig = {}) {
     this.container = container;
     this.config = {
@@ -258,56 +258,56 @@ export class KeyboardNavigator {
       loop: true,
       ...config
     };
-    
+
     this.updateElements();
     this.bindEvents();
   }
-  
-  private updateElements() {
-    this.elements = getFocusableElements(this.container);
-    this.currentIndex = this.elements.findIndex(el => el === document.activeElement);
-  }
-  
-  private bindEvents() {
-    this.container.addEventListener('keydown', this.handleKeyDown);
-    this.container.addEventListener('focusin', this.handleFocusIn);
-  }
-  
-  unbind() {
+
+  unbind(): void {
     this.container.removeEventListener('keydown', this.handleKeyDown);
     this.container.removeEventListener('focusin', this.handleFocusIn);
   }
-  
+
+  private updateElements(): void {
+    this.elements = getFocusableElements(this.container);
+    this.currentIndex = this.elements.findIndex(el => el === document.activeElement);
+  }
+
+  private bindEvents(): void {
+    this.container.addEventListener('keydown', this.handleKeyDown);
+    this.container.addEventListener('focusin', this.handleFocusIn);
+  }
+
   private handleKeyDown = (event: KeyboardEvent) => {
-    const { key } = event;
-    
+    const {key} = event;
+
     // Update elements list
     this.updateElements();
-    
+
     let handled = false;
-    
+
     if (this.config.horizontal && (key === 'ArrowLeft' || key === 'ArrowRight')) {
       const direction = key === 'ArrowRight' ? 1 : -1;
       this.navigate(direction);
       handled = true;
     }
-    
+
     if (this.config.vertical && (key === 'ArrowUp' || key === 'ArrowDown')) {
       const direction = key === 'ArrowDown' ? 1 : -1;
       this.navigate(direction);
       handled = true;
     }
-    
+
     if (key === 'Home') {
       this.navigateToFirst();
       handled = true;
     }
-    
+
     if (key === 'End') {
       this.navigateToLast();
       handled = true;
     }
-    
+
     if ((key === 'Enter' || key === ' ') && this.config.onSelect) {
       const currentElement = this.elements[this.currentIndex];
       if (currentElement) {
@@ -315,22 +315,22 @@ export class KeyboardNavigator {
         handled = true;
       }
     }
-    
+
     if (handled) {
       event.preventDefault();
       event.stopPropagation();
     }
   }
-  
+
   private handleFocusIn = () => {
     this.updateElements();
   }
-  
-  private navigate(direction: number) {
+
+  private navigate(direction: number): void {
     if (this.elements.length === 0) return;
-    
+
     let newIndex = this.currentIndex + direction;
-    
+
     if (this.config.wrap || this.config.loop) {
       if (newIndex < 0) {
         newIndex = this.elements.length - 1;
@@ -340,23 +340,23 @@ export class KeyboardNavigator {
     } else {
       newIndex = Math.max(0, Math.min(newIndex, this.elements.length - 1));
     }
-    
+
     this.focusElement(newIndex);
   }
-  
-  private navigateToFirst() {
+
+  private navigateToFirst(): void {
     if (this.elements.length > 0) {
       this.focusElement(0);
     }
   }
-  
-  private navigateToLast() {
+
+  private navigateToLast(): void {
     if (this.elements.length > 0) {
       this.focusElement(this.elements.length - 1);
     }
   }
-  
-  private focusElement(index: number) {
+
+  private focusElement(index: number): void {
     if (index >= 0 && index < this.elements.length) {
       this.currentIndex = index;
       this.elements[index].focus();
@@ -384,16 +384,16 @@ export function isFocusWithin(container: HTMLElement): boolean {
 export function focusNext(currentElement?: HTMLElement): boolean {
   const current = currentElement || document.activeElement as HTMLElement;
   if (!current) return false;
-  
+
   const root = document.body;
   const focusableElements = getFocusableElements(root);
   const currentIndex = focusableElements.indexOf(current);
-  
+
   if (currentIndex >= 0 && currentIndex < focusableElements.length - 1) {
     focusableElements[currentIndex + 1].focus();
     return true;
   }
-  
+
   return false;
 }
 
@@ -403,16 +403,16 @@ export function focusNext(currentElement?: HTMLElement): boolean {
 export function focusPrevious(currentElement?: HTMLElement): boolean {
   const current = currentElement || document.activeElement as HTMLElement;
   if (!current) return false;
-  
+
   const root = document.body;
   const focusableElements = getFocusableElements(root);
   const currentIndex = focusableElements.indexOf(current);
-  
+
   if (currentIndex > 0) {
     focusableElements[currentIndex - 1].focus();
     return true;
   }
-  
+
   return false;
 }
 
@@ -422,38 +422,38 @@ export function focusPrevious(currentElement?: HTMLElement): boolean {
 export const focusUtils = {
   // Save current focus
   saveFocus: () => globalFocusManager.push(),
-  
+
   // Restore saved focus
   restoreFocus: () => globalFocusManager.pop(),
-  
+
   // Focus the first element in a container
   focusFirst: (container: HTMLElement) => {
     const first = getFirstFocusableElement(container);
     if (first) first.focus();
     return !!first;
   },
-  
+
   // Focus the last element in a container
   focusLast: (container: HTMLElement) => {
     const last = getLastFocusableElement(container);
     if (last) last.focus();
     return !!last;
   },
-  
+
   // Check if element can receive focus
   isFocusable: (element: HTMLElement): boolean => {
     return getFocusableElements(document.body).includes(element);
   },
-  
+
   // Focus element with error handling
   safeFocus: (element: HTMLElement | null): boolean => {
     if (!element) return false;
-    
+
     try {
       element.focus();
       return document.activeElement === element;
-    } catch (error) {
-      console.warn('Failed to focus element:', error);
+    } catch {
+      // console.warn('Failed to focus element');
       return false;
     }
   }

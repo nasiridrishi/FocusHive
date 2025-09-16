@@ -1,10 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import {
-  loginSchema,
-  registerSchema,
-  createHiveSchema,
-  checkPasswordStrength
-} from './schemas'
+import {describe, expect, it} from 'vitest'
+import {checkPasswordStrength, createHiveSchema, loginSchema, registerSchema} from './schemas'
 
 describe('Validation Schemas', () => {
   describe('loginSchema', () => {
@@ -13,7 +8,7 @@ describe('Validation Schemas', () => {
         email: 'user@example.com',
         password: 'validpassword123'
       }
-      
+
       const result = await loginSchema.isValid(validLogin)
       expect(result).toBe(true)
     })
@@ -23,7 +18,7 @@ describe('Validation Schemas', () => {
         email: 'invalid-email',
         password: 'validpassword123'
       }
-      
+
       const result = await loginSchema.isValid(invalidLogin)
       expect(result).toBe(false)
     })
@@ -33,7 +28,7 @@ describe('Validation Schemas', () => {
         email: 'user@example.com',
         password: '123'
       }
-      
+
       const result = await loginSchema.isValid(invalidLogin)
       expect(result).toBe(false)
     })
@@ -50,7 +45,7 @@ describe('Validation Schemas', () => {
         confirmPassword: 'SecurePass123!',
         acceptTerms: true
       }
-      
+
       const result = await registerSchema.isValid(validRegister)
       expect(result).toBe(true)
     })
@@ -65,7 +60,7 @@ describe('Validation Schemas', () => {
         confirmPassword: 'DifferentPassword123!',
         acceptTerms: true
       }
-      
+
       const result = await registerSchema.isValid(invalidRegister)
       expect(result).toBe(false)
     })
@@ -80,7 +75,7 @@ describe('Validation Schemas', () => {
         confirmPassword: 'weakpass',
         acceptTerms: true
       }
-      
+
       const result = await registerSchema.isValid(invalidRegister)
       expect(result).toBe(false)
     })
@@ -95,7 +90,7 @@ describe('Validation Schemas', () => {
         confirmPassword: 'SecurePass123!',
         acceptTerms: true
       }
-      
+
       const result = await registerSchema.isValid(invalidRegister)
       expect(result).toBe(false)
     })
@@ -110,7 +105,7 @@ describe('Validation Schemas', () => {
         confirmPassword: 'SecurePass123!',
         acceptTerms: false
       }
-      
+
       const result = await registerSchema.isValid(invalidRegister)
       expect(result).toBe(false)
     })
@@ -133,7 +128,7 @@ describe('Validation Schemas', () => {
           maxSessionLength: 120
         }
       }
-      
+
       const result = await createHiveSchema.isValid(validHive)
       expect(result).toBe(true)
     })
@@ -154,7 +149,7 @@ describe('Validation Schemas', () => {
           maxSessionLength: 120
         }
       }
-      
+
       const result = await createHiveSchema.isValid(invalidHive)
       expect(result).toBe(false)
     })
@@ -175,7 +170,7 @@ describe('Validation Schemas', () => {
           maxSessionLength: 120
         }
       }
-      
+
       const result = await createHiveSchema.isValid(invalidHive)
       expect(result).toBe(false)
     })
@@ -196,7 +191,7 @@ describe('Validation Schemas', () => {
           maxSessionLength: 30  // Less than default
         }
       }
-      
+
       const result = await createHiveSchema.isValid(invalidHive)
       expect(result).toBe(false)
     })
@@ -217,7 +212,7 @@ describe('Validation Schemas', () => {
           maxSessionLength: 120
         }
       }
-      
+
       const result = await createHiveSchema.isValid(invalidHive)
       expect(result).toBe(false)
     })

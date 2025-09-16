@@ -7,9 +7,17 @@
 
 1. [Authentication](#authentication)
 2. [Core Services](#core-services)
-3. [Real-time WebSocket](#real-time-websocket)
-4. [Error Handling](#error-handling)
-5. [Rate Limiting](#rate-limiting)
+   - [Hive Management](#hive-management)
+   - [Timer Operations](#timer-operations)
+   - [Presence System](#presence-system)
+   - [Chat Module](#chat-module)
+   - [Analytics Module](#analytics-module)
+3. [Identity Service](#identity-service)
+4. [Notification Service](#notification-service)
+5. [Buddy Service](#buddy-service)
+6. [Real-time WebSocket](#real-time-websocket)
+7. [Error Handling](#error-handling)
+8. [Rate Limiting](#rate-limiting)
 
 ---
 

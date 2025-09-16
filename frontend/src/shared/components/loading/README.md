@@ -1,10 +1,12 @@
 # Loading Components
 
-Comprehensive loading state components for FocusHive, built with Material UI and designed for optimal user experience.
+Comprehensive loading state components for FocusHive, built with Material UI and designed for
+optimal user experience.
 
 ## Overview
 
-This package provides a complete set of loading indicators, skeleton screens, and loading-aware components that integrate seamlessly with FocusHive's design system and API patterns.
+This package provides a complete set of loading indicators, skeleton screens, and loading-aware
+components that integrate seamlessly with FocusHive's design system and API patterns.
 
 ## Components
 
@@ -29,6 +31,7 @@ import { LoadingSpinner } from '@shared/components/Loading'
 ```
 
 **Props:**
+
 - `text?: string` - Optional loading text
 - `centered?: boolean` - Center the spinner (default: true)
 - `inline?: boolean` - Inline display (default: false)
@@ -58,6 +61,7 @@ import { LoadingBackdrop } from '@shared/components/Loading'
 ```
 
 **Props:**
+
 - `open: boolean` - Controls backdrop visibility
 - `text?: string` - Loading message (default: "Loading...")
 - `progress?: number` - Progress value 0-100
@@ -91,6 +95,7 @@ import { LoadingSkeleton } from '@shared/components/Loading'
 ```
 
 **Props:**
+
 - `lines?: number` - Number of text lines (default: 3)
 - `avatar?: boolean` - Show avatar placeholder (default: false)
 - `actions?: boolean` - Show action buttons placeholder (default: false)
@@ -133,6 +138,7 @@ import { LoadingButton } from '@shared/components/Loading'
 ```
 
 **Props:**
+
 - `loading?: boolean` - Loading state (default: false)
 - `loadingText?: string` - Text during loading
 - `loadingPosition?: 'start' | 'center' | 'end'` - Indicator position (default: 'center')
@@ -159,6 +165,7 @@ import { ContentSkeleton } from '@shared/components/Loading'
 ```
 
 **Props:**
+
 - `type: 'card' | 'list' | 'form' | 'table' | 'chat' | 'hive'` - Content type
 - `count?: number` - Number of items (default: 1)
 - `animation?: 'pulse' | 'wave' | false` - Animation type (default: 'wave')
@@ -183,6 +190,7 @@ import { TableSkeleton } from '@shared/components/Loading'
 ```
 
 **Props:**
+
 - `rows?: number` - Number of rows (default: 5)
 - `columns?: number` - Number of columns (default: 4)
 - `showHeader?: boolean` - Show header row (default: true)
@@ -350,7 +358,8 @@ const FileUpload = () => {
 
 ## Best Practices
 
-1. **Use appropriate loading indicators**: Spinners for quick operations, skeletons for content loading, backdrops for major operations
+1. **Use appropriate loading indicators**: Spinners for quick operations, skeletons for content
+   loading, backdrops for major operations
 
 2. **Provide meaningful feedback**: Always include descriptive text with loading states
 
@@ -358,7 +367,8 @@ const FileUpload = () => {
 
 4. **Disable interactions during loading**: Prevent users from triggering multiple operations
 
-5. **Show progress when possible**: For operations with measurable progress, show completion percentage
+5. **Show progress when possible**: For operations with measurable progress, show completion
+   percentage
 
 6. **Graceful error handling**: Always handle and display errors appropriately
 
@@ -376,6 +386,7 @@ const FileUpload = () => {
 ## Browser Support
 
 Loading components work in all modern browsers and gracefully degrade in older browsers:
+
 - Chrome 60+
 - Firefox 60+
 - Safari 12+

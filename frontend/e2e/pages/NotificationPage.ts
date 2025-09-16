@@ -3,8 +3,8 @@
  * Provides methods for interacting with notification UI elements
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from '../helpers/test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {TIMEOUTS} from '../helpers/test-data';
 
 export class NotificationPage {
   // Page elements - notification center/panel
@@ -67,7 +67,7 @@ export class NotificationPage {
 
     // Settings panel
     this.settingsPanel = page.locator('[data-testid="notification-settings-panel"]');
-    
+
     // Channel toggles
     this.channelToggles = {
       inApp: page.locator('[data-testid="channel-toggle-in-app"]'),
@@ -103,38 +103,38 @@ export class NotificationPage {
   }
 
   // Navigation methods
-  async goto() {
+  async goto(): Promise<void> {
     await this.page.goto('/notifications');
     await this.page.waitForLoadState('networkidle');
   }
 
-  async openNotificationCenter() {
+  async openNotificationCenter(): Promise<void> {
     await this.notificationToggle.click();
-    await this.notificationCenter.waitFor({ state: 'visible', timeout: TIMEOUTS.UI_ACTION });
+    await this.notificationCenter.waitFor({state: 'visible', timeout: TIMEOUTS.UI_ACTION});
   }
 
-  async closeNotificationCenter() {
+  async closeNotificationCenter(): Promise<void> {
     // Click outside or use close button if available
     const closeButton = this.notificationCenter.locator('[data-testid="close-notification-center"]');
     if (await closeButton.count() > 0) {
       await closeButton.click();
     } else {
       // Click outside the notification center
-      await this.page.click('body', { position: { x: 10, y: 10 } });
+      await this.page.click('body', {position: {x: 10, y: 10}});
     }
-    
-    await this.notificationCenter.waitFor({ state: 'hidden', timeout: TIMEOUTS.UI_ACTION });
+
+    await this.notificationCenter.waitFor({state: 'hidden', timeout: TIMEOUTS.UI_ACTION});
   }
 
-  async openNotificationSettings() {
+  async openNotificationSettings(): Promise<void> {
     await this.notificationSettings.click();
-    await this.settingsPanel.waitFor({ state: 'visible', timeout: TIMEOUTS.UI_ACTION });
+    await this.settingsPanel.waitFor({state: 'visible', timeout: TIMEOUTS.UI_ACTION});
   }
 
   // Notification interaction methods
   async getNotificationCount(): Promise<number> {
     if (await this.notificationBadge.count() === 0) return 0;
-    
+
     const badgeText = await this.notificationBadge.textContent();
     return parseInt(badgeText || '0', 10);
   }
@@ -151,10 +151,10 @@ export class NotificationPage {
     return this.notificationList.locator(`text="${title}"`).first();
   }
 
-  async markNotificationAsRead(id: string) {
+  async markNotificationAsRead(id: string): Promise<void> {
     const notification = await this.getNotificationById(id);
     const markReadButton = notification.locator('[data-testid="mark-read-button"]');
-    
+
     if (await markReadButton.count() > 0) {
       await markReadButton.click();
     } else {
@@ -163,12 +163,12 @@ export class NotificationPage {
     }
   }
 
-  async deleteNotification(id: string) {
+  async deleteNotification(id: string): Promise<void> {
     const notification = await this.getNotificationById(id);
     const deleteButton = notification.locator('[data-testid="delete-notification-button"]');
-    
+
     await deleteButton.click();
-    
+
     // Confirm deletion if dialog appears
     const confirmButton = this.page.locator('[data-testid="confirm-delete-notification"]');
     if (await confirmButton.count() > 0) {
@@ -176,9 +176,9 @@ export class NotificationPage {
     }
   }
 
-  async clearAllNotifications() {
+  async clearAllNotifications(): Promise<void> {
     await this.clearAllButton.click();
-    
+
     // Confirm if dialog appears
     const confirmButton = this.page.locator('[data-testid="confirm-clear-notifications"]');
     if (await confirmButton.count() > 0) {
@@ -189,9 +189,9 @@ export class NotificationPage {
     await expect(this.notificationList.locator('[data-testid^="notification-"]')).toHaveCount(0);
   }
 
-  async markAllAsRead() {
+  async markAllAsRead(): Promise<void> {
     await this.markAllReadButton.click();
-    
+
     // Wait for all notifications to be marked as read
     const unreadNotifications = this.notificationList.locator('[data-testid^="notification-"]:not(.read)');
     await expect(unreadNotifications).toHaveCount(0);
@@ -200,19 +200,19 @@ export class NotificationPage {
   // Toast notification methods
   async waitForToast(title?: string, timeout = TIMEOUTS.NOTIFICATION): Promise<Locator> {
     if (title) {
-      const toastWithTitle = this.toastNotification.filter({ hasText: title });
-      await toastWithTitle.waitFor({ timeout });
+      const toastWithTitle = this.toastNotification.filter({hasText: title});
+      await toastWithTitle.waitFor({timeout});
       return toastWithTitle.first();
     } else {
-      await this.toastNotification.first().waitFor({ timeout });
+      await this.toastNotification.first().waitFor({timeout});
       return this.toastNotification.first();
     }
   }
 
-  async dismissToast(toast?: Locator) {
+  async dismissToast(toast?: Locator): Promise<void> {
     const targetToast = toast || this.toastNotification.first();
     const closeButton = targetToast.locator('[data-testid="toast-close-button"]');
-    
+
     if (await closeButton.count() > 0) {
       await closeButton.click();
     } else {
@@ -220,10 +220,10 @@ export class NotificationPage {
       await targetToast.click();
     }
 
-    await targetToast.waitFor({ state: 'hidden', timeout: TIMEOUTS.UI_ACTION });
+    await targetToast.waitFor({state: 'hidden', timeout: TIMEOUTS.UI_ACTION});
   }
 
-  async dismissAllToasts() {
+  async dismissAllToasts(): Promise<void> {
     const toasts = await this.toastNotification.all();
     for (const toast of toasts) {
       try {
@@ -236,33 +236,33 @@ export class NotificationPage {
   }
 
   // Settings management methods
-  async toggleChannel(channel: keyof typeof this.channelToggles, enabled: boolean) {
+  async toggleChannel(channel: keyof typeof this.channelToggles, enabled: boolean): Promise<void> {
     const toggle = this.channelToggles[channel];
-    
+
     // Check current state
     const isCurrentlyEnabled = await toggle.isChecked();
-    
+
     if (isCurrentlyEnabled !== enabled) {
       await toggle.click();
     }
-    
+
     // Verify state change
-    await expect(toggle).toBeChecked({ checked: enabled });
+    await expect(toggle).toBeChecked({checked: enabled});
   }
 
-  async toggleCategory(category: keyof typeof this.categoryToggles, enabled: boolean) {
+  async toggleCategory(category: keyof typeof this.categoryToggles, enabled: boolean): Promise<void> {
     const toggle = this.categoryToggles[category];
-    
+
     const isCurrentlyEnabled = await toggle.isChecked();
-    
+
     if (isCurrentlyEnabled !== enabled) {
       await toggle.click();
     }
-    
-    await expect(toggle).toBeChecked({ checked: enabled });
+
+    await expect(toggle).toBeChecked({checked: enabled});
   }
 
-  async enableDoNotDisturb(schedule?: { start: string; end: string }) {
+  async enableDoNotDisturb(schedule?: { start: string; end: string }): Promise<void> {
     // Enable do not disturb
     await this.doNotDisturbToggle.check();
     await expect(this.doNotDisturbToggle).toBeChecked();
@@ -275,49 +275,49 @@ export class NotificationPage {
     }
   }
 
-  async disableDoNotDisturb() {
+  async disableDoNotDisturb(): Promise<void> {
     await this.doNotDisturbToggle.uncheck();
     await expect(this.doNotDisturbToggle).not.toBeChecked();
   }
 
-  async setDigestFrequency(frequency: 'hourly' | 'daily' | 'weekly' | 'disabled') {
+  async setDigestFrequency(frequency: 'hourly' | 'daily' | 'weekly' | 'disabled'): Promise<void> {
     await this.digestFrequencySelect.selectOption(frequency);
     await expect(this.digestFrequencySelect).toHaveValue(frequency);
   }
 
-  async saveNotificationSettings() {
+  async saveNotificationSettings(): Promise<void> {
     await this.saveSettingsButton.click();
-    
+
     // Wait for success message or settings to be saved
     const successMessage = this.page.locator('[data-testid="settings-saved-message"]');
     if (await successMessage.count() > 0) {
-      await successMessage.waitFor({ timeout: TIMEOUTS.UI_ACTION });
+      await successMessage.waitFor({timeout: TIMEOUTS.UI_ACTION});
     }
   }
 
   // Permission handling methods
-  async handleNotificationPermission(allow: boolean) {
+  async handleNotificationPermission(allow: boolean): Promise<void> {
     // Wait for permission dialog to appear
-    await this.permissionDialog.waitFor({ timeout: TIMEOUTS.UI_ACTION });
-    
+    await this.permissionDialog.waitFor({timeout: TIMEOUTS.UI_ACTION});
+
     if (allow) {
       await this.allowNotificationsButton.click();
     } else {
       await this.blockNotificationsButton.click();
     }
-    
+
     // Wait for dialog to disappear
-    await this.permissionDialog.waitFor({ state: 'hidden', timeout: TIMEOUTS.UI_ACTION });
+    await this.permissionDialog.waitFor({state: 'hidden', timeout: TIMEOUTS.UI_ACTION});
   }
 
   // Validation methods
-  async validateNotificationDisplay(expectedTitle: string, expectedMessage: string) {
+  async validateNotificationDisplay(expectedTitle: string, expectedMessage: string): Promise<void> {
     const notification = await this.getNotificationByTitle(expectedTitle);
-    
+
     await expect(notification).toBeVisible();
     await expect(notification).toContainText(expectedTitle);
     await expect(notification).toContainText(expectedMessage);
-    
+
     // Check timestamp
     const timestamp = notification.locator('[data-testid="notification-timestamp"]');
     if (await timestamp.count() > 0) {
@@ -325,22 +325,22 @@ export class NotificationPage {
     }
   }
 
-  async validateToastDisplay(expectedTitle: string, expectedMessage: string) {
+  async validateToastDisplay(expectedTitle: string, expectedMessage: string): Promise<void> {
     const toast = await this.waitForToast(expectedTitle);
-    
+
     await expect(toast).toBeVisible();
     await expect(toast).toContainText(expectedTitle);
     await expect(toast).toContainText(expectedMessage);
   }
 
-  async validateNotificationAccessibility(notificationLocator: Locator) {
+  async validateNotificationAccessibility(notificationLocator: Locator): Promise<void> {
     // Check ARIA attributes
     await expect(notificationLocator).toHaveAttribute('role');
-    
+
     // Check keyboard navigation
     await notificationLocator.focus();
     await expect(notificationLocator).toBeFocused();
-    
+
     // Check close button accessibility
     const closeButton = notificationLocator.locator('[aria-label*="close"], [aria-label*="dismiss"]');
     if (await closeButton.count() > 0) {
@@ -349,7 +349,7 @@ export class NotificationPage {
     }
   }
 
-  async validateSettingsAccessibility() {
+  async validateSettingsAccessibility(): Promise<void> {
     // Check all toggles have labels
     const allToggles = [
       ...Object.values(this.channelToggles),
@@ -369,9 +369,9 @@ export class NotificationPage {
   }
 
   // Utility methods
-  async waitForNotificationUpdate(timeout = TIMEOUTS.API_RESPONSE) {
+  async waitForNotificationUpdate(timeout = TIMEOUTS.API_RESPONSE): Promise<void> {
     // Wait for any pending API calls to complete
-    await this.page.waitForLoadState('networkidle', { timeout });
+    await this.page.waitForLoadState('networkidle', {timeout});
   }
 
   async isDoNotDisturbActive(): Promise<boolean> {
@@ -380,25 +380,25 @@ export class NotificationPage {
 
   async getChannelStatus(): Promise<Record<string, boolean>> {
     const status: Record<string, boolean> = {};
-    
+
     for (const [channel, toggle] of Object.entries(this.channelToggles)) {
       if (await toggle.count() > 0) {
         status[channel] = await toggle.isChecked();
       }
     }
-    
+
     return status;
   }
 
   async getCategoryStatus(): Promise<Record<string, boolean>> {
     const status: Record<string, boolean> = {};
-    
+
     for (const [category, toggle] of Object.entries(this.categoryToggles)) {
       if (await toggle.count() > 0) {
         status[category] = await toggle.isChecked();
       }
     }
-    
+
     return status;
   }
 }

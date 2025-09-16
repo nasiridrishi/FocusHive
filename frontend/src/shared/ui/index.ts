@@ -1,6 +1,6 @@
 /**
  * Responsive UI Components Library
- * 
+ *
  * Central export point for all responsive and adaptive UI components
  */
 
@@ -35,4 +35,4 @@ export {
 } from './SmartFAB'
 
 // WebSocket Components
-export { default as WebSocketConnectionStatus } from './WebSocketConnectionStatus'
+export {default as WebSocketConnectionStatus} from './WebSocketConnectionStatus'

@@ -1,39 +1,35 @@
 /**
  * E2E Tests for Privacy Controls and Data Access Management
- * 
+ *
  * Comprehensive testing of privacy settings, data access permissions, GDPR compliance,
  * and data protection features within the FocusHive Identity Service
- * 
+ *
  * @fileoverview Privacy controls E2E tests
  * @version 1.0.0
  */
 
-import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
-import { IdentityPage, PrivacySettingsPage } from '../../pages/IdentityPage';
-import { PersonaSwitcherPage } from '../../pages/PersonaSwitcherPage';
+import {type APIRequestContext, expect, type Page, test} from '@playwright/test';
+import {IdentityPage, PrivacySettingsPage} from '../../pages/IdentityPage';
+import {PersonaSwitcherPage} from '../../pages/PersonaSwitcherPage';
 import {
-  AuthenticationHelper,
-  PrivacyHelper,
-  PerformanceHelper,
   AccessibilityHelper,
+  AuthenticationHelper,
+  PerformanceHelper,
+  PrivacyHelper,
   SecurityHelper
 } from '../../helpers/identity/identity-helpers';
 import {
-  IdentityTestDataManager,
   IdentityTestDataFactory,
-  type TestUser,
-  type TestPersona
+  IdentityTestDataManager,
+  type TestPersona,
+  type TestUser
 } from '../../fixtures/identity/identity-fixtures';
-import { 
-  TEST_USERS, 
-  PERFORMANCE_THRESHOLDS,
-  SECURITY_CONFIG
-} from './identity.config';
+import {PERFORMANCE_THRESHOLDS, TEST_USERS} from './identity.config';
 
 test.describe('Privacy Controls and Data Access Management', () => {
   let page: Page;
   let apiContext: APIRequestContext;
-  let identityPage: IdentityPage;
+  let _identityPage: IdentityPage;
   let privacyPage: PrivacySettingsPage;
   let personaPage: PersonaSwitcherPage;
   let authHelper: AuthenticationHelper;
@@ -43,9 +39,9 @@ test.describe('Privacy Controls and Data Access Management', () => {
   let securityHelper: SecurityHelper;
   let dataManager: IdentityTestDataManager;
   let testUser: TestUser;
-  let privacyUser: TestUser;
+  let _privacyUser: TestUser;
 
-  test.beforeAll(async ({ browser, playwright }) => {
+  test.beforeAll(async ({browser, playwright}) => {
     // Create API context for setup
     apiContext = await playwright.request.newContext({
       baseURL: process.env.E2E_IDENTITY_API_URL || 'http://localhost:8081'
@@ -134,7 +130,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
         name: 'Personal Privacy Test'
       });
 
-      await dataManager.createPersonas(testUser.id!, [workPersona, personalPersona], testUser.accessToken!);
+      await dataManager.createPersonas(testUser.id || '', [workPersona, personalPersona], testUser.accessToken || '');
 
       // Update global privacy setting
       await privacyPage.updateProfileVisibility('PRIVATE');
@@ -157,7 +153,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
         })
       });
 
-      await dataManager.createPersonas(testUser.id!, [workPersona], testUser.accessToken!);
+      await dataManager.createPersonas(testUser.id || '', [workPersona], testUser.accessToken || '');
 
       // Set global visibility to private
       await privacyPage.updateProfileVisibility('PRIVATE');
@@ -216,8 +212,8 @@ test.describe('Privacy Controls and Data Access Management', () => {
       const personalPersona = IdentityTestDataFactory.createPersona('PERSONAL', {
         name: 'Message Test Personal'
       });
-      await dataManager.createPersonas(testUser.id!, [personalPersona], testUser.accessToken!);
-      
+      await dataManager.createPersonas(testUser.id || '', [personalPersona], testUser.accessToken || '');
+
       await personaPage.switchPersona(personalPersona.name);
       await expect(page.locator('[data-testid="send-message-button"]')).toBeDisabled();
     });
@@ -226,13 +222,13 @@ test.describe('Privacy Controls and Data Access Management', () => {
   test.describe('Activity Data Sharing Controls', () => {
     test('should disable activity data sharing', async () => {
       await privacyPage.goToPrivacySettings();
-      
+
       // Disable activity data sharing
       const currentState = await privacyPage.shareActivityDataToggle.isChecked();
       if (currentState) {
         await privacyPage.shareActivityDataToggle.click();
       }
-      
+
       await privacyPage.savePrivacyButton.click();
       await privacyPage.waitForSuccess();
 
@@ -247,7 +243,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
 
     test('should enable activity data sharing with consent', async () => {
       await privacyPage.goToPrivacySettings();
-      
+
       // Enable activity data sharing
       const currentState = await privacyPage.shareActivityDataToggle.isChecked();
       if (!currentState) {
@@ -257,10 +253,10 @@ test.describe('Privacy Controls and Data Access Management', () => {
       // Should show consent dialog
       await expect(page.locator('[data-testid="data-sharing-consent-modal"]')).toBeVisible();
       await expect(page.locator('[data-testid="consent-details"]')).toContainText('productivity analytics');
-      
+
       // Accept consent
       await page.locator('[data-testid="accept-consent"]').click();
-      
+
       await privacyPage.savePrivacyButton.click();
       await privacyPage.waitForSuccess();
 
@@ -331,8 +327,8 @@ test.describe('Privacy Controls and Data Access Management', () => {
     test('should disable two-factor authentication with verification', async () => {
       // First enable 2FA (using API for speed)
       await apiContext.post(`${process.env.E2E_IDENTITY_API_URL}/api/v1/auth/2fa/enable`, {
-        headers: { 'Authorization': `Bearer ${testUser.accessToken}` },
-        data: { code: '123456' }
+        headers: {'Authorization': `Bearer ${testUser.accessToken}`},
+        data: {code: '123456'}
       });
 
       await privacyPage.goToPrivacySettings();
@@ -355,8 +351,8 @@ test.describe('Privacy Controls and Data Access Management', () => {
     test('should show backup codes management', async () => {
       // Enable 2FA first
       await apiContext.post(`${process.env.E2E_IDENTITY_API_URL}/api/v1/auth/2fa/enable`, {
-        headers: { 'Authorization': `Bearer ${testUser.accessToken}` },
-        data: { code: '123456' }
+        headers: {'Authorization': `Bearer ${testUser.accessToken}`},
+        data: {code: '123456'}
       });
 
       await privacyPage.goToPrivacySettings();
@@ -367,7 +363,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
 
       await expect(page.locator('[data-testid="backup-codes-modal"]')).toBeVisible();
       await expect(page.locator('[data-testid="remaining-codes-count"]')).toBeVisible();
-      
+
       // Generate new backup codes
       await page.locator('[data-testid="generate-new-codes"]').click();
       await expect(page.locator('[data-testid="new-backup-codes"]')).toBeVisible();
@@ -392,8 +388,8 @@ test.describe('Privacy Controls and Data Access Management', () => {
     test('should enforce session timeout', async () => {
       // Set very short timeout for testing (5 seconds)
       await apiContext.patch(`${process.env.E2E_IDENTITY_API_URL}/api/v1/users/${testUser.id}/settings`, {
-        headers: { 'Authorization': `Bearer ${testUser.accessToken}` },
-        data: { sessionTimeout: 5 }
+        headers: {'Authorization': `Bearer ${testUser.accessToken}`},
+        data: {sessionTimeout: 5}
       });
 
       // Wait for timeout
@@ -401,7 +397,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
 
       // Should show session timeout warning
       await expect(page.locator('[data-testid="session-timeout-warning"]')).toBeVisible();
-      
+
       // Attempt to perform action - should redirect to login
       await page.locator('[data-testid="user-menu"]').click();
       await expect(page.locator('[data-testid="login-form"]')).toBeVisible();
@@ -410,8 +406,8 @@ test.describe('Privacy Controls and Data Access Management', () => {
     test('should allow session extension', async () => {
       // Set medium timeout
       await apiContext.patch(`${process.env.E2E_IDENTITY_API_URL}/api/v1/users/${testUser.id}/settings`, {
-        headers: { 'Authorization': `Bearer ${testUser.accessToken}` },
-        data: { sessionTimeout: 300 } // 5 minutes
+        headers: {'Authorization': `Bearer ${testUser.accessToken}`},
+        data: {sessionTimeout: 300} // 5 minutes
       });
 
       // Wait until near timeout
@@ -434,7 +430,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
       // Verify GDPR information is displayed
       await expect(page.locator('[data-testid="gdpr-rights-info"]')).toBeVisible();
       await expect(page.locator('[data-testid="privacy-policy-link"]')).toBeVisible();
-      
+
       // Check specific rights are mentioned
       await expect(page.locator('[data-testid="right-to-access"]')).toBeVisible();
       await expect(page.locator('[data-testid="right-to-rectification"]')).toBeVisible();
@@ -448,18 +444,18 @@ test.describe('Privacy Controls and Data Access Management', () => {
       // Verify export request was created
       await expect(page.locator('[data-testid="export-request-confirmation"]')).toBeVisible();
       await expect(page.locator('[data-testid="export-status"]')).toContainText('PENDING');
-      
+
       // Should receive email notification
       await expect(page.locator('[data-testid="email-notification-sent"]')).toBeVisible();
     });
 
     test('should provide data in machine-readable format', async () => {
-      const exportRequestId = await privacyHelper.requestDataExport('JSON', testUser.accessToken!);
+      const exportRequestId = await privacyHelper.requestDataExport('JSON', testUser.accessToken || '');
 
       // Simulate export completion
       await apiContext.patch(`${process.env.E2E_IDENTITY_API_URL}/api/v1/privacy/data-export/${exportRequestId}`, {
-        headers: { 'Authorization': `Bearer ${testUser.accessToken}` },
-        data: { status: 'COMPLETED', downloadUrl: '/exports/test-export.json' }
+        headers: {'Authorization': `Bearer ${testUser.accessToken}`},
+        data: {status: 'COMPLETED', downloadUrl: '/exports/test-export.json'}
       });
 
       await privacyPage.goToPrivacySettings();
@@ -467,12 +463,12 @@ test.describe('Privacy Controls and Data Access Management', () => {
 
       // Verify download link is available
       await expect(page.locator('[data-testid="download-export-link"]')).toBeVisible();
-      
+
       // Download and verify JSON structure
       const downloadPromise = page.waitForDownload();
       await page.locator('[data-testid="download-export-link"]').click();
       const download = await downloadPromise;
-      
+
       expect(download.suggestedFilename()).toMatch(/\.json$/);
     });
 
@@ -503,13 +499,13 @@ test.describe('Privacy Controls and Data Access Management', () => {
       // Perform various privacy actions
       await privacyPage.updateProfileVisibility('PRIVATE');
       await privacyPage.requestDataExport('JSON');
-      
+
       // View audit trail
       await page.locator('[data-testid="view-privacy-audit"]').click();
 
       await expect(page.locator('[data-testid="privacy-audit-log"]')).toBeVisible();
       await expect(page.locator('[data-testid="audit-entry"]')).toHaveCount(2);
-      
+
       // Verify audit entries contain required information
       const auditEntries = await page.locator('[data-testid="audit-entry"]').all();
       for (const entry of auditEntries) {
@@ -529,7 +525,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
       await page.locator('[data-testid="manage-consent"]').click();
 
       await expect(page.locator('[data-testid="consent-management-modal"]')).toBeVisible();
-      
+
       // Verify different consent categories
       await expect(page.locator('[data-testid="essential-consent"]')).toBeVisible();
       await expect(page.locator('[data-testid="analytics-consent"]')).toBeVisible();
@@ -573,7 +569,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
 
       // Withdraw analytics consent
       await page.locator('[data-testid="analytics-consent"] input').uncheck();
-      
+
       // Should show immediate effect warning
       await expect(page.locator('[data-testid="analytics-warning"]')).toBeVisible();
       await expect(page.locator('[data-testid="analytics-warning"]')).toContainText('analytics features will be disabled');
@@ -600,7 +596,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
   test.describe('Performance and Security', () => {
     test('should load privacy settings quickly', async () => {
       const loadTime = await perfHelper.measurePageLoadTime('/profile/privacy');
-      
+
       perfHelper.verifyPerformanceThreshold(loadTime, 'MEDIUM');
       expect(loadTime).toBeLessThan(PERFORMANCE_THRESHOLDS.UI_RESPONSE_TIME.DATA_LOAD);
     });
@@ -616,17 +612,17 @@ test.describe('Privacy Controls and Data Access Management', () => {
     });
 
     test('should validate CSRF protection on privacy endpoints', async () => {
-      await securityHelper.testCSRFProtection('/api/v1/privacy/preferences', testUser.accessToken!);
+      await securityHelper.testCSRFProtection('/api/v1/privacy/preferences', testUser.accessToken || '');
     });
 
     test('should encrypt sensitive privacy data', async () => {
       // Verify that privacy settings are encrypted in transit
       const privacyResponse = await apiContext.get(`${process.env.E2E_IDENTITY_API_URL}/api/v1/privacy/preferences`, {
-        headers: { 'Authorization': `Bearer ${testUser.accessToken}` }
+        headers: {'Authorization': `Bearer ${testUser.accessToken}`}
       });
 
       expect(privacyResponse.ok()).toBe(true);
-      
+
       // Response should be over HTTPS and contain encrypted data
       const responseData = await privacyResponse.json();
       expect(responseData.encrypted).toBe(true);
@@ -645,10 +641,10 @@ test.describe('Privacy Controls and Data Access Management', () => {
 
     test('should support keyboard navigation in privacy controls', async () => {
       await privacyPage.goToPrivacySettings();
-      
+
       await a11yHelper.testKeyboardNavigation(
-        '[data-testid="profile-visibility-select"]',
-        '[data-testid="save-privacy-button"]'
+          '[data-testid="profile-visibility-select"]',
+          '[data-testid="save-privacy-button"]'
       );
     });
 
@@ -669,7 +665,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
       await expect(page.locator('[data-testid="profile-visibility-help"]')).toBeVisible();
       await expect(page.locator('[data-testid="online-status-help"]')).toBeVisible();
       await expect(page.locator('[data-testid="activity-data-help"]')).toBeVisible();
-      
+
       // Help text should be descriptive and not just generic
       const helpTexts = await Promise.all([
         page.locator('[data-testid="profile-visibility-help"]').textContent(),
@@ -679,7 +675,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
 
       helpTexts.forEach(text => {
         expect(text).toBeTruthy();
-        expect(text!.length).toBeGreaterThan(20); // Ensure meaningful descriptions
+        expect(text?.length).toBeGreaterThan(20); // Ensure meaningful descriptions
       });
     });
   });
@@ -705,7 +701,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
         })
       });
 
-      await dataManager.createPersonas(testUser.id!, [workPersona, personalPersona], testUser.accessToken!);
+      await dataManager.createPersonas(testUser.id || '', [workPersona, personalPersona], testUser.accessToken || '');
     });
 
     test('should maintain separate privacy settings per persona', async () => {
@@ -745,7 +741,7 @@ test.describe('Privacy Controls and Data Access Management', () => {
       await page.locator('[data-testid="privacy-summary"]').click();
 
       await expect(page.locator('[data-testid="privacy-summary-modal"]')).toBeVisible();
-      
+
       // Should show settings for each persona
       await expect(page.locator(`[data-testid="persona-privacy-${workPersona.name}"]`)).toBeVisible();
       await expect(page.locator(`[data-testid="persona-privacy-${personalPersona.name}"]`)).toBeVisible();

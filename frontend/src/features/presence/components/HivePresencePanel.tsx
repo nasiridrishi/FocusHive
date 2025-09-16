@@ -1,36 +1,36 @@
-import React, { useState } from 'react'
+import React, {useState} from 'react'
 import {
+  alpha,
+  Box,
   Card,
   CardContent,
   CardHeader,
-  Typography,
-  Box,
   Chip,
-  IconButton,
   Collapse,
   Divider,
+  IconButton,
+  LinearProgress,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
-  LinearProgress,
   styled,
-  alpha,
+  Typography,
   useTheme,
 } from '@mui/material'
 import {
+  Coffee as BreakIcon,
   ExpandMore as ExpandMoreIcon,
   Groups as GroupsIcon,
-  Visibility as FocusingIcon,
-  Coffee as BreakIcon,
-  TrendingUp as TrendingUpIcon,
-  Schedule as ScheduleIcon,
   Person as PersonIcon,
+  Schedule as ScheduleIcon,
+  TrendingUp as TrendingUpIcon,
+  Visibility as FocusingIcon,
 } from '@mui/icons-material'
 import ActiveUsersList from './ActiveUsersList'
-import { HivePresenceInfo, ActivityEvent, UserPresence } from '../../../shared/types/presence'
+import {ActivityEvent, HivePresenceInfo, UserPresence} from '../../../shared/types/presence'
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(({theme}) => ({
   background: `linear-gradient(135deg, 
     ${alpha(theme.palette.primary.main, 0.05)} 0%, 
     ${alpha(theme.palette.background.paper, 0.95)} 100%)`,
@@ -42,7 +42,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   },
 }))
 
-const MetricCard = styled(Box)(({ theme }) => ({
+const MetricCard = styled(Box)(({theme}) => ({
   textAlign: 'center',
   padding: theme.spacing(2),
   borderRadius: theme.shape.borderRadius,
@@ -50,7 +50,7 @@ const MetricCard = styled(Box)(({ theme }) => ({
   border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
 }))
 
-const ExpandMoreStyled = styled(IconButton)<{ expand: boolean }>(({ theme, expand }) => ({
+const ExpandMoreStyled = styled(IconButton)<{ expand: boolean }>(({theme, expand}) => ({
   transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
   marginLeft: 'auto',
   transition: theme.transitions.create('transform', {
@@ -69,17 +69,17 @@ interface HivePresencePanelProps {
 }
 
 const HivePresencePanel: React.FC<HivePresencePanelProps> = ({
-  presenceInfo,
-  recentActivity = [],
-  showActivity = true,
-  compact = false,
-  onUserClick,
-  className,
-}) => {
+                                                               presenceInfo,
+                                                               recentActivity = [],
+                                                               showActivity = true,
+                                                               compact = false,
+                                                               onUserClick,
+                                                               className,
+                                                             }) => {
   const theme = useTheme()
   const [expanded, setExpanded] = useState(!compact)
 
-  const { activeUsers, totalOnline, totalFocusing, totalOnBreak } = presenceInfo
+  const {activeUsers, totalOnline, totalFocusing, totalOnBreak} = presenceInfo
 
   // Calculate productivity metrics
   const totalActive = totalOnline + totalFocusing
@@ -97,41 +97,41 @@ const HivePresencePanel: React.FC<HivePresencePanelProps> = ({
     return (statusPriority[b.status] || 0) - (statusPriority[a.status] || 0)
   })
 
-  const formatActivityTime = (timestamp: string) => {
+  const formatActivityTime = (timestamp: string): string => {
     const date = new Date(timestamp)
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffMinutes = Math.floor(diffMs / (1000 * 60))
-    
+
     if (diffMinutes < 1) return 'Just now'
     if (diffMinutes < 60) return `${diffMinutes}m ago`
-    
+
     const diffHours = Math.floor(diffMinutes / 60)
     if (diffHours < 24) return `${diffHours}h ago`
-    
+
     return date.toLocaleDateString()
   }
 
-  const getActivityIcon = (type: ActivityEvent['type']) => {
+  const getActivityIcon = (type: ActivityEvent['type']): React.ReactElement => {
     switch (type) {
       case 'joined_hive':
-        return <PersonIcon fontSize="small" color="success" />
+        return <PersonIcon fontSize="small" color="success"/>
       case 'left_hive':
-        return <PersonIcon fontSize="small" color="error" />
+        return <PersonIcon fontSize="small" color="error"/>
       case 'started_session':
-        return <FocusingIcon fontSize="small" color="primary" />
+        return <FocusingIcon fontSize="small" color="primary"/>
       case 'completed_session':
-        return <TrendingUpIcon fontSize="small" color="primary" />
+        return <TrendingUpIcon fontSize="small" color="primary"/>
       case 'took_break':
-        return <BreakIcon fontSize="small" color="warning" />
+        return <BreakIcon fontSize="small" color="warning"/>
       case 'resumed_session':
-        return <FocusingIcon fontSize="small" color="primary" />
+        return <FocusingIcon fontSize="small" color="primary"/>
       default:
-        return <ScheduleIcon fontSize="small" />
+        return <ScheduleIcon fontSize="small"/>
     }
   }
 
-  const getActivityMessage = (event: ActivityEvent) => {
+  const getActivityMessage = (event: ActivityEvent): string => {
     switch (event.type) {
       case 'joined_hive':
         return `${event.user.name} joined the hive`
@@ -151,182 +151,182 @@ const HivePresencePanel: React.FC<HivePresencePanelProps> = ({
   }
 
   const renderMetrics = () => (
-    <Box sx={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(4, 1fr)', 
-      gap: 2, 
-      mb: 2 
-    }}>
-      <MetricCard>
-        <Typography variant="h6" color="primary">
-          {totalActive}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Active
-        </Typography>
-      </MetricCard>
-      <MetricCard>
-        <Typography variant="h6" color="success.main">
-          {totalFocusing}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Focusing
-        </Typography>
-      </MetricCard>
-      <MetricCard>
-        <Typography variant="h6" color="warning.main">
-          {totalOnBreak}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          On Break
-        </Typography>
-      </MetricCard>
-      <MetricCard>
-        <Typography variant="h6" color="text.secondary">
-          {Math.round(focusRate)}%
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Focus Rate
-        </Typography>
-      </MetricCard>
-    </Box>
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 2,
+        mb: 2
+      }}>
+        <MetricCard>
+          <Typography variant="h6" color="primary">
+            {totalActive}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Active
+          </Typography>
+        </MetricCard>
+        <MetricCard>
+          <Typography variant="h6" color="success.main">
+            {totalFocusing}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Focusing
+          </Typography>
+        </MetricCard>
+        <MetricCard>
+          <Typography variant="h6" color="warning.main">
+            {totalOnBreak}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            On Break
+          </Typography>
+        </MetricCard>
+        <MetricCard>
+          <Typography variant="h6" color="text.secondary">
+            {Math.round(focusRate)}%
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Focus Rate
+          </Typography>
+        </MetricCard>
+      </Box>
   )
 
-  const renderFocusProgress = () => {
+  const renderFocusProgress = (): React.ReactElement | null => {
     if (totalActive === 0) return null
 
     return (
-      <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-          <Typography variant="body2" color="text.secondary">
-            Hive Focus Activity
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {Math.round(focusRate)}%
-          </Typography>
+        <Box sx={{mb: 2}}>
+          <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 0.5}}>
+            <Typography variant="body2" color="text.secondary">
+              Hive Focus Activity
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {Math.round(focusRate)}%
+            </Typography>
+          </Box>
+          <LinearProgress
+              variant="determinate"
+              value={focusRate}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: alpha(theme.palette.grey[300], 0.3),
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 4,
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.success.main})`,
+                },
+              }}
+          />
         </Box>
-        <LinearProgress
-          variant="determinate"
-          value={focusRate}
-          sx={{
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: alpha(theme.palette.grey[300], 0.3),
-            '& .MuiLinearProgress-bar': {
-              borderRadius: 4,
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.success.main})`,
-            },
-          }}
-        />
-      </Box>
     )
   }
 
-  const renderRecentActivity = () => {
+  const renderRecentActivity = (): React.ReactElement | null => {
     if (!showActivity || recentActivity.length === 0) return null
 
     return (
-      <>
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-          Recent Activity
-        </Typography>
-        <List dense>
-          {recentActivity.slice(0, 5).map((event) => (
-            <ListItem key={event.id} sx={{ px: 0, py: 0.5 }}>
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                {getActivityIcon(event.type)}
-              </ListItemIcon>
-              <ListItemText
-                primary={getActivityMessage(event)}
-                secondary={formatActivityTime(event.timestamp)}
-                primaryTypographyProps={{ variant: 'body2' }}
-                secondaryTypographyProps={{ variant: 'caption' }}
-              />
-            </ListItem>
-          ))}
-        </List>
-      </>
+        <>
+          <Divider sx={{my: 2}}/>
+          <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 600}}>
+            Recent Activity
+          </Typography>
+          <List dense>
+            {recentActivity.slice(0, 5).map((event) => (
+                <ListItem key={event.id} sx={{px: 0, py: 0.5}}>
+                  <ListItemIcon sx={{minWidth: 36}}>
+                    {getActivityIcon(event.type)}
+                  </ListItemIcon>
+                  <ListItemText
+                      primary={getActivityMessage(event)}
+                      secondary={formatActivityTime(event.timestamp)}
+                      primaryTypographyProps={{variant: 'body2'}}
+                      secondaryTypographyProps={{variant: 'caption'}}
+                  />
+                </ListItem>
+            ))}
+          </List>
+        </>
     )
   }
 
   if (compact) {
     return (
-      <Box className={className} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <GroupsIcon fontSize="small" color="action" />
-        <Typography variant="body2" color="text.secondary">
-          {totalActive} active
-        </Typography>
-        {totalFocusing > 0 && (
-          <Chip
-            label={`${totalFocusing} focusing`}
-            size="small"
-            color="primary"
-            variant="outlined"
-          />
-        )}
-      </Box>
+        <Box className={className} sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+          <GroupsIcon fontSize="small" color="action"/>
+          <Typography variant="body2" color="text.secondary">
+            {totalActive} active
+          </Typography>
+          {totalFocusing > 0 && (
+              <Chip
+                  label={`${totalFocusing} focusing`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+              />
+          )}
+        </Box>
     )
   }
 
   return (
-    <StyledCard className={className}>
-      <CardHeader
-        title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <GroupsIcon color="primary" />
-            <Typography variant="h6">
-              Hive Presence
-            </Typography>
-            {totalFocusing > 0 && (
-              <Chip
-                label={`${totalFocusing} focusing`}
-                size="small"
-                color="primary"
-                variant="filled"
-              />
-            )}
-          </Box>
-        }
-        action={
-          <ExpandMoreStyled
-            expand={expanded}
-            onClick={() => setExpanded(!expanded)}
-            aria-expanded={expanded}
-            aria-label="show more"
-          >
-            <ExpandMoreIcon />
-          </ExpandMoreStyled>
-        }
-        sx={{ pb: 1 }}
-      />
-      
-      <CardContent sx={{ pt: 0 }}>
-        {!expanded && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              {totalActive} users active
-            </Typography>
+      <StyledCard className={className}>
+        <CardHeader
+            title={
+              <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                <GroupsIcon color="primary"/>
+                <Typography variant="h6">
+                  Hive Presence
+                </Typography>
+                {totalFocusing > 0 && (
+                    <Chip
+                        label={`${totalFocusing} focusing`}
+                        size="small"
+                        color="primary"
+                        variant="filled"
+                    />
+                )}
+              </Box>
+            }
+            action={
+              <ExpandMoreStyled
+                  expand={expanded}
+                  onClick={() => setExpanded(!expanded)}
+                  aria-expanded={expanded}
+                  aria-label="show more"
+              >
+                <ExpandMoreIcon/>
+              </ExpandMoreStyled>
+            }
+            sx={{pb: 1}}
+        />
+
+        <CardContent sx={{pt: 0}}>
+          {!expanded && (
+              <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                <Typography variant="body2" color="text.secondary">
+                  {totalActive} users active
+                </Typography>
+                {renderFocusProgress()}
+              </Box>
+          )}
+
+          <Collapse in={expanded} timeout="auto" unmountOnExit>
+            {renderMetrics()}
             {renderFocusProgress()}
-          </Box>
-        )}
-        
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
-          {renderMetrics()}
-          {renderFocusProgress()}
-          
-          <ActiveUsersList
-            users={sortedUsers}
-            maxVisible={8}
-            showStatusSummary={false}
-            onUserClick={onUserClick}
-            title=""
-          />
-          
-          {renderRecentActivity()}
-        </Collapse>
-      </CardContent>
-    </StyledCard>
+
+            <ActiveUsersList
+                users={sortedUsers}
+                maxVisible={8}
+                showStatusSummary={false}
+                onUserClick={onUserClick}
+                title=""
+            />
+
+            {renderRecentActivity()}
+          </Collapse>
+        </CardContent>
+      </StyledCard>
   )
 }
 

@@ -132,37 +132,37 @@ export const scenarios = {
   'user-journey': {
     name: 'Complete User Journey',
     steps: [
-      { action: 'navigate', url: '/' },
-      { action: 'navigate', url: '/login' },
-      { action: 'login', credentials: 'test-user' },
-      { action: 'navigate', url: '/dashboard' },
-      { action: 'createHive', name: 'Test Hive' },
-      { action: 'joinHive', waitTime: 5000 },
-      { action: 'startTimer', duration: 25 },
-      { action: 'sendMessage', text: 'Hello team!' },
-      { action: 'navigate', url: '/analytics' },
-      { action: 'logout' },
+      {action: 'navigate', url: '/'},
+      {action: 'navigate', url: '/login'},
+      {action: 'login', credentials: 'test-user'},
+      {action: 'navigate', url: '/dashboard'},
+      {action: 'createHive', name: 'Test Hive'},
+      {action: 'joinHive', waitTime: 5000},
+      {action: 'startTimer', duration: 25},
+      {action: 'sendMessage', text: 'Hello team!'},
+      {action: 'navigate', url: '/analytics'},
+      {action: 'logout'},
     ],
   },
   'quick-session': {
     name: 'Quick Focus Session',
     steps: [
-      { action: 'navigate', url: '/' },
-      { action: 'quickJoin', hiveType: 'public' },
-      { action: 'startTimer', duration: 15 },
-      { action: 'completeTimer' },
-      { action: 'leave' },
+      {action: 'navigate', url: '/'},
+      {action: 'quickJoin', hiveType: 'public'},
+      {action: 'startTimer', duration: 15},
+      {action: 'completeTimer'},
+      {action: 'leave'},
     ],
   },
   'heavy-interaction': {
     name: 'Heavy Real-time Interaction',
     steps: [
-      { action: 'login', credentials: 'test-user' },
-      { action: 'joinHive', hiveId: 'busy-hive' },
-      { action: 'startTimer', duration: 25 },
-      { action: 'sendMessage', count: 10, interval: 2000 },
-      { action: 'updatePresence', interval: 5000 },
-      { action: 'receiveNotifications', subscribe: true },
+      {action: 'login', credentials: 'test-user'},
+      {action: 'joinHive', hiveId: 'busy-hive'},
+      {action: 'startTimer', duration: 25},
+      {action: 'sendMessage', count: 10, interval: 2000},
+      {action: 'updatePresence', interval: 5000},
+      {action: 'receiveNotifications', subscribe: true},
     ],
   },
 };
@@ -176,16 +176,16 @@ export const getLoadTestConfig = (profile: string = 'local-minimal'): LoadTestCo
   return config;
 };
 
-export const calculateResourceRequirements = (config: LoadTestConfig) => {
+export const calculateResourceRequirements = (config: LoadTestConfig): void => {
   const memoryPerBrowser = config.headless ? 50 : 150; // MB
   const cpuPerBrowser = config.headless ? 5 : 15; // % CPU
-  
+
   return {
     estimatedMemory: config.maxConcurrentBrowsers * memoryPerBrowser,
     estimatedCPU: Math.min(100, config.maxConcurrentBrowsers * cpuPerBrowser),
     recommendedRAM: Math.ceil((config.maxConcurrentBrowsers * memoryPerBrowser) / 1000) + 2, // GB
-    warning: config.users > 50 && config.safeMode 
-      ? 'Consider using cloud infrastructure for this load level' 
-      : null,
+    warning: config.users > 50 && config.safeMode
+        ? 'Consider using cloud infrastructure for this load level'
+        : null,
   };
 };

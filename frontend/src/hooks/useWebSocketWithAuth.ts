@@ -1,9 +1,9 @@
-import { useEffect, useCallback } from 'react';
-import { useWebSocket } from './useWebSocket';
-import type { 
-  WebSocketMessage, 
-  PresenceUpdate, 
-  NotificationMessage 
+import {useCallback, useEffect} from 'react';
+import {useWebSocket} from './useWebSocket';
+import type {
+  NotificationMessage,
+  PresenceUpdate,
+  WebSocketMessage
 } from '../services/websocket/WebSocketService';
 
 interface UseWebSocketWithAuthOptions {

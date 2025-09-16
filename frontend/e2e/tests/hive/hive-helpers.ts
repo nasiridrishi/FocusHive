@@ -3,18 +3,17 @@
  * Provides reusable utilities for hive workflow testing
  */
 
-import { Page, expect, Locator, BrowserContext, Browser } from '@playwright/test';
-import { EnhancedAuthHelper } from '../../helpers/auth-helpers';
-import { 
-  HIVE_TEST_USERS, 
-  HIVE_TEMPLATES, 
-  TIMER_CONFIGURATIONS, 
-  PRESENCE_STATUSES,
+import {Browser, BrowserContext, expect, Page} from '@playwright/test';
+import {EnhancedAuthHelper} from '../../helpers/auth-helpers';
+import {
   generateUniqueHiveData,
-  generateTestMember,
-  type TestHive 
+  HIVE_TEMPLATES,
+  HIVE_TEST_USERS,
+  PRESENCE_STATUSES,
+  type TestHive,
+  TIMER_CONFIGURATIONS
 } from './hive-fixtures';
-import { CreateHiveRequest, Hive, HiveMember } from '../../../src/services/api/hiveApi';
+import {CreateHiveRequest} from '../../../src/services/api/hiveApi';
 
 // API Response types
 export interface ApiResponse<T = unknown> {
@@ -66,7 +65,8 @@ export interface PresenceUpdate {
 }
 
 export class HiveWorkflowHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   /**
    * Navigate to hive discovery/browse page
@@ -105,9 +105,9 @@ export class HiveWorkflowHelper {
    */
   async createHive(hiveData: Partial<CreateHiveRequest> = {}): Promise<TestHive> {
     await this.navigateToCreateHive();
-    
+
     const defaultData = generateUniqueHiveData();
-    const finalData = { ...defaultData, ...hiveData };
+    const finalData = {...defaultData, ...hiveData};
 
     // Fill basic information
     await this.page.fill('[data-testid="hive-name-input"]', finalData.name);
@@ -149,7 +149,7 @@ export class HiveWorkflowHelper {
 
     // Wait for creation success and redirect
     await expect(this.page.locator('[data-testid="hive-workspace"]')).toBeVisible();
-    
+
     // Extract hive ID from URL
     const url = this.page.url();
     const hiveId = parseInt(url.split('/hives/')[1]);
@@ -163,9 +163,9 @@ export class HiveWorkflowHelper {
   /**
    * Search for hives with filters
    */
-  async searchHives(query: string, filters: Record<string, any> = {}): Promise<void> {
+  async searchHives(query: string, filters: Record<string, unknown> = {}): Promise<void> {
     await this.navigateToDiscovery();
-    
+
     // Enter search query
     await this.page.fill('[data-testid="hive-search-input"]', query);
     await this.page.press('[data-testid="hive-search-input"]', 'Enter');
@@ -198,7 +198,7 @@ export class HiveWorkflowHelper {
   async joinHive(hiveId: number): Promise<void> {
     await this.navigateToHive(hiveId);
     await this.page.click('[data-testid="join-hive-button"]');
-    
+
     // Handle different join scenarios
     const approvalModal = this.page.locator('[data-testid="join-approval-modal"]');
     if (await approvalModal.isVisible()) {
@@ -218,7 +218,7 @@ export class HiveWorkflowHelper {
   async leaveHive(): Promise<void> {
     await this.page.click('[data-testid="hive-menu-button"]');
     await this.page.click('[data-testid="leave-hive-option"]');
-    
+
     // Confirm leave action
     await this.page.click('[data-testid="confirm-leave-hive"]');
     await expect(this.page.locator('[data-testid="hive-left-message"]')).toBeVisible();
@@ -229,13 +229,13 @@ export class HiveWorkflowHelper {
    */
   async startTimerSession(config: keyof typeof TIMER_CONFIGURATIONS = 'POMODORO_25_5'): Promise<TimerSession> {
     const timerConfig = TIMER_CONFIGURATIONS[config];
-    
+
     // Open timer settings
     await this.page.click('[data-testid="timer-settings-button"]');
-    
+
     // Select timer type
     await this.page.click(`[data-testid="timer-type-${timerConfig.type}"]`);
-    
+
     // Configure timer based on type
     if (timerConfig.type === 'pomodoro') {
       await this.page.fill('[data-testid="work-duration-input"]', timerConfig.workDuration.toString());
@@ -247,14 +247,14 @@ export class HiveWorkflowHelper {
 
     // Start timer
     await this.page.click('[data-testid="start-timer-button"]');
-    
+
     // Wait for timer to start
     await expect(this.page.locator('[data-testid="active-timer"]')).toBeVisible();
-    
+
     // Extract session information
     const sessionId = await this.page.getAttribute('[data-testid="active-timer"]', 'data-session-id') || 'session_' + Date.now();
     const hiveId = parseInt(this.page.url().split('/hives/')[1]);
-    
+
     return {
       id: sessionId,
       hiveId,
@@ -280,7 +280,7 @@ export class HiveWorkflowHelper {
   async pauseResumeTimer(): Promise<void> {
     const pauseButton = this.page.locator('[data-testid="pause-timer-button"]');
     const resumeButton = this.page.locator('[data-testid="resume-timer-button"]');
-    
+
     if (await pauseButton.isVisible()) {
       await pauseButton.click();
       await expect(resumeButton).toBeVisible();
@@ -296,7 +296,7 @@ export class HiveWorkflowHelper {
   async updatePresenceStatus(status: keyof typeof PRESENCE_STATUSES): Promise<void> {
     await this.page.click('[data-testid="user-presence-dropdown"]');
     await this.page.click(`[data-testid="presence-status-${status.toLowerCase()}"]`);
-    
+
     // Verify status update
     await expect(this.page.locator(`[data-testid="current-status-${status.toLowerCase()}"]`)).toBeVisible();
   }
@@ -312,7 +312,7 @@ export class HiveWorkflowHelper {
       const username = await element.locator('[data-testid="member-username"]').textContent();
       const status = await element.locator('[data-testid="member-status"]').textContent();
       const isActive = await element.locator('[data-testid="member-active-indicator"]').isVisible();
-      
+
       members.push({
         username: username || '',
         status: status || '',
@@ -329,14 +329,14 @@ export class HiveWorkflowHelper {
   async verifyTimerSync(expectedRemainingTime: number, toleranceMs: number = 2000): Promise<boolean> {
     const timerDisplay = this.page.locator('[data-testid="timer-display"]');
     const currentTime = await timerDisplay.textContent();
-    
+
     if (!currentTime) return false;
-    
+
     // Parse MM:SS format
     const [minutes, seconds] = currentTime.split(':').map(Number);
     const actualRemainingMs = (minutes * 60 + seconds) * 1000;
     const expectedRemainingMs = expectedRemainingTime * 1000;
-    
+
     return Math.abs(actualRemainingMs - expectedRemainingMs) <= toleranceMs;
   }
 
@@ -346,9 +346,9 @@ export class HiveWorkflowHelper {
   async waitForPresenceUpdate(userId: number, expectedStatus: string, timeoutMs: number = 5000): Promise<boolean> {
     const memberElement = this.page.locator(`[data-testid="member-${userId}"]`);
     const statusElement = memberElement.locator('[data-testid="member-status"]');
-    
+
     try {
-      await expect(statusElement).toHaveText(expectedStatus, { timeout: timeoutMs });
+      await expect(statusElement).toHaveText(expectedStatus, {timeout: timeoutMs});
       return true;
     } catch {
       return false;
@@ -373,12 +373,12 @@ export class HiveWorkflowHelper {
     currentStreak: number;
   }> {
     await this.navigateToAnalytics();
-    
+
     const totalFocusTime = await this.page.locator('[data-testid="total-focus-time"]').textContent();
     const completedSessions = await this.page.locator('[data-testid="completed-sessions"]').textContent();
     const averageSessionLength = await this.page.locator('[data-testid="average-session-length"]').textContent();
     const currentStreak = await this.page.locator('[data-testid="current-streak"]').textContent();
-    
+
     return {
       totalFocusTime: parseInt(totalFocusTime?.replace(/\D/g, '') || '0'),
       completedSessions: parseInt(completedSessions?.replace(/\D/g, '') || '0'),
@@ -394,38 +394,26 @@ export class HiveWorkflowHelper {
     await this.navigateToAnalytics();
     await this.page.click('[data-testid="export-menu-button"]');
     await this.page.click(`[data-testid="export-${format}"]`);
-    
+
     // Wait for download
     const downloadPromise = this.page.waitForEvent('download');
     await this.page.click('[data-testid="confirm-export"]');
     const download = await downloadPromise;
-    
-    expect(download.suggestedFilename()).toContain(format);
-  }
 
-  /**
-   * Toggle hive settings
-   */
-  private async toggleSetting(setting: string, enabled: boolean): Promise<void> {
-    const checkbox = this.page.locator(`[data-testid="setting-${setting}"]`);
-    const isChecked = await checkbox.isChecked();
-    
-    if (isChecked !== enabled) {
-      await checkbox.click();
-    }
+    expect(download.suggestedFilename()).toContain(format);
   }
 
   /**
    * Wait for API response and validate data
    */
   async waitForApiResponse<T = unknown>(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET'): Promise<T> {
-    const responsePromise = this.page.waitForResponse(response => 
-      response.url().includes(endpoint) && response.request().method() === method
+    const responsePromise = this.page.waitForResponse(response =>
+        response.url().includes(endpoint) && response.request().method() === method
     );
-    
+
     const response = await responsePromise;
     expect(response.ok()).toBeTruthy();
-    
+
     return response.json() as T;
   }
 
@@ -434,13 +422,13 @@ export class HiveWorkflowHelper {
    */
   async measureWebSocketLatency(): Promise<number> {
     const startTime = Date.now();
-    
+
     // Send a presence update
     await this.updatePresenceStatus('ACTIVE');
-    
+
     // Wait for the update to be reflected in UI
     await this.waitForPresenceUpdate(1, 'active');
-    
+
     return Date.now() - startTime;
   }
 
@@ -449,13 +437,13 @@ export class HiveWorkflowHelper {
    */
   async simulateNetworkConditions(conditions: 'slow3g' | 'fast3g' | 'offline'): Promise<void> {
     const context = this.page.context();
-    
-    const networkConditions = {
-      slow3g: { downloadThroughput: 50000, uploadThroughput: 50000, latency: 2000 },
-      fast3g: { downloadThroughput: 1600000, uploadThroughput: 750000, latency: 150 },
-      offline: { offline: true }
+
+    const _networkConditions = {
+      slow3g: {downloadThroughput: 50000, uploadThroughput: 50000, latency: 2000},
+      fast3g: {downloadThroughput: 1600000, uploadThroughput: 750000, latency: 150},
+      offline: {offline: true}
     };
-    
+
     await context.setOffline(conditions === 'offline');
     if (conditions !== 'offline') {
       // Note: Full network throttling requires CDP, this is simplified
@@ -467,6 +455,18 @@ export class HiveWorkflowHelper {
           });
         }
       `);
+    }
+  }
+
+  /**
+   * Toggle hive settings
+   */
+  private async toggleSetting(setting: string, enabled: boolean): Promise<void> {
+    const checkbox = this.page.locator(`[data-testid="setting-${setting}"]`);
+    const isChecked = await checkbox.isChecked();
+
+    if (isChecked !== enabled) {
+      await checkbox.click();
     }
   }
 }
@@ -482,38 +482,38 @@ export class MultiUserHiveHelper {
     const page = await context.newPage();
     const helper = new HiveWorkflowHelper(page);
     const authHelper = new EnhancedAuthHelper(page);
-    
+
     // Login user
     await authHelper.loginUser(user.email, user.password);
-    
-    this.contexts.push({ context, page, helper, user });
+
+    this.contexts.push({context, page, helper, user});
     return helper;
   }
 
   async cleanup(): Promise<void> {
-    for (const { context } of this.contexts) {
+    for (const {context} of this.contexts) {
       await context.close();
     }
     this.contexts = [];
   }
 
   getHelpers(): HiveWorkflowHelper[] {
-    return this.contexts.map(({ helper }) => helper);
+    return this.contexts.map(({helper}) => helper);
   }
 
   async simulateConcurrentTimerStart(hiveId: number): Promise<TimerSession[]> {
-    const sessions = [];
-    
+    const _sessions = [];
+
     // Navigate all users to the same hive
     await Promise.all(
-      this.contexts.map(({ helper }) => helper.navigateToHive(hiveId))
+        this.contexts.map(({helper}) => helper.navigateToHive(hiveId))
     );
 
     // Start timers simultaneously
-    const timerPromises = this.contexts.map(({ helper }) => 
-      helper.startTimerSession('POMODORO_25_5')
+    const timerPromises = this.contexts.map(({helper}) =>
+        helper.startTimerSession('POMODORO_25_5')
     );
-    
+
     const results = await Promise.all(timerPromises);
     return results;
   }
@@ -521,12 +521,12 @@ export class MultiUserHiveHelper {
   async verifyConcurrentPresence(hiveId: number): Promise<boolean> {
     // Navigate all users to the same hive
     await Promise.all(
-      this.contexts.map(({ helper }) => helper.navigateToHive(hiveId))
+        this.contexts.map(({helper}) => helper.navigateToHive(hiveId))
     );
 
     // Get member lists from all users
     const memberLists = await Promise.all(
-      this.contexts.map(({ helper }) => helper.getHiveMembers())
+        this.contexts.map(({helper}) => helper.getHiveMembers())
     );
 
     // Verify all users see the same member count

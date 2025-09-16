@@ -3,11 +3,11 @@
  * Enhanced mobile-specific testing capabilities and device emulation
  */
 
-import { Page, BrowserContext, devices, expect, Locator } from '@playwright/test';
-import { MOBILE_DEVICES, VIEWPORT_BREAKPOINTS, TOUCH_TARGET_SPECS, MobileDeviceConfig } from './mobile.config';
+import {BrowserContext, Page} from '@playwright/test';
+import {MOBILE_DEVICES, MobileDeviceConfig} from './mobile.config';
 
 // Extended Window interface for mobile-specific properties
-interface ExtendedWindow extends Window {
+interface _ExtendedWindow extends Window {
   installPromptReceived?: boolean;
   MSStream?: unknown;
   navigator: Navigator & {
@@ -101,7 +101,7 @@ export class MobileTestHelper {
   async setupMobileDevice(deviceConfig: MobileDeviceConfig): Promise<void> {
     await this.page.setViewportSize(deviceConfig.viewport);
     await this.page.setUserAgent(deviceConfig.userAgent);
-    
+
     // Set device scale factor if supported
     if (deviceConfig.deviceScaleFactor) {
       const cdpSession = await this.context.newCDPSession(this.page);
@@ -118,7 +118,7 @@ export class MobileTestHelper {
    * Test responsive behavior at specific breakpoint
    */
   async testAtBreakpoint(width: number, height: number): Promise<MobileTestResult> {
-    await this.page.setViewportSize({ width, height });
+    await this.page.setViewportSize({width, height});
     await this.page.waitForTimeout(500); // Allow CSS transitions
 
     const issues: string[] = [];
@@ -217,7 +217,7 @@ export class MobileTestHelper {
     const installable = await this.page.evaluate(() => {
       return new Promise<boolean>((resolve) => {
         let hasPrompt = false;
-        
+
         window.addEventListener('beforeinstallprompt', () => {
           hasPrompt = true;
           resolve(true);
@@ -260,7 +260,7 @@ export class MobileTestHelper {
   }> {
     // Go offline
     await this.context.setOffline(true);
-    
+
     // Try to reload page
     await this.page.reload();
     await this.page.waitForTimeout(2000);
@@ -278,7 +278,7 @@ export class MobileTestHelper {
 
     let showsOfflineIndicator = false;
     for (const selector of offlineIndicators) {
-      if (await this.page.locator(selector).isVisible({ timeout: 1000 })) {
+      if (await this.page.locator(selector).isVisible({timeout: 1000})) {
         showsOfflineIndicator = true;
         break;
       }
@@ -295,13 +295,125 @@ export class MobileTestHelper {
   }
 
   /**
+   * Test accessibility features
+   */
+  async testAccessibility(): Promise<{
+    screenReaderCompatible: boolean;
+    keyboardNavigable: boolean;
+    contrastSufficient: boolean;
+    focusVisible: boolean;
+  }> {
+    // Check for ARIA labels and roles
+    const screenReaderCompatible = await this.page.evaluate(() => {
+      const interactiveElements = document.querySelectorAll('button, a, input, [role="button"]');
+      let accessibleCount = 0;
+
+      interactiveElements.forEach(el => {
+        const hasLabel = el.getAttribute('aria-label') ||
+            el.getAttribute('aria-labelledby') ||
+            el.textContent?.trim();
+        if (hasLabel) accessibleCount++;
+      });
+
+      return accessibleCount / interactiveElements.length > 0.8; // 80% threshold
+    });
+
+    // Test keyboard navigation
+    const keyboardNavigable = await this.testKeyboardNavigation();
+
+    // Basic contrast check (simplified)
+    const contrastSufficient = await this.page.evaluate(() => {
+      // This is a simplified check - real contrast testing requires more complex algorithms
+      const textElements = document.querySelectorAll('p, span, button, a');
+      return textElements.length > 0; // Placeholder
+    });
+
+    // Check focus visibility
+    const focusVisible = await this.page.evaluate(() => {
+      const focusableElements = document.querySelectorAll('button, a, input, [tabindex="0"]');
+
+      // Check if focus styles are defined
+      return Array.from(focusableElements).some(el => {
+        const styles = window.getComputedStyle(el, ':focus');
+        return styles.outline !== 'none' || styles.boxShadow !== 'none';
+      });
+    });
+
+    return {
+      screenReaderCompatible,
+      keyboardNavigable,
+      contrastSufficient,
+      focusVisible
+    };
+  }
+
+  /**
+   * Generate comprehensive mobile test report
+   */
+  async generateMobileReport(deviceName: string): Promise<{
+    device: string;
+    timestamp: string;
+    results: {
+      responsiveness: MobileTestResult;
+      performance: MobilePerformanceResult;
+      accessibility: MobileAccessibilityResult;
+      pwa: MobilePWAResult;
+    };
+    recommendations: string[];
+  }> {
+    const timestamp = new Date().toISOString();
+    const recommendations: string[] = [];
+
+    // Test responsiveness
+    const responsiveness = await this.testAtBreakpoint(390, 844);
+
+    // Test performance
+    const performance = await this.measureBasicPerformance();
+
+    // Test accessibility
+    const accessibility = await this.testAccessibility();
+
+    // Test PWA capabilities
+    const pwa = await this.testPWAInstallability();
+
+    // Generate recommendations
+    if (!responsiveness.passed) {
+      recommendations.push('Fix responsive design issues: ' + responsiveness.issues.join(', '));
+    }
+
+    if (performance.loadTime > 3000) {
+      recommendations.push('Optimize page load time (currently ' + performance.loadTime + 'ms)');
+    }
+
+    if (!accessibility.screenReaderCompatible) {
+      recommendations.push('Improve screen reader compatibility with better ARIA labels');
+    }
+
+    if (!pwa.installable) {
+      recommendations.push('Enable PWA installation with proper manifest and service worker');
+    }
+
+    return {
+      device: deviceName,
+      timestamp,
+      results: {
+        responsiveness,
+        performance,
+        accessibility,
+        pwa
+      },
+      recommendations
+    };
+  }
+
+  /**
    * Validate touch target sizes
    */
   private async validateTouchTargets(): Promise<string[]> {
     return await this.page.evaluate(() => {
       const issues: string[] = [];
       const interactiveElements = document.querySelectorAll(
-        'button, a, input, textarea, select, [role="button"], [tabindex="0"], [onclick]'
+          'button, a, input, textarea, select, [role="button"], [tabindex="0"], [onclick]'
       );
 
       interactiveElements.forEach((element, index) => {
@@ -380,13 +492,13 @@ export class MobileTestHelper {
   }
 
   private async performSwipe(
-    start: { x: number; y: number },
-    end: { x: number; y: number },
-    duration: number
+      start: { x: number; y: number },
+      end: { x: number; y: number },
+      duration: number
   ): Promise<void> {
     await this.page.mouse.move(start.x, start.y);
     await this.page.mouse.down();
-    
+
     const steps = Math.max(5, duration / 50);
     const stepX = (end.x - start.x) / steps;
     const stepY = (end.y - start.y) / steps;
@@ -401,82 +513,29 @@ export class MobileTestHelper {
   }
 
   private async performPinch(
-    center: { x: number; y: number },
-    scale: number,
-    duration: number
+      center: { x: number; y: number },
+      scale: number,
+      duration: number
   ): Promise<void> {
     // Simplified pinch implementation
     const distance = 100;
     const startDistance = distance;
     const endDistance = distance * scale;
 
-    const finger1Start = { x: center.x - startDistance / 2, y: center.y };
-    const finger1End = { x: center.x - endDistance / 2, y: center.y };
+    const finger1Start = {x: center.x - startDistance / 2, y: center.y};
+    const finger1End = {x: center.x - endDistance / 2, y: center.y};
 
     // Simulate first finger movement
     await this.performSwipe(finger1Start, finger1End, duration);
   }
 
   private async performPan(
-    start: { x: number; y: number },
-    end: { x: number; y: number },
-    duration: number
+      start: { x: number; y: number },
+      end: { x: number; y: number },
+      duration: number
   ): Promise<void> {
     // Pan is similar to swipe but typically slower and more controlled
     await this.performSwipe(start, end, duration);
-  }
-
-  /**
-   * Test accessibility features
-   */
-  async testAccessibility(): Promise<{
-    screenReaderCompatible: boolean;
-    keyboardNavigable: boolean;
-    contrastSufficient: boolean;
-    focusVisible: boolean;
-  }> {
-    // Check for ARIA labels and roles
-    const screenReaderCompatible = await this.page.evaluate(() => {
-      const interactiveElements = document.querySelectorAll('button, a, input, [role="button"]');
-      let accessibleCount = 0;
-
-      interactiveElements.forEach(el => {
-        const hasLabel = el.getAttribute('aria-label') || 
-                        el.getAttribute('aria-labelledby') ||
-                        el.textContent?.trim();
-        if (hasLabel) accessibleCount++;
-      });
-
-      return accessibleCount / interactiveElements.length > 0.8; // 80% threshold
-    });
-
-    // Test keyboard navigation
-    const keyboardNavigable = await this.testKeyboardNavigation();
-
-    // Basic contrast check (simplified)
-    const contrastSufficient = await this.page.evaluate(() => {
-      // This is a simplified check - real contrast testing requires more complex algorithms
-      const textElements = document.querySelectorAll('p, span, button, a');
-      return textElements.length > 0; // Placeholder
-    });
-
-    // Check focus visibility
-    const focusVisible = await this.page.evaluate(() => {
-      const focusableElements = document.querySelectorAll('button, a, input, [tabindex="0"]');
-      
-      // Check if focus styles are defined
-      return Array.from(focusableElements).some(el => {
-        const styles = window.getComputedStyle(el, ':focus');
-        return styles.outline !== 'none' || styles.boxShadow !== 'none';
-      });
-    });
-
-    return {
-      screenReaderCompatible,
-      keyboardNavigable,
-      contrastSufficient,
-      focusVisible
-    };
   }
 
   /**
@@ -487,75 +546,16 @@ export class MobileTestHelper {
       // Try to tab through interactive elements
       await this.page.keyboard.press('Tab');
       await this.page.waitForTimeout(100);
-      
+
       const focusedElement = await this.page.evaluate(() => {
-        return !!document.activeElement && 
-               document.activeElement !== document.body;
+        return !!document.activeElement &&
+            document.activeElement !== document.body;
       });
 
       return focusedElement;
-    } catch (error) {
+    } catch {
       return false;
     }
-  }
-
-  /**
-   * Generate comprehensive mobile test report
-   */
-  async generateMobileReport(deviceName: string): Promise<{
-    device: string;
-    timestamp: string;
-    results: {
-      responsiveness: MobileTestResult;
-      performance: MobilePerformanceResult;
-      accessibility: MobileAccessibilityResult;
-      pwa: MobilePWAResult;
-    };
-    recommendations: string[];
-  }> {
-    const timestamp = new Date().toISOString();
-    const recommendations: string[] = [];
-
-    // Test responsiveness
-    const responsiveness = await this.testAtBreakpoint(390, 844);
-    
-    // Test performance
-    const performance = await this.measureBasicPerformance();
-    
-    // Test accessibility
-    const accessibility = await this.testAccessibility();
-    
-    // Test PWA capabilities
-    const pwa = await this.testPWAInstallability();
-
-    // Generate recommendations
-    if (!responsiveness.passed) {
-      recommendations.push('Fix responsive design issues: ' + responsiveness.issues.join(', '));
-    }
-    
-    if (performance.loadTime > 3000) {
-      recommendations.push('Optimize page load time (currently ' + performance.loadTime + 'ms)');
-    }
-    
-    if (!accessibility.screenReaderCompatible) {
-      recommendations.push('Improve screen reader compatibility with better ARIA labels');
-    }
-    
-    if (!pwa.installable) {
-      recommendations.push('Enable PWA installation with proper manifest and service worker');
-    }
-
-    return {
-      device: deviceName,
-      timestamp,
-      results: {
-        responsiveness,
-        performance,
-        accessibility,
-        pwa
-      },
-      recommendations
-    };
   }
 }
 
@@ -568,15 +568,15 @@ export class MobileUtils {
    */
   static getTestDeviceList(priority: 'critical' | 'high' | 'medium' | 'all' = 'critical'): MobileDeviceConfig[] {
     const allDevices = Object.values(MOBILE_DEVICES);
-    
+
     switch (priority) {
       case 'critical':
-        return allDevices.filter(device => 
-          ['iPhone 14', 'Galaxy S21', 'Pixel 7', 'iPad Air'].includes(device.name)
+        return allDevices.filter(device =>
+            ['iPhone 14', 'Galaxy S21', 'Pixel 7', 'iPad Air'].includes(device.name)
         );
       case 'high':
-        return allDevices.filter(device => 
-          device.category === 'phone' || device.category === 'tablet'
+        return allDevices.filter(device =>
+            device.category === 'phone' || device.category === 'tablet'
         );
       case 'medium':
         return allDevices.filter(device => device.category !== 'foldable');
@@ -624,32 +624,32 @@ export class MobileUtils {
       {
         name: 'iPhone Portrait',
         description: 'Standard iPhone portrait mode',
-        viewport: { width: 390, height: 844 }
+        viewport: {width: 390, height: 844}
       },
       {
         name: 'iPhone Landscape',
         description: 'iPhone in landscape orientation',
-        viewport: { width: 844, height: 390 }
+        viewport: {width: 844, height: 390}
       },
       {
         name: 'Android Standard',
         description: 'Standard Android phone',
-        viewport: { width: 360, height: 800 }
+        viewport: {width: 360, height: 800}
       },
       {
         name: 'Small Mobile',
         description: 'Older/smaller mobile devices',
-        viewport: { width: 320, height: 568 }
+        viewport: {width: 320, height: 568}
       },
       {
         name: 'Tablet Portrait',
         description: 'Tablet in portrait mode',
-        viewport: { width: 768, height: 1024 }
+        viewport: {width: 768, height: 1024}
       },
       {
         name: 'Slow Network Mobile',
         description: 'Mobile on slow 3G network',
-        viewport: { width: 390, height: 844 },
+        viewport: {width: 390, height: 844},
         networkCondition: this.getNetworkConditions()[0]
       }
     ];

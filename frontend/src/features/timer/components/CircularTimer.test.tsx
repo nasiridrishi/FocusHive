@@ -1,8 +1,8 @@
 import React from 'react'
-import { render, screen } from '../../../test-utils/test-utils'
-import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { ThemeProvider, createTheme } from '@mui/material/styles'
-import { TimerState } from '../../../shared/types/timer'
+import {render, screen} from '../../../test-utils/test-utils'
+import {beforeEach, describe, expect, it, vi} from 'vitest'
+import {createTheme, ThemeProvider} from '@mui/material/styles'
+import {TimerState} from '../../../shared/types/timer'
 
 // Extract CircularTimer component for testing
 // Since it's not exported separately, we'll test it through the main component
@@ -15,25 +15,29 @@ interface CircularTimerProps {
   size?: number
 }
 
-const CircularTimer: React.FC<CircularTimerProps> = ({ 
-  timeRemaining, 
-  totalTime, 
-  phase, 
-  size = 200 
-}) => {
+const CircularTimer: React.FC<CircularTimerProps> = ({
+                                                       timeRemaining,
+                                                       totalTime,
+                                                       phase,
+                                                       size = 200
+                                                     }) => {
   const progress = totalTime > 0 ? ((totalTime - timeRemaining) / totalTime) * 100 : 0
   const circumference = 2 * Math.PI * (size / 2 - 8)
   const strokeDasharray = circumference
   const strokeDashoffset = circumference - (progress / 100) * circumference
 
   const theme = createTheme()
-  
-  const getPhaseColor = (phase: TimerState['currentPhase']) => {
+
+  const getPhaseColor = (phase: TimerState['currentPhase']): string => {
     switch (phase) {
-      case 'focus': return theme.palette.primary.main
-      case 'short-break': return theme.palette.success.main
-      case 'long-break': return theme.palette.info.main
-      default: return theme.palette.grey[400]
+      case 'focus':
+        return theme.palette.primary.main
+      case 'short-break':
+        return theme.palette.success.main
+      case 'long-break':
+        return theme.palette.info.main
+      default:
+        return theme.palette.grey[400]
     }
   }
 
@@ -44,80 +48,80 @@ const CircularTimer: React.FC<CircularTimerProps> = ({
   }
 
   return (
-    <div 
-      data-testid="circular-timer"
-      style={{ 
-        position: 'relative', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        width: size,
-        height: size,
-      }}
-    >
-      {/* Background Circle */}
-      <svg width={size} height={size} style={{ position: 'absolute' }}>
-        <circle
-          data-testid="background-circle"
-          cx={size / 2}
-          cy={size / 2}
-          r={size / 2 - 8}
-          fill="none"
-          stroke={theme.palette.grey[200]}
-          strokeWidth="4"
-        />
-        {/* Progress Circle */}
-        <circle
-          data-testid="progress-circle"
-          cx={size / 2}
-          cy={size / 2}
-          r={size / 2 - 8}
-          fill="none"
-          stroke={getPhaseColor(phase)}
-          strokeWidth="6"
-          strokeLinecap="round"
-          strokeDasharray={strokeDasharray}
-          strokeDashoffset={strokeDashoffset}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      
-      {/* Time Display */}
-      <div data-testid="time-display" style={{ textAlign: 'center', zIndex: 1 }}>
-        <div 
-          data-testid="time-text" 
-          style={{ 
-            fontFamily: 'monospace', 
-            fontWeight: 'bold',
-            color: getPhaseColor(phase),
-            fontSize: '2.5rem'
+      <div
+          data-testid="circular-timer"
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: size,
+            height: size,
           }}
-        >
-          {formatTime(timeRemaining)}
-        </div>
-        <div 
-          data-testid="phase-text"
-          style={{ 
-            fontSize: '0.875rem',
-            color: theme.palette.text.secondary,
-            textTransform: 'capitalize',
-            marginTop: '8px'
-          }}
-        >
-          {phase.replace('-', ' ')}
+      >
+        {/* Background Circle */}
+        <svg width={size} height={size} style={{position: 'absolute'}}>
+          <circle
+              data-testid="background-circle"
+              cx={size / 2}
+              cy={size / 2}
+              r={size / 2 - 8}
+              fill="none"
+              stroke={theme.palette.grey[200]}
+              strokeWidth="4"
+          />
+          {/* Progress Circle */}
+          <circle
+              data-testid="progress-circle"
+              cx={size / 2}
+              cy={size / 2}
+              r={size / 2 - 8}
+              fill="none"
+              stroke={getPhaseColor(phase)}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
+              transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        </svg>
+
+        {/* Time Display */}
+        <div data-testid="time-display" style={{textAlign: 'center', zIndex: 1}}>
+          <div
+              data-testid="time-text"
+              style={{
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                color: getPhaseColor(phase),
+                fontSize: '2.5rem'
+              }}
+          >
+            {formatTime(timeRemaining)}
+          </div>
+          <div
+              data-testid="phase-text"
+              style={{
+                fontSize: '0.875rem',
+                color: theme.palette.text.secondary,
+                textTransform: 'capitalize',
+                marginTop: '8px'
+              }}
+          >
+            {phase.replace('-', ' ')}
+          </div>
         </div>
       </div>
-    </div>
   )
 }
 
 // Wrapper component with theme
-const CircularTimerWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const CircularTimerWrapper: React.FC<{ children: React.ReactNode }> = ({children}) => {
   const theme = createTheme()
   return (
-    <ThemeProvider theme={theme}>
-      {children}
-    </ThemeProvider>
+      <ThemeProvider theme={theme}>
+        {children}
+      </ThemeProvider>
   )
 }
 
@@ -136,9 +140,9 @@ describe('CircularTimer Component', () => {
   describe('Rendering', () => {
     it('renders without crashing', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} />
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('circular-timer')).toBeInTheDocument()
@@ -149,20 +153,20 @@ describe('CircularTimer Component', () => {
 
     it('renders with custom size', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} size={300} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} size={300}/>
+          </CircularTimerWrapper>
       )
 
       const timer = screen.getByTestId('circular-timer')
-      expect(timer).toHaveStyle({ width: '300px', height: '300px' })
+      expect(timer).toHaveStyle({width: '300px', height: '300px'})
     })
 
     it('renders SVG circles correctly', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} />
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('background-circle')).toBeInTheDocument()
@@ -173,9 +177,9 @@ describe('CircularTimer Component', () => {
   describe('Time Formatting', () => {
     it('formats time correctly for full minutes', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} timeRemaining={1800} totalTime={1800} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} timeRemaining={1800} totalTime={1800}/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('time-text')).toHaveTextContent('30:00')
@@ -183,9 +187,9 @@ describe('CircularTimer Component', () => {
 
     it('formats time correctly for minutes and seconds', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} timeRemaining={1545} totalTime={1800} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} timeRemaining={1545} totalTime={1800}/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('time-text')).toHaveTextContent('25:45')
@@ -193,9 +197,9 @@ describe('CircularTimer Component', () => {
 
     it('formats time correctly for seconds only', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} timeRemaining={45} totalTime={1800} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} timeRemaining={45} totalTime={1800}/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('time-text')).toHaveTextContent('00:45')
@@ -203,9 +207,9 @@ describe('CircularTimer Component', () => {
 
     it('formats zero time correctly', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} timeRemaining={0} totalTime={1500} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} timeRemaining={0} totalTime={1500}/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('time-text')).toHaveTextContent('00:00')
@@ -213,9 +217,9 @@ describe('CircularTimer Component', () => {
 
     it('pads single digit minutes and seconds', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} timeRemaining={65} totalTime={1500} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} timeRemaining={65} totalTime={1500}/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('time-text')).toHaveTextContent('01:05')
@@ -225,9 +229,9 @@ describe('CircularTimer Component', () => {
   describe('Phase Display', () => {
     it('displays focus phase correctly', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('phase-text')).toHaveTextContent('focus')
@@ -235,9 +239,9 @@ describe('CircularTimer Component', () => {
 
     it('displays short break phase correctly', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} phase="short-break" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} phase="short-break"/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('phase-text')).toHaveTextContent('short break')
@@ -245,9 +249,9 @@ describe('CircularTimer Component', () => {
 
     it('displays long break phase correctly', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} phase="long-break" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} phase="long-break"/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('phase-text')).toHaveTextContent('long break')
@@ -255,9 +259,9 @@ describe('CircularTimer Component', () => {
 
     it('displays idle phase correctly', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} phase="idle" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} phase="idle"/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('phase-text')).toHaveTextContent('idle')
@@ -267,14 +271,14 @@ describe('CircularTimer Component', () => {
   describe('Progress Calculation', () => {
     it('calculates progress correctly at start', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer timeRemaining={1500} totalTime={1500} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer timeRemaining={1500} totalTime={1500} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
       expect(progressCircle).toBeInTheDocument()
-      
+
       // At start, progress should be 0% (full dashoffset)
       const circumference = 2 * Math.PI * (200 / 2 - 8)
       expect(progressCircle).toHaveAttribute('stroke-dashoffset', circumference.toString())
@@ -282,42 +286,42 @@ describe('CircularTimer Component', () => {
 
     it('calculates progress correctly at halfway point', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer timeRemaining={750} totalTime={1500} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer timeRemaining={750} totalTime={1500} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
       const circumference = 2 * Math.PI * (200 / 2 - 8)
       const expectedOffset = circumference - (50 / 100) * circumference
-      
+
       expect(progressCircle).toHaveAttribute('stroke-dashoffset', expectedOffset.toString())
     })
 
     it('calculates progress correctly when complete', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer timeRemaining={0} totalTime={1500} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer timeRemaining={0} totalTime={1500} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
       const circumference = 2 * Math.PI * (200 / 2 - 8)
       const expectedOffset = circumference - circumference // Should be 0
-      
+
       expect(progressCircle).toHaveAttribute('stroke-dashoffset', expectedOffset.toString())
     })
 
     it('handles zero total time gracefully', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer timeRemaining={0} totalTime={0} phase="idle" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer timeRemaining={0} totalTime={0} phase="idle"/>
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
       const circumference = 2 * Math.PI * (200 / 2 - 8)
-      
+
       // With zero total time, progress should be 0, so full dashoffset
       expect(progressCircle).toHaveAttribute('stroke-dashoffset', circumference.toString())
     })
@@ -326,9 +330,9 @@ describe('CircularTimer Component', () => {
   describe('Visual Styling', () => {
     it('applies correct colors for focus phase', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
@@ -338,9 +342,9 @@ describe('CircularTimer Component', () => {
 
     it('applies correct colors for short break phase', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} phase="short-break" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} phase="short-break"/>
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
@@ -350,9 +354,9 @@ describe('CircularTimer Component', () => {
 
     it('applies correct colors for long break phase', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} phase="long-break" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} phase="long-break"/>
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
@@ -362,9 +366,9 @@ describe('CircularTimer Component', () => {
 
     it('has proper stroke width for progress circle', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} />
+          </CircularTimerWrapper>
       )
 
       const progressCircle = screen.getByTestId('progress-circle')
@@ -373,9 +377,9 @@ describe('CircularTimer Component', () => {
 
     it('has proper stroke width for background circle', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} />
+          </CircularTimerWrapper>
       )
 
       const backgroundCircle = screen.getByTestId('background-circle')
@@ -385,43 +389,43 @@ describe('CircularTimer Component', () => {
 
   describe('Responsive Design', () => {
     it('adjusts size prop correctly', () => {
-      const { rerender } = render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} size={150} />
-        </CircularTimerWrapper>
+      const {rerender} = render(
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} size={150}/>
+          </CircularTimerWrapper>
       )
 
       let timer = screen.getByTestId('circular-timer')
-      expect(timer).toHaveStyle({ width: '150px', height: '150px' })
+      expect(timer).toHaveStyle({width: '150px', height: '150px'})
 
       rerender(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} size={300} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} size={300}/>
+          </CircularTimerWrapper>
       )
 
       timer = screen.getByTestId('circular-timer')
-      expect(timer).toHaveStyle({ width: '300px', height: '300px' })
+      expect(timer).toHaveStyle({width: '300px', height: '300px'})
     })
 
     it('maintains aspect ratio', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} size={250} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} size={250}/>
+          </CircularTimerWrapper>
       )
 
       const timer = screen.getByTestId('circular-timer')
-      expect(timer).toHaveStyle({ width: '250px', height: '250px' })
+      expect(timer).toHaveStyle({width: '250px', height: '250px'})
     })
   })
 
   describe('Accessibility', () => {
     it('has proper structure for screen readers', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} />
+          </CircularTimerWrapper>
       )
 
       // Time should be readable
@@ -432,22 +436,22 @@ describe('CircularTimer Component', () => {
 
     it('uses monospace font for time display', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer {...defaultProps} />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer {...defaultProps} />
+          </CircularTimerWrapper>
       )
 
       const timeText = screen.getByTestId('time-text')
-      expect(timeText).toHaveStyle({ fontFamily: 'monospace' })
+      expect(timeText).toHaveStyle({fontFamily: 'monospace'})
     })
   })
 
   describe('Edge Cases', () => {
     it('handles negative time remaining', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer timeRemaining={-10} totalTime={1500} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer timeRemaining={-10} totalTime={1500} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       // Should handle gracefully, likely showing 00:00 or handling as 0
@@ -457,9 +461,9 @@ describe('CircularTimer Component', () => {
     it('handles very large numbers', () => {
       const largeTime = 99999 // 27+ hours
       render(
-        <CircularTimerWrapper>
-          <CircularTimer timeRemaining={largeTime} totalTime={largeTime} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer timeRemaining={largeTime} totalTime={largeTime} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       expect(screen.getByTestId('time-text')).toHaveTextContent('1666:39')
@@ -467,9 +471,9 @@ describe('CircularTimer Component', () => {
 
     it('handles time remaining larger than total time', () => {
       render(
-        <CircularTimerWrapper>
-          <CircularTimer timeRemaining={2000} totalTime={1500} phase="focus" />
-        </CircularTimerWrapper>
+          <CircularTimerWrapper>
+            <CircularTimer timeRemaining={2000} totalTime={1500} phase="focus"/>
+          </CircularTimerWrapper>
       )
 
       // Should handle gracefully without breaking

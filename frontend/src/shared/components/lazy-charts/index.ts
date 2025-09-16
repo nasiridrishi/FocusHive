@@ -13,5 +13,5 @@ export {
   SparkLineChartWrapper
 } from './LazyCharts'
 
-export { preloadChartLibrary, chartBundleInfo } from './lazyChartUtils'
-export type { LazyChartWrapperProps } from './lazyChartUtils'
+export {preloadChartLibrary, chartBundleInfo} from './lazyChartUtils'
+export type {LazyChartWrapperProps} from './lazyChartUtils'

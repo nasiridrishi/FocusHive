@@ -1,0 +1,290 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  focushive-notification-service-postgres:
+    image: postgres:15-alpine
+    container_name: focushive-notification-service-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notification_service
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    # Ports commented out for security - PostgreSQL only accessible internally
+    # ports:
+    #   - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      # Using shared network to enable communication with identity-service, buddy-service, and focushive-backend
+      # This prevents network isolation that causes UnknownHostException between services
+      - focushive-shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_user -d notification_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Cache
+  focushive-notification-service-redis:
+    image: redis:7-alpine
+    container_name: focushive-notification-service-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --tcp-backlog 511
+      --timeout 300
+      --tcp-keepalive 60
+    # Ports commented out for security - Redis only accessible internally
+    # ports:
+    #   - "6380:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      # Using shared network to enable communication with identity-service, buddy-service, and focushive-backend  
+      # This prevents network isolation that causes UnknownHostException between services
+      - focushive-shared-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # RabbitMQ Message Broker
+  focushive-notification-service-rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: focushive-notification-service-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "15673:15672"   # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+      # Using shared network to enable communication with identity-service, buddy-service, and focushive-backend
+      # This prevents network isolation that causes UnknownHostException between services  
+      - focushive-shared-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Notification Service Application
+  focushive-notification-service-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: focushive/notification-service:latest
+    container_name: focushive-notification-service-app
+    restart: unless-stopped
+    depends_on:
+      focushive-notification-service-postgres:
+        condition: service_healthy
+      focushive-notification-service-redis:
+        condition: service_healthy
+      focushive-notification-service-rabbitmq:
+        condition: service_healthy
+    environment:
+      # Spring profiles
+      SPRING_PROFILES_ACTIVE: docker
+
+      # Server configuration
+      SERVER_PORT: 8083
+
+      # Database configuration
+      DB_HOST: focushive-notification-service-postgres
+      DB_NAME: notification_service
+      DB_USER: notification_user
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # Redis configuration
+      REDIS_HOST: focushive-notification-service-redis
+      REDIS_PORT: 6379
+
+      # RabbitMQ configuration
+      RABBITMQ_HOST: focushive-notification-service-rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      # Email configuration - AWS SES SMTP
+      SPRING_MAIL_HOST: ${EMAIL_HOST}
+      SPRING_MAIL_PORT: ${EMAIL_PORT}
+      SPRING_MAIL_USERNAME: ${EMAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${EMAIL_PASSWORD}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+
+      # Email settings
+      NOTIFICATION_EMAIL_FROM: ${EMAIL_FROM}
+      NOTIFICATION_EMAIL_ENABLED: "true"
+
+      # JWT configuration - CRITICAL for service-to-service authentication
+      # These MUST point to the identity service container, not localhost
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER_URI: ${JWT_ISSUER_URI}
+      JWT_JWK_SET_URI: ${JWT_JWK_SET_URI}
+
+      # Spring Security OAuth2 Resource Server configuration
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI}
+
+      # Security configuration
+      API_SECURITY_SIGNATURE_ENABLED: "true"
+      API_SECURITY_ENCRYPTION_ENABLED: "true"
+      SECURITY_ENCRYPTION_ENABLED: "true"
+      SECURITY_ENCRYPTION_MASTER_KEY: "sjysSJotrn0zoDSR+CyZ1ErbGE7Pkv9SuzEGbq86sd8="
+
+      # Flyway configuration
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+
+      # Actuator configuration
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,metrics,prometheus,info
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+
+      # Logging - Disable SQL and Hibernate verbosity
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_FOCUSHIVE: INFO
+      LOGGING_LEVEL_ORG_HIBERNATE_SQL: OFF
+      LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL: OFF
+      LOGGING_LEVEL_ORG_HIBERNATE: WARN
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC: WARN
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC_CORE_JDBCTEMPLATE: WARN
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_JDBC_CORE_STATEMENTCREATORUTILS: WARN
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: false
+      SPRING_JPA_PROPERTIES_HIBERNATE_USE_SQL_COMMENTS: false
+
+      # Test mode (DISABLE IN PRODUCTION)
+      NOTIFICATION_TEST_ENABLED: "false"
+
+      # JVM Memory settings
+      JAVA_OPTS: "-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+    ports:
+      - "8083:8083"   # Application port
+      - "9091:9090"   # JMX port
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+    networks:
+      # Using shared network to enable communication with identity-service, buddy-service, and focushive-backend
+      # This prevents network isolation that causes UnknownHostException between services
+      - focushive-shared-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # MailHog for email testing (development/testing only)
+  focushive-notification-service-mailhog:
+    image: mailhog/mailhog:latest
+    container_name: focushive-notification-service-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      # Using shared network to enable communication with other services if needed
+      - focushive-shared-network
+    profiles:
+      - dev
+      - test
+
+  # Prometheus for monitoring (optional)
+  focushive-notification-service-prometheus:
+    image: prom/prometheus:latest
+    container_name: focushive-notification-service-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9092:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      # Using shared network for monitoring communication with other services
+      - focushive-shared-network
+    profiles:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  # Shared network for all FocusHive services to communicate with each other
+  # Prevents network isolation issues that cause UnknownHostException between services
+  focushive-shared-network:
+    external: true
+    name: focushive-shared-network
+
+volumes:
+  postgres-data:
+    driver: local
+    name: focushive-notification-service-postgres-data
+  redis-data:
+    driver: local
+    name: focushive-notification-service-redis-data
+  rabbitmq-data:
+    driver: local
+    name: focushive-notification-service-rabbitmq-data
+  prometheus-data:
+    driver: local
+    name: focushive-notification-service-prometheus-data
