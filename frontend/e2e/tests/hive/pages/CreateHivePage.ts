@@ -3,9 +3,9 @@
  * Handles hive creation form interactions and validations
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { CreateHiveRequest, HiveSettings } from '../../../src/services/api/hiveApi';
-import { TestHive, FORM_VALIDATION_CASES } from '../hive-fixtures';
+import {expect, Locator, Page} from '@playwright/test';
+import {CreateHiveRequest, HiveSettings} from '../../../src/services/api/hiveApi';
+import {FORM_VALIDATION_CASES, TestHive} from '../hive-fixtures';
 
 export class CreateHivePage {
   readonly page: Page;
@@ -139,10 +139,10 @@ export class CreateHivePage {
     for (const tag of tags) {
       await this.tagsInput.fill(tag);
       await this.tagsInput.press('Enter');
-      
+
       // Verify tag was added
       await expect(
-        this.tagsList.locator(`[data-testid="tag-${tag}"]`)
+          this.tagsList.locator(`[data-testid="tag-${tag}"]`)
       ).toBeVisible();
     }
   }
@@ -152,10 +152,10 @@ export class CreateHivePage {
    */
   async removeTag(tag: string): Promise<void> {
     await this.tagsList.locator(`[data-testid="remove-tag-${tag}"]`).click();
-    
+
     // Verify tag was removed
     await expect(
-      this.tagsList.locator(`[data-testid="tag-${tag}"]`)
+        this.tagsList.locator(`[data-testid="tag-${tag}"]`)
     ).not.toBeVisible();
   }
 
@@ -199,7 +199,7 @@ export class CreateHivePage {
    */
   async uploadImage(imagePath: string): Promise<void> {
     await this.imageInput.setInputFiles(imagePath);
-    
+
     // Wait for image preview to appear
     await expect(this.imagePreview).toBeVisible();
   }
@@ -217,12 +217,12 @@ export class CreateHivePage {
    */
   async createHive(): Promise<TestHive> {
     await this.createButton.click();
-    
+
     // Wait for success message or redirect
     await expect(
-      this.successMessage.or(this.page.locator('[data-testid="hive-workspace"]'))
+        this.successMessage.or(this.page.locator('[data-testid="hive-workspace"]'))
     ).toBeVisible();
-    
+
     // Extract hive information from success state or URL
     let hiveId: number;
     if (await this.successMessage.isVisible()) {
@@ -258,7 +258,7 @@ export class CreateHivePage {
    */
   async cancelCreation(): Promise<void> {
     await this.cancelButton.click();
-    
+
     // Should navigate away from create page
     await expect(this.createHiveForm).not.toBeVisible();
   }
@@ -268,7 +268,7 @@ export class CreateHivePage {
    */
   async resetForm(): Promise<void> {
     await this.resetButton.click();
-    
+
     // Verify form is cleared
     await expect(this.nameInput).toHaveValue('');
     await expect(this.descriptionInput).toHaveValue('');
@@ -280,14 +280,14 @@ export class CreateHivePage {
   async getValidationErrors(): Promise<string[]> {
     const errorElements = await this.validationErrors.all();
     const errors = [];
-    
+
     for (const element of errorElements) {
       const errorText = await element.textContent();
       if (errorText) {
         errors.push(errorText);
       }
     }
-    
+
     return errors;
   }
 
@@ -308,10 +308,10 @@ export class CreateHivePage {
 
     // Try to submit
     await this.createButton.click();
-    
+
     // Verify expected error appears
     await expect(
-      this.page.locator(`[data-testid="validation-error"]:has-text("${validationCase.expectedError}")`)
+        this.page.locator(`[data-testid="validation-error"]:has-text("${validationCase.expectedError}")`)
     ).toBeVisible();
   }
 
@@ -355,9 +355,9 @@ export class CreateHivePage {
   async testDuplicateName(existingName: string): Promise<void> {
     await this.nameInput.fill(existingName);
     await this.createButton.click();
-    
+
     await expect(
-      this.page.locator('[data-testid="validation-error"]:has-text("already exists")')
+        this.page.locator('[data-testid="validation-error"]:has-text("already exists")')
     ).toBeVisible();
   }
 
@@ -370,8 +370,8 @@ export class CreateHivePage {
   }> {
     const nameCount = (await this.nameInput.inputValue()).length;
     const descriptionCount = (await this.descriptionInput.inputValue()).length;
-    
-    return { name: nameCount, description: descriptionCount };
+
+    return {name: nameCount, description: descriptionCount};
   }
 
   /**
@@ -380,7 +380,7 @@ export class CreateHivePage {
   private async toggleSetting(setting: string, enabled: boolean): Promise<void> {
     const checkbox = this.page.locator(`[data-testid="setting-${setting}"]`);
     const isChecked = await checkbox.isChecked();
-    
+
     if (isChecked !== enabled) {
       await checkbox.click();
     }
@@ -392,14 +392,14 @@ export class CreateHivePage {
   private async getSelectedTags(): Promise<string[]> {
     const tagElements = await this.tagsList.locator('[data-testid^="tag-"]').all();
     const tags = [];
-    
+
     for (const element of tagElements) {
       const tagText = await element.textContent();
       if (tagText) {
         tags.push(tagText.trim());
       }
     }
-    
+
     return tags;
   }
 
@@ -409,14 +409,14 @@ export class CreateHivePage {
   private async getPreviewTags(): Promise<string[]> {
     const tagElements = await this.previewCard.locator('[data-testid="preview-tag"]').all();
     const tags = [];
-    
+
     for (const element of tagElements) {
       const tagText = await element.textContent();
       if (tagText) {
         tags.push(tagText.trim());
       }
     }
-    
+
     return tags;
   }
 }

@@ -1,28 +1,27 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useMusicWebSocket } from './useMusicWebSocket';
-import type { WebSocketMessage } from '../types';
-
-// Create mock socket object
-const createMockSocket = () => ({
-  connected: false,
-  id: 'test-socket-id',
-  io: {
-    engine: {
-      transport: {
-        name: 'websocket'
-      }
-    }
-  },
-  on: vi.fn(),
-  off: vi.fn(),
-  emit: vi.fn(),
-  disconnect: vi.fn(),
-  connect: vi.fn()
-});
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {act, renderHook, waitFor} from '@testing-library/react';
+import {useMusicWebSocket} from './useMusicWebSocket';
 
 // Mock socket.io-client
 vi.mock('socket.io-client', () => {
+  // Create mock socket object inside the factory to avoid hoisting issues
+  const createMockSocket = () => ({
+    connected: false,
+    id: 'test-socket-id',
+    io: {
+      engine: {
+        transport: {
+          name: 'websocket'
+        }
+      }
+    },
+    on: vi.fn(),
+    off: vi.fn(),
+    emit: vi.fn(),
+    disconnect: vi.fn(),
+    connect: vi.fn()
+  });
+  
   const mockSocket = createMockSocket();
   const mockIo = vi.fn(() => mockSocket);
   return {
@@ -30,27 +29,63 @@ vi.mock('socket.io-client', () => {
   };
 });
 
+// Define proper type for mock socket
+type MockSocket = {
+  connected: boolean;
+  id: string;
+  io: {
+    engine: {
+      transport: {
+        name: string;
+      };
+    };
+  };
+  on: ReturnType<typeof vi.fn>;
+  off: ReturnType<typeof vi.fn>;
+  emit: ReturnType<typeof vi.fn>;
+  disconnect: ReturnType<typeof vi.fn>;
+  connect: ReturnType<typeof vi.fn>;
+};
+
 describe('useMusicWebSocket', () => {
   let eventHandlers: Record<string, (data?: unknown) => void> = {};
-  let mockSocket: ReturnType<typeof createMockSocket>;
+  let mockSocket: MockSocket;
   let mockIo: ReturnType<typeof vi.fn>;
+
+  // Helper to create mock socket
+  const createMockSocket = (): MockSocket => ({
+    connected: false,
+    id: 'test-socket-id',
+    io: {
+      engine: {
+        transport: {
+          name: 'websocket'
+        }
+      }
+    },
+    on: vi.fn(),
+    off: vi.fn(),
+    emit: vi.fn(),
+    disconnect: vi.fn(),
+    connect: vi.fn()
+  });
 
   beforeEach(async () => {
     vi.clearAllMocks();
     eventHandlers = {};
-    
+
     // Get fresh mocks
-    const { io } = await import('socket.io-client');
+    const {io} = await import('socket.io-client');
     mockIo = vi.mocked(io);
     mockSocket = createMockSocket();
     mockIo.mockReturnValue(mockSocket);
-    
+
     // Mock socket.on to capture event handlers
     mockSocket.on.mockImplementation((event: string, handler: (data?: unknown) => void) => {
       eventHandlers[event] = handler;
       return mockSocket;
     });
-    
+
     // Reset socket state
     mockSocket.connected = false;
   });
@@ -60,7 +95,7 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should initialize with correct default state', () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     expect(result.current.isConnected).toBe(false);
     expect(result.current.isConnecting).toBe(false);
@@ -87,7 +122,7 @@ describe('useMusicWebSocket', () => {
     expect(mockIo).toHaveBeenCalledWith('ws://localhost:8084', {
       path: '/ws/music',
       transports: ['websocket'],
-      query: { hiveId },
+      query: {hiveId},
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -113,8 +148,8 @@ describe('useMusicWebSocket', () => {
 
   it('should handle successful connection', async () => {
     const onConnect = vi.fn();
-    
-    const { result } = renderHook(() => useMusicWebSocket({
+
+    const {result} = renderHook(() => useMusicWebSocket({
       onConnect
     }));
 
@@ -138,8 +173,8 @@ describe('useMusicWebSocket', () => {
 
   it('should handle disconnection', async () => {
     const onDisconnect = vi.fn();
-    
-    const { result } = renderHook(() => useMusicWebSocket({
+
+    const {result} = renderHook(() => useMusicWebSocket({
       onDisconnect
     }));
 
@@ -168,7 +203,7 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should handle connection errors', async () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Simulate connection error
     act(() => {
@@ -185,8 +220,8 @@ describe('useMusicWebSocket', () => {
 
   it('should handle track_added message', async () => {
     const onMessage = vi.fn();
-    
-    const { result } = renderHook(() => useMusicWebSocket({
+
+    const {result} = renderHook(() => useMusicWebSocket({
       onMessage
     }));
 
@@ -218,8 +253,8 @@ describe('useMusicWebSocket', () => {
 
   it('should handle track_voted message', async () => {
     const onMessage = vi.fn();
-    
-    const { result } = renderHook(() => useMusicWebSocket({
+
+    const {result} = renderHook(() => useMusicWebSocket({
       onMessage
     }));
 
@@ -250,15 +285,15 @@ describe('useMusicWebSocket', () => {
 
   it('should handle queue_updated message', async () => {
     const onMessage = vi.fn();
-    
-    const { result } = renderHook(() => useMusicWebSocket({
+
+    const {result} = renderHook(() => useMusicWebSocket({
       onMessage
     }));
 
     const queueData = {
       queue: [
-        { trackId: 'track-1', position: 0, votes: 3 },
-        { trackId: 'track-2', position: 1, votes: 1 }
+        {trackId: 'track-1', position: 0, votes: 3},
+        {trackId: 'track-2', position: 1, votes: 1}
       ]
     };
 
@@ -282,7 +317,7 @@ describe('useMusicWebSocket', () => {
 
   it('should handle user_joined and user_left messages', async () => {
     const onMessage = vi.fn();
-    
+
     renderHook(() => useMusicWebSocket({
       onMessage
     }));
@@ -318,7 +353,7 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should send messages when connected', async () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Establish connection
     act(() => {
@@ -332,18 +367,18 @@ describe('useMusicWebSocket', () => {
 
     // Test sending message
     act(() => {
-      result.current.sendMessage('test_event', { data: 'test' });
+      result.current.sendMessage('test_event', {data: 'test'});
     });
 
-    expect(mockSocket.emit).toHaveBeenCalledWith('test_event', { data: 'test' });
+    expect(mockSocket.emit).toHaveBeenCalledWith('test_event', {data: 'test'});
   });
 
   it('should queue messages when disconnected', () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Send message while disconnected
     act(() => {
-      result.current.sendMessage('queued_event', { data: 'queued' });
+      result.current.sendMessage('queued_event', {data: 'queued'});
     });
 
     // Message should not be sent immediately
@@ -356,11 +391,11 @@ describe('useMusicWebSocket', () => {
     });
 
     // Queued messages should be sent on connection
-    expect(mockSocket.emit).toHaveBeenCalledWith('queued_event', { data: 'queued' });
+    expect(mockSocket.emit).toHaveBeenCalledWith('queued_event', {data: 'queued'});
   });
 
   it('should provide music-specific action methods', async () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Establish connection
     act(() => {
@@ -376,26 +411,29 @@ describe('useMusicWebSocket', () => {
     act(() => {
       result.current.joinHive('hive-123');
     });
-    expect(mockSocket.emit).toHaveBeenCalledWith('join_hive', { hiveId: 'hive-123' });
+    expect(mockSocket.emit).toHaveBeenCalledWith('join_hive', {hiveId: 'hive-123'});
 
     act(() => {
       result.current.leaveHive('hive-123');
     });
-    expect(mockSocket.emit).toHaveBeenCalledWith('leave_hive', { hiveId: 'hive-123' });
+    expect(mockSocket.emit).toHaveBeenCalledWith('leave_hive', {hiveId: 'hive-123'});
 
     // Test queue actions
     act(() => {
       result.current.addTrackToQueue('track-456', 2);
     });
-    expect(mockSocket.emit).toHaveBeenCalledWith('add_to_queue', { trackId: 'track-456', position: 2 });
+    expect(mockSocket.emit).toHaveBeenCalledWith('add_to_queue', {
+      trackId: 'track-456',
+      position: 2
+    });
 
     act(() => {
       result.current.voteOnTrack('queue-789', 'up');
     });
-    expect(mockSocket.emit).toHaveBeenCalledWith('vote_track', { queueId: 'queue-789', vote: 'up' });
+    expect(mockSocket.emit).toHaveBeenCalledWith('vote_track', {queueId: 'queue-789', vote: 'up'});
 
     // Test playback actions
-    const playbackState = { isPlaying: true, currentTime: 30, volume: 0.8 };
+    const playbackState = {isPlaying: true, currentTime: 30, volume: 0.8};
     act(() => {
       result.current.updatePlaybackState(playbackState);
     });
@@ -403,7 +441,7 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should handle manual reconnection', async () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Initial state should allow reconnection
     expect(result.current.canReconnect).toBe(true);
@@ -415,18 +453,18 @@ describe('useMusicWebSocket', () => {
 
     // Should disconnect and attempt to reconnect after delay
     expect(mockSocket.disconnect).toHaveBeenCalled();
-    
+
     // Fast-forward timers
     act(() => {
       vi.advanceTimersByTime(1000);
     });
-    
+
     // New connection attempt should be made
     expect(mockIo).toHaveBeenCalledTimes(2);
   });
 
   it('should prevent reconnection when already connecting or connected', () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Set connecting state
     act(() => {
@@ -445,7 +483,7 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should handle reconnection events', async () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Simulate reconnection successful
     act(() => {
@@ -481,7 +519,7 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should provide connection utilities', async () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     // Test checkConnection when disconnected
     expect(result.current.checkConnection()).toBe(false);
@@ -511,7 +549,7 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should cleanup on unmount', () => {
-    const { unmount } = renderHook(() => useMusicWebSocket());
+    const {unmount} = renderHook(() => useMusicWebSocket());
 
     unmount();
 
@@ -519,26 +557,26 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should handle reconnection when hiveId changes', () => {
-    const { rerender } = renderHook(
-      ({ hiveId }: { hiveId?: string }) => useMusicWebSocket({ hiveId }),
-      { initialProps: { hiveId: 'hive-1' } }
+    const {rerender} = renderHook(
+        ({hiveId}: { hiveId?: string }) => useMusicWebSocket({hiveId}),
+        {initialProps: {hiveId: 'hive-1'}}
     );
 
     expect(mockIo).toHaveBeenCalledTimes(1);
 
     // Change hiveId
-    rerender({ hiveId: 'hive-2' });
+    rerender({hiveId: 'hive-2'});
 
     // Should trigger disconnection and new connection
     expect(mockSocket.disconnect).toHaveBeenCalled();
     expect(mockIo).toHaveBeenCalledTimes(2);
     expect(mockIo).toHaveBeenLastCalledWith('ws://localhost:8084', expect.objectContaining({
-      query: { hiveId: 'hive-2' }
+      query: {hiveId: 'hive-2'}
     }));
   });
 
   it('should calculate canReconnect correctly', async () => {
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     expect(result.current.canReconnect).toBe(true);
 
@@ -556,14 +594,15 @@ describe('useMusicWebSocket', () => {
   });
 
   it('should handle connection errors gracefully', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+    });
+
     // Mock io to throw error
     mockIo.mockImplementationOnce(() => {
       throw new Error('Connection setup failed');
     });
 
-    const { result } = renderHook(() => useMusicWebSocket());
+    const {result} = renderHook(() => useMusicWebSocket());
 
     expect(result.current.isConnecting).toBe(false);
     expect(result.current.error).toBe('Connection failed: Connection setup failed');

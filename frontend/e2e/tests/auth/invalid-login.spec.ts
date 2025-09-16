@@ -2,22 +2,18 @@
  * E2E Tests for Invalid Login Attempts and Error Handling
  */
 
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../../pages/LoginPage';
-import { DashboardPage } from '../../pages/DashboardPage';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { 
-  TEST_USERS, 
-  validateTestEnvironment,
-  TIMEOUTS 
-} from '../../helpers/test-data';
+import {expect, test} from '@playwright/test';
+import {LoginPage} from '../../pages/LoginPage';
+import {DashboardPage} from '../../pages/DashboardPage';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {TEST_USERS, TIMEOUTS, validateTestEnvironment} from '../../helpers/test-data';
 
 test.describe('Invalid Login Attempts', () => {
   let loginPage: LoginPage;
   let dashboardPage: DashboardPage;
   let authHelper: AuthHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     // Initialize page objects
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);
@@ -25,12 +21,12 @@ test.describe('Invalid Login Attempts', () => {
 
     // Clear any existing authentication
     await authHelper.clearStorage();
-    
+
     // Validate test environment
     validateTestEnvironment();
   });
 
-  test.afterEach(async ({ page: _page }) => {
+  test.afterEach(async ({page: _page}) => {
     // Cleanup: Clear storage after each test
     await authHelper.clearStorage();
   });
@@ -44,13 +40,13 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify error message appears
     await loginPage.verifyErrorMessage();
-    
+
     // Verify user stays on login page
     await loginPage.verifyStayOnLoginPage();
-    
+
     // Verify no tokens are stored
     await authHelper.verifyTokensCleared();
-    
+
     // Verify user is not authenticated
     const userMenu = dashboardPage.userMenu;
     await expect(userMenu).not.toBeVisible();
@@ -65,10 +61,10 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify error message appears
     await loginPage.verifyErrorMessage();
-    
+
     // Verify user stays on login page
     await loginPage.verifyStayOnLoginPage();
-    
+
     // Verify no tokens are stored
     await authHelper.verifyTokensCleared();
   });
@@ -82,10 +78,10 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify error message appears
     await loginPage.verifyErrorMessage();
-    
+
     // Verify user stays on login page
     await loginPage.verifyStayOnLoginPage();
-    
+
     // Verify no tokens are stored
     await authHelper.verifyTokensCleared();
   });
@@ -98,7 +94,7 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify validation error appears
     await loginPage.verifyValidationErrors();
-    
+
     // Verify user stays on login page
     await loginPage.verifyStayOnLoginPage();
   });
@@ -111,7 +107,7 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify validation error appears
     await loginPage.verifyValidationErrors();
-    
+
     // Verify user stays on login page
     await loginPage.verifyStayOnLoginPage();
   });
@@ -124,7 +120,7 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify validation errors appear for both fields
     await loginPage.verifyValidationErrors();
-    
+
     // Verify user stays on login page
     await loginPage.verifyStayOnLoginPage();
   });
@@ -138,7 +134,7 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify error message appears (could be validation error or login error)
     await loginPage.verifyErrorMessage();
-    
+
     // Verify user stays on login page
     await loginPage.verifyStayOnLoginPage();
   });
@@ -157,7 +153,7 @@ test.describe('Invalid Login Attempts', () => {
     for (const payload of sqlInjectionPayloads) {
       // Clear form first
       await loginPage.clearForm();
-      
+
       // Try injection payload
       await loginPage.login(payload, TEST_USERS.VALID_USER.password);
       await loginPage.waitForLoading();
@@ -165,10 +161,10 @@ test.describe('Invalid Login Attempts', () => {
       // Should show error, not succeed
       await loginPage.verifyErrorMessage();
       await loginPage.verifyStayOnLoginPage();
-      
+
       // Verify no tokens are stored
       await authHelper.verifyTokensCleared();
-      
+
     }
   });
 
@@ -185,7 +181,7 @@ test.describe('Invalid Login Attempts', () => {
     for (const payload of xssPayloads) {
       // Clear form first
       await loginPage.clearForm();
-      
+
       // Try XSS payload
       await loginPage.login(payload, TEST_USERS.VALID_USER.password);
       await loginPage.waitForLoading();
@@ -193,11 +189,11 @@ test.describe('Invalid Login Attempts', () => {
       // Should show error, not execute script
       await loginPage.verifyErrorMessage();
       await loginPage.verifyStayOnLoginPage();
-      
+
       // Verify no alert dialog appeared (XSS blocked)
       const alertDialog = loginPage.page.locator('[role="alertdialog"]');
       await expect(alertDialog).not.toBeVisible();
-      
+
     }
   });
 
@@ -219,7 +215,7 @@ test.describe('Invalid Login Attempts', () => {
       // Verify error message
       await loginPage.verifyErrorMessage();
       await loginPage.verifyStayOnLoginPage();
-      
+
     }
 
     // After max attempts, should show rate limiting message or block further attempts
@@ -229,15 +225,15 @@ test.describe('Invalid Login Attempts', () => {
 
     // Look for rate limiting error message or disabled state
     const rateLimitError = loginPage.page.locator(':text("too many attempts"), :text("rate limit"), :text("try again later"), :text("account locked")');
-    
+
     try {
-      await expect(rateLimitError).toBeVisible({ timeout: TIMEOUTS.SHORT });
+      await expect(rateLimitError).toBeVisible({timeout: TIMEOUTS.SHORT});
     } catch {
       // Rate limiting might not be implemented yet, which is acceptable
     }
   });
 
-  test('should show appropriate error for deactivated account', async ({ page }) => {
+  test('should show appropriate error for deactivated account', async ({page}) => {
     await loginPage.goto();
 
     // Mock server response for deactivated account
@@ -245,7 +241,7 @@ test.describe('Invalid Login Attempts', () => {
       route.fulfill({
         status: 403,
         contentType: 'application/json',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: 'Account has been deactivated',
           error: 'ACCOUNT_DEACTIVATED'
         })
@@ -259,12 +255,12 @@ test.describe('Invalid Login Attempts', () => {
     // Verify appropriate error message
     await loginPage.verifyErrorMessage();
     await loginPage.verifyStayOnLoginPage();
-    
+
     // Verify no tokens are stored
     await authHelper.verifyTokensCleared();
   });
 
-  test('should show appropriate error for unverified email', async ({ page }) => {
+  test('should show appropriate error for unverified email', async ({page}) => {
     await loginPage.goto();
 
     // Mock server response for unverified email
@@ -272,7 +268,7 @@ test.describe('Invalid Login Attempts', () => {
       route.fulfill({
         status: 403,
         contentType: 'application/json',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: 'Email address not verified',
           error: 'EMAIL_NOT_VERIFIED'
         })
@@ -286,7 +282,7 @@ test.describe('Invalid Login Attempts', () => {
     // Verify appropriate error message
     await loginPage.verifyErrorMessage();
     await loginPage.verifyStayOnLoginPage();
-    
+
     // Verify no tokens are stored
     await authHelper.verifyTokensCleared();
   });
@@ -304,7 +300,7 @@ test.describe('Invalid Login Attempts', () => {
 
     for (const password of specialPasswordCases) {
       await loginPage.clearForm();
-      
+
       // Try login with special character password
       await loginPage.login(TEST_USERS.VALID_USER.username, password);
       await loginPage.waitForLoading();
@@ -312,7 +308,7 @@ test.describe('Invalid Login Attempts', () => {
       // Should show authentication error (not encoding/parsing error)
       await loginPage.verifyErrorMessage();
       await loginPage.verifyStayOnLoginPage();
-      
+
     }
   });
 
@@ -330,15 +326,15 @@ test.describe('Invalid Login Attempts', () => {
 
     // Verify error
     await loginPage.verifyErrorMessage();
-    
+
     // Check if username is preserved
     const formValues = await loginPage.getFormValues();
     expect(formValues.username).toBe(testCredentials.username);
-    
+
     // Password should typically be cleared for security
   });
 
-  test('should not leak sensitive information in error messages', async ({ page }) => {
+  test('should not leak sensitive information in error messages', async ({page}) => {
     await loginPage.goto();
 
     // Mock server response that might contain sensitive info
@@ -346,7 +342,7 @@ test.describe('Invalid Login Attempts', () => {
       route.fulfill({
         status: 500,
         contentType: 'application/json',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: 'Database connection failed',
           error: 'Connection to postgres://user:password@localhost:5432/db failed',
           stack: 'Error at /path/to/sensitive/code.js:123'
@@ -361,26 +357,26 @@ test.describe('Invalid Login Attempts', () => {
     // Verify error message doesn't contain sensitive information
     const errorElement = loginPage.errorMessage;
     await expect(errorElement).toBeVisible();
-    
+
     const errorText = await errorElement.textContent();
-    
+
     // Should not contain sensitive information
     expect(errorText?.toLowerCase()).not.toContain('password');
     expect(errorText?.toLowerCase()).not.toContain('database');
     expect(errorText?.toLowerCase()).not.toContain('connection');
     expect(errorText?.toLowerCase()).not.toContain('stack');
     expect(errorText?.toLowerCase()).not.toContain('postgres');
-    
+
   });
 
-  test('should handle concurrent login attempts gracefully', async ({ context }) => {
+  test('should handle concurrent login attempts gracefully', async ({context}) => {
     // Create multiple pages for concurrent login attempts
     const page1 = await context.newPage();
     const page2 = await context.newPage();
-    
+
     const loginPage1 = new LoginPage(page1);
     const loginPage2 = new LoginPage(page2);
-    
+
     await loginPage1.goto();
     await loginPage2.goto();
 
@@ -390,17 +386,17 @@ test.describe('Invalid Login Attempts', () => {
 
     // Wait for both to complete
     await Promise.all([loginPromise1, loginPromise2]);
-    
+
     await loginPage1.waitForLoading();
     await loginPage2.waitForLoading();
 
     // Both should show errors and stay on login page
     await loginPage1.verifyErrorMessage();
     await loginPage1.verifyStayOnLoginPage();
-    
+
     await loginPage2.verifyErrorMessage();
     await loginPage2.verifyStayOnLoginPage();
-    
+
     // Clean up
     await page1.close();
     await page2.close();

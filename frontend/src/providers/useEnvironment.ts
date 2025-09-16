@@ -1,13 +1,12 @@
 /**
  * Environment Hooks
- * 
+ *
  * Custom hooks for accessing validated environment variables
  * throughout the application.
  */
 
-import { useContext } from 'react';
-import { createContext } from 'react';
-import type { ValidatedEnv, EnvValidationError } from '../services/validation/envValidation';
+import {createContext, useContext} from 'react';
+import type {EnvValidationError, ValidatedEnv} from '../services/validation/envValidation';
 
 // Environment Context
 export interface EnvironmentContextValue {
@@ -25,7 +24,7 @@ export const EnvironmentContext = createContext<EnvironmentContextValue | null>(
  */
 export const useEnvironment = (): ValidatedEnv => {
   const context = useContext(EnvironmentContext);
-  
+
   if (!context) {
     throw new Error('useEnvironment must be used within an EnvironmentProvider');
   }
@@ -42,7 +41,7 @@ export const useEnvironment = (): ValidatedEnv => {
  */
 export const useEnvironmentContext = (): EnvironmentContextValue => {
   const context = useContext(EnvironmentContext);
-  
+
   if (!context) {
     throw new Error('useEnvironmentContext must be used within an EnvironmentProvider');
   }
@@ -54,7 +53,7 @@ export const useEnvironmentContext = (): EnvironmentContextValue => {
  * Hook to check if specific environment variable is available
  */
 export const useEnvironmentVariable = <K extends keyof ValidatedEnv>(
-  key: K
+    key: K
 ): ValidatedEnv[K] => {
   const env = useEnvironment();
   return env[key];
@@ -65,7 +64,7 @@ export const useEnvironmentVariable = <K extends keyof ValidatedEnv>(
  */
 export const useEnvironmentMode = () => {
   const env = useEnvironment();
-  
+
   return {
     mode: env.MODE,
     isDevelopment: env.DEV,
@@ -80,7 +79,7 @@ export const useEnvironmentMode = () => {
  */
 export const useApiConfig = () => {
   const env = useEnvironment();
-  
+
   return {
     apiBaseUrl: env.VITE_API_BASE_URL,
     websocketUrl: env.VITE_WEBSOCKET_URL,
@@ -94,7 +93,7 @@ export const useApiConfig = () => {
  */
 export const useWebSocketConfig = () => {
   const env = useEnvironment();
-  
+
   return {
     url: env.VITE_WEBSOCKET_URL,
     reconnectAttempts: env.VITE_WEBSOCKET_RECONNECT_ATTEMPTS,
@@ -108,7 +107,7 @@ export const useWebSocketConfig = () => {
  */
 export const useSpotifyConfig = () => {
   const env = useEnvironment();
-  
+
   return {
     clientId: env.VITE_SPOTIFY_CLIENT_ID,
     redirectUri: env.VITE_SPOTIFY_REDIRECT_URI,
@@ -121,7 +120,7 @@ export const useSpotifyConfig = () => {
  */
 export const useErrorLoggingConfig = () => {
   const env = useEnvironment();
-  
+
   return {
     endpoint: env.VITE_ERROR_LOGGING_ENDPOINT,
     apiKey: env.VITE_ERROR_LOGGING_API_KEY,

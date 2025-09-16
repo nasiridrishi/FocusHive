@@ -47,6 +47,7 @@ public class UnifiedRedisConfig implements CachingConfigurer {
     // Cache Names Constants
     public static final String HIVES_ACTIVE_CACHE = "hives-active";
     public static final String HIVES_USER_CACHE = "hives-user";
+    public static final String HIVES_STATS_CACHE = "hives-stats";
     public static final String HIVE_DETAILS_CACHE = "hive-details";
     public static final String TIMER_SESSION_CACHE = "timer-sessions";
     public static final String PRESENCE_CACHE = "presence";
@@ -167,6 +168,10 @@ public class UnifiedRedisConfig implements CachingConfigurer {
         // User's hives - 15 minutes TTL
         cacheConfigurations.put(HIVES_USER_CACHE,
             defaultCacheConfiguration().entryTtl(Duration.ofMinutes(15)));
+
+        // Hive statistics - 5 minutes TTL
+        cacheConfigurations.put(HIVES_STATS_CACHE,
+            defaultCacheConfiguration().entryTtl(Duration.ofMinutes(5)));
 
         // Hive details - 30 minutes TTL
         cacheConfigurations.put(HIVE_DETAILS_CACHE,

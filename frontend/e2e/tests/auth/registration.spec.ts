@@ -3,23 +3,23 @@
  * Comprehensive registration flow testing including validation, security, and accessibility
  */
 
-import { test, expect } from '@playwright/test';
-import { EnhancedAuthHelper } from '../../helpers/auth-helpers';
-import { 
-  AUTH_TEST_USERS, 
-  REGISTRATION_VALIDATION_CASES, 
+import {expect, test} from '@playwright/test';
+import {EnhancedAuthHelper} from '../../helpers/auth-helpers';
+import {
+  AUTH_TEST_USERS,
   generateUniqueAuthUser,
   INVALID_CREDENTIALS,
   MAILHOG_CONFIG,
-  MOBILE_VIEWPORTS
+  MOBILE_VIEWPORTS,
+  REGISTRATION_VALIDATION_CASES
 } from '../../helpers/auth-fixtures';
 
 test.describe('User Registration Flow', () => {
   let authHelper: EnhancedAuthHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new EnhancedAuthHelper(page);
-    
+
     // Clear any existing authentication and emails
     await authHelper.clearStorage();
     await authHelper.clearAllEmails();
@@ -79,7 +79,7 @@ test.describe('User Registration Flow', () => {
 
       // Verify validation errors appear (at least one should be visible)
       const errorElements = authHelper.page.locator('[role="alert"], .error, .MuiFormHelperText-error, .error-message');
-      await expect(errorElements.first()).toBeVisible({ timeout: 5000 });
+      await expect(errorElements.first()).toBeVisible({timeout: 5000});
     });
 
     // Test each validation case
@@ -108,7 +108,7 @@ test.describe('User Registration Flow', () => {
     test('should validate existing username', async () => {
       // First, register a user successfully
       const existingUser = generateUniqueAuthUser(AUTH_TEST_USERS.NEW_USER);
-      const { user } = await authHelper.registerUserWithVerification(existingUser);
+      const {user} = await authHelper.registerUserWithVerification(existingUser);
 
       // Try to register with same username
       await authHelper.navigateToRegistration();
@@ -125,7 +125,7 @@ test.describe('User Registration Flow', () => {
     test('should validate existing email', async () => {
       // First, register a user successfully  
       const existingUser = generateUniqueAuthUser(AUTH_TEST_USERS.NEW_USER);
-      const { user } = await authHelper.registerUserWithVerification(existingUser);
+      const {user} = await authHelper.registerUserWithVerification(existingUser);
 
       // Try to register with same email
       await authHelper.navigateToRegistration();
@@ -166,17 +166,17 @@ test.describe('User Registration Flow', () => {
 
       // Verify redirect or message about email verification
       const currentUrl = authHelper.page.url();
-      const hasVerificationMessage = await authHelper.page.locator(':text("check your email")').isVisible({ timeout: 5000 }).catch(() => false);
-      
+      const hasVerificationMessage = await authHelper.page.locator(':text("check your email")').isVisible({timeout: 5000}).catch(() => false);
+
       expect(currentUrl.includes('/login') || currentUrl.includes('/verify') || hasVerificationMessage).toBeTruthy();
     });
 
-    test('should send verification email after registration', async ({ page }) => {
+    test('should send verification email after registration', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
       } catch {
-        test.skip('MailHog not available for email testing');
+        test.skip(true, 'MailHog not available for email testing');
       }
 
       const uniqueUser = generateUniqueAuthUser(AUTH_TEST_USERS.NEW_USER);
@@ -199,16 +199,16 @@ test.describe('User Registration Flow', () => {
   });
 
   test.describe('Email Verification Flow', () => {
-    test('should verify email with valid token', async ({ page }) => {
+    test('should verify email with valid token', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
       } catch {
-        test.skip('MailHog not available for email testing');
+        test.skip(true, 'MailHog not available for email testing');
       }
 
-      const { user, verificationToken } = await authHelper.registerUserWithVerification(
-        generateUniqueAuthUser(AUTH_TEST_USERS.NEW_USER)
+      const {user, verificationToken} = await authHelper.registerUserWithVerification(
+          generateUniqueAuthUser(AUTH_TEST_USERS.NEW_USER)
       );
 
       // Verify email using token
@@ -261,7 +261,7 @@ test.describe('User Registration Flow', () => {
 
       // Verify that XSS is not executed (page should still be functional)
       await expect(authHelper.page.locator('input[name="username"]')).toBeVisible();
-      
+
       // No alert dialogs should be present
       authHelper.page.on('dialog', dialog => {
         throw new Error(`Unexpected dialog: ${dialog.message()}`);
@@ -283,7 +283,7 @@ test.describe('User Registration Flow', () => {
 
       // Should show validation error or handle gracefully
       const isOnRegisterPage = await expect(authHelper.page).toHaveURL(/\/register/).catch(() => false);
-      const hasErrorMessage = await authHelper.page.locator('[role="alert"], .error').isVisible({ timeout: 2000 }).catch(() => false);
+      const hasErrorMessage = await authHelper.page.locator('[role="alert"], .error').isVisible({timeout: 2000}).catch(() => false);
 
       expect(isOnRegisterPage || hasErrorMessage).toBeTruthy();
     });
@@ -309,8 +309,8 @@ test.describe('User Registration Flow', () => {
 
       // The last few attempts should be rate limited
       const rateLimitMessage = authHelper.page.locator(':text("too many requests"), :text("rate limit"), [role="alert"]');
-      const hasRateLimit = await rateLimitMessage.isVisible({ timeout: 2000 }).catch(() => false);
-      
+      const hasRateLimit = await rateLimitMessage.isVisible({timeout: 2000}).catch(() => false);
+
       // Rate limiting may or may not be implemented - this is informational
       if (hasRateLimit) {
         console.log('✅ Rate limiting is implemented for registration');
@@ -322,9 +322,9 @@ test.describe('User Registration Flow', () => {
 
   test.describe('Mobile Responsiveness', () => {
     Object.entries(MOBILE_VIEWPORTS).forEach(([deviceName, viewport]) => {
-      test(`should work on ${deviceName}`, async ({ page }) => {
+      test(`should work on ${deviceName}`, async ({page}) => {
         await page.setViewportSize(viewport);
-        
+
         const mobileAuthHelper = new EnhancedAuthHelper(page);
         await mobileAuthHelper.clearStorage();
 
@@ -341,8 +341,8 @@ test.describe('User Registration Flow', () => {
         await mobileAuthHelper.submitRegistrationForm();
 
         // Should show success message or handle appropriately
-        const hasSuccess = await mobileAuthHelper.page.locator('.success, .MuiAlert-standardSuccess').isVisible({ timeout: 5000 }).catch(() => false);
-        const hasError = await mobileAuthHelper.page.locator('[role="alert"], .error').isVisible({ timeout: 5000 }).catch(() => false);
+        const hasSuccess = await mobileAuthHelper.page.locator('.success, .MuiAlert-standardSuccess').isVisible({timeout: 5000}).catch(() => false);
+        const hasError = await mobileAuthHelper.page.locator('[role="alert"], .error').isVisible({timeout: 5000}).catch(() => false);
 
         expect(hasSuccess || hasError).toBeTruthy();
       });
@@ -396,15 +396,15 @@ test.describe('User Registration Flow', () => {
 
       // Fields should have labels, aria-label, or aria-labelledby
       const usernameHasLabel = await usernameField.evaluate(el => {
-        return el.hasAttribute('aria-label') || 
-               el.hasAttribute('aria-labelledby') || 
-               document.querySelector(`label[for="${el.id}"]`) !== null;
+        return el.hasAttribute('aria-label') ||
+            el.hasAttribute('aria-labelledby') ||
+            document.querySelector(`label[for="${el.id}"]`) !== null;
       });
 
       const emailHasLabel = await emailField.evaluate(el => {
-        return el.hasAttribute('aria-label') || 
-               el.hasAttribute('aria-labelledby') || 
-               document.querySelector(`label[for="${el.id}"]`) !== null;
+        return el.hasAttribute('aria-label') ||
+            el.hasAttribute('aria-labelledby') ||
+            document.querySelector(`label[for="${el.id}"]`) !== null;
       });
 
       expect(usernameHasLabel).toBeTruthy();
@@ -443,8 +443,8 @@ test.describe('User Registration Flow', () => {
 
       // Wait for success or error response
       await Promise.race([
-        authHelper.page.locator('.success, .MuiAlert-standardSuccess').waitFor({ timeout: 10000 }),
-        authHelper.page.locator('[role="alert"], .error').waitFor({ timeout: 10000 }),
+        authHelper.page.locator('.success, .MuiAlert-standardSuccess').waitFor({timeout: 10000}),
+        authHelper.page.locator('[role="alert"], .error').waitFor({timeout: 10000}),
       ]);
 
       const endTime = Date.now();
@@ -456,7 +456,7 @@ test.describe('User Registration Flow', () => {
   });
 
   test.describe('Error Handling', () => {
-    test('should handle network errors gracefully', async ({ page }) => {
+    test('should handle network errors gracefully', async ({page}) => {
       await authHelper.navigateToRegistration();
 
       // Mock network failure
@@ -472,7 +472,7 @@ test.describe('User Registration Flow', () => {
       await authHelper.verifyErrorMessage();
     });
 
-    test('should handle server errors (500) gracefully', async ({ page }) => {
+    test('should handle server errors (500) gracefully', async ({page}) => {
       await authHelper.navigateToRegistration();
 
       // Mock server error
@@ -495,7 +495,7 @@ test.describe('User Registration Flow', () => {
       await authHelper.verifyErrorMessage();
     });
 
-    test('should handle malformed server response', async ({ page }) => {
+    test('should handle malformed server response', async ({page}) => {
       await authHelper.navigateToRegistration();
 
       // Mock malformed response

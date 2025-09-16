@@ -1,6 +1,6 @@
 /**
  * Responsive Hooks Exports
- * 
+ *
  * Central export point for all responsive and utility hooks
  */
 

@@ -1,15 +1,15 @@
 /**
  * Advanced Responsive Theme Configuration
- * 
+ *
  * Comprehensive Material-UI theme with responsive design system
  * Integrates typography, spacing, colors, and breakpoints
  */
 
-import { createTheme, ThemeOptions, responsiveFontSizes, Theme } from '@mui/material/styles'
-import { breakpointValues, containerBreakpoints } from './breakpoints'
-import { createResponsiveTypography } from './typography'
-import { createLightPalette, createDarkPalette } from './palette'
-import { createSpacingFunction } from './spacing'
+import {createTheme, responsiveFontSizes, Theme, ThemeOptions} from '@mui/material/styles'
+import {breakpointValues, containerBreakpoints} from './breakpoints'
+import {createResponsiveTypography} from './typography'
+import {createDarkPalette, createLightPalette} from './palette'
+import {createSpacingFunction} from './spacing'
 
 // Base theme configuration shared between light and dark themes
 const baseThemeConfig: ThemeOptions = {
@@ -17,15 +17,15 @@ const baseThemeConfig: ThemeOptions = {
   breakpoints: {
     values: breakpointValues,
   },
-  
+
   // Responsive spacing function
   spacing: createSpacingFunction(),
-  
+
   // Shape and border radius
   shape: {
     borderRadius: 12, // More modern, rounded corners
   },
-  
+
   // Component style overrides
   components: {
     // Global CSS baseline
@@ -61,7 +61,7 @@ const baseThemeConfig: ThemeOptions = {
         },
       },
     },
-    
+
     // Container component with responsive max-widths
     MuiContainer: {
       styleOverrides: {
@@ -80,7 +80,7 @@ const baseThemeConfig: ThemeOptions = {
         },
       },
     },
-    
+
     // Card component with responsive design
     MuiCard: {
       styleOverrides: {
@@ -99,7 +99,7 @@ const baseThemeConfig: ThemeOptions = {
         }),
       },
     },
-    
+
     // Button component with responsive sizing
     MuiButton: {
       styleOverrides: {
@@ -128,7 +128,7 @@ const baseThemeConfig: ThemeOptions = {
         },
       },
     },
-    
+
     // AppBar with responsive styling
     MuiAppBar: {
       styleOverrides: {
@@ -153,7 +153,7 @@ const baseThemeConfig: ThemeOptions = {
         }),
       },
     },
-    
+
     // Drawer with responsive behavior
     MuiDrawer: {
       styleOverrides: {
@@ -172,7 +172,7 @@ const baseThemeConfig: ThemeOptions = {
         }),
       },
     },
-    
+
     // Responsive Grid component
     MuiGrid: {
       styleOverrides: {
@@ -190,7 +190,7 @@ const baseThemeConfig: ThemeOptions = {
         },
       },
     },
-    
+
     // Dialog with responsive behavior
     MuiDialog: {
       styleOverrides: {
@@ -205,7 +205,7 @@ const baseThemeConfig: ThemeOptions = {
         }),
       },
     },
-    
+
     // Responsive Chip component
     MuiChip: {
       styleOverrides: {
@@ -218,7 +218,7 @@ const baseThemeConfig: ThemeOptions = {
         }),
       },
     },
-    
+
     // Form controls with responsive styling
     MuiTextField: {
       styleOverrides: {
@@ -233,11 +233,11 @@ const baseThemeConfig: ThemeOptions = {
         }),
       },
     },
-    
+
     // Responsive FAB positioning
     MuiFab: {
       styleOverrides: {
-        root: ({ theme }) => ({
+        root: ({theme}) => ({
           // Mobile positioning
           [`@media (max-width: ${breakpointValues.tablet - 1}px)`]: {
             position: 'fixed',
@@ -255,7 +255,7 @@ const baseThemeConfig: ThemeOptions = {
         }),
       },
     },
-    
+
     // Responsive data tables
     MuiTableContainer: {
       styleOverrides: {
@@ -271,7 +271,7 @@ const baseThemeConfig: ThemeOptions = {
       },
     },
   },
-  
+
   // Transitions with reduced motion support
   transitions: {
     duration: {
@@ -290,7 +290,7 @@ const baseThemeConfig: ThemeOptions = {
       sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
     },
   },
-  
+
   // Z-index values for layering
   zIndex: {
     mobileStepper: 1000,
@@ -311,7 +311,7 @@ export const createLightTheme = () => {
     palette: createLightPalette(),
     typography: createResponsiveTypography(),
   })
-  
+
   // Apply responsive font sizes
   return responsiveFontSizes(baseTheme, {
     breakpoints: ['mobile', 'tablet', 'desktop', 'desktopLg'],
@@ -341,7 +341,7 @@ export const createDarkTheme = () => {
       },
     },
   })
-  
+
   // Apply responsive font sizes
   return responsiveFontSizes(baseTheme, {
     breakpoints: ['mobile', 'tablet', 'desktop', 'desktopLg'],
@@ -357,31 +357,31 @@ export const themeVariants = {
 
 // Container queries helper (requires CSS Container Queries support)
 export const containerQueries = {
-  up: (breakpoint: keyof typeof containerBreakpoints) => 
-    `@container (min-width: ${containerBreakpoints[breakpoint]}px)`,
-  down: (breakpoint: keyof typeof containerBreakpoints) => 
-    `@container (max-width: ${containerBreakpoints[breakpoint] - 1}px)`,
+  up: (breakpoint: keyof typeof containerBreakpoints) =>
+      `@container (min-width: ${containerBreakpoints[breakpoint]}px)`,
+  down: (breakpoint: keyof typeof containerBreakpoints) =>
+      `@container (max-width: ${containerBreakpoints[breakpoint] - 1}px)`,
   between: (start: keyof typeof containerBreakpoints, end: keyof typeof containerBreakpoints) =>
-    `@container (min-width: ${containerBreakpoints[start]}px) and (max-width: ${containerBreakpoints[end] - 1}px)`,
+      `@container (min-width: ${containerBreakpoints[start]}px) and (max-width: ${containerBreakpoints[end] - 1}px)`,
 }
 
 // Theme utilities
 export const themeUtils = {
   // Get current theme mode
   getThemeMode: (theme: Theme): 'light' | 'dark' => theme.palette.mode,
-  
+
   // Check if mobile breakpoint
   isMobile: (theme: Theme) => `@media (max-width: ${theme.breakpoints.values.tablet - 1}px)`,
-  
+
   // Check if desktop breakpoint
   isDesktop: (theme: Theme) => `@media (min-width: ${theme.breakpoints.values.laptop}px)`,
-  
+
   // Get responsive value
   responsive: <T>(theme: Theme, mobileValue: T, desktopValue: T) => ({
     [themeUtils.isMobile(theme)]: mobileValue,
     [themeUtils.isDesktop(theme)]: desktopValue,
   }),
-  
+
   // Get spacing for breakpoint
   getSpacing: (theme: Theme, mobile: number, desktop: number) => ({
     [themeUtils.isMobile(theme)]: theme.spacing(mobile),

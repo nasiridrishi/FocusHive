@@ -1,52 +1,52 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, {useCallback, useEffect, useState} from 'react'
 import {
-  Box,
-  Paper,
-  Typography,
-  IconButton,
-  Chip,
   Alert,
+  alpha,
+  Box,
+  Chip,
+  IconButton,
+  Paper,
   Snackbar,
   styled,
-  alpha,
+  Typography,
 } from '@mui/material'
 import {
   Close as CloseIcon,
+  CloseFullscreen as CloseFullscreenIcon,
   Minimize as MinimizeIcon,
   OpenInFull as OpenInFullIcon,
-  CloseFullscreen as CloseFullscreenIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import TypingIndicator from './TypingIndicator'
-import { useChat } from '../../../shared/contexts/ChatContext'
-import { useWebSocket, ConnectionState } from '../../../shared/contexts/WebSocketContext'
-import { ChatMessage } from '../../../shared/types/chat'
+import {useChat} from '../../../shared/contexts/ChatContext'
+import {ConnectionState, useWebSocket} from '../../../shared/contexts/WebSocketContext'
+import {ChatMessage} from '../../../shared/types/chat'
 
 const ChatContainer = styled(Paper)<{ isFullscreen: boolean; isMinimized: boolean }>(
-  ({ theme, isFullscreen, isMinimized }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    height: isFullscreen ? '100vh' : isMinimized ? 'auto' : '600px',
-    width: isFullscreen ? '100vw' : '400px',
-    maxWidth: isFullscreen ? '100vw' : '400px',
-    position: isFullscreen ? 'fixed' : 'relative',
-    top: isFullscreen ? 0 : 'auto',
-    left: isFullscreen ? 0 : 'auto',
-    zIndex: isFullscreen ? 1300 : 'auto',
-    borderRadius: isFullscreen ? 0 : theme.shape.borderRadius * 2,
-    overflow: 'hidden',
-    border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-    background: `linear-gradient(135deg, 
+    ({theme, isFullscreen, isMinimized}) => ({
+      display: 'flex',
+      flexDirection: 'column',
+      height: isFullscreen ? '100vh' : isMinimized ? 'auto' : '600px',
+      width: isFullscreen ? '100vw' : '400px',
+      maxWidth: isFullscreen ? '100vw' : '400px',
+      position: isFullscreen ? 'fixed' : 'relative',
+      top: isFullscreen ? 0 : 'auto',
+      left: isFullscreen ? 0 : 'auto',
+      zIndex: isFullscreen ? 1300 : 'auto',
+      borderRadius: isFullscreen ? 0 : theme.shape.borderRadius * 2,
+      overflow: 'hidden',
+      border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+      background: `linear-gradient(135deg, 
       ${alpha(theme.palette.background.paper, 0.95)} 0%, 
       ${alpha(theme.palette.background.default, 0.98)} 100%)`,
-    backdropFilter: 'blur(10px)',
-    transition: 'all 0.3s ease-in-out',
-  })
+      backdropFilter: 'blur(10px)',
+      transition: 'all 0.3s ease-in-out',
+    })
 )
 
-const ChatHeader = styled(Box)<{ isMinimized: boolean }>(({ theme, isMinimized }) => ({
+const ChatHeader = styled(Box)<{ isMinimized: boolean }>(({theme, isMinimized}) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -64,34 +64,34 @@ const HeaderControls = styled(Box)({
 })
 
 const ConnectionIndicator = styled(Chip)<{ connectionState: ConnectionState }>(
-  ({ theme, connectionState }) => {
-    const getColor = () => {
-      switch (connectionState) {
-        case ConnectionState.CONNECTED:
-          return theme.palette.success.main
-        case ConnectionState.CONNECTING:
-        case ConnectionState.RECONNECTING:
-          return theme.palette.warning.main
-        case ConnectionState.ERROR:
-        case ConnectionState.DISCONNECTED:
-          return theme.palette.error.main
-        default:
-          return theme.palette.grey[500]
+    ({theme, connectionState}) => {
+      const getColor = (): string => {
+        switch (connectionState) {
+          case ConnectionState.CONNECTED:
+            return theme.palette.success.main
+          case ConnectionState.CONNECTING:
+          case ConnectionState.RECONNECTING:
+            return theme.palette.warning.main
+          case ConnectionState.ERROR:
+          case ConnectionState.DISCONNECTED:
+            return theme.palette.error.main
+          default:
+            return theme.palette.grey[500]
+        }
+      }
+
+      return {
+        height: 20,
+        fontSize: '0.7rem',
+        backgroundColor: alpha(getColor(), 0.1),
+        color: getColor(),
+        border: `1px solid ${alpha(getColor(), 0.3)}`,
+        '& .MuiChip-icon': {
+          color: getColor(),
+          fontSize: '0.8rem',
+        },
       }
     }
-
-    return {
-      height: 20,
-      fontSize: '0.7rem',
-      backgroundColor: alpha(getColor(), 0.1),
-      color: getColor(),
-      border: `1px solid ${alpha(getColor(), 0.3)}`,
-      '& .MuiChip-icon': {
-        color: getColor(),
-        fontSize: '0.8rem',
-      },
-    }
-  }
 )
 
 interface ChatWindowProps {
@@ -105,15 +105,15 @@ interface ChatWindowProps {
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
-  hiveId,
-  hiveName = 'Chat',
-  currentUserId,
-  onClose,
-  defaultMinimized = false,
-  allowFullscreen = true,
-  className,
-}) => {
-  const { connectionState, isConnected } = useWebSocket()
+                                                 hiveId,
+                                                 hiveName = 'Chat',
+                                                 currentUserId,
+                                                 onClose,
+                                                 defaultMinimized = false,
+                                                 allowFullscreen = true,
+                                                 className,
+                                               }) => {
+  const {connectionState, isConnected} = useWebSocket()
   const {
     chatState,
     sendMessage,
@@ -208,7 +208,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setTyping(hiveId, false)
   }, [hiveId, setTyping])
 
-  const getConnectionLabel = () => {
+  const getConnectionLabel = (): string => {
     switch (connectionState) {
       case ConnectionState.CONNECTED:
         return 'Connected'
@@ -225,147 +225,148 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }
 
-  const handleHeaderClick = () => {
+  const handleHeaderClick = (): void => {
     if (isMinimized) {
       setIsMinimized(false)
     }
   }
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = (): void => {
     setIsFullscreen(!isFullscreen)
     setIsMinimized(false)
   }
 
   const renderHeader = () => (
-    <ChatHeader isMinimized={isMinimized} onClick={handleHeaderClick}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-        <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
-          {hiveName}
-        </Typography>
-        <ConnectionIndicator
-          connectionState={connectionState}
-          label={getConnectionLabel()}
-          size="small"
-          variant="outlined"
-        />
-        {typingUsers.length > 0 && !isMinimized && (
-          <TypingIndicator 
-            typingUsers={typingUsers}
-            variant="compact"
-            showAvatars={false}
+      <ChatHeader isMinimized={isMinimized} onClick={handleHeaderClick}>
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 1, minWidth: 0}}>
+          <Typography variant="h6" sx={{fontSize: '1rem', fontWeight: 600}}>
+            {hiveName}
+          </Typography>
+          <ConnectionIndicator
+              connectionState={connectionState}
+              label={getConnectionLabel()}
+              size="small"
+              variant="outlined"
           />
-        )}
-      </Box>
-      
-      <HeaderControls>
-        {!isConnected && (
-          <IconButton 
-            size="small" 
-            onClick={(e) => {
-              e.stopPropagation()
-              window.location.reload()
-            }}
-            title="Reconnect"
+          {typingUsers.length > 0 && !isMinimized && (
+              <TypingIndicator
+                  typingUsers={typingUsers}
+                  variant="compact"
+                  showAvatars={false}
+              />
+          )}
+        </Box>
+
+        <HeaderControls>
+          {!isConnected && (
+              <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.location.reload()
+                  }}
+                  title="Reconnect"
+              >
+                <RefreshIcon fontSize="small"/>
+              </IconButton>
+          )}
+
+          <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsMinimized(!isMinimized)
+              }}
+              title={isMinimized ? "Expand" : "Minimize"}
           >
-            <RefreshIcon fontSize="small" />
+            <MinimizeIcon fontSize="small"/>
           </IconButton>
-        )}
-        
-        <IconButton 
-          size="small" 
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsMinimized(!isMinimized)
-          }}
-          title={isMinimized ? "Expand" : "Minimize"}
-        >
-          <MinimizeIcon fontSize="small" />
-        </IconButton>
-        
-        {allowFullscreen && (
-          <IconButton 
-            size="small" 
-            onClick={(e) => {
-              e.stopPropagation()
-              toggleFullscreen()
-            }}
-            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-          >
-            {isFullscreen ? <CloseFullscreenIcon fontSize="small" /> : <OpenInFullIcon fontSize="small" />}
-          </IconButton>
-        )}
-        
-        {onClose && (
-          <IconButton 
-            size="small" 
-            onClick={(e) => {
-              e.stopPropagation()
-              onClose()
-            }}
-            title="Close"
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        )}
-      </HeaderControls>
-    </ChatHeader>
+
+          {allowFullscreen && (
+              <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleFullscreen()
+                  }}
+                  title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              >
+                {isFullscreen ? <CloseFullscreenIcon fontSize="small"/> :
+                    <OpenInFullIcon fontSize="small"/>}
+              </IconButton>
+          )}
+
+          {onClose && (
+              <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClose()
+                  }}
+                  title="Close"
+              >
+                <CloseIcon fontSize="small"/>
+              </IconButton>
+          )}
+        </HeaderControls>
+      </ChatHeader>
   )
 
   return (
-    <>
-      <ChatContainer
-        className={className}
-        isFullscreen={isFullscreen}
-        isMinimized={isMinimized}
-        elevation={isFullscreen ? 0 : 6}
-      >
-        {renderHeader()}
-        
-        {!isMinimized && (
-          <>
-            <MessageList
-              hiveId={hiveId}
-              messages={messages}
-              onLoadMore={() => loadMoreMessages(hiveId)}
-              hasMore={hasMore}
-              isLoading={chatState.isLoading}
-              currentUserId={currentUserId}
-              onEditMessage={handleEditMessage}
-              onDeleteMessage={handleDeleteMessage}
-              onReplyMessage={handleReplyMessage}
-              onReaction={handleReaction}
-              onRemoveReaction={handleRemoveReaction}
-              typingUsers={typingUsers}
-            />
-            
-            <MessageInput
-              hiveId={hiveId}
-              onSendMessage={handleSendMessage}
-              onTypingStart={handleTypingStart}
-              onTypingStop={handleTypingStop}
-              disabled={!isConnected}
-              replyTo={replyToMessage}
-              onCancelReply={() => setReplyToMessage(null)}
-            />
-          </>
-        )}
-      </ChatContainer>
-
-      <Snackbar
-        open={Boolean(error)}
-        autoHideDuration={6000}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={() => setError(null)} 
-          severity="error" 
-          variant="filled"
+      <>
+        <ChatContainer
+            className={className}
+            isFullscreen={isFullscreen}
+            isMinimized={isMinimized}
+            elevation={isFullscreen ? 0 : 6}
         >
-          {error}
-        </Alert>
-      </Snackbar>
-    </>
+          {renderHeader()}
+
+          {!isMinimized && (
+              <>
+                <MessageList
+                    hiveId={hiveId}
+                    messages={messages}
+                    onLoadMore={() => loadMoreMessages(hiveId)}
+                    hasMore={hasMore}
+                    isLoading={chatState.isLoading}
+                    currentUserId={currentUserId}
+                    onEditMessage={handleEditMessage}
+                    onDeleteMessage={handleDeleteMessage}
+                    onReplyMessage={handleReplyMessage}
+                    onReaction={handleReaction}
+                    onRemoveReaction={handleRemoveReaction}
+                    typingUsers={typingUsers}
+                />
+
+                <MessageInput
+                    hiveId={hiveId}
+                    onSendMessage={handleSendMessage}
+                    onTypingStart={handleTypingStart}
+                    onTypingStop={handleTypingStop}
+                    disabled={!isConnected}
+                    replyTo={replyToMessage}
+                    onCancelReply={() => setReplyToMessage(null)}
+                />
+              </>
+          )}
+        </ChatContainer>
+
+        <Snackbar
+            open={Boolean(error)}
+            autoHideDuration={6000}
+            onClose={() => setError(null)}
+            anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+        >
+          <Alert
+              onClose={() => setError(null)}
+              severity="error"
+              variant="filled"
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+      </>
   )
 }
 

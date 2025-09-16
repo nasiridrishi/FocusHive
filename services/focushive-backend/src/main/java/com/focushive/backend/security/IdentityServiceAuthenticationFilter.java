@@ -1,7 +1,7 @@
 package com.focushive.backend.security;
 
-import com.focushive.backend.client.dto.TokenValidationResponse;
-import com.focushive.backend.service.IdentityIntegrationService;
+import com.focushive.api.dto.identity.TokenValidationResponse;
+import com.focushive.api.service.IdentityIntegrationService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component("backendIdentityServiceAuthenticationFilter")
 @RequiredArgsConstructor
+@org.springframework.context.annotation.Profile("!test") // Disable in test profile
 public class IdentityServiceAuthenticationFilter extends OncePerRequestFilter {
 
     private final IdentityIntegrationService identityIntegrationService;
@@ -53,10 +55,13 @@ public class IdentityServiceAuthenticationFilter extends OncePerRequestFilter {
                             .collect(Collectors.toList());
                     
                     // Create custom principal with user details
+                    String activePersonaId = validationResponse.getActivePersona() != null
+                            ? validationResponse.getActivePersona().getId().toString()
+                            : null;
                     IdentityServicePrincipal principal = new IdentityServicePrincipal(
                             validationResponse.getUserId(),
                             validationResponse.getEmail(),
-                            validationResponse.getActivePersonaId()
+                            activePersonaId
                     );
                     
                     UsernamePasswordAuthenticationToken authentication = 

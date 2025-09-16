@@ -1,0 +1,107 @@
+spring:
+  application:
+    name: identity-service-test
+  
+  # Use H2 for simple, fast tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  # JPA Config for tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+  
+  # Disable Flyway for tests
+  flyway:
+    enabled: false
+  
+  # Simple cache for tests
+  cache:
+    type: simple
+  
+  # Test security
+  security:
+    user:
+      name: test
+      password: test
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:8081/oauth2
+  
+  # Disable Redis and Flyway auto-configuration for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+
+  # Test profiles
+  profiles:
+    active: test
+
+# Test JWT configuration with RSA
+jwt:
+  secret: testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposesTestOnly
+  access-token-expiration-ms: 3600000
+  refresh-token-expiration-ms: 86400000
+  remember-me-expiration-ms: 7776000000
+  issuer: http://localhost:8081/identity
+  use-rsa: true
+  rsa:
+    key-id: test-key-2025
+    # RSA keys will be auto-generated for tests
+  service:
+    expiration: 300000
+
+# Disable rate limiting for tests
+focushive:
+  rate-limiting:
+    enabled: false
+
+# Test logging
+logging:
+  level:
+    com.focushive.identity: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    
+# Random port for tests
+server:
+  port: 0
+
+# Test notification service integration
+app:
+  base-url: http://localhost:8081
+  admin:
+    username: testadmin
+    password: testpass123
+    email: admin@test.com
+    first-name: Test
+    last-name: Admin
+    auto-create: true
+  encryption:
+    master-key: testMasterKey12345678901234567890123456789012
+    salt: testSalt1234567890123456789012345678901234567890
+
+# Test environment variable values
+auth:
+  issuer: http://localhost:8081/auth
+
+security:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:3001
+
+notification:
+  service:
+    url: http://localhost:8083
+    auth:
+      enabled: true
+    api-key: test-api-key

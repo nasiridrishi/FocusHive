@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.Comparator;
 
@@ -82,9 +83,17 @@ public class User extends BaseEncryptedEntity implements UserDetails {
     @Column(name = "email_verified", nullable = false)
     @Builder.Default
     private boolean emailVerified = false;
-    
+
     @Column(name = "email_verification_token")
     private String emailVerificationToken;
+
+    @Column(name = "phone_number", length = 20)
+    @Convert(converter = com.focushive.identity.security.encryption.converters.EncryptedStringConverter.class)
+    private String phoneNumber;
+
+    @Column(name = "phone_number_verified", nullable = false)
+    @Builder.Default
+    private boolean phoneNumberVerified = false;
     
     @Column(name = "password_reset_token")
     private String passwordResetToken;
@@ -107,7 +116,21 @@ public class User extends BaseEncryptedEntity implements UserDetails {
     @Column(name = "credentials_non_expired", nullable = false)
     @Builder.Default
     private boolean credentialsNonExpired = true;
-    
+
+    // Account lockout fields for OWASP A04:2021 Insecure Design protection
+    @Column(name = "failed_login_attempts", nullable = false)
+    @Builder.Default
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "last_failed_login_at")
+    private Instant lastFailedLoginAt;
+
+    @Column(name = "account_locked_at")
+    private Instant accountLockedAt;
+
+    @Column(name = "account_locked_until")
+    private Instant accountLockedUntil;
+
     @Column(name = "two_factor_enabled", nullable = false)
     @Builder.Default
     private boolean twoFactorEnabled = false;
@@ -159,7 +182,18 @@ public class User extends BaseEncryptedEntity implements UserDetails {
     
     @Column(name = "deleted_at")
     private Instant deletedAt;
-    
+
+    // Account deletion and recovery fields
+    @Column(name = "account_deleted_at")
+    private Instant accountDeletedAt;
+
+    @Column(name = "deletion_token")
+    private String deletionToken;
+
+    // Token invalidation timestamp for session management
+    @Column(name = "token_invalidated_at")
+    private Instant tokenInvalidatedAt;
+
     // Role-based access control
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
@@ -175,17 +209,27 @@ public class User extends BaseEncryptedEntity implements UserDetails {
     
     // UserDetails implementation
     @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        
+
         // Add primary role
         authorities.add(new SimpleGrantedAuthority(role.getAuthority()));
-        
+
         // Add additional roles
-        additionalRoles.forEach(additionalRole -> 
+        additionalRoles.forEach(additionalRole ->
             authorities.add(new SimpleGrantedAuthority(additionalRole.getAuthority()))
         );
-        
+
         return authorities;
     }
     
@@ -196,7 +240,17 @@ public class User extends BaseEncryptedEntity implements UserDetails {
     
     @Override
     public boolean isAccountNonLocked() {
-        return accountNonLocked;
+        return accountNonLocked && !isAccountCurrentlyLocked();
+    }
+
+    /**
+     * Check if account is currently locked based on lockout timestamp.
+     */
+    public boolean isAccountCurrentlyLocked() {
+        if (accountLockedUntil == null) {
+            return false;
+        }
+        return Instant.now().isBefore(accountLockedUntil);
     }
     
     @Override
@@ -299,6 +353,71 @@ public class User extends BaseEncryptedEntity implements UserDetails {
     }
     
     /**
+     * Increment failed login attempts and lock account if threshold reached.
+     * Following OWASP A04:2021 Insecure Design best practices.
+     *
+     * @param maxAttempts Maximum number of failed attempts before lockout
+     * @param lockoutDurationMinutes Duration of lockout in minutes
+     */
+    public void recordFailedLoginAttempt(int maxAttempts, int lockoutDurationMinutes) {
+        this.failedLoginAttempts++;
+        this.lastFailedLoginAt = Instant.now();
+
+        if (this.failedLoginAttempts >= maxAttempts) {
+            lockAccount(lockoutDurationMinutes);
+        }
+    }
+
+    /**
+     * Lock the account for the specified duration.
+     *
+     * @param lockoutDurationMinutes Duration in minutes (0 for indefinite)
+     */
+    public void lockAccount(int lockoutDurationMinutes) {
+        this.accountNonLocked = false;
+        this.accountLockedAt = Instant.now();
+
+        if (lockoutDurationMinutes > 0) {
+            this.accountLockedUntil = Instant.now().plus(lockoutDurationMinutes, ChronoUnit.MINUTES);
+        } else {
+            this.accountLockedUntil = null; // Indefinite lockout
+        }
+    }
+
+    /**
+     * Reset failed login attempts after successful login.
+     */
+    public void resetFailedLoginAttempts() {
+        this.failedLoginAttempts = 0;
+        this.lastFailedLoginAt = null;
+
+        // Unlock account if it was locked due to failed attempts
+        if (!this.accountNonLocked && this.accountLockedAt != null) {
+            unlockAccount();
+        }
+    }
+
+    /**
+     * Unlock the account manually (admin action or automatic recovery).
+     */
+    public void unlockAccount() {
+        this.accountNonLocked = true;
+        this.accountLockedAt = null;
+        this.accountLockedUntil = null;
+        this.failedLoginAttempts = 0;
+        this.lastFailedLoginAt = null;
+    }
+
+    /**
+     * Check if account lockout has expired and should be automatically unlocked.
+     */
+    public boolean shouldAutoUnlock() {
+        return !accountNonLocked &&
+               accountLockedUntil != null &&
+               Instant.now().isAfter(accountLockedUntil);
+    }
+
+    /**
      * Update searchable hashes for encrypted fields.
      * Called before persisting or updating the entity.
      */
@@ -308,7 +427,7 @@ public class User extends BaseEncryptedEntity implements UserDetails {
         if (email != null) {
             this.emailHash = encryptionService.hash(email.toLowerCase());
         }
-        
+
         // Note: Other PII fields (firstName, lastName, etc.) don't need hashes
         // as they are not searchable - they use regular encryption only
     }

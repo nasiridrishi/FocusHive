@@ -1,10 +1,10 @@
-import { AxiosInstance, AxiosError } from 'axios';
-import { apiClient } from './httpInterceptors';
-import { API_ENDPOINTS, buildEndpoint } from './index';
+import {AxiosError, AxiosInstance} from 'axios';
+import {apiClient} from './httpInterceptors';
+import {API_ENDPOINTS, buildEndpoint} from './index';
 
 /**
  * Presence API Service
- * 
+ *
  * Provides real-time presence and activity tracking with:
  * - User presence status management
  * - Hive presence tracking
@@ -89,7 +89,7 @@ class PresenceApiService {
    */
   async getUserPresence(userId: number): Promise<UserPresence> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRESENCE.USER_BY_ID, { userId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRESENCE.USER_BY_ID, {userId});
       const response = await this.api.get<UserPresence>(endpoint);
       return response.data;
     } catch (error) {
@@ -129,7 +129,7 @@ class PresenceApiService {
    */
   async getHivePresence(hiveId: number): Promise<HivePresenceInfo> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRESENCE.HIVE, { hiveId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRESENCE.HIVE, {hiveId});
       const response = await this.api.get<HivePresenceInfo>(endpoint);
       return response.data;
     } catch (error) {
@@ -144,8 +144,8 @@ class PresenceApiService {
   async getHivePresenceBatch(hiveIds: number[]): Promise<HivePresenceInfo[]> {
     try {
       const response = await this.api.post<HivePresenceInfo[]>(
-        API_ENDPOINTS.PRESENCE.HIVES_BATCH,
-        { hiveIds }
+          API_ENDPOINTS.PRESENCE.HIVES_BATCH,
+          {hiveIds}
       );
       return response.data;
     } catch (error) {
@@ -172,7 +172,7 @@ class PresenceApiService {
    */
   async getHiveSessions(hiveId: number): Promise<FocusSession[]> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.PRESENCE.HIVE_SESSIONS, { hiveId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.PRESENCE.HIVE_SESSIONS, {hiveId});
       const response = await this.api.get<FocusSession[]>(endpoint);
       return response.data;
     } catch (error) {
@@ -192,7 +192,7 @@ class PresenceApiService {
         startTime: new Date().toISOString(),
         isActive: true
       };
-      
+
       const response = await this.api.post<FocusSession>('/api/v1/timer/sessions/start', sessionData);
       return response.data;
     } catch (error) {
@@ -219,7 +219,7 @@ class PresenceApiService {
    */
   async updateStatus(status: PresenceStatus, activity?: string, hiveId?: number): Promise<UserPresence> {
     try {
-      const update: PresenceUpdate = { status, activity, hiveId };
+      const update: PresenceUpdate = {status, activity, hiveId};
       return await this.updateMyPresence(update);
     } catch (error) {
       this.handleError(error, 'Failed to update status');
@@ -260,8 +260,8 @@ class PresenceApiService {
    */
   async joinHivePresence(hiveId: number): Promise<UserPresence> {
     try {
-      const update: PresenceUpdate = { 
-        status: PresenceStatus.ONLINE, 
+      const update: PresenceUpdate = {
+        status: PresenceStatus.ONLINE,
         hiveId,
         activity: 'Joined hive'
       };
@@ -277,7 +277,7 @@ class PresenceApiService {
    */
   async leaveHivePresence(_hiveId: number): Promise<UserPresence> {
     try {
-      const update: PresenceUpdate = { 
+      const update: PresenceUpdate = {
         status: PresenceStatus.ONLINE,
         activity: 'Left hive'
       };
@@ -291,10 +291,13 @@ class PresenceApiService {
   /**
    * Get presence statistics for analytics
    */
-  async getPresenceStats(hiveId?: number, dateRange?: { start: string; end: string }): Promise<unknown> {
+  async getPresenceStats(hiveId?: number, dateRange?: {
+    start: string;
+    end: string
+  }): Promise<unknown> {
     try {
-      const params = hiveId ? { hiveId, ...dateRange } : dateRange;
-      const response = await this.api.get('/api/v1/analytics/presence/stats', { params });
+      const params = hiveId ? {hiveId, ...dateRange} : dateRange;
+      const response = await this.api.get('/api/v1/analytics/presence/stats', {params});
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to get presence statistics');
@@ -307,9 +310,9 @@ class PresenceApiService {
    */
   private handleError(error: unknown, defaultMessage: string): never {
     if (error instanceof AxiosError) {
-      const message = error.response?.data?.message || 
-                     error.response?.data?.error || 
-                     defaultMessage;
+      const message = error.response?.data?.message ||
+          error.response?.data?.error ||
+          defaultMessage;
       throw new Error(message);
     }
     throw new Error('Network error occurred');

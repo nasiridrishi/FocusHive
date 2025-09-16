@@ -3,22 +3,20 @@
  * Comprehensive login flow testing including security, performance, and accessibility
  */
 
-import { test, expect } from '@playwright/test';
-import { EnhancedAuthHelper } from '../../helpers/auth-helpers';
-import { 
-  AUTH_TEST_USERS, 
-  INVALID_CREDENTIALS, 
-  SESSION_SCENARIOS,
+import {expect, test} from '@playwright/test';
+import {EnhancedAuthHelper} from '../../helpers/auth-helpers';
+import {
+  AUTH_PERFORMANCE_THRESHOLDS,
+  AUTH_TEST_USERS,
+  INVALID_CREDENTIALS,
   LOCKOUT_SCENARIOS,
-  generateUniqueAuthUser,
-  MOBILE_VIEWPORTS,
-  AUTH_PERFORMANCE_THRESHOLDS
+  MOBILE_VIEWPORTS
 } from '../../helpers/auth-fixtures';
 
 test.describe('Enhanced Login Flow', () => {
   let authHelper: EnhancedAuthHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new EnhancedAuthHelper(page);
     await authHelper.clearStorage();
   });
@@ -30,8 +28,8 @@ test.describe('Enhanced Login Flow', () => {
   test.describe('Valid Credentials', () => {
     test('should login successfully with username and password', async () => {
       const tokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       // Verify tokens are stored
@@ -45,8 +43,8 @@ test.describe('Enhanced Login Flow', () => {
 
     test('should login successfully with email and password', async () => {
       const tokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.email, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.email,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       expect(tokenInfo.accessToken).toBeTruthy();
@@ -56,9 +54,9 @@ test.describe('Enhanced Login Flow', () => {
 
     test('should store tokens in sessionStorage by default', async () => {
       const tokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password,
-        false // rememberMe = false
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password,
+          false // rememberMe = false
       );
 
       expect(tokenInfo.location).toBe('sessionStorage');
@@ -66,9 +64,9 @@ test.describe('Enhanced Login Flow', () => {
 
     test('should store tokens in localStorage when "Remember Me" is checked', async () => {
       const tokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password,
-        true // rememberMe = true
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password,
+          true // rememberMe = true
       );
 
       // Should store in localStorage for persistent login
@@ -78,8 +76,8 @@ test.describe('Enhanced Login Flow', () => {
     test('should maintain session after page refresh', async () => {
       // Login first
       await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       await authHelper.verifyOnDashboard();
@@ -94,8 +92,8 @@ test.describe('Enhanced Login Flow', () => {
 
     test('should load user profile data after login', async () => {
       await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       await authHelper.verifyOnDashboard();
@@ -109,7 +107,7 @@ test.describe('Enhanced Login Flow', () => {
 
       // Should show user information
       const userInfo = authHelper.page.locator(':text("' + AUTH_TEST_USERS.VALID_USER.firstName + '"), :text("' + AUTH_TEST_USERS.VALID_USER.email + '")');
-      const hasUserInfo = await userInfo.first().isVisible({ timeout: 2000 }).catch(() => false);
+      const hasUserInfo = await userInfo.first().isVisible({timeout: 2000}).catch(() => false);
 
       expect(hasUserInfo).toBeTruthy();
     });
@@ -160,7 +158,7 @@ test.describe('Enhanced Login Flow', () => {
       await authHelper.page.locator('button[type="submit"]').click();
 
       await authHelper.verifyErrorMessage();
-      
+
       // Check for specific error message about credentials
       const errorText = await authHelper.page.locator('[role="alert"], .error').textContent();
       expect(errorText?.toLowerCase()).toMatch(/invalid|incorrect|wrong|credentials/);
@@ -174,9 +172,9 @@ test.describe('Enhanced Login Flow', () => {
 
       for (let i = 0; i < attempts; i++) {
         const startTime = Date.now();
-        
+
         await authHelper.testInvalidLogin(invalidCredentials);
-        
+
         const endTime = Date.now();
         const responseTime = endTime - startTime;
 
@@ -192,17 +190,17 @@ test.describe('Enhanced Login Flow', () => {
       }
     });
 
-    test('should lock account after maximum failed attempts', async ({ page }) => {
+    test('should lock account after maximum failed attempts', async ({page: _page}) => {
       // Skip this test if it would affect other tests
       test.slow(); // Mark as slow test
 
       await authHelper.testAccountLockout(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        LOCKOUT_SCENARIOS.MAX_FAILED_ATTEMPTS
+          AUTH_TEST_USERS.VALID_USER.username,
+          LOCKOUT_SCENARIOS.MAX_FAILED_ATTEMPTS
       );
     });
 
-    test('should show lockout message with remaining time', async ({ page }) => {
+    test('should show lockout message with remaining time', async ({page}) => {
       // Simulate account lockout response
       await page.route('**/api/v1/auth/login', route => {
         route.fulfill({
@@ -230,11 +228,11 @@ test.describe('Enhanced Login Flow', () => {
   test.describe('Security Features', () => {
     test('should protect against SQL injection', async () => {
       await authHelper.testInvalidLogin(INVALID_CREDENTIALS.SQL_INJECTION);
-      
+
       // Should handle gracefully without exposing database errors
       const errorElement = authHelper.page.locator('[role="alert"], .error');
       const errorText = await errorElement.textContent().catch(() => '');
-      
+
       // Should not expose database-specific error messages
       expect(errorText?.toLowerCase()).not.toMatch(/sql|database|table|column/);
     });
@@ -245,7 +243,7 @@ test.describe('Enhanced Login Flow', () => {
       // Try XSS in login fields
       await authHelper.page.locator('#email, input[name="email"]').fill(INVALID_CREDENTIALS.XSS_ATTEMPT.username);
       await authHelper.page.locator('#password, input[name="password"]').fill(INVALID_CREDENTIALS.XSS_ATTEMPT.password);
-      
+
       // Set up alert listener to catch any XSS execution
       let alertTriggered = false;
       authHelper.page.on('dialog', dialog => {
@@ -258,14 +256,14 @@ test.describe('Enhanced Login Flow', () => {
 
       // XSS should not execute
       expect(alertTriggered).toBeFalsy();
-      
+
       // Page should remain functional
       await expect(authHelper.page.locator('#email, input[name="email"]')).toBeVisible();
     });
 
     test('should use HTTPS in production URLs', async () => {
       const currentUrl = authHelper.page.url();
-      
+
       // In production, should use HTTPS
       if (!currentUrl.includes('localhost') && !currentUrl.includes('127.0.0.1')) {
         expect(currentUrl).toMatch(/^https:/);
@@ -274,8 +272,8 @@ test.describe('Enhanced Login Flow', () => {
 
     test('should clear sensitive data from memory', async () => {
       await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       // Check that password is not stored in form
@@ -289,17 +287,17 @@ test.describe('Enhanced Login Flow', () => {
   });
 
   test.describe('Session Management', () => {
-    test('should handle token refresh automatically', async ({ page }) => {
+    test('should handle token refresh automatically', async ({page}) => {
       // Mock initial login with short-lived token
       await page.route('**/api/v1/auth/login', route => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            user: { 
-              id: 1, 
+            user: {
+              id: 1,
               username: AUTH_TEST_USERS.VALID_USER.username,
-              email: AUTH_TEST_USERS.VALID_USER.email 
+              email: AUTH_TEST_USERS.VALID_USER.email
             },
             token: 'short.lived.token',
             refreshToken: 'valid.refresh.token',
@@ -322,8 +320,8 @@ test.describe('Enhanced Login Flow', () => {
       });
 
       await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       await authHelper.verifyOnDashboard();
@@ -346,9 +344,9 @@ test.describe('Enhanced Login Flow', () => {
     test('should support "Remember Me" functionality', async () => {
       // Test session storage (default)
       const sessionTokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password,
-        false
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password,
+          false
       );
 
       expect(sessionTokenInfo.location).toBe('sessionStorage');
@@ -356,9 +354,9 @@ test.describe('Enhanced Login Flow', () => {
 
       // Test persistent storage (remember me)
       const persistentTokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password,
-        true
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password,
+          true
       );
 
       expect(persistentTokenInfo.location).toBe('localStorage');
@@ -376,7 +374,7 @@ test.describe('Enhanced Login Flow', () => {
       await authHelper.page.locator('button[type="submit"]').click();
 
       // Wait for redirect to dashboard
-      await expect(authHelper.page).toHaveURL(/\/dashboard|\/home|\/app/, { timeout: 10000 });
+      await expect(authHelper.page).toHaveURL(/\/dashboard|\/home|\/app/, {timeout: 10000});
 
       const endTime = Date.now();
       const loginTime = endTime - startTime;
@@ -385,7 +383,7 @@ test.describe('Enhanced Login Flow', () => {
       console.log(`Login completed in ${loginTime}ms`);
     });
 
-    test('should handle slow network conditions', async ({ page }) => {
+    test('should handle slow network conditions', async ({page}) => {
       // Simulate slow network
       await page.route('**/api/v1/auth/login', async route => {
         await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
@@ -395,8 +393,8 @@ test.describe('Enhanced Login Flow', () => {
       const startTime = Date.now();
 
       const tokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       const endTime = Date.now();
@@ -410,16 +408,16 @@ test.describe('Enhanced Login Flow', () => {
 
   test.describe('Mobile Responsiveness', () => {
     Object.entries(MOBILE_VIEWPORTS).forEach(([deviceName, viewport]) => {
-      test(`should work on ${deviceName}`, async ({ page }) => {
+      test(`should work on ${deviceName}`, async ({page}) => {
         await page.setViewportSize(viewport);
-        
+
         const mobileAuthHelper = new EnhancedAuthHelper(page);
         await mobileAuthHelper.clearStorage();
 
         // Test login on mobile viewport
         const tokenInfo = await mobileAuthHelper.loginWithCredentials(
-          AUTH_TEST_USERS.VALID_USER.username, 
-          AUTH_TEST_USERS.VALID_USER.password
+            AUTH_TEST_USERS.VALID_USER.username,
+            AUTH_TEST_USERS.VALID_USER.password
         );
 
         expect(tokenInfo.accessToken).toBeTruthy();
@@ -428,7 +426,7 @@ test.describe('Enhanced Login Flow', () => {
         // Test form is properly sized
         const loginForm = mobileAuthHelper.page.locator('form, [role="form"]');
         const formBox = await loginForm.boundingBox();
-        
+
         if (formBox) {
           expect(formBox.width).toBeLessThanOrEqual(viewport.width);
           expect(formBox.width).toBeGreaterThan(viewport.width * 0.8); // Should use most of the width
@@ -436,9 +434,9 @@ test.describe('Enhanced Login Flow', () => {
       });
     });
 
-    test('should support touch interactions on mobile', async ({ page }) => {
+    test('should support touch interactions on mobile', async ({page}) => {
       await page.setViewportSize(MOBILE_VIEWPORTS.IPHONE_12);
-      
+
       const mobileAuthHelper = new EnhancedAuthHelper(page);
       await mobileAuthHelper.clearStorage();
       await mobileAuthHelper.navigateToLogin();
@@ -446,10 +444,10 @@ test.describe('Enhanced Login Flow', () => {
       // Use tap instead of click on mobile
       await mobileAuthHelper.page.locator('#email, input[name="email"]').tap();
       await mobileAuthHelper.page.locator('#email, input[name="email"]').fill(AUTH_TEST_USERS.VALID_USER.username);
-      
+
       await mobileAuthHelper.page.locator('#password, input[name="password"]').tap();
       await mobileAuthHelper.page.locator('#password, input[name="password"]').fill(AUTH_TEST_USERS.VALID_USER.password);
-      
+
       await mobileAuthHelper.page.locator('button[type="submit"]').tap();
 
       await mobileAuthHelper.verifyOnDashboard();
@@ -463,7 +461,7 @@ test.describe('Enhanced Login Flow', () => {
       // Test tab order
       const emailField = authHelper.page.locator('#email, input[name="email"]');
       const passwordField = authHelper.page.locator('#password, input[name="password"]');
-      const submitButton = authHelper.page.locator('button[type="submit"]');
+      const _submitButton = authHelper.page.locator('button[type="submit"]');
 
       await emailField.focus();
       expect(await emailField.evaluate(el => el === document.activeElement)).toBeTruthy();
@@ -474,7 +472,7 @@ test.describe('Enhanced Login Flow', () => {
       // Fill form using keyboard
       await emailField.focus();
       await authHelper.page.keyboard.type(AUTH_TEST_USERS.VALID_USER.username);
-      
+
       await authHelper.page.keyboard.press('Tab');
       await authHelper.page.keyboard.type(AUTH_TEST_USERS.VALID_USER.password);
 
@@ -493,15 +491,15 @@ test.describe('Enhanced Login Flow', () => {
 
       // Check for accessibility attributes
       const emailHasLabel = await emailField.evaluate(el => {
-        return el.hasAttribute('aria-label') || 
-               el.hasAttribute('aria-labelledby') || 
-               document.querySelector(`label[for="${el.id}"]`) !== null;
+        return el.hasAttribute('aria-label') ||
+            el.hasAttribute('aria-labelledby') ||
+            document.querySelector(`label[for="${el.id}"]`) !== null;
       });
 
       const passwordHasLabel = await passwordField.evaluate(el => {
-        return el.hasAttribute('aria-label') || 
-               el.hasAttribute('aria-labelledby') || 
-               document.querySelector(`label[for="${el.id}"]`) !== null;
+        return el.hasAttribute('aria-label') ||
+            el.hasAttribute('aria-labelledby') ||
+            document.querySelector(`label[for="${el.id}"]`) !== null;
       });
 
       expect(emailHasLabel).toBeTruthy();
@@ -525,9 +523,9 @@ test.describe('Enhanced Login Flow', () => {
       expect(errorText?.length).toBeGreaterThan(5);
     });
 
-    test('should work with high contrast mode', async ({ page }) => {
+    test('should work with high contrast mode', async ({page}) => {
       // Simulate high contrast mode
-      await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+      await page.emulateMedia({colorScheme: 'dark', reducedMotion: 'reduce'});
 
       await authHelper.navigateToLogin();
 
@@ -538,8 +536,8 @@ test.describe('Enhanced Login Flow', () => {
 
       // Test login still works
       const tokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username, 
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
 
       expect(tokenInfo.accessToken).toBeTruthy();
@@ -547,11 +545,11 @@ test.describe('Enhanced Login Flow', () => {
   });
 
   test.describe('Error Handling', () => {
-    test('should handle network timeouts', async ({ page }) => {
+    test('should handle network timeouts', async ({page}) => {
       await authHelper.navigateToLogin();
 
       // Mock timeout
-      await page.route('**/api/v1/auth/login', route => {
+      await page.route('**/api/v1/auth/login', _route => {
         // Never respond (timeout)
         // Don't call route.continue() or route.fulfill()
       });
@@ -564,7 +562,7 @@ test.describe('Enhanced Login Flow', () => {
       await authHelper.verifyErrorMessage();
     });
 
-    test('should handle server maintenance (503)', async ({ page }) => {
+    test('should handle server maintenance (503)', async ({page}) => {
       await authHelper.navigateToLogin();
 
       await page.route('**/api/v1/auth/login', route => {
@@ -586,7 +584,7 @@ test.describe('Enhanced Login Flow', () => {
       expect(errorText?.toLowerCase()).toMatch(/unavailable|maintenance|try.*later/);
     });
 
-    test('should recover from API errors', async ({ page }) => {
+    test('should recover from API errors', async ({page}) => {
       await authHelper.navigateToLogin();
 
       let requestCount = 0;
@@ -597,7 +595,7 @@ test.describe('Enhanced Login Flow', () => {
           route.fulfill({
             status: 500,
             contentType: 'application/json',
-            body: JSON.stringify({ message: 'Internal server error' }),
+            body: JSON.stringify({message: 'Internal server error'}),
           });
         } else {
           // Second request succeeds
@@ -605,10 +603,10 @@ test.describe('Enhanced Login Flow', () => {
             status: 200,
             contentType: 'application/json',
             body: JSON.stringify({
-              user: { 
-                id: 1, 
+              user: {
+                id: 1,
                 username: AUTH_TEST_USERS.VALID_USER.username,
-                email: AUTH_TEST_USERS.VALID_USER.email 
+                email: AUTH_TEST_USERS.VALID_USER.email
               },
               token: 'valid.jwt.token',
               refreshToken: 'valid.refresh.token',

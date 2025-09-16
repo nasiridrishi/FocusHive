@@ -85,4 +85,24 @@ public class OAuth2ServerMetadata {
     @JsonProperty("id_token_signing_alg_values_supported")
     @Schema(description = "Supported ID token signing algorithms")
     private List<String> idTokenSigningAlgValuesSupported;
+
+    @JsonProperty("subject_types_supported")
+    @Schema(description = "Supported subject identifier types")
+    private List<String> subjectTypesSupported;
+
+    @JsonProperty("claims_supported")
+    @Schema(description = "Supported claims")
+    private List<String> claimsSupported;
+
+    @JsonProperty("service_documentation")
+    @Schema(description = "Service documentation URL")
+    private String serviceDocumentation;
+
+    @JsonProperty("op_policy_uri")
+    @Schema(description = "Privacy policy URL")
+    private String opPolicyUri;
+
+    @JsonProperty("op_tos_uri")
+    @Schema(description = "Terms of service URL")
+    private String opTosUri;
 }

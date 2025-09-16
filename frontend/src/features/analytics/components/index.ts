@@ -8,4 +8,4 @@ export * from './AnalyticsFilters';
 export * from './ExportMenu';
 
 // Default export for AnalyticsDashboard
-export { default as AnalyticsDashboard } from './AnalyticsDashboard';
+export {default as AnalyticsDashboard} from './AnalyticsDashboard';

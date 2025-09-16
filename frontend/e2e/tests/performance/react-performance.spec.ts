@@ -1,6 +1,6 @@
 /**
  * React Component Performance Tests
- * 
+ *
  * Tests for measuring and validating React-specific performance metrics:
  * - Component rendering performance
  * - Re-render optimization
@@ -11,44 +11,44 @@
  * - Bundle size and code splitting effectiveness
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { PerformanceTestHelper, ReactPerformanceMetrics } from './performance-helpers';
-import { performanceCollector, PerformanceMetrics } from './performance-metrics';
-import { AuthHelper } from '../../helpers/auth.helper';
+import {expect, test} from '@playwright/test';
+import {PerformanceTestHelper, ReactPerformanceMetrics} from './performance-helpers';
+import {performanceCollector, PerformanceMetrics} from './performance-metrics';
+import {AuthHelper} from '../../helpers/auth.helper';
 
 // React performance test configuration
 const REACT_TEST_CONFIG = {
   components: [
-    { 
-      name: 'HiveCard', 
+    {
+      name: 'HiveCard',
       selector: '[data-testid="hive-card"]',
       route: '/hives',
       expectedCount: 5,
       interactionType: 'hover' as const
     },
-    { 
-      name: 'UserProfile', 
+    {
+      name: 'UserProfile',
       selector: '[data-testid="user-profile"]',
       route: '/profile',
       expectedCount: 1,
       interactionType: 'click' as const
     },
-    { 
-      name: 'NotificationList', 
+    {
+      name: 'NotificationList',
       selector: '[data-testid="notification-item"]',
       route: '/notifications',
       expectedCount: 10,
       interactionType: 'click' as const
     },
-    { 
-      name: 'ChatMessage', 
+    {
+      name: 'ChatMessage',
       selector: '[data-testid="chat-message"]',
       route: '/hives/1/chat',
       expectedCount: 20,
       interactionType: 'scroll' as const
     },
-    { 
-      name: 'AnalyticsDashboard', 
+    {
+      name: 'AnalyticsDashboard',
       selector: '[data-testid="analytics-chart"]',
       route: '/analytics',
       expectedCount: 4,
@@ -69,7 +69,7 @@ test.describe('React Component Performance Tests', () => {
   let authHelper: AuthHelper;
   let performanceHelper: PerformanceTestHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
     performanceHelper = new PerformanceTestHelper(page);
     await performanceHelper.initializePerformanceMonitoring();
@@ -82,7 +82,7 @@ test.describe('React Component Performance Tests', () => {
 
   // Test individual component rendering performance
   for (const component of REACT_TEST_CONFIG.components) {
-    test(`React Performance - ${component.name} Rendering`, async ({ page }) => {
+    test(`React Performance - ${component.name} Rendering`, async ({page}) => {
       performanceCollector.startTest(`React - ${component.name} - Rendering`);
 
       // Navigate to component route
@@ -91,7 +91,7 @@ test.describe('React Component Performance Tests', () => {
       await page.waitForLoadState('networkidle');
 
       // Wait for component to be visible
-      await page.waitForSelector(component.selector, { timeout: 10000 });
+      await page.waitForSelector(component.selector, {timeout: 10000});
 
       // Get initial performance metrics
       const initialMemory = await performanceHelper.getMemoryUsage();
@@ -108,7 +108,7 @@ test.describe('React Component Performance Tests', () => {
           const observer = new MutationObserver(() => {
             const endTime = performance.now();
             const components = document.querySelectorAll(selector);
-            
+
             observer.disconnect();
             resolve({
               componentCount: components.length,
@@ -116,13 +116,13 @@ test.describe('React Component Performance Tests', () => {
               domUpdateTime: endTime - startTime
             });
           });
-          
+
           observer.observe(document.body, {
             childList: true,
             subtree: true,
             attributes: true
           });
-          
+
           // Fallback timeout
           setTimeout(() => {
             const components = document.querySelectorAll(selector);
@@ -141,15 +141,15 @@ test.describe('React Component Performance Tests', () => {
 
       // Validate component count
       expect(renderingMetrics.componentCount, `Should render expected number of ${component.name} components`)
-        .toBeGreaterThanOrEqual(component.expectedCount);
+      .toBeGreaterThanOrEqual(component.expectedCount);
 
       // Validate render time
       expect(renderingMetrics.renderTime, `${component.name} render time should be under 16ms for 60fps`)
-        .toBeLessThan(REACT_TEST_CONFIG.thresholds.renderTime);
+      .toBeLessThan(REACT_TEST_CONFIG.thresholds.renderTime);
 
       // Validate FPS
       expect(fps, `FPS should be above ${REACT_TEST_CONFIG.thresholds.fps}`)
-        .toBeGreaterThan(REACT_TEST_CONFIG.thresholds.fps);
+      .toBeGreaterThan(REACT_TEST_CONFIG.thresholds.fps);
 
       // Record results
       const reactMetrics: ReactPerformanceMetrics = {
@@ -176,8 +176,8 @@ test.describe('React Component Performance Tests', () => {
         }
       };
 
-      const result = performanceCollector.endTest(`React - ${component.name} - Rendering`, metrics);
-      
+      const _result = performanceCollector.endTest(`React - ${component.name} - Rendering`, metrics);
+
       console.log(`⚛️ ${component.name} Performance:`);
       console.log(`  Components: ${renderingMetrics.componentCount}`);
       console.log(`  Render Time: ${renderingMetrics.renderTime.toFixed(2)}ms`);
@@ -187,7 +187,7 @@ test.describe('React Component Performance Tests', () => {
   }
 
   // Test component re-rendering performance
-  test('React Performance - Component Re-rendering', async ({ page }) => {
+  test('React Performance - Component Re-rendering', async ({page}) => {
     performanceCollector.startTest('React - Re-rendering Performance');
 
     await page.goto('http://localhost:3000/hives');
@@ -205,26 +205,26 @@ test.describe('React Component Performance Tests', () => {
         let rerenderCount = 0;
         let totalTime = 0;
         const startTime = performance.now();
-        
+
         const observer = new MutationObserver(() => {
           rerenderCount++;
           totalTime = performance.now() - startTime;
         });
-        
+
         observer.observe(document.body, {
           childList: true,
           subtree: true,
           attributes: true,
           characterData: true
         });
-        
+
         // Trigger multiple state updates
         const triggers = [
           () => window.dispatchEvent(new CustomEvent('filter-change')),
           () => window.dispatchEvent(new CustomEvent('sort-change')),
           () => window.dispatchEvent(new CustomEvent('search-change')),
         ];
-        
+
         let triggerIndex = 0;
         const triggerInterval = setInterval(() => {
           if (triggerIndex < triggers.length) {
@@ -233,7 +233,7 @@ test.describe('React Component Performance Tests', () => {
           } else {
             clearInterval(triggerInterval);
             observer.disconnect();
-            
+
             setTimeout(() => {
               resolve({
                 rerenderCount,
@@ -251,13 +251,13 @@ test.describe('React Component Performance Tests', () => {
 
     // Validate re-render performance
     expect(rerenderMetrics.averageRerenderTime, 'Average re-render time should be minimal')
-      .toBeLessThan(REACT_TEST_CONFIG.thresholds.renderTime);
-    
+    .toBeLessThan(REACT_TEST_CONFIG.thresholds.renderTime);
+
     expect(rerenderMetrics.rerenderCount, 'Re-render count should be reasonable')
-      .toBeLessThan(REACT_TEST_CONFIG.thresholds.rerenderCount * 2);
-    
+    .toBeLessThan(REACT_TEST_CONFIG.thresholds.rerenderCount * 2);
+
     expect(memoryGrowth, 'Memory growth during re-renders should be minimal')
-      .toBeLessThan(REACT_TEST_CONFIG.thresholds.memoryGrowth);
+    .toBeLessThan(REACT_TEST_CONFIG.thresholds.memoryGrowth);
 
     // Record results
     const reactMetrics: ReactPerformanceMetrics = {
@@ -284,8 +284,8 @@ test.describe('React Component Performance Tests', () => {
       }
     };
 
-    const result = performanceCollector.endTest('React - Re-rendering Performance', metrics);
-    
+    const _result = performanceCollector.endTest('React - Re-rendering Performance', metrics);
+
     console.log(`🔄 Re-rendering Performance:`);
     console.log(`  Re-renders: ${rerenderMetrics.rerenderCount}`);
     console.log(`  Avg Time: ${rerenderMetrics.averageRerenderTime.toFixed(2)}ms`);
@@ -294,7 +294,7 @@ test.describe('React Component Performance Tests', () => {
 
   // Test interaction response time
   for (const component of REACT_TEST_CONFIG.components) {
-    test(`React Performance - ${component.name} Interaction Response`, async ({ page }) => {
+    test(`React Performance - ${component.name} Interaction Response`, async ({page}) => {
       performanceCollector.startTest(`React - ${component.name} - Interaction`);
 
       await page.goto(`http://localhost:3000${component.route}`);
@@ -308,13 +308,13 @@ test.describe('React Component Performance Tests', () => {
         }>((resolve) => {
           const element = document.querySelector(config.selector);
           if (!element) {
-            resolve({ interactionTime: 0, fps: 0 });
+            resolve({interactionTime: 0, fps: 0});
             return;
           }
 
           let frameCount = 0;
-          let startTime = performance.now();
-          const measureFrames = () => {
+          const startTime = performance.now();
+          const measureFrames = (): void => {
             frameCount++;
             if (performance.now() - startTime < 1000) {
               requestAnimationFrame(measureFrames);
@@ -322,19 +322,19 @@ test.describe('React Component Performance Tests', () => {
           };
 
           const interactionStart = performance.now();
-          
+
           // Simulate interaction based on type
-          const event = config.interactionType === 'hover' 
-            ? new MouseEvent('mouseenter', { bubbles: true })
-            : config.interactionType === 'click'
-            ? new MouseEvent('click', { bubbles: true })
-            : new Event('scroll', { bubbles: true });
+          const event = config.interactionType === 'hover'
+              ? new MouseEvent('mouseenter', {bubbles: true})
+              : config.interactionType === 'click'
+                  ? new MouseEvent('click', {bubbles: true})
+                  : new Event('scroll', {bubbles: true});
 
           element.dispatchEvent(event);
-          
+
           // Start measuring frames
           requestAnimationFrame(measureFrames);
-          
+
           // Wait for interaction to complete
           setTimeout(() => {
             const interactionEnd = performance.now();
@@ -348,7 +348,7 @@ test.describe('React Component Performance Tests', () => {
 
       // Validate interaction response time
       expect(interactionMetrics.interactionTime, `${component.name} interaction should be responsive`)
-        .toBeLessThan(REACT_TEST_CONFIG.thresholds.interactionDelay);
+      .toBeLessThan(REACT_TEST_CONFIG.thresholds.interactionDelay);
 
       // Record results
       const reactMetrics: ReactPerformanceMetrics = {
@@ -366,8 +366,8 @@ test.describe('React Component Performance Tests', () => {
         reactPerformance: reactMetrics
       };
 
-      const result = performanceCollector.endTest(`React - ${component.name} - Interaction`, metrics);
-      
+      const _result = performanceCollector.endTest(`React - ${component.name} - Interaction`, metrics);
+
       console.log(`👆 ${component.name} Interaction:`);
       console.log(`  Response Time: ${interactionMetrics.interactionTime.toFixed(2)}ms`);
       console.log(`  FPS: ${interactionMetrics.fps}`);
@@ -375,7 +375,7 @@ test.describe('React Component Performance Tests', () => {
   }
 
   // Test component mount/unmount performance
-  test('React Performance - Component Lifecycle', async ({ page }) => {
+  test('React Performance - Component Lifecycle', async ({page}) => {
     performanceCollector.startTest('React - Component Lifecycle');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -390,32 +390,32 @@ test.describe('React Component Performance Tests', () => {
         let rerenderCount = 0;
         let mountTime = 0;
         let unmountTime = 0;
-        
+
         const observer = new MutationObserver(() => {
           rerenderCount++;
         });
-        
+
         observer.observe(document.body, {
           childList: true,
           subtree: true
         });
-        
+
         // Simulate navigation to trigger mount/unmount
         const startMount = performance.now();
         window.history.pushState({}, '', '/hives');
         window.dispatchEvent(new PopStateEvent('popstate'));
-        
+
         setTimeout(() => {
           mountTime = performance.now() - startMount;
-          
+
           const startUnmount = performance.now();
           window.history.pushState({}, '', '/profile');
           window.dispatchEvent(new PopStateEvent('popstate'));
-          
+
           setTimeout(() => {
             unmountTime = performance.now() - startUnmount;
             observer.disconnect();
-            
+
             resolve({
               mountTime,
               unmountTime,
@@ -428,10 +428,10 @@ test.describe('React Component Performance Tests', () => {
 
     // Validate lifecycle performance
     expect(lifecycleMetrics.mountTime, 'Component mount should be fast')
-      .toBeLessThan(100);
-    
+    .toBeLessThan(100);
+
     expect(lifecycleMetrics.unmountTime, 'Component unmount should be fast')
-      .toBeLessThan(50);
+    .toBeLessThan(50);
 
     // Record results
     const reactMetrics: ReactPerformanceMetrics = {
@@ -449,8 +449,8 @@ test.describe('React Component Performance Tests', () => {
       reactPerformance: reactMetrics
     };
 
-    const result = performanceCollector.endTest('React - Component Lifecycle', metrics);
-    
+    const _result = performanceCollector.endTest('React - Component Lifecycle', metrics);
+
     console.log(`🔄 Component Lifecycle:`);
     console.log(`  Mount Time: ${lifecycleMetrics.mountTime.toFixed(2)}ms`);
     console.log(`  Unmount Time: ${lifecycleMetrics.unmountTime.toFixed(2)}ms`);
@@ -458,7 +458,7 @@ test.describe('React Component Performance Tests', () => {
   });
 
   // Test React Concurrent Features performance
-  test('React Performance - Concurrent Features', async ({ page }) => {
+  test('React Performance - Concurrent Features', async ({page}) => {
     performanceCollector.startTest('React - Concurrent Features');
 
     await page.goto('http://localhost:3000/dashboard');
@@ -474,48 +474,48 @@ test.describe('React Component Performance Tests', () => {
         let frameDrops = 0;
         let lastFrameTime = performance.now();
         let responsiveness = 0;
-        
-        const measureFrameDrops = () => {
+
+        const measureFrameDrops = (): void => {
           const currentTime = performance.now();
           const frameDelta = currentTime - lastFrameTime;
-          
+
           // Frame drop if more than 16.67ms (60fps)
           if (frameDelta > 16.67 * 1.5) {
             frameDrops++;
           }
-          
+
           lastFrameTime = currentTime;
-          
+
           if (currentTime - startTime < 2000) {
             requestAnimationFrame(measureFrameDrops);
           }
         };
-        
+
         const startTime = performance.now();
-        
+
         // Trigger high-priority and low-priority updates
         const highPriorityStart = performance.now();
-        
+
         // Simulate user input (high priority)
-        document.dispatchEvent(new CustomEvent('user-input', { 
-          detail: { value: 'test' } 
+        document.dispatchEvent(new CustomEvent('user-input', {
+          detail: {value: 'test'}
         }));
-        
+
         // Simulate data fetching (lower priority)
         setTimeout(() => {
-          document.dispatchEvent(new CustomEvent('data-update', { 
-            detail: { data: new Array(1000).fill('item') } 
+          document.dispatchEvent(new CustomEvent('data-update', {
+            detail: {data: new Array(1000).fill('item')}
           }));
         }, 100);
-        
+
         const prioritizationTime = performance.now() - highPriorityStart;
-        
+
         requestAnimationFrame(measureFrameDrops);
-        
+
         setTimeout(() => {
           const endTime = performance.now();
           responsiveness = endTime - startTime;
-          
+
           resolve({
             frameDrops,
             responsiveness,
@@ -527,10 +527,10 @@ test.describe('React Component Performance Tests', () => {
 
     // Validate concurrent features performance
     expect(concurrentMetrics.frameDrops, 'Frame drops should be minimal with concurrent features')
-      .toBeLessThan(5);
-    
+    .toBeLessThan(5);
+
     expect(concurrentMetrics.prioritizationTime, 'High-priority updates should be fast')
-      .toBeLessThan(50);
+    .toBeLessThan(50);
 
     // Record results
     const reactMetrics: ReactPerformanceMetrics = {
@@ -548,8 +548,8 @@ test.describe('React Component Performance Tests', () => {
       reactPerformance: reactMetrics
     };
 
-    const result = performanceCollector.endTest('React - Concurrent Features', metrics);
-    
+    const _result = performanceCollector.endTest('React - Concurrent Features', metrics);
+
     console.log(`⚡ Concurrent Features Performance:`);
     console.log(`  Frame Drops: ${concurrentMetrics.frameDrops}`);
     console.log(`  Responsiveness: ${concurrentMetrics.responsiveness.toFixed(2)}ms`);
@@ -557,7 +557,7 @@ test.describe('React Component Performance Tests', () => {
   });
 
   // Test bundle analysis and code splitting effectiveness
-  test('React Performance - Bundle Analysis', async ({ page }) => {
+  test('React Performance - Bundle Analysis', async ({page}) => {
     performanceCollector.startTest('React - Bundle Analysis');
 
     // Navigate to different routes to test code splitting
@@ -572,7 +572,7 @@ test.describe('React Component Performance Tests', () => {
 
       // Measure bundle loading for this route
       const routeMetrics = await performanceHelper.measureNetworkPerformance();
-      
+
       bundleMetrics.push({
         route,
         loadTime: routeEnd - routeStart,
@@ -589,10 +589,10 @@ test.describe('React Component Performance Tests', () => {
 
     // Validate bundle performance
     expect(avgLoadTime, 'Average route load time should be reasonable')
-      .toBeLessThan(REACT_TEST_CONFIG.thresholds.bundleLoadTime);
-    
+    .toBeLessThan(REACT_TEST_CONFIG.thresholds.bundleLoadTime);
+
     expect(avgBundleSize / 1024, 'Average bundle size should be optimized')
-      .toBeLessThan(500); // 500KB per route
+    .toBeLessThan(500); // 500KB per route
 
     // Record results
     const reactMetrics: ReactPerformanceMetrics = {
@@ -621,13 +621,13 @@ test.describe('React Component Performance Tests', () => {
       networkMetrics
     };
 
-    const result = performanceCollector.endTest('React - Bundle Analysis', metrics);
-    
+    const _result = performanceCollector.endTest('React - Bundle Analysis', metrics);
+
     console.log(`📦 Bundle Analysis:`);
     console.log(`  Avg Load Time: ${avgLoadTime.toFixed(2)}ms`);
     console.log(`  Avg Bundle Size: ${(avgBundleSize / 1024).toFixed(2)}KB`);
     console.log(`  Total Bundle Size: ${(totalBundleSize / 1024).toFixed(2)}KB`);
-    
+
     bundleMetrics.forEach(metric => {
       console.log(`  ${metric.route}: ${metric.loadTime}ms, ${(metric.bundleSize / 1024).toFixed(2)}KB`);
     });

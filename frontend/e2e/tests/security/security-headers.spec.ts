@@ -1,8 +1,8 @@
 /**
  * Security Headers Tests (UOL-44.15)
- * 
+ *
  * Comprehensive security headers validation for FocusHive frontend
- * 
+ *
  * Test Categories:
  * 1. Content Security Policy (CSP)
  * 2. HTTP Strict Transport Security (HSTS)
@@ -16,8 +16,7 @@
  * 10. Server Information Disclosure
  */
 
-import { test, expect } from '@playwright/test';
-import { Page, Response } from '@playwright/test';
+import {expect, Page, Response, test} from '@playwright/test';
 
 interface SecurityHeader {
   name: string;
@@ -35,17 +34,18 @@ interface CSPDirective {
 }
 
 class SecurityHeadersHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   async getResponseHeaders(url?: string): Promise<Record<string, string>> {
     let response: Response | null = null;
-    
+
     if (url) {
       response = await this.page.goto(url);
     } else {
       response = await this.page.goto(this.page.url());
     }
-    
+
     return response ? response.headers() : {};
   }
 
@@ -54,14 +54,19 @@ class SecurityHeadersHelper {
     failed: boolean[];
     missing: string[];
     present: string[];
-    details: Array<{header: string; expected: string; actual: string; passed: boolean}>;
+    details: Array<{ header: string; expected: string; actual: string; passed: boolean }>;
   }> {
     const headers = await this.getResponseHeaders();
     const passed: boolean[] = [];
     const failed: boolean[] = [];
     const missing: string[] = [];
     const present: string[] = [];
-    const details: Array<{header: string; expected: string; actual: string; passed: boolean}> = [];
+    const details: Array<{
+      header: string;
+      expected: string;
+      actual: string;
+      passed: boolean
+    }> = [];
 
     for (const expectedHeader of expectedHeaders) {
       const actualValue = headers[expectedHeader.name.toLowerCase()];
@@ -144,21 +149,21 @@ class SecurityHeadersHelper {
       }
     }
 
-    return { passed, failed, missing, present, details };
+    return {passed, failed, missing, present, details};
   }
 
   async validateCSP(expectedDirectives: CSPDirective[]): Promise<{
     directivesPassed: boolean[];
     missingDirectives: string[];
-    invalidSources: Array<{directive: string; invalidSource: string}>;
+    invalidSources: Array<{ directive: string; invalidSource: string }>;
     cspString: string;
   }> {
     const headers = await this.getResponseHeaders();
     const csp = headers['content-security-policy'] || headers['content-security-policy-report-only'] || '';
-    
+
     const directivesPassed: boolean[] = [];
     const missingDirectives: string[] = [];
-    const invalidSources: Array<{directive: string; invalidSource: string}> = [];
+    const invalidSources: Array<{ directive: string; invalidSource: string }> = [];
 
     for (const expectedDirective of expectedDirectives) {
       const directiveRegex = new RegExp(`${expectedDirective.directive}\\s+([^;]+)`, 'i');
@@ -172,15 +177,15 @@ class SecurityHeadersHelper {
 
       if (match) {
         const sources = match[1].trim().split(/\s+/);
-        
+
         // Check for expected sources
         const hasAllExpectedSources = expectedDirective.expectedSources.every(expected =>
-          sources.some(source => source.includes(expected))
+            sources.some(source => source.includes(expected))
         );
 
         // Check for forbidden sources
         const hasForbiddenSources = expectedDirective.forbiddenSources.some(forbidden =>
-          sources.some(source => source.includes(forbidden))
+            sources.some(source => source.includes(forbidden))
         );
 
         if (hasForbiddenSources) {
@@ -215,7 +220,7 @@ class SecurityHeadersHelper {
   }> {
     const headers = await this.getResponseHeaders();
     const xFrameOptions = headers['x-frame-options'] || '';
-    
+
     // Try to frame the page
     const canBeFramed = await this.page.evaluate(async () => {
       try {
@@ -223,7 +228,7 @@ class SecurityHeadersHelper {
         iframe.src = window.location.href;
         iframe.style.display = 'none';
         document.body.appendChild(iframe);
-        
+
         return new Promise<boolean>((resolve) => {
           iframe.onload = () => {
             document.body.removeChild(iframe);
@@ -233,7 +238,7 @@ class SecurityHeadersHelper {
             document.body.removeChild(iframe);
             resolve(false);
           };
-          
+
           // Timeout after 3 seconds
           setTimeout(() => {
             if (document.body.contains(iframe)) {
@@ -242,7 +247,7 @@ class SecurityHeadersHelper {
             resolve(false);
           }, 3000);
         });
-      } catch (error) {
+      } catch {
         return false;
       }
     });
@@ -262,7 +267,7 @@ class SecurityHeadersHelper {
   }> {
     const headers = await this.getResponseHeaders();
     const xContentTypeOptions = headers['x-content-type-options'] || '';
-    
+
     return {
       mimeSniffingDisabled: xContentTypeOptions.toLowerCase() === 'nosniff',
       actualValue: xContentTypeOptions
@@ -278,10 +283,10 @@ class SecurityHeadersHelper {
   }> {
     const headers = await this.getResponseHeaders();
     const hsts = headers['strict-transport-security'] || '';
-    
+
     const maxAgeMatch = hsts.match(/max-age=(\d+)/i);
     const maxAge = maxAgeMatch ? parseInt(maxAgeMatch[1], 10) : 0;
-    
+
     return {
       hstsEnabled: hsts.length > 0,
       maxAge,
@@ -298,14 +303,14 @@ class SecurityHeadersHelper {
   }> {
     const headers = await this.getResponseHeaders();
     const referrerPolicy = headers['referrer-policy'] || '';
-    
+
     const securePolicies = [
       'no-referrer',
       'same-origin',
       'strict-origin',
       'strict-origin-when-cross-origin'
     ];
-    
+
     return {
       hasReferrerPolicy: referrerPolicy.length > 0,
       isSecure: securePolicies.includes(referrerPolicy.toLowerCase()),
@@ -320,7 +325,7 @@ class SecurityHeadersHelper {
   }> {
     const headers = await this.getResponseHeaders();
     const permissionsPolicy = headers['permissions-policy'] || headers['feature-policy'] || '';
-    
+
     // Common features that should be restricted
     const expectedRestrictions = [
       'camera',
@@ -332,11 +337,11 @@ class SecurityHeadersHelper {
       'gyroscope',
       'accelerometer'
     ];
-    
-    const restrictedFeatures = expectedRestrictions.filter(feature => 
-      permissionsPolicy.includes(feature)
+
+    const restrictedFeatures = expectedRestrictions.filter(feature =>
+        permissionsPolicy.includes(feature)
     );
-    
+
     return {
       hasPermissionsPolicy: permissionsPolicy.length > 0,
       restrictedFeatures,
@@ -356,18 +361,18 @@ class SecurityHeadersHelper {
     };
   }> {
     const headers = await this.getResponseHeaders();
-    
+
     const corsHeaders = {
       accessControlAllowOrigin: headers['access-control-allow-origin'] || '',
       accessControlAllowCredentials: headers['access-control-allow-credentials'] || '',
       accessControlAllowMethods: headers['access-control-allow-methods'] || '',
       accessControlAllowHeaders: headers['access-control-allow-headers'] || ''
     };
-    
+
     const hasCORSHeaders = Object.values(corsHeaders).some(value => value.length > 0);
     const allowsAnyOrigin = corsHeaders.accessControlAllowOrigin === '*';
     const allowsCredentials = corsHeaders.accessControlAllowCredentials === 'true';
-    
+
     return {
       hasCORSHeaders,
       allowsAnyOrigin,
@@ -382,7 +387,7 @@ class SecurityHeadersHelper {
     disclosedHeaders: string[];
   }> {
     const headers = await this.getResponseHeaders();
-    
+
     const sensitiveHeaders = [
       'server',
       'x-powered-by',
@@ -390,11 +395,11 @@ class SecurityHeadersHelper {
       'x-version',
       'x-generator'
     ];
-    
-    const disclosedHeaders = sensitiveHeaders.filter(header => 
-      headers[header] && headers[header].length > 0
+
+    const disclosedHeaders = sensitiveHeaders.filter(header =>
+        headers[header] && headers[header].length > 0
     );
-    
+
     return {
       disclosesServer: headers['server'] !== undefined,
       disclosesVersion: disclosedHeaders.length > 1,
@@ -406,13 +411,13 @@ class SecurityHeadersHelper {
 test.describe('Security Headers Tests', () => {
   let headersHelper: SecurityHeadersHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page: _page}) => {
     headersHelper = new SecurityHeadersHelper(page);
     await page.goto('/');
   });
 
   test.describe('Content Security Policy (CSP)', () => {
-    test('should have comprehensive CSP header', async ({ page }) => {
+    test('should have comprehensive CSP header', async ({page: _page}) => {
       const expectedDirectives: CSPDirective[] = [
         {
           directive: 'default-src',
@@ -461,26 +466,28 @@ test.describe('Security Headers Tests', () => {
       expect(cspResults.invalidSources).toHaveLength(0);
 
       // All directives should pass validation
-      cspResults.directivesPassed.forEach((passed, index) => {
+      cspResults.directivesPassed.forEach((passed, _index) => {
         expect(passed).toBe(true);
       });
     });
 
-    test('should prevent inline script execution via CSP', async ({ page }) => {
+    test('should prevent inline script execution via CSP', async ({page: _page}) => {
       // Try to inject inline script
       const inlineScriptBlocked = await page.evaluate(() => {
         try {
           const script = document.createElement('script');
           script.innerHTML = 'window.inlineScriptExecuted = true;';
           document.head.appendChild(script);
-          
+
           // Wait a moment for potential execution
           return new Promise<boolean>(resolve => {
             setTimeout(() => {
-              resolve(!(window as unknown as {inlineScriptExecuted?: boolean}).inlineScriptExecuted);
+              resolve(!(window as unknown as {
+                inlineScriptExecuted?: boolean
+              }).inlineScriptExecuted);
             }, 100);
           });
-        } catch (error) {
+        } catch {
           return true; // Script injection failed, CSP working
         }
       });
@@ -488,12 +495,12 @@ test.describe('Security Headers Tests', () => {
       expect(inlineScriptBlocked).toBe(true);
     });
 
-    test('should prevent eval() execution via CSP', async ({ page }) => {
+    test('should prevent eval() execution via CSP', async ({page: _page}) => {
       const evalBlocked = await page.evaluate(() => {
         try {
           eval('window.evalExecuted = true;');
-          return !(window as unknown as {evalExecuted?: boolean}).evalExecuted;
-        } catch (error) {
+          return !(window as unknown as { evalExecuted?: boolean }).evalExecuted;
+        } catch {
           return true; // eval blocked by CSP
         }
       });
@@ -501,7 +508,7 @@ test.describe('Security Headers Tests', () => {
       expect(evalBlocked).toBe(true);
     });
 
-    test('should prevent external resource loading via CSP', async ({ page }) => {
+    test('should prevent external resource loading via CSP', async ({page: _page}) => {
       // Test if external scripts are blocked
       const externalScriptBlocked = await page.evaluate(() => {
         return new Promise<boolean>((resolve) => {
@@ -509,9 +516,9 @@ test.describe('Security Headers Tests', () => {
           script.src = 'https://evil-domain.com/malicious.js';
           script.onload = () => resolve(false); // Should not load
           script.onerror = () => resolve(true); // Should be blocked
-          
+
           document.head.appendChild(script);
-          
+
           // Timeout after 3 seconds
           setTimeout(() => resolve(true), 3000);
         });
@@ -522,17 +529,17 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('HTTP Strict Transport Security (HSTS)', () => {
-    test('should have HSTS header configured', async ({ page }) => {
+    test('should have HSTS header configured', async ({page: _page}) => {
       const hstsResults = await headersHelper.testHSTS();
 
       expect(hstsResults.hstsEnabled).toBe(true);
       expect(hstsResults.maxAge).toBeGreaterThan(0);
-      
+
       // Recommended: max-age of at least 1 year (31536000 seconds)
       expect(hstsResults.maxAge).toBeGreaterThanOrEqual(31536000);
     });
 
-    test('should include subdomains in HSTS', async ({ page }) => {
+    test('should include subdomains in HSTS', async ({page: _page}) => {
       const hstsResults = await headersHelper.testHSTS();
 
       if (hstsResults.hstsEnabled) {
@@ -540,7 +547,7 @@ test.describe('Security Headers Tests', () => {
       }
     });
 
-    test('should consider HSTS preload', async ({ page }) => {
+    test('should consider HSTS preload', async ({page: _page}) => {
       const hstsResults = await headersHelper.testHSTS();
 
       // Preload is optional but recommended for production
@@ -552,21 +559,21 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('Frame Protection', () => {
-    test('should have X-Frame-Options header', async ({ page }) => {
+    test('should have X-Frame-Options header', async ({page: _page}) => {
       const frameResults = await headersHelper.testFrameOptions();
 
       expect(frameResults.xFrameOptionsCorrect).toBe(true);
       expect(['DENY', 'SAMEORIGIN']).toContain(frameResults.actualValue.toUpperCase());
     });
 
-    test('should prevent clickjacking attacks', async ({ page }) => {
+    test('should prevent clickjacking attacks', async ({page: _page}) => {
       const frameResults = await headersHelper.testFrameOptions();
 
       // Page should not be frameable from other origins
       expect(frameResults.canBeFramed).toBe(false);
     });
 
-    test('should use frame-ancestors CSP directive', async ({ page }) => {
+    test('should use frame-ancestors CSP directive', async ({page: _page}) => {
       const expectedDirectives: CSPDirective[] = [
         {
           directive: 'frame-ancestors',
@@ -584,14 +591,14 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('Content Type Protection', () => {
-    test('should have X-Content-Type-Options header', async ({ page }) => {
+    test('should have X-Content-Type-Options header', async ({page: _page}) => {
       const mimeResults = await headersHelper.testMIMETypeSniffing();
 
       expect(mimeResults.mimeSniffingDisabled).toBe(true);
       expect(mimeResults.actualValue.toLowerCase()).toBe('nosniff');
     });
 
-    test('should prevent MIME type sniffing attacks', async ({ page }) => {
+    test('should prevent MIME type sniffing attacks', async ({page: _page}) => {
       // Test that files are served with correct content types
       await page.route('**/*.js', route => {
         const headers = route.request().headers();
@@ -611,7 +618,7 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('XSS Protection Headers', () => {
-    test('should have appropriate XSS protection', async ({ page }) => {
+    test('should have appropriate XSS protection', async ({page: _page}) => {
       const expectedHeaders: SecurityHeader[] = [
         {
           name: 'X-XSS-Protection',
@@ -621,13 +628,13 @@ test.describe('Security Headers Tests', () => {
         }
       ];
 
-      const results = await headersHelper.validateSecurityHeaders(expectedHeaders);
+      const _results = await headersHelper.validateSecurityHeaders(expectedHeaders);
 
       // Modern applications should rely on CSP rather than X-XSS-Protection
       // This test documents that the legacy header is not needed
     });
 
-    test('should rely on CSP for XSS protection', async ({ page }) => {
+    test('should rely on CSP for XSS protection', async ({page: _page}) => {
       const expectedDirectives: CSPDirective[] = [
         {
           directive: 'script-src',
@@ -646,7 +653,7 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('Referrer Policy', () => {
-    test('should have secure referrer policy', async ({ page }) => {
+    test('should have secure referrer policy', async ({page: _page}) => {
       const referrerResults = await headersHelper.testReferrerPolicy();
 
       expect(referrerResults.hasReferrerPolicy).toBe(true);
@@ -662,14 +669,14 @@ test.describe('Security Headers Tests', () => {
       expect(secureValues).toContain(referrerResults.actualValue.toLowerCase());
     });
 
-    test('should not leak referrer information inappropriately', async ({ page }) => {
+    test('should not leak referrer information inappropriately', async ({page: _page}) => {
       // Test referrer policy in practice
       const referrerTest = await page.evaluate(() => {
         // Create a link to external domain
         const link = document.createElement('a');
         link.href = 'https://example.com/';
         link.rel = 'noopener noreferrer';
-        
+
         // Check if referrer policy is set via meta tag or header
         const metaReferrer = document.querySelector('meta[name="referrer"]');
         return {
@@ -681,13 +688,13 @@ test.describe('Security Headers Tests', () => {
       // Should have referrer policy configured either via header or meta tag
       if (referrerTest.hasMetaReferrer) {
         expect(['no-referrer', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin'])
-          .toContain(referrerTest.metaContent.toLowerCase());
+        .toContain(referrerTest.metaContent.toLowerCase());
       }
     });
   });
 
   test.describe('Permissions Policy', () => {
-    test('should restrict sensitive browser features', async ({ page }) => {
+    test('should restrict sensitive browser features', async ({page: _page}) => {
       const permissionsResults = await headersHelper.testPermissionsPolicy();
 
       expect(permissionsResults.hasPermissionsPolicy).toBe(true);
@@ -704,26 +711,26 @@ test.describe('Security Headers Tests', () => {
       expect(sensitiveFeaturesRestricted).toBe(true);
     });
 
-    test('should prevent unauthorized feature access', async ({ page }) => {
+    test('should prevent unauthorized feature access', async ({page: _page}) => {
       // Test that restricted features are actually blocked
       const featureTest = await page.evaluate(async () => {
         const results: Record<string, boolean> = {};
 
         // Test camera access (should be blocked)
         try {
-          await navigator.mediaDevices.getUserMedia({ video: true });
+          await navigator.mediaDevices.getUserMedia({video: true});
           results.camera = false; // Should not succeed
-        } catch (error) {
+        } catch {
           results.camera = true; // Correctly blocked
         }
 
         // Test geolocation access (should be blocked)
         try {
           await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 1000 });
+            navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 1000});
           });
           results.geolocation = false; // Should not succeed
-        } catch (error) {
+        } catch {
           results.geolocation = true; // Correctly blocked
         }
 
@@ -737,7 +744,7 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('CORS Headers', () => {
-    test('should have secure CORS configuration', async ({ page }) => {
+    test('should have secure CORS configuration', async ({page: _page}) => {
       const corsResults = await headersHelper.testCORSHeaders();
 
       if (corsResults.hasCORSHeaders) {
@@ -751,15 +758,15 @@ test.describe('Security Headers Tests', () => {
       }
     });
 
-    test('should validate CORS preflight requests', async ({ page }) => {
+    test('should validate CORS preflight requests', async ({page: _page}) => {
       // Intercept OPTIONS requests to validate CORS headers
       let corsHeadersValid = false;
 
       await page.route('**/api/**', route => {
         if (route.request().method() === 'OPTIONS') {
           const headers = route.request().headers();
-          const origin = headers.origin;
-          
+          const _origin = headers.origin;
+
           // Validate that preflight requests are handled properly
           corsHeadersValid = true; // CORS preflight intercepted
         }
@@ -774,7 +781,7 @@ test.describe('Security Headers Tests', () => {
             'Content-Type': 'application/json',
             'X-Custom-Header': 'test'
           },
-          body: JSON.stringify({ test: 'data' })
+          body: JSON.stringify({test: 'data'})
         }).catch(() => {
           // Request might fail, but we're testing CORS headers
         });
@@ -786,7 +793,7 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('Information Disclosure Prevention', () => {
-    test('should not disclose server information', async ({ page }) => {
+    test('should not disclose server information', async ({page: _page}) => {
       const serverInfo = await headersHelper.testServerInfoDisclosure();
 
       // Should not reveal server software details
@@ -795,7 +802,7 @@ test.describe('Security Headers Tests', () => {
       expect(serverInfo.disclosedHeaders).toHaveLength(0);
     });
 
-    test('should not expose framework versions', async ({ page }) => {
+    test('should not expose framework versions', async ({page: _page}) => {
       const headers = await headersHelper.getResponseHeaders();
 
       const exposedHeaders = [
@@ -810,17 +817,17 @@ test.describe('Security Headers Tests', () => {
       });
     });
 
-    test('should use secure error pages', async ({ page }) => {
+    test('should use secure error pages', async ({page: _page}) => {
       // Test 404 page doesn't expose sensitive information
-      const response = await page.goto('/nonexistent-page-test', { 
-        waitUntil: 'networkidle' 
+      const response = await page.goto('/nonexistent-page-test', {
+        waitUntil: 'networkidle'
       });
 
       expect(response?.status()).toBe(404);
 
       // Error page should not reveal server details
       const pageContent = await page.textContent('body');
-      
+
       const sensitiveTerms = [
         'apache',
         'nginx',
@@ -839,7 +846,7 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('Cache Control Headers', () => {
-    test('should have appropriate cache control for sensitive pages', async ({ page }) => {
+    test('should have appropriate cache control for sensitive pages', async ({page: _page}) => {
       // Navigate to authenticated page
       await page.goto('/profile');
 
@@ -848,22 +855,22 @@ test.describe('Security Headers Tests', () => {
 
       // Sensitive pages should not be cached
       const hasCacheControl = cacheControl.length > 0;
-      const preventsCache = cacheControl.includes('no-cache') || 
-                           cacheControl.includes('no-store') ||
-                           cacheControl.includes('private');
+      const preventsCache = cacheControl.includes('no-cache') ||
+          cacheControl.includes('no-store') ||
+          cacheControl.includes('private');
 
       expect(hasCacheControl).toBe(true);
       expect(preventsCache).toBe(true);
     });
 
-    test('should allow caching for static resources', async ({ page }) => {
+    test('should allow caching for static resources', async ({page: _page}) => {
       // Test static resource caching
       let staticResourceCached = false;
 
       await page.route('**/*.{js,css,png,jpg,gif,svg}', route => {
-        const response = route.request().url();
-        const headers = route.request().headers();
-        
+        const _response = route.request().url();
+        const _headers = route.request().headers();
+
         // Static resources can be cached
         staticResourceCached = true;
         route.continue();
@@ -879,7 +886,7 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('Cross-Origin Resource Policies', () => {
-    test('should implement Cross-Origin-Resource-Policy', async ({ page }) => {
+    test('should implement Cross-Origin-Resource-Policy', async ({page: _page}) => {
       const headers = await headersHelper.getResponseHeaders();
       const corp = headers['cross-origin-resource-policy'];
 
@@ -888,7 +895,7 @@ test.describe('Security Headers Tests', () => {
       }
     });
 
-    test('should implement Cross-Origin-Embedder-Policy', async ({ page }) => {
+    test('should implement Cross-Origin-Embedder-Policy', async ({page: _page}) => {
       const headers = await headersHelper.getResponseHeaders();
       const coep = headers['cross-origin-embedder-policy'];
 
@@ -897,7 +904,7 @@ test.describe('Security Headers Tests', () => {
       }
     });
 
-    test('should implement Cross-Origin-Opener-Policy', async ({ page }) => {
+    test('should implement Cross-Origin-Opener-Policy', async ({page: _page}) => {
       const headers = await headersHelper.getResponseHeaders();
       const coop = headers['cross-origin-opener-policy'];
 
@@ -908,7 +915,7 @@ test.describe('Security Headers Tests', () => {
   });
 
   test.describe('Security Headers Integration', () => {
-    test('should have all essential security headers', async ({ page }) => {
+    test('should have all essential security headers', async ({page: _page}) => {
       const essentialHeaders: SecurityHeader[] = [
         {
           name: 'Content-Security-Policy',
@@ -941,14 +948,14 @@ test.describe('Security Headers Tests', () => {
       const results = await headersHelper.validateSecurityHeaders(essentialHeaders);
 
       // All essential headers should be present and valid
-      results.passed.forEach((passed, index) => {
+      results.passed.forEach((passed, _index) => {
         expect(passed).toBe(true);
       });
 
       expect(results.missing).toHaveLength(0);
     });
 
-    test('should not conflict between security headers', async ({ page }) => {
+    test('should not conflict between security headers', async ({page: _page}) => {
       const headers = await headersHelper.getResponseHeaders();
 
       // X-Frame-Options and CSP frame-ancestors should not conflict
@@ -966,7 +973,7 @@ test.describe('Security Headers Tests', () => {
       }
     });
 
-    test('should maintain security headers across different pages', async ({ page }) => {
+    test('should maintain security headers across different pages', async ({page: _page}) => {
       const pagesToTest = ['/', '/login', '/dashboard', '/profile'];
       const headerConsistency: Record<string, string[]> = {};
 

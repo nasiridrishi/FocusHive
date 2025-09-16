@@ -3,8 +3,8 @@
  * Provides utilities for testing notification features, real-time delivery, and user preferences
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from './test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {TIMEOUTS} from './test-data';
 
 // Mock notification data types
 export interface MockNotification {
@@ -47,16 +47,16 @@ export interface NotificationPreferences {
   };
 }
 
-export type NotificationType = 
-  | 'focus_session_reminder' 
-  | 'focus_session_complete'
-  | 'hive_member_joined'
-  | 'hive_message'
-  | 'buddy_checkin'
-  | 'buddy_request'
-  | 'achievement_unlocked'
-  | 'system_maintenance'
-  | 'system_update';
+export type NotificationType =
+    | 'focus_session_reminder'
+    | 'focus_session_complete'
+    | 'hive_member_joined'
+    | 'hive_message'
+    | 'buddy_checkin'
+    | 'buddy_request'
+    | 'achievement_unlocked'
+    | 'system_maintenance'
+    | 'system_update';
 
 export type NotificationChannel = 'in_app' | 'push' | 'email' | 'sms';
 
@@ -70,7 +70,8 @@ declare global {
 }
 
 export class NotificationHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   // Mock data generation
   generateMockNotification(overrides: Partial<MockNotification> = {}): MockNotification {
@@ -117,7 +118,7 @@ export class NotificationHelper {
   }
 
   // Mock API responses
-  async mockNotificationAPI() {
+  async mockNotificationAPI(): Promise<void> {
     await this.page.route('**/api/notifications**', async route => {
       const url = route.request().url();
       const method = route.request().method();
@@ -148,7 +149,7 @@ export class NotificationHelper {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ notifications, total: notifications.length }),
+          body: JSON.stringify({notifications, total: notifications.length}),
         });
       } else if (method === 'GET' && url.includes('/preferences')) {
         // Return mock notification preferences
@@ -162,14 +163,14 @@ export class NotificationHelper {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ success: true }),
+          body: JSON.stringify({success: true}),
         });
       } else if (method === 'PATCH' && url.includes('/read')) {
         // Mock mark as read
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ success: true }),
+          body: JSON.stringify({success: true}),
         });
       } else {
         await route.continue();
@@ -178,7 +179,7 @@ export class NotificationHelper {
   }
 
   // Real-time WebSocket simulation
-  async simulateRealtimeNotification(notification: MockNotification) {
+  async simulateRealtimeNotification(notification: MockNotification): Promise<void> {
     // Inject notification into page via WebSocket simulation
     await this.page.evaluate((notif) => {
       // Simulate WebSocket message
@@ -190,19 +191,20 @@ export class NotificationHelper {
   }
 
   // Browser push notification testing
-  async mockPushNotificationPermission(permission: 'granted' | 'denied' | 'default') {
+  async mockPushNotificationPermission(permission: 'granted' | 'denied' | 'default'): Promise<void> {
     await this.page.addInitScript((perm) => {
       // Mock Notification API
       Object.defineProperty(window, 'Notification', {
         value: class MockNotification {
           static permission = perm;
-          static requestPermission = () => Promise.resolve(perm);
-          
+
           constructor(public title: string, public options?: NotificationOptions) {
             // Store for testing
             window.mockNotifications = window.mockNotifications || [];
-            window.mockNotifications.push({ title, options });
+            window.mockNotifications.push({title, options});
           }
+
+          static requestPermission = (): Promise<NotificationPermission> => Promise.resolve(perm);
         },
         configurable: true,
       });
@@ -216,7 +218,7 @@ export class NotificationHelper {
   }
 
   // Do not disturb mode testing
-  async enableDoNotDisturb(schedule?: { start: string; end: string }) {
+  async enableDoNotDisturb(schedule?: { start: string; end: string }): Promise<void> {
     const preferences = this.generateMockPreferences({
       doNotDisturb: {
         enabled: true,
@@ -237,20 +239,20 @@ export class NotificationHelper {
   }
 
   // Email notification testing
-  async mockEmailNotification(notification: MockNotification) {
+  async mockEmailNotification(notification: MockNotification): Promise<void> {
     await this.page.route('**/api/notifications/email', async route => {
       const requestBody = await route.request().postDataJSON();
-      
+
       // Validate email format
-      const emailValid = requestBody.to && 
-                        requestBody.subject && 
-                        requestBody.html &&
-                        requestBody.subject.includes(notification.title);
+      const emailValid = requestBody.to &&
+          requestBody.subject &&
+          requestBody.html &&
+          requestBody.subject.includes(notification.title);
 
       await route.fulfill({
         status: emailValid ? 200 : 400,
         contentType: 'application/json',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           success: emailValid,
           messageId: emailValid ? `msg_${Date.now()}` : undefined,
           error: emailValid ? undefined : 'Invalid email format',
@@ -262,7 +264,7 @@ export class NotificationHelper {
   // Performance testing
   async measureNotificationLatency(): Promise<number> {
     const startTime = Date.now();
-    
+
     // Trigger notification
     const notification = this.generateMockNotification({
       priority: 'high',
@@ -273,18 +275,18 @@ export class NotificationHelper {
 
     // Wait for notification to appear
     const notificationElement = this.page.locator('[data-testid="notification-toast"]').first();
-    await notificationElement.waitFor({ timeout: TIMEOUTS.NOTIFICATION });
+    await notificationElement.waitFor({timeout: TIMEOUTS.NOTIFICATION});
 
     const endTime = Date.now();
     return endTime - startTime;
   }
 
   // Accessibility testing helpers
-  async validateNotificationAccessibility(notificationLocator: Locator) {
+  async validateNotificationAccessibility(notificationLocator: Locator): Promise<void> {
     // Check ARIA attributes
     await expect(notificationLocator).toHaveAttribute('role', 'alert');
     await expect(notificationLocator).toHaveAttribute('aria-live', 'polite');
-    
+
     // Check keyboard navigation
     await notificationLocator.focus();
     await expect(notificationLocator).toBeFocused();
@@ -298,7 +300,7 @@ export class NotificationHelper {
   }
 
   // Notification UI validation
-  async validateNotificationDisplay(notification: MockNotification, locator: Locator) {
+  async validateNotificationDisplay(notification: MockNotification, locator: Locator): Promise<void> {
     await expect(locator).toBeVisible();
     await expect(locator).toContainText(notification.title);
     await expect(locator).toContainText(notification.message);
@@ -318,10 +320,10 @@ export class NotificationHelper {
   }
 
   // Notification management
-  async markAsRead(notificationId: string) {
+  async markAsRead(notificationId: string): Promise<void> {
     const notificationElement = this.page.locator(`[data-testid="notification-${notificationId}"]`);
     const markReadButton = notificationElement.locator('[data-testid="mark-read-button"]');
-    
+
     if (await markReadButton.count() > 0) {
       await markReadButton.click();
     } else {
@@ -333,11 +335,11 @@ export class NotificationHelper {
     await expect(notificationElement).toHaveClass(/read/);
   }
 
-  async clearAllNotifications() {
+  async clearAllNotifications(): Promise<void> {
     const clearAllButton = this.page.locator('[data-testid="clear-all-notifications"]');
     if (await clearAllButton.count() > 0) {
       await clearAllButton.click();
-      
+
       // Confirm if dialog appears
       const confirmButton = this.page.locator('[data-testid="confirm-clear-notifications"]');
       if (await confirmButton.count() > 0) {
@@ -347,10 +349,10 @@ export class NotificationHelper {
   }
 
   // Sound and vibration testing
-  async mockNotificationSound() {
+  async mockNotificationSound(): Promise<void> {
     await this.page.addInitScript(() => {
       // Mock Audio API
-      window.HTMLAudioElement.prototype.play = function() {
+      window.HTMLAudioElement.prototype.play = function () {
         // Store for testing
         window.notificationSoundPlayed = true;
         return Promise.resolve();
@@ -364,11 +366,11 @@ export class NotificationHelper {
     });
   }
 
-  async mockVibrationAPI() {
+  async mockVibrationAPI(): Promise<boolean> {
     await this.page.addInitScript(() => {
       // Mock Vibration API
       Object.defineProperty(navigator, 'vibrate', {
-        value: function(pattern: VibratePattern) {
+        value: function (pattern: VibratePattern) {
           window.vibrationPattern = pattern;
           return true;
         },
@@ -384,10 +386,10 @@ export class NotificationHelper {
   }
 
   // Cleanup
-  async cleanup() {
+  async cleanup(): Promise<void> {
     // Clear all routes
     await this.page.unrouteAll();
-    
+
     // Clear mock data
     await this.page.evaluate(() => {
       delete window.mockNotifications;
@@ -397,9 +399,9 @@ export class NotificationHelper {
   }
 
   // Utility methods for common notification scenarios
-  async waitForNotification(title: string, timeout = TIMEOUTS.NOTIFICATION) {
-    const notificationLocator = this.page.locator('[data-testid="notification-toast"]', { hasText: title });
-    await notificationLocator.waitFor({ timeout });
+  async waitForNotification(title: string, timeout = TIMEOUTS.NOTIFICATION): Promise<void> {
+    const notificationLocator = this.page.locator('[data-testid="notification-toast"]', {hasText: title});
+    await notificationLocator.waitFor({timeout});
     return notificationLocator;
   }
 
@@ -410,7 +412,7 @@ export class NotificationHelper {
   async getNotificationBadgeCount(): Promise<number> {
     const badge = this.page.locator('[data-testid="notification-badge"]');
     if (await badge.count() === 0) return 0;
-    
+
     const text = await badge.textContent();
     return parseInt(text || '0', 10);
   }

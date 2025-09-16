@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { Track } from '../types'
-import { useMusic } from '../context'
+import {useCallback, useEffect, useRef, useState} from 'react'
+import {Track} from '../types'
+import {useMusic} from '../context'
 
 interface PlaybackControlOptions {
   autoNext?: boolean
@@ -22,8 +22,19 @@ interface PlaybackHistory {
  */
 export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
   const musicContext = useMusic()
-  const { state, play, pause, resume, stop, seekTo, setVolume, toggleMute, skipNext, skipPrevious } = musicContext
-  const { playbackState, currentTrack, queue } = state
+  const {
+    state,
+    play,
+    pause,
+    resume,
+    stop,
+    seekTo,
+    setVolume,
+    toggleMute,
+    skipNext,
+    skipPrevious
+  } = musicContext
+  const {playbackState, currentTrack, queue} = state
   const [history, setHistory] = useState<PlaybackHistory[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
   const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none')
@@ -31,11 +42,11 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     isActive: false,
     progress: 0,
   })
-  
+
   const scrobbleTimerRef = useRef<NodeJS.Timeout | null>(null)
   const crossfadeTimerRef = useRef<NodeJS.Timeout | null>(null)
   const lastScrobbledTrack = useRef<string | null>(null)
-  
+
   const {
     autoNext = true,
     crossfade = 0,
@@ -50,15 +61,15 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
   const playWithCrossfade = useCallback(async (track?: Track) => {
     if (crossfade > 0 && playbackState.isPlaying) {
       // Start crossfade
-      setCrossfadeState({ isActive: true, progress: 0 })
-      
+      setCrossfadeState({isActive: true, progress: 0})
+
       const fadeOutDuration = crossfade * 1000
       const fadeOutSteps = 20
       const fadeOutInterval = fadeOutDuration / fadeOutSteps
       const volumeStep = playbackState.volume / fadeOutSteps
-      
+
       let currentVolume = playbackState.volume
-      
+
       const fadeOutTimer = setInterval(() => {
         currentVolume -= volumeStep
         if (currentVolume <= 0) {
@@ -66,34 +77,34 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
           currentVolume = 0
         }
         setVolume(currentVolume)
-        setCrossfadeState(prev => ({ 
-          ...prev, 
-          progress: (playbackState.volume - currentVolume) / playbackState.volume 
+        setCrossfadeState(prev => ({
+          ...prev,
+          progress: (playbackState.volume - currentVolume) / playbackState.volume
         }))
       }, fadeOutInterval)
-      
+
       // Switch track after fade out
       setTimeout(async () => {
         await play(track)
-        
+
         // Fade in new track
         const fadeInSteps = 20
         const fadeInInterval = fadeOutDuration / fadeInSteps
         const targetVolume = playbackState.volume
         currentVolume = 0
         setVolume(0)
-        
+
         const fadeInTimer = setInterval(() => {
           currentVolume += targetVolume / fadeInSteps
           if (currentVolume >= targetVolume) {
             clearInterval(fadeInTimer)
             currentVolume = targetVolume
-            setCrossfadeState({ isActive: false, progress: 0 })
+            setCrossfadeState({isActive: false, progress: 0})
           }
           setVolume(currentVolume)
         }, fadeInInterval)
       }, fadeOutDuration)
-      
+
     } else {
       await play(track)
     }
@@ -112,8 +123,8 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     if (isShuffling) {
       // Shuffle mode: pick random track
       const availableIndices = queue
-        .map((_, index) => index)
-        .filter(index => index !== currentIndex)
+      .map((_, index) => index)
+      .filter(index => index !== currentIndex)
       nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)]
     } else if (nextIndex >= queue.length) {
       // End of queue
@@ -140,7 +151,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     }
 
     const currentIndex = queue.findIndex(item => item.id === currentTrack?.id)
-    
+
     if (currentIndex > 0) {
       const previousTrack = queue[currentIndex - 1]
       playWithCrossfade(previousTrack)
@@ -159,10 +170,14 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
   const toggleRepeat = useCallback(() => {
     setRepeatMode(prev => {
       switch (prev) {
-        case 'none': return 'one'
-        case 'one': return 'all'
-        case 'all': return 'none'
-        default: return 'none'
+        case 'none':
+          return 'one'
+        case 'one':
+          return 'all'
+        case 'all':
+          return 'none'
+        default:
+          return 'none'
       }
     })
   }, [])
@@ -184,19 +199,19 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     const interval = duration / steps
     const currentVolume = playbackState.volume
     const volumeStep = (targetVolume - currentVolume) / steps
-    
+
     let step = 0
     const timer = setInterval(() => {
       step++
       const newVolume = currentVolume + (volumeStep * step)
       setVolume(Math.max(0, Math.min(1, newVolume)))
-      
+
       if (step >= steps) {
         clearInterval(timer)
         setVolume(targetVolume)
       }
     }, interval)
-    
+
     return () => clearInterval(timer)
   }, [playbackState.volume, setVolume])
 
@@ -215,18 +230,18 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     if (lastScrobbledTrack.current === track.id && !completed) {
       return // Avoid duplicate scrobbles
     }
-    
+
     const historyEntry: PlaybackHistory = {
       track,
       playedAt: new Date(),
       duration: playTime,
       completed,
     }
-    
+
     setHistory(prev => [historyEntry, ...prev.slice(0, 99)]) // Keep last 100 tracks
-    
+
     // TODO: Send to analytics service
-    
+
     if (completed) {
       lastScrobbledTrack.current = null
     } else {
@@ -261,11 +276,11 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
 
   // Handle track end for scrobbling
   useEffect(() => {
-    if (!playbackState.isPlaying && currentTrack && 
+    if (!playbackState.isPlaying && currentTrack &&
         playbackState.currentTime >= playbackState.duration - 1) {
       // Track completed
       handleScrobble(currentTrack, playbackState.duration, true)
-      
+
       if (autoNext) {
         skipNextEnhanced()
       }
@@ -350,7 +365,7 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
       const scrobbleTimer = scrobbleTimerRef.current
       // eslint-disable-next-line react-hooks/exhaustive-deps
       const crossfadeTimer = crossfadeTimerRef.current
-      
+
       if (scrobbleTimer) clearTimeout(scrobbleTimer)
       if (crossfadeTimer) clearTimeout(crossfadeTimer)
     }
@@ -363,25 +378,25 @@ export const usePlaybackControl = (options: PlaybackControlOptions = {}) => {
     skipPreviousEnhanced,
     quickSeekBackward,
     quickSeekForward,
-    
+
     // Volume controls
     fadeVolume,
     muteWithFade,
     unmuteWithFade,
-    
+
     // Playback modes
     isShuffling,
     repeatMode,
     toggleShuffle,
     toggleRepeat,
-    
+
     // State
     history,
     crossfadeState,
-    
+
     // Utilities
     clearHistory: () => setHistory([]),
-    
+
     // Basic controls (re-exported for convenience)
     play,
     pause,

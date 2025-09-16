@@ -4,17 +4,16 @@
  * Includes achievement tracking, streaks, and data export functionality
  */
 
-import { test, expect, Page, Browser } from '@playwright/test';
-import { HivePage } from './pages/HivePage';
-import { CreateHivePage } from './pages/CreateHivePage';
-import { EnhancedAuthHelper } from '../../helpers/auth-helpers';
-import { HiveWorkflowHelper, MultiUserHiveHelper } from './hive-helpers';
-import { WebSocketTestHelper } from './websocket-helpers';
-import { 
-  HIVE_TEST_USERS, 
+import {Browser, expect, Page, test} from '@playwright/test';
+import {HivePage} from './pages/HivePage';
+import {CreateHivePage} from './pages/CreateHivePage';
+import {EnhancedAuthHelper} from '../../helpers/auth-helpers';
+import {MultiUserHiveHelper} from './hive-helpers';
+import {
   ANALYTICS_MOCK_DATA,
   generateUniqueHiveData,
-  type TestHive 
+  HIVE_TEST_USERS,
+  type TestHive
 } from './hive-fixtures';
 
 // Extend Window interface for analytics testing
@@ -30,46 +29,46 @@ test.describe('Session Analytics Workflow', () => {
   let ownerPage: Page;
   let memberPage: Page;
   let observerPage: Page;
-  
+
   let ownerHivePage: HivePage;
   let memberHivePage: HivePage;
   let observerHivePage: HivePage;
   let createHivePage: CreateHivePage;
-  
+
   let ownerAuth: EnhancedAuthHelper;
   let memberAuth: EnhancedAuthHelper;
   let observerAuth: EnhancedAuthHelper;
-  
+
   let testHive: TestHive;
 
-  test.beforeAll(async ({ browser: testBrowser }) => {
+  test.beforeAll(async ({browser: testBrowser}) => {
     browser = testBrowser;
-    
+
     // Set up multiple user contexts
     const ownerContext = await browser.newContext();
     const memberContext = await browser.newContext();
     const observerContext = await browser.newContext();
-    
+
     ownerPage = await ownerContext.newPage();
     memberPage = await memberContext.newPage();
     observerPage = await observerContext.newPage();
-    
+
     // Initialize page objects
     ownerHivePage = new HivePage(ownerPage);
     memberHivePage = new HivePage(memberPage);
     observerHivePage = new HivePage(observerPage);
     createHivePage = new CreateHivePage(ownerPage);
-    
+
     // Initialize auth helpers
     ownerAuth = new EnhancedAuthHelper(ownerPage);
     memberAuth = new EnhancedAuthHelper(memberPage);
     observerAuth = new EnhancedAuthHelper(observerPage);
-    
+
     // Login all users
     await ownerAuth.loginUser(HIVE_TEST_USERS.OWNER.email, HIVE_TEST_USERS.OWNER.password);
     await memberAuth.loginUser(HIVE_TEST_USERS.MEMBER_1.email, HIVE_TEST_USERS.MEMBER_1.password);
     await observerAuth.loginUser(HIVE_TEST_USERS.MEMBER_2.email, HIVE_TEST_USERS.MEMBER_2.password);
-    
+
     // Create a test hive for analytics testing
     const hiveData = generateUniqueHiveData('ANALYTICS_TEST_HIVE');
     await createHivePage.goto();
@@ -79,11 +78,11 @@ test.describe('Session Analytics Workflow', () => {
       allowMusic: true
     });
     testHive = await createHivePage.createHive();
-    
+
     // Have other users join the hive
     await memberHivePage.goto(testHive.id);
     await memberHivePage.joinHive();
-    
+
     await observerHivePage.goto(testHive.id);
     await observerHivePage.joinHive();
   });
@@ -105,14 +104,14 @@ test.describe('Session Analytics Workflow', () => {
     test('should track basic session completion', async () => {
       // Act - Complete a focus session
       await ownerHivePage.startTimer('POMODORO_25_5');
-      
+
       // Simulate session completion for testing
       await ownerPage.evaluate(() => {
         window.__simulateSessionCompletion = true;
       });
-      
+
       await ownerHivePage.stopTimer();
-      
+
       // Assert - Session should be recorded in analytics
       const analytics = await ownerHivePage.getAnalyticsSummary();
       expect(analytics.completedSessions).toBeGreaterThan(0);
@@ -122,7 +121,7 @@ test.describe('Session Analytics Workflow', () => {
     test('should calculate average session length correctly', async () => {
       // Arrange - Complete multiple sessions of different lengths
       const sessionDurations = [25, 50, 30]; // minutes
-      
+
       for (const duration of sessionDurations) {
         await ownerPage.evaluate((mins) => {
           window.__mockAnalyticsData = true;
@@ -131,17 +130,17 @@ test.describe('Session Analytics Workflow', () => {
             duration: mins * 60, // Convert to seconds
             completedAt: new Date().toISOString()
           };
-          
+
           // Store in localStorage for persistence
           const sessions = JSON.parse(localStorage.getItem('completedSessions') || '[]');
           sessions.push(sessionData);
           localStorage.setItem('completedSessions', JSON.stringify(sessions));
         }, duration);
       }
-      
+
       // Act - Get analytics summary
       const analytics = await ownerHivePage.getAnalyticsSummary();
-      
+
       // Assert - Average should be calculated correctly
       const expectedAverage = Math.floor((25 + 50 + 30) / 3);
       expect(analytics.averageSessionLength).toBeCloseTo(expectedAverage, 0);
@@ -153,24 +152,24 @@ test.describe('Session Analytics Workflow', () => {
         // Mock consecutive daily sessions
         const today = new Date();
         const sessions = [];
-        
+
         for (let i = 0; i < 5; i++) {
           const sessionDate = new Date(today);
           sessionDate.setDate(today.getDate() - i);
-          
+
           sessions.push({
             duration: 25 * 60,
             completedAt: sessionDate.toISOString(),
             date: sessionDate.toDateString()
           });
         }
-        
+
         localStorage.setItem('completedSessions', JSON.stringify(sessions));
       });
-      
+
       // Act
       const analytics = await ownerHivePage.getAnalyticsSummary();
-      
+
       // Assert
       expect(analytics.currentStreak).toBeGreaterThanOrEqual(5);
     });
@@ -178,18 +177,18 @@ test.describe('Session Analytics Workflow', () => {
     test('should show session statistics in real-time', async () => {
       // Act - Start timer and check real-time stats
       await ownerHivePage.startTimer('POMODORO_25_5');
-      
+
       // Should show current session info
       await expect(
-        ownerPage.locator('[data-testid="current-session-stats"]')
+          ownerPage.locator('[data-testid="current-session-stats"]')
       ).toBeVisible();
-      
+
       await expect(
-        ownerPage.locator('[data-testid="session-start-time"]')
+          ownerPage.locator('[data-testid="session-start-time"]')
       ).toContainText(/\d{1,2}:\d{2}/); // Should show time format
-      
+
       await expect(
-        ownerPage.locator('[data-testid="session-type"]')
+          ownerPage.locator('[data-testid="session-type"]')
       ).toContainText('Pomodoro');
     });
   });
@@ -200,25 +199,25 @@ test.describe('Session Analytics Workflow', () => {
       await ownerPage.evaluate((mockData) => {
         localStorage.setItem('personalAnalytics', JSON.stringify(mockData));
       }, ANALYTICS_MOCK_DATA.PERSONAL_STATS);
-      
+
       // Act
       await ownerHivePage.openAnalytics();
-      
+
       // Assert - All key metrics should be displayed
       await expect(
-        ownerPage.locator('[data-testid="total-focus-time"]')
+          ownerPage.locator('[data-testid="total-focus-time"]')
       ).toContainText('24'); // 1440 minutes = 24 hours
-      
+
       await expect(
-        ownerPage.locator('[data-testid="completed-sessions"]')
+          ownerPage.locator('[data-testid="completed-sessions"]')
       ).toContainText('42');
-      
+
       await expect(
-        ownerPage.locator('[data-testid="current-streak"]')
+          ownerPage.locator('[data-testid="current-streak"]')
       ).toContainText('7');
-      
+
       await expect(
-        ownerPage.locator('[data-testid="productivity-score"]')
+          ownerPage.locator('[data-testid="productivity-score"]')
       ).toContainText('85');
     });
 
@@ -227,41 +226,41 @@ test.describe('Session Analytics Workflow', () => {
       await ownerPage.evaluate((mockData) => {
         localStorage.setItem('weeklyAnalytics', JSON.stringify(mockData));
       }, ANALYTICS_MOCK_DATA.PERSONAL_STATS.weeklyData);
-      
+
       // Act
       await ownerHivePage.openAnalytics();
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="weekly-progress-chart"]')
+          ownerPage.locator('[data-testid="weekly-progress-chart"]')
       ).toBeVisible();
-      
+
       // Chart should show data for each day
       const chartDays = await ownerPage.locator('[data-testid="chart-day"]').count();
       expect(chartDays).toBe(7);
-      
+
       // Should show highest day (Friday with 240 minutes)
       await expect(
-        ownerPage.locator('[data-testid="highest-day"]')
+          ownerPage.locator('[data-testid="highest-day"]')
       ).toContainText('Friday');
     });
 
     test('should display goal progress indicators', async () => {
       // Act
       await ownerHivePage.openAnalytics();
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="weekly-goal-progress"]')
+          ownerPage.locator('[data-testid="weekly-goal-progress"]')
       ).toBeVisible();
-      
+
       // Progress bar should show percentage
       const progressBar = ownerPage.locator('[data-testid="goal-progress-bar"]');
       await expect(progressBar).toHaveAttribute('aria-valuenow', expect.stringMatching(/\d+/));
-      
+
       // Should show time until goal completion
       await expect(
-        ownerPage.locator('[data-testid="time-to-goal"]')
+          ownerPage.locator('[data-testid="time-to-goal"]')
       ).toBeVisible();
     });
 
@@ -269,22 +268,22 @@ test.describe('Session Analytics Workflow', () => {
       // Act
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="trends-tab"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="productivity-trend-chart"]')
+          ownerPage.locator('[data-testid="productivity-trend-chart"]')
       ).toBeVisible();
-      
+
       // Trend should show improvement or decline indicators
       await expect(
-        ownerPage.locator('[data-testid="trend-indicator"]')
+          ownerPage.locator('[data-testid="trend-indicator"]')
       ).toBeVisible();
-      
+
       // Should allow changing time range
       await ownerPage.selectOption('[data-testid="trend-timerange"]', '30days');
-      
+
       await expect(
-        ownerPage.locator('[data-testid="trend-30days"]')
+          ownerPage.locator('[data-testid="trend-30days"]')
       ).toBeVisible();
     });
   });
@@ -295,22 +294,22 @@ test.describe('Session Analytics Workflow', () => {
       await ownerPage.evaluate((mockData) => {
         localStorage.setItem('hiveAnalytics', JSON.stringify(mockData));
       }, ANALYTICS_MOCK_DATA.HIVE_STATS);
-      
+
       // Act
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="hive-analytics-tab"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="hive-total-members"]')
+          ownerPage.locator('[data-testid="hive-total-members"]')
       ).toContainText('8');
-      
+
       await expect(
-        ownerPage.locator('[data-testid="hive-active-members"]')
+          ownerPage.locator('[data-testid="hive-active-members"]')
       ).toContainText('5');
-      
+
       await expect(
-        ownerPage.locator('[data-testid="hive-focus-time"]')
+          ownerPage.locator('[data-testid="hive-focus-time"]')
       ).toContainText('88'); // 5280 minutes = 88 hours
     });
 
@@ -319,19 +318,19 @@ test.describe('Session Analytics Workflow', () => {
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="hive-analytics-tab"]');
       await ownerPage.click('[data-testid="leaderboard-tab"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="member-leaderboard"]')
+          ownerPage.locator('[data-testid="member-leaderboard"]')
       ).toBeVisible();
-      
+
       // Should show member rankings
       const leaderboardItems = await ownerPage.locator('[data-testid="leaderboard-item"]').count();
       expect(leaderboardItems).toBeGreaterThan(0);
-      
+
       // Top member should be highlighted
       await expect(
-        ownerPage.locator('[data-testid="leaderboard-item"]').first().locator('[data-testid="top-member-badge"]')
+          ownerPage.locator('[data-testid="leaderboard-item"]').first().locator('[data-testid="top-member-badge"]')
       ).toBeVisible();
     });
 
@@ -340,20 +339,20 @@ test.describe('Session Analytics Workflow', () => {
       await ownerPage.evaluate((mockData) => {
         localStorage.setItem('hiveActivityData', JSON.stringify(mockData));
       }, ANALYTICS_MOCK_DATA.HIVE_STATS.popularTimes);
-      
+
       // Act
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="hive-analytics-tab"]');
       await ownerPage.click('[data-testid="activity-heatmap-tab"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="activity-heatmap"]')
+          ownerPage.locator('[data-testid="activity-heatmap"]')
       ).toBeVisible();
-      
+
       // Should show peak activity times
       await expect(
-        ownerPage.locator('[data-testid="peak-hours"]')
+          ownerPage.locator('[data-testid="peak-hours"]')
       ).toContainText('3 PM'); // Hour 15 with count 22
     });
 
@@ -361,24 +360,24 @@ test.describe('Session Analytics Workflow', () => {
       // Act
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="comparison-tab"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="performance-comparison"]')
+          ownerPage.locator('[data-testid="performance-comparison"]')
       ).toBeVisible();
-      
+
       // Should show above/below average indicators
       await expect(
-        ownerPage.locator('[data-testid="vs-average-sessions"]')
+          ownerPage.locator('[data-testid="vs-average-sessions"]')
       ).toBeVisible();
-      
+
       await expect(
-        ownerPage.locator('[data-testid="vs-average-focus-time"]')
+          ownerPage.locator('[data-testid="vs-average-focus-time"]')
       ).toBeVisible();
-      
+
       // Should show percentile ranking
       await expect(
-        ownerPage.locator('[data-testid="percentile-ranking"]')
+          ownerPage.locator('[data-testid="percentile-ranking"]')
       ).toContainText('%');
     });
   });
@@ -405,28 +404,28 @@ test.describe('Session Analytics Workflow', () => {
         ];
         localStorage.setItem('userAchievements', JSON.stringify(achievements));
       });
-      
+
       // Act
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="achievements-tab"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="achievement-list"]')
+          ownerPage.locator('[data-testid="achievement-list"]')
       ).toBeVisible();
-      
+
       // Should show earned achievements
       await expect(
-        ownerPage.locator('[data-testid="achievement-first-session"]')
+          ownerPage.locator('[data-testid="achievement-first-session"]')
       ).toBeVisible();
-      
+
       await expect(
-        ownerPage.locator('[data-testid="achievement-week-streak"]')
+          ownerPage.locator('[data-testid="achievement-week-streak"]')
       ).toBeVisible();
-      
+
       // Should show achievement progress
       await expect(
-        ownerPage.locator('[data-testid="achievement-progress"]')
+          ownerPage.locator('[data-testid="achievement-progress"]')
       ).toContainText('2 of');
     });
 
@@ -444,20 +443,20 @@ test.describe('Session Analytics Workflow', () => {
         });
         document.dispatchEvent(event);
       });
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="achievement-notification"]')
+          ownerPage.locator('[data-testid="achievement-notification"]')
       ).toBeVisible();
-      
+
       await expect(
-        ownerPage.locator('[data-testid="achievement-notification"]')
+          ownerPage.locator('[data-testid="achievement-notification"]')
       ).toContainText('Marathon Master');
-      
+
       // Notification should auto-dismiss
       await expect(
-        ownerPage.locator('[data-testid="achievement-notification"]')
-      ).not.toBeVisible({ timeout: 10000 });
+          ownerPage.locator('[data-testid="achievement-notification"]')
+      ).not.toBeVisible({timeout: 10000});
     });
 
     test('should show upcoming achievement previews', async () => {
@@ -465,19 +464,19 @@ test.describe('Session Analytics Workflow', () => {
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="achievements-tab"]');
       await ownerPage.click('[data-testid="upcoming-achievements"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="upcoming-achievement-list"]')
+          ownerPage.locator('[data-testid="upcoming-achievement-list"]')
       ).toBeVisible();
-      
+
       // Should show progress toward unearned achievements
       const upcomingAchievements = await ownerPage.locator('[data-testid="upcoming-achievement"]').count();
       expect(upcomingAchievements).toBeGreaterThan(0);
-      
+
       // Should show progress bars
       await expect(
-        ownerPage.locator('[data-testid="upcoming-achievement"]').first().locator('[data-testid="achievement-progress-bar"]')
+          ownerPage.locator('[data-testid="upcoming-achievement"]').first().locator('[data-testid="achievement-progress-bar"]')
       ).toBeVisible();
     });
   });
@@ -486,7 +485,7 @@ test.describe('Session Analytics Workflow', () => {
     test('should export analytics data as CSV', async () => {
       // Act
       await ownerHivePage.exportAnalytics('csv');
-      
+
       // Assert - File should be downloaded
       // Note: In a real E2E test, you'd verify the download completed
       // For this test, we're checking the export flow initiated correctly
@@ -495,26 +494,26 @@ test.describe('Session Analytics Workflow', () => {
     test('should export analytics data as JSON', async () => {
       // Act
       await ownerHivePage.exportAnalytics('json');
-      
+
       // Assert - Export should initiate
       await expect(
-        ownerPage.locator('[data-testid="export-success"]')
+          ownerPage.locator('[data-testid="export-success"]')
       ).toBeVisible();
     });
 
     test('should export analytics data as PDF report', async () => {
       // Act
       await ownerHivePage.exportAnalytics('pdf');
-      
+
       // Assert - PDF generation should start
       await expect(
-        ownerPage.locator('[data-testid="pdf-generating"]')
+          ownerPage.locator('[data-testid="pdf-generating"]')
       ).toBeVisible();
-      
+
       // Should complete generation
       await expect(
-        ownerPage.locator('[data-testid="pdf-ready"]')
-      ).toBeVisible({ timeout: 10000 });
+          ownerPage.locator('[data-testid="pdf-ready"]')
+      ).toBeVisible({timeout: 10000});
     });
 
     test('should allow custom date range for exports', async () => {
@@ -522,17 +521,17 @@ test.describe('Session Analytics Workflow', () => {
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="export-menu-button"]');
       await ownerPage.click('[data-testid="custom-date-range"]');
-      
+
       // Set date range
       await ownerPage.fill('[data-testid="export-start-date"]', '2024-01-01');
       await ownerPage.fill('[data-testid="export-end-date"]', '2024-01-31');
-      
+
       await ownerPage.click('[data-testid="export-csv"]');
       await ownerPage.click('[data-testid="confirm-export"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="export-success"]')
+          ownerPage.locator('[data-testid="export-success"]')
       ).toContainText('January 2024');
     });
   });
@@ -542,14 +541,14 @@ test.describe('Session Analytics Workflow', () => {
       // Act
       const startTime = Date.now();
       await ownerHivePage.openAnalytics();
-      
+
       // Wait for all charts to load
       await expect(
-        ownerPage.locator('[data-testid="analytics-loaded"]')
+          ownerPage.locator('[data-testid="analytics-loaded"]')
       ).toBeVisible();
-      
+
       const loadTime = Date.now() - startTime;
-      
+
       // Assert
       expect(loadTime).toBeLessThan(5000); // Should load within 5 seconds
     });
@@ -567,41 +566,41 @@ test.describe('Session Analytics Workflow', () => {
         }
         localStorage.setItem('largeSessions', JSON.stringify(largeSessions));
       });
-      
+
       // Act
       const startTime = Date.now();
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="load-large-dataset"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="large-dataset-loaded"]')
-      ).toBeVisible({ timeout: 10000 });
-      
+          ownerPage.locator('[data-testid="large-dataset-loaded"]')
+      ).toBeVisible({timeout: 10000});
+
       const loadTime = Date.now() - startTime;
       expect(loadTime).toBeLessThan(8000); // Should handle large dataset within 8 seconds
     });
 
     test('should gracefully handle analytics API failures', async () => {
       // Act - Simulate API failure
-      await ownerPage.route('/api/analytics/**', route => 
-        route.fulfill({ status: 500, body: 'Server Error' })
+      await ownerPage.route('/api/analytics/**', route =>
+          route.fulfill({status: 500, body: 'Server Error'})
       );
-      
+
       await ownerHivePage.openAnalytics();
-      
+
       // Assert - Should show error state with retry option
       await expect(
-        ownerPage.locator('[data-testid="analytics-error-state"]')
+          ownerPage.locator('[data-testid="analytics-error-state"]')
       ).toBeVisible();
-      
+
       await expect(
-        ownerPage.locator('[data-testid="retry-analytics"]')
+          ownerPage.locator('[data-testid="retry-analytics"]')
       ).toBeVisible();
-      
+
       // Should offer offline mode if cached data available
       await expect(
-        ownerPage.locator('[data-testid="offline-analytics"]')
+          ownerPage.locator('[data-testid="offline-analytics"]')
       ).toBeVisible();
     });
   });
@@ -609,7 +608,7 @@ test.describe('Session Analytics Workflow', () => {
   test.describe('Multi-User Analytics Comparison', () => {
     test('should show collaborative session statistics', async () => {
       const multiUserHelper = new MultiUserHiveHelper();
-      
+
       try {
         // Create multiple user sessions
         const users = [
@@ -617,30 +616,30 @@ test.describe('Session Analytics Workflow', () => {
           HIVE_TEST_USERS.MEMBER_2,
           HIVE_TEST_USERS.MODERATOR
         ];
-        
+
         const helpers = [];
         for (const user of users) {
           const helper = await multiUserHelper.createUserSession(browser, user);
           await helper.navigateToHive(testHive.id);
           helpers.push(helper);
         }
-        
+
         // Simulate collaborative session
-        const sessions = await multiUserHelper.simulateConcurrentTimerStart(testHive.id);
-        
+        const _sessions = await multiUserHelper.simulateConcurrentTimerStart(testHive.id);
+
         // Act - View collaborative analytics
         await ownerHivePage.openAnalytics();
         await ownerPage.click('[data-testid="collaborative-sessions-tab"]');
-        
+
         // Assert
         await expect(
-          ownerPage.locator('[data-testid="collaborative-session-stats"]')
+            ownerPage.locator('[data-testid="collaborative-session-stats"]')
         ).toBeVisible();
-        
+
         await expect(
-          ownerPage.locator('[data-testid="session-participants"]')
+            ownerPage.locator('[data-testid="session-participants"]')
         ).toContainText(users.length.toString());
-        
+
       } finally {
         await multiUserHelper.cleanup();
       }
@@ -650,19 +649,19 @@ test.describe('Session Analytics Workflow', () => {
       // Act
       await ownerHivePage.openAnalytics();
       await ownerPage.click('[data-testid="hive-comparison-tab"]');
-      
+
       // Assert
       await expect(
-        ownerPage.locator('[data-testid="individual-vs-hive"]')
+          ownerPage.locator('[data-testid="individual-vs-hive"]')
       ).toBeVisible();
-      
+
       // Should show relative performance indicators
       const performanceIndicators = [
         'above-average',
         'below-average',
         'at-average'
       ];
-      
+
       let hasValidIndicator = false;
       for (const indicator of performanceIndicators) {
         const element = ownerPage.locator(`[data-testid="performance-${indicator}"]`);
@@ -671,7 +670,7 @@ test.describe('Session Analytics Workflow', () => {
           break;
         }
       }
-      
+
       expect(hasValidIndicator).toBe(true);
     });
   });
@@ -680,26 +679,26 @@ test.describe('Session Analytics Workflow', () => {
     test('should update analytics in real-time during sessions', async () => {
       // Act - Start a session
       await ownerHivePage.startTimer('POMODORO_25_5');
-      
+
       // Open analytics in another tab
       const analyticsContext = await browser.newContext();
       const analyticsPage = await analyticsContext.newPage();
       const analyticsAuth = new EnhancedAuthHelper(analyticsPage);
       await analyticsAuth.loginUser(HIVE_TEST_USERS.OWNER.email, HIVE_TEST_USERS.OWNER.password);
-      
+
       const analyticsHivePage = new HivePage(analyticsPage);
       await analyticsHivePage.goto(testHive.id);
       await analyticsHivePage.openAnalytics();
-      
+
       // Assert - Should show current session in real-time
       await expect(
-        analyticsPage.locator('[data-testid="current-session-timer"]')
+          analyticsPage.locator('[data-testid="current-session-timer"]')
       ).toBeVisible();
-      
+
       await expect(
-        analyticsPage.locator('[data-testid="session-in-progress"]')
+          analyticsPage.locator('[data-testid="session-in-progress"]')
       ).toContainText('In Progress');
-      
+
       await analyticsPage.close();
       await analyticsContext.close();
     });
@@ -707,21 +706,21 @@ test.describe('Session Analytics Workflow', () => {
     test('should sync analytics across multiple user sessions', async () => {
       // Act - Complete session in one browser
       await ownerHivePage.startTimer('CONTINUOUS_60');
-      
+
       // Simulate session completion
       await ownerPage.evaluate(() => {
         window.__simulateSessionCompletion = true;
       });
-      
+
       await ownerHivePage.stopTimer();
-      
+
       // Check analytics in another user's view of hive stats
       await memberHivePage.openAnalytics();
       await memberPage.click('[data-testid="hive-analytics-tab"]');
-      
+
       // Assert - Hive analytics should reflect the completed session
       await memberPage.waitForTimeout(2000); // Allow for sync
-      
+
       const hiveSessionCount = await memberPage.locator('[data-testid="hive-total-sessions"]').textContent();
       const sessionCount = parseInt(hiveSessionCount?.replace(/\D/g, '') || '0');
       expect(sessionCount).toBeGreaterThan(0);
@@ -732,43 +731,43 @@ test.describe('Session Analytics Workflow', () => {
     test('should provide accessible chart descriptions', async () => {
       // Act
       await ownerHivePage.openAnalytics();
-      
+
       // Assert - Charts should have proper ARIA labels
       await expect(
-        ownerPage.locator('[data-testid="weekly-progress-chart"]')
+          ownerPage.locator('[data-testid="weekly-progress-chart"]')
       ).toHaveAttribute('aria-label', expect.stringMatching(/weekly progress/i));
-      
+
       // Should have data tables as alternatives
       await ownerPage.click('[data-testid="chart-data-table-toggle"]');
-      
+
       await expect(
-        ownerPage.locator('[data-testid="progress-data-table"]')
+          ownerPage.locator('[data-testid="progress-data-table"]')
       ).toBeVisible();
-      
+
       // Table should have proper headers
       await expect(
-        ownerPage.locator('[data-testid="progress-data-table"] th')
+          ownerPage.locator('[data-testid="progress-data-table"] th')
       ).toHaveCount(3); // Day, Sessions, Focus Time
     });
 
     test('should support keyboard navigation in analytics', async () => {
       // Act
       await ownerHivePage.openAnalytics();
-      
+
       // Navigate tabs with keyboard
       await ownerPage.focus('[data-testid="personal-analytics-tab"]');
       await ownerPage.keyboard.press('ArrowRight');
-      
+
       // Should focus hive analytics tab
       await expect(
-        ownerPage.locator('[data-testid="hive-analytics-tab"]')
+          ownerPage.locator('[data-testid="hive-analytics-tab"]')
       ).toBeFocused();
-      
+
       await ownerPage.keyboard.press('Enter');
-      
+
       // Should switch to hive analytics
       await expect(
-        ownerPage.locator('[data-testid="hive-analytics-content"]')
+          ownerPage.locator('[data-testid="hive-analytics-content"]')
       ).toBeVisible();
     });
 
@@ -783,10 +782,10 @@ test.describe('Session Analytics Workflow', () => {
         });
         document.dispatchEvent(event);
       });
-      
+
       // Assert - Should announce to screen readers
       await expect(
-        ownerPage.locator('[data-testid="analytics-announcements"][aria-live="assertive"]')
+          ownerPage.locator('[data-testid="analytics-announcements"][aria-live="assertive"]')
       ).toContainText('Achievement earned: Consistency King');
     });
   });

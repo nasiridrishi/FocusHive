@@ -38,3 +38,5 @@ npm-debug.log*
 .gradle/
 gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.properties
+.env
+!.env.example

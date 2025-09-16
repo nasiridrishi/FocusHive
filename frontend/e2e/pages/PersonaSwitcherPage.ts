@@ -1,16 +1,16 @@
 /**
  * Page Object Model for Persona Management and Context Switching
- * 
+ *
  * Provides a structured interface for persona CRUD operations, context switching,
  * and multi-persona session management within the FocusHive Identity Service
- * 
+ *
  * @fileoverview Persona management page object model for E2E tests
  * @version 1.0.0
  */
 
-import { expect, type Page, type Locator } from '@playwright/test';
-import { IDENTITY_ROUTES } from '../tests/identity/identity.config';
-import type { TestPersona, PersonaType } from '../fixtures/identity/identity-fixtures';
+import {expect, type Locator, type Page} from '@playwright/test';
+import {IDENTITY_ROUTES} from '../tests/identity/identity.config';
+import type {TestPersona} from '../fixtures/identity/identity-fixtures';
 
 export class PersonaSwitcherPage {
   readonly page: Page;
@@ -159,9 +159,9 @@ export class PersonaSwitcherPage {
   async switchPersona(personaName: string): Promise<void> {
     await this.personaSwitcher.click();
     await expect(this.personaDropdown).toBeVisible();
-    
+
     await this.page.locator(`[data-testid="persona-option-${personaName}"]`).click();
-    
+
     // Wait for context switch to complete
     await expect(this.currentPersonaName).toContainText(personaName);
     await expect(this.personaDropdown).not.toBeVisible();
@@ -176,11 +176,11 @@ export class PersonaSwitcherPage {
     // Fill basic information
     await this.personaNameInput.fill(personaData.name || 'Test Persona');
     await this.personaTypeSelect.selectOption(personaData.type || 'PERSONAL');
-    
+
     if (personaData.displayName) {
       await this.personaDisplayNameInput.fill(personaData.displayName);
     }
-    
+
     if (personaData.bio) {
       await this.personaBioTextarea.fill(personaData.bio);
     }
@@ -189,11 +189,11 @@ export class PersonaSwitcherPage {
     if (personaData.themePreference) {
       await this.personaThemeSelect.selectOption(personaData.themePreference);
     }
-    
+
     if (personaData.language) {
       await this.personaLanguageSelect.selectOption(personaData.language);
     }
-    
+
     if (personaData.timezone) {
       await this.personaTimezoneSelect.selectOption(personaData.timezone);
     }
@@ -201,7 +201,7 @@ export class PersonaSwitcherPage {
     // Configure privacy settings
     if (personaData.privacySettings) {
       await this.profileVisibilitySelect.selectOption(personaData.privacySettings.profileVisibility);
-      
+
       await this.setToggleState(this.showOnlineStatusToggle, personaData.privacySettings.showOnlineStatus);
       await this.allowMessagesFromSelect.selectOption(personaData.privacySettings.allowMessagesFrom);
       await this.setToggleState(this.shareActivityDataToggle, personaData.privacySettings.shareActivityData);
@@ -225,10 +225,10 @@ export class PersonaSwitcherPage {
    */
   async createPersonaFromTemplate(templateType: 'work' | 'personal' | 'study' | 'gaming'): Promise<void> {
     await this.goToCreatePersona();
-    
+
     // Open template selector
     await this.templateSelector.click();
-    
+
     // Select template
     const templateLocator = {
       work: this.workTemplate,
@@ -236,14 +236,14 @@ export class PersonaSwitcherPage {
       study: this.studyTemplate,
       gaming: this.gamingTemplate
     };
-    
+
     await templateLocator[templateType].click();
     await this.createFromTemplateButton.click();
-    
+
     // Form should be pre-filled
     await expect(this.personaNameInput).not.toHaveValue('');
     await expect(this.personaTypeSelect).not.toHaveValue('');
-    
+
     // Submit form
     await this.createPersonaSubmit.click();
     await expect(this.page.locator('[data-testid="success-message"]')).toBeVisible();
@@ -254,21 +254,21 @@ export class PersonaSwitcherPage {
    */
   async editPersona(personaName: string, updates: Partial<TestPersona>): Promise<void> {
     await this.goToPersonas();
-    
+
     // Find and click edit button for the persona
     await this.page.locator(`[data-testid="persona-item-${personaName}"] [data-testid="edit-button"]`).click();
-    
+
     // Update fields
     if (updates.displayName) {
       await this.personaDisplayNameInput.clear();
       await this.personaDisplayNameInput.fill(updates.displayName);
     }
-    
+
     if (updates.bio) {
       await this.personaBioTextarea.clear();
       await this.personaBioTextarea.fill(updates.bio);
     }
-    
+
     if (updates.themePreference) {
       await this.personaThemeSelect.selectOption(updates.themePreference);
     }
@@ -283,14 +283,14 @@ export class PersonaSwitcherPage {
    */
   async deletePersona(personaName: string): Promise<void> {
     await this.goToPersonas();
-    
+
     // Find and click delete button for the persona
     await this.page.locator(`[data-testid="persona-item-${personaName}"] [data-testid="delete-button"]`).click();
-    
+
     // Confirm deletion
     await expect(this.page.locator('[data-testid="delete-persona-modal"]')).toBeVisible();
     await this.page.locator('[data-testid="confirm-delete-persona"]').click();
-    
+
     await expect(this.page.locator('[data-testid="success-message"]')).toBeVisible();
   }
 
@@ -299,12 +299,12 @@ export class PersonaSwitcherPage {
    */
   async setAsDefault(personaName: string): Promise<void> {
     await this.goToPersonas();
-    
+
     // Find and click set default button for the persona
     await this.page.locator(`[data-testid="persona-item-${personaName}"] [data-testid="set-default-button"]`).click();
-    
+
     await expect(this.page.locator('[data-testid="success-message"]')).toBeVisible();
-    
+
     // Verify default indicator appears
     await expect(this.page.locator(`[data-testid="persona-item-${personaName}"] [data-testid="default-badge"]`)).toBeVisible();
   }
@@ -314,14 +314,14 @@ export class PersonaSwitcherPage {
    */
   async uploadPersonaAvatar(personaName: string, filePath: string): Promise<void> {
     await this.goToPersonas();
-    
+
     // Open persona for editing
     await this.page.locator(`[data-testid="persona-item-${personaName}"] [data-testid="edit-button"]`).click();
-    
+
     // Upload avatar
     await this.personaAvatarUpload.setInputFiles(filePath);
     await this.savePersonaButton.click();
-    
+
     await expect(this.page.locator('[data-testid="success-message"]')).toBeVisible();
   }
 
@@ -331,7 +331,7 @@ export class PersonaSwitcherPage {
   async verifyPersonaInSwitcher(personaName: string): Promise<void> {
     await this.personaSwitcher.click();
     await expect(this.page.locator(`[data-testid="persona-option-${personaName}"]`)).toBeVisible();
-    
+
     // Close dropdown
     await this.page.keyboard.press('Escape');
   }
@@ -372,12 +372,12 @@ export class PersonaSwitcherPage {
    */
   async verifySwitchPerformance(personaName: string, maxTime: number = 500): Promise<number> {
     const startTime = Date.now();
-    
+
     await this.switchPersona(personaName);
-    
+
     const switchTime = Date.now() - startTime;
     expect(switchTime).toBeLessThan(maxTime);
-    
+
     return switchTime;
   }
 
@@ -453,24 +453,14 @@ export class PersonaSwitcherPage {
   }
 
   /**
-   * Helper method to set toggle state
-   */
-  private async setToggleState(toggle: Locator, desiredState: boolean): Promise<void> {
-    const currentState = await toggle.isChecked();
-    if (currentState !== desiredState) {
-      await toggle.click();
-    }
-  }
-
-  /**
    * Get list of all persona names
    */
   async getPersonaNames(): Promise<string[]> {
     await this.goToPersonas();
-    
+
     const personaItems = await this.page.locator('[data-testid^="persona-item-"]').all();
     const names: string[] = [];
-    
+
     for (const item of personaItems) {
       const nameElement = item.locator('[data-testid="persona-name"]');
       const name = await nameElement.textContent();
@@ -478,7 +468,7 @@ export class PersonaSwitcherPage {
         names.push(name.trim());
       }
     }
-    
+
     return names;
   }
 
@@ -487,20 +477,30 @@ export class PersonaSwitcherPage {
    */
   async verifyPersonaOrder(expectedOrder: string[]): Promise<void> {
     await this.personaSwitcher.click();
-    
+
     const personaElements = await this.personaOptions.all();
     const actualOrder: string[] = [];
-    
+
     for (const element of personaElements) {
       const text = await element.textContent();
       if (text) {
         actualOrder.push(text.trim());
       }
     }
-    
+
     expect(actualOrder).toEqual(expectedOrder);
-    
+
     // Close dropdown
     await this.page.keyboard.press('Escape');
+  }
+
+  /**
+   * Helper method to set toggle state
+   */
+  private async setToggleState(toggle: Locator, desiredState: boolean): Promise<void> {
+    const currentState = await toggle.isChecked();
+    if (currentState !== desiredState) {
+      await toggle.click();
+    }
   }
 }

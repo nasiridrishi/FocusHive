@@ -1,6 +1,6 @@
 /**
  * Core Web Vitals Performance Tests
- * 
+ *
  * Tests for measuring and validating Core Web Vitals metrics:
  * - First Contentful Paint (FCP)
  * - Largest Contentful Paint (LCP)
@@ -8,39 +8,39 @@
  * - Cumulative Layout Shift (CLS)
  * - First Input Delay (FID)
  * - Time to First Byte (TTFB)
- * 
+ *
  * Tests across different network conditions and device types
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { PerformanceTestHelper, CoreWebVitals } from './performance-helpers';
-import { performanceCollector, PerformanceMetrics } from './performance-metrics';
-import { AuthHelper } from '../../helpers/auth.helper';
+import {expect, test} from '@playwright/test';
+import {PerformanceTestHelper} from './performance-helpers';
+import {performanceCollector, PerformanceMetrics} from './performance-metrics';
+import {AuthHelper} from '../../helpers/auth.helper';
 
 // Test configuration
 const TEST_CONFIG = {
   pages: [
-    { name: 'Landing Page', url: '/', requiresAuth: false },
-    { name: 'Dashboard', url: '/dashboard', requiresAuth: true },
-    { name: 'Hive List', url: '/hives', requiresAuth: true },
-    { name: 'Profile', url: '/profile', requiresAuth: true },
-    { name: 'Settings', url: '/settings', requiresAuth: true }
+    {name: 'Landing Page', url: '/', requiresAuth: false},
+    {name: 'Dashboard', url: '/dashboard', requiresAuth: true},
+    {name: 'Hive List', url: '/hives', requiresAuth: true},
+    {name: 'Profile', url: '/profile', requiresAuth: true},
+    {name: 'Settings', url: '/settings', requiresAuth: true}
   ],
   networkConditions: [
-    { name: 'Fast 3G', condition: 'fast-3g' as const },
-    { name: 'Slow 3G', condition: 'slow-3g' as const }
+    {name: 'Fast 3G', condition: 'fast-3g' as const},
+    {name: 'Slow 3G', condition: 'slow-3g' as const}
   ],
   devices: [
-    { name: 'Desktop', viewport: { width: 1920, height: 1080 } },
-    { name: 'Tablet', viewport: { width: 1024, height: 768 } },
-    { name: 'Mobile', viewport: { width: 375, height: 667 } }
+    {name: 'Desktop', viewport: {width: 1920, height: 1080}},
+    {name: 'Tablet', viewport: {width: 1024, height: 768}},
+    {name: 'Mobile', viewport: {width: 375, height: 667}}
   ],
   thresholds: {
-    fcp: { good: 1800, poor: 3000 },
-    lcp: { good: 2500, poor: 4000 },
-    tti: { good: 3800, poor: 5800 },
-    cls: { good: 0.1, poor: 0.25 },
-    ttfb: { good: 800, poor: 1500 }
+    fcp: {good: 1800, poor: 3000},
+    lcp: {good: 2500, poor: 4000},
+    tti: {good: 3800, poor: 5800},
+    cls: {good: 0.1, poor: 0.25},
+    ttfb: {good: 800, poor: 1500}
   }
 };
 
@@ -48,7 +48,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
   let authHelper: AuthHelper;
   let performanceHelper: PerformanceTestHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
     performanceHelper = new PerformanceTestHelper(page);
     await performanceHelper.initializePerformanceMonitoring();
@@ -60,7 +60,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
 
   // Test each page under optimal conditions (WiFi, Desktop)
   for (const pageConfig of TEST_CONFIG.pages) {
-    test(`Core Web Vitals - ${pageConfig.name} (Optimal Conditions)`, async ({ page }) => {
+    test(`Core Web Vitals - ${pageConfig.name} (Optimal Conditions)`, async ({page}) => {
       performanceCollector.startTest(`CWV - ${pageConfig.name} - Optimal`);
 
       // Authenticate if required
@@ -70,7 +70,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
 
       // Navigate to page
       const navigationPromise = page.goto(`http://localhost:3000${pageConfig.url}`);
-      
+
       // Wait for page to be interactive
       await Promise.all([
         navigationPromise,
@@ -85,7 +85,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
       const coreWebVitals = await performanceHelper.measureCoreWebVitals();
 
       // Collect additional metrics
-      const memoryUsage = await performanceHelper.getMemoryUsage();
+      const _memoryUsage = await performanceHelper.getMemoryUsage();
 
       // Validate thresholds
       expect(coreWebVitals.fcp, `FCP should be under ${TEST_CONFIG.thresholds.fcp.good}ms`).toBeLessThan(TEST_CONFIG.thresholds.fcp.good);
@@ -108,8 +108,8 @@ test.describe('Core Web Vitals Performance Tests', () => {
         }
       };
 
-      const result = performanceCollector.endTest(`CWV - ${pageConfig.name} - Optimal`, metrics);
-      
+      const _result = performanceCollector.endTest(`CWV - ${pageConfig.name} - Optimal`, metrics);
+
       // Log detailed results
       console.log(`📊 ${pageConfig.name} Performance Metrics:`);
       console.log(`  FCP: ${coreWebVitals.fcp}ms`);
@@ -127,7 +127,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
 
   // Test Core Web Vitals under different network conditions
   for (const networkCondition of TEST_CONFIG.networkConditions) {
-    test(`Core Web Vitals - Dashboard under ${networkCondition.name}`, async ({ page }) => {
+    test(`Core Web Vitals - Dashboard under ${networkCondition.name}`, async ({page}) => {
       performanceCollector.startTest(`CWV - Dashboard - ${networkCondition.name}`);
 
       // Set up network throttling
@@ -137,29 +137,29 @@ test.describe('Core Web Vitals Performance Tests', () => {
       await authHelper.loginWithTestUser();
 
       // Navigate to dashboard
-      const startTime = Date.now();
+      const _startTime = Date.now();
       await page.goto('http://localhost:3000/dashboard');
-      await page.waitForLoadState('networkidle', { timeout: 30000 });
+      await page.waitForLoadState('networkidle', {timeout: 30000});
 
       // Measure Core Web Vitals
       const coreWebVitals = await performanceHelper.measureCoreWebVitals();
-      const memoryUsage = await performanceHelper.getMemoryUsage();
+      const _memoryUsage = await performanceHelper.getMemoryUsage();
 
       // Adjust expectations for slow networks
-      const adjustedThresholds = networkCondition.condition === 'slow-3g' ? 
-        {
-          fcp: TEST_CONFIG.thresholds.fcp.poor * 1.5,
-          lcp: TEST_CONFIG.thresholds.lcp.poor * 1.5,
-          tti: TEST_CONFIG.thresholds.tti.poor * 1.5,
-          cls: TEST_CONFIG.thresholds.cls.poor,
-          ttfb: TEST_CONFIG.thresholds.ttfb.poor * 2
-        } : {
-          fcp: TEST_CONFIG.thresholds.fcp.poor,
-          lcp: TEST_CONFIG.thresholds.lcp.poor,
-          tti: TEST_CONFIG.thresholds.tti.poor,
-          cls: TEST_CONFIG.thresholds.cls.poor,
-          ttfb: TEST_CONFIG.thresholds.ttfb.poor
-        };
+      const adjustedThresholds = networkCondition.condition === 'slow-3g' ?
+          {
+            fcp: TEST_CONFIG.thresholds.fcp.poor * 1.5,
+            lcp: TEST_CONFIG.thresholds.lcp.poor * 1.5,
+            tti: TEST_CONFIG.thresholds.tti.poor * 1.5,
+            cls: TEST_CONFIG.thresholds.cls.poor,
+            ttfb: TEST_CONFIG.thresholds.ttfb.poor * 2
+          } : {
+            fcp: TEST_CONFIG.thresholds.fcp.poor,
+            lcp: TEST_CONFIG.thresholds.lcp.poor,
+            tti: TEST_CONFIG.thresholds.tti.poor,
+            cls: TEST_CONFIG.thresholds.cls.poor,
+            ttfb: TEST_CONFIG.thresholds.ttfb.poor
+          };
 
       // Validate with adjusted thresholds
       expect(coreWebVitals.fcp, `FCP under ${networkCondition.name} should be reasonable`).toBeLessThan(adjustedThresholds.fcp);
@@ -185,8 +185,8 @@ test.describe('Core Web Vitals Performance Tests', () => {
         }
       };
 
-      const result = performanceCollector.endTest(`CWV - Dashboard - ${networkCondition.name}`, metrics);
-      
+      const _result = performanceCollector.endTest(`CWV - Dashboard - ${networkCondition.name}`, metrics);
+
       console.log(`📊 Dashboard Performance on ${networkCondition.name}:`);
       console.log(`  FCP: ${coreWebVitals.fcp}ms (threshold: ${adjustedThresholds.fcp}ms)`);
       console.log(`  LCP: ${coreWebVitals.lcp}ms (threshold: ${adjustedThresholds.lcp}ms)`);
@@ -196,7 +196,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
 
   // Test Core Web Vitals on different device types
   for (const device of TEST_CONFIG.devices) {
-    test(`Core Web Vitals - Dashboard on ${device.name}`, async ({ page }) => {
+    test(`Core Web Vitals - Dashboard on ${device.name}`, async ({page}) => {
       performanceCollector.startTest(`CWV - Dashboard - ${device.name}`);
 
       // Set viewport
@@ -211,11 +211,11 @@ test.describe('Core Web Vitals Performance Tests', () => {
 
       // Measure Core Web Vitals
       const coreWebVitals = await performanceHelper.measureCoreWebVitals();
-      const memoryUsage = await performanceHelper.getMemoryUsage();
+      const _memoryUsage = await performanceHelper.getMemoryUsage();
 
       // Mobile devices might have slightly different performance characteristics
       const deviceMultiplier = device.name === 'Mobile' ? 1.3 : 1.0;
-      
+
       expect(coreWebVitals.fcp, `FCP on ${device.name} should be reasonable`).toBeLessThan(TEST_CONFIG.thresholds.fcp.good * deviceMultiplier);
       expect(coreWebVitals.lcp, `LCP on ${device.name} should be reasonable`).toBeLessThan(TEST_CONFIG.thresholds.lcp.good * deviceMultiplier);
       expect(coreWebVitals.cls, `CLS on ${device.name} should be minimal`).toBeLessThan(TEST_CONFIG.thresholds.cls.good);
@@ -239,8 +239,8 @@ test.describe('Core Web Vitals Performance Tests', () => {
         }
       };
 
-      const result = performanceCollector.endTest(`CWV - Dashboard - ${device.name}`, metrics);
-      
+      const _result = performanceCollector.endTest(`CWV - Dashboard - ${device.name}`, metrics);
+
       console.log(`📱 Dashboard Performance on ${device.name} (${device.viewport.width}x${device.viewport.height}):`);
       console.log(`  FCP: ${coreWebVitals.fcp}ms`);
       console.log(`  LCP: ${coreWebVitals.lcp}ms`);
@@ -249,7 +249,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
   }
 
   // Test First Input Delay (FID) with user interactions
-  test('First Input Delay (FID) Measurement', async ({ page }) => {
+  test('First Input Delay (FID) Measurement', async ({page}) => {
     performanceCollector.startTest('FID - User Interactions');
 
     await authHelper.loginWithTestUser();
@@ -260,7 +260,7 @@ test.describe('Core Web Vitals Performance Tests', () => {
     const fidMeasurement = await page.evaluate(() => {
       return new Promise<number>((resolve) => {
         let fidValue = 0;
-        
+
         const observer = new PerformanceObserver((list) => {
           const entries = list.getEntries() as PerformanceEventTiming[];
           for (const entry of entries) {
@@ -271,21 +271,21 @@ test.describe('Core Web Vitals Performance Tests', () => {
             }
           }
         });
-        
+
         try {
-          observer.observe({ type: 'first-input', buffered: true });
+          observer.observe({type: 'first-input', buffered: true});
         } catch {
           // Fallback if first-input is not supported
           resolve(0);
         }
-        
+
         // Timeout fallback
         setTimeout(() => resolve(fidValue), 5000);
       });
     });
 
     // Perform a click interaction to trigger FID measurement
-    await page.click('button:first-of-type', { force: true });
+    await page.click('button:first-of-type', {force: true});
     await page.waitForTimeout(1000);
 
     // Get final Core Web Vitals including FID
@@ -302,13 +302,13 @@ test.describe('Core Web Vitals Performance Tests', () => {
       coreWebVitals
     };
 
-    const result = performanceCollector.endTest('FID - User Interactions', metrics);
-    
+    const _result = performanceCollector.endTest('FID - User Interactions', metrics);
+
     console.log(`👆 First Input Delay: ${coreWebVitals.fid}ms`);
   });
 
   // Test performance with CPU throttling (simulating low-end devices)
-  test('Core Web Vitals with CPU Throttling', async ({ page }) => {
+  test('Core Web Vitals with CPU Throttling', async ({page}) => {
     performanceCollector.startTest('CWV - CPU Throttling');
 
     // Apply CPU throttling (4x slowdown)
@@ -316,11 +316,11 @@ test.describe('Core Web Vitals Performance Tests', () => {
 
     await authHelper.loginWithTestUser();
     await page.goto('http://localhost:3000/dashboard');
-    await page.waitForLoadState('networkidle', { timeout: 30000 });
+    await page.waitForLoadState('networkidle', {timeout: 30000});
 
     // Measure Core Web Vitals under CPU constraint
     const coreWebVitals = await performanceHelper.measureCoreWebVitals();
-    const memoryUsage = await performanceHelper.getMemoryUsage();
+    const _memoryUsage = await performanceHelper.getMemoryUsage();
 
     // Adjusted thresholds for CPU throttling
     const throttledThresholds = {
@@ -345,8 +345,8 @@ test.describe('Core Web Vitals Performance Tests', () => {
       }
     };
 
-    const result = performanceCollector.endTest('CWV - CPU Throttling', metrics);
-    
+    const _result = performanceCollector.endTest('CWV - CPU Throttling', metrics);
+
     console.log(`🐌 Performance with 4x CPU throttling:`);
     console.log(`  FCP: ${coreWebVitals.fcp}ms`);
     console.log(`  LCP: ${coreWebVitals.lcp}ms`);
@@ -357,19 +357,19 @@ test.describe('Core Web Vitals Performance Tests', () => {
   test.afterAll(async () => {
     const report = performanceCollector.generateReport();
     console.log(report);
-    
+
     // Export results for CI/CD integration
     const results = performanceCollector.exportResults();
-    
+
     // Write results to file for artifact collection
-    const fs = require('fs').promises;
-    const path = require('path');
-    
+    const fs = (await import('fs')).promises;
+    const path = await import('path');
+
     await fs.writeFile(
-      path.join(__dirname, '../../reports/core-web-vitals-report.json'),
-      JSON.stringify(results, null, 2)
+        path.join(__dirname, '../../reports/core-web-vitals-report.json'),
+        JSON.stringify(results, null, 2)
     );
-    
+
     console.log('📝 Performance report saved to core-web-vitals-report.json');
   });
 });

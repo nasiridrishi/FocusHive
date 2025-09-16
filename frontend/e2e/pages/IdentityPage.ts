@@ -1,15 +1,15 @@
 /**
  * Page Object Model for Identity and Profile Management
- * 
+ *
  * Provides a structured interface for interacting with identity-related UI elements
  * Supports authentication, profile management, privacy settings, and OAuth2 flows
- * 
+ *
  * @fileoverview Identity page object model for E2E tests
  * @version 1.0.0
  */
 
-import { expect, type Page, type Locator } from '@playwright/test';
-import { IDENTITY_ROUTES } from '../tests/identity/identity.config';
+import {expect, type Locator, type Page} from '@playwright/test';
+import {IDENTITY_ROUTES} from '../tests/identity/identity.config';
 
 export class IdentityPage {
   readonly page: Page;
@@ -125,11 +125,11 @@ export class IdentityPage {
     await this.goToLogin();
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
-    
-    const navigationPromise = this.page.waitForURL('**/dashboard', { timeout: 10000 });
+
+    const navigationPromise = this.page.waitForURL('**/dashboard', {timeout: 10000});
     await this.loginSubmit.click();
     await navigationPromise;
-    
+
     await expect(this.userMenu).toBeVisible();
   }
 
@@ -139,7 +139,7 @@ export class IdentityPage {
   async logout(): Promise<void> {
     await this.userMenu.click();
     await this.logoutButton.click();
-    
+
     await this.page.waitForURL('**/auth/login');
     await expect(this.loginForm).toBeVisible();
   }
@@ -306,12 +306,12 @@ export class PrivacySettingsPage extends IdentityPage {
    */
   async toggleOnlineStatus(show: boolean): Promise<void> {
     await this.goToPrivacySettings();
-    
+
     const currentState = await this.showOnlineStatusToggle.isChecked();
     if (currentState !== show) {
       await this.showOnlineStatusToggle.click();
     }
-    
+
     await this.savePrivacyButton.click();
     await this.waitForSuccess();
   }
@@ -332,10 +332,10 @@ export class PrivacySettingsPage extends IdentityPage {
   async requestDataExport(format: 'JSON' | 'CSV' = 'JSON'): Promise<void> {
     await this.goToPrivacySettings();
     await this.switchToTab('data');
-    
+
     await this.dataExportFormatSelect.selectOption(format);
     await this.requestDataExportButton.click();
-    
+
     await expect(this.page.locator('[data-testid="export-request-confirmation"]')).toBeVisible();
   }
 
@@ -345,10 +345,10 @@ export class PrivacySettingsPage extends IdentityPage {
   async initiateAccountDeletion(confirmationText: string): Promise<void> {
     await this.goToPrivacySettings();
     await this.switchToTab('data');
-    
+
     await this.deleteAccountButton.click();
     await expect(this.page.locator('[data-testid="delete-account-modal"]')).toBeVisible();
-    
+
     await this.confirmDeleteInput.fill(confirmationText);
     await this.confirmDeleteButton.click();
   }
@@ -471,7 +471,7 @@ export class OAuth2AppsPage extends IdentityPage {
     await this.createAppButton.click();
 
     await this.appName.fill(appData.name);
-    
+
     if (appData.description) {
       await this.appDescription.fill(appData.description);
     }
@@ -509,7 +509,7 @@ export class OAuth2AppsPage extends IdentityPage {
       clientSecret = await this.clientSecretDisplay.textContent() || undefined;
     }
 
-    return { clientId, clientSecret };
+    return {clientId, clientSecret};
   }
 
   /**
@@ -518,9 +518,9 @@ export class OAuth2AppsPage extends IdentityPage {
   async deleteApp(appName: string): Promise<void> {
     await this.goToOAuthApps();
     await this.page.locator(`[data-testid="app-item-${appName}"]`).click();
-    
+
     await this.deleteAppButton.click();
-    
+
     // Confirm deletion
     await this.page.locator('[data-testid="confirm-delete-app"]').click();
     await this.waitForSuccess();

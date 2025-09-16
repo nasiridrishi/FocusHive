@@ -1,17 +1,17 @@
 /**
  * ARIA Testing Helpers
- * 
+ *
  * Utility functions for testing ARIA implementation including:
  * - ARIA role validation
  * - Property and state verification
  * - Relationship testing
  * - Live region monitoring
  * - Complex pattern validation
- * 
+ *
  * UOL-44.19: Comprehensive Accessibility E2E Tests
  */
 
-import { Page, Locator } from '@playwright/test';
+import {Locator, Page} from '@playwright/test';
 
 export interface AriaRole {
   name: string;
@@ -268,7 +268,8 @@ export const ARIA_ROLES: Record<string, AriaRole> = {
 };
 
 export class AriaHelpers {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   /**
    * Validate ARIA implementation for an element
@@ -294,7 +295,7 @@ export class AriaHelpers {
     // Separate properties and states
     for (const [name, value] of Object.entries(ariaAttributes)) {
       if (name === 'role') continue;
-      
+
       if (['aria-checked', 'aria-disabled', 'aria-expanded', 'aria-hidden', 'aria-invalid', 'aria-pressed', 'aria-selected'].includes(name)) {
         states[name] = value;
       } else {
@@ -305,14 +306,14 @@ export class AriaHelpers {
     if (!role) {
       // No role specified - validate native element semantics
       const tagName = await element.evaluate(el => el.tagName.toLowerCase());
-      
+
       if (['div', 'span'].includes(tagName) && Object.keys(ariaAttributes).length > 1) {
         warnings.push(`Generic ${tagName} element with ARIA attributes should consider using semantic HTML or explicit role`);
       }
     } else {
       // Validate against role specification
       const roleSpec = ARIA_ROLES[role];
-      
+
       if (!roleSpec) {
         errors.push(`Invalid or unsupported ARIA role: ${role}`);
       } else {
@@ -387,132 +388,10 @@ export class AriaHelpers {
   }
 
   /**
-   * Validate ARIA property value
-   */
-  private validateAriaPropertyValue(property: string, value: string): string | null {
-    switch (property) {
-      case 'aria-level':
-        const level = parseInt(value);
-        if (isNaN(level) || level < 1) {
-          return `aria-level must be a positive integer, got: ${value}`;
-        }
-        break;
-
-      case 'aria-posinset':
-      case 'aria-setsize':
-        const num = parseInt(value);
-        if (isNaN(num) || num < 1) {
-          return `${property} must be a positive integer, got: ${value}`;
-        }
-        break;
-
-      case 'aria-colspan':
-      case 'aria-rowspan':
-        const span = parseInt(value);
-        if (isNaN(span) || span < 1) {
-          return `${property} must be a positive integer, got: ${value}`;
-        }
-        break;
-
-      case 'aria-autocomplete':
-        if (!['none', 'inline', 'list', 'both'].includes(value)) {
-          return `aria-autocomplete must be one of: none, inline, list, both. Got: ${value}`;
-        }
-        break;
-
-      case 'aria-orientation':
-        if (!['horizontal', 'vertical', 'undefined'].includes(value)) {
-          return `aria-orientation must be one of: horizontal, vertical, undefined. Got: ${value}`;
-        }
-        break;
-
-      case 'aria-sort':
-        if (!['ascending', 'descending', 'none', 'other'].includes(value)) {
-          return `aria-sort must be one of: ascending, descending, none, other. Got: ${value}`;
-        }
-        break;
-
-      case 'aria-live':
-        if (!['off', 'polite', 'assertive'].includes(value)) {
-          return `aria-live must be one of: off, polite, assertive. Got: ${value}`;
-        }
-        break;
-    }
-
-    return null;
-  }
-
-  /**
-   * Validate ARIA state value
-   */
-  private validateAriaStateValue(state: string, value: string): string | null {
-    switch (state) {
-      case 'aria-checked':
-        if (!['true', 'false', 'mixed'].includes(value)) {
-          return `aria-checked must be true, false, or mixed. Got: ${value}`;
-        }
-        break;
-
-      case 'aria-pressed':
-        if (!['true', 'false', 'mixed'].includes(value)) {
-          return `aria-pressed must be true, false, or mixed. Got: ${value}`;
-        }
-        break;
-
-      case 'aria-selected':
-      case 'aria-expanded':
-      case 'aria-hidden':
-      case 'aria-disabled':
-      case 'aria-invalid':
-      case 'aria-required':
-      case 'aria-readonly':
-      case 'aria-multiline':
-      case 'aria-multiselectable':
-      case 'aria-atomic':
-        if (!['true', 'false'].includes(value)) {
-          return `${state} must be true or false. Got: ${value}`;
-        }
-        break;
-    }
-
-    return null;
-  }
-
-  /**
-   * Check if element has valid parent role
-   */
-  private async checkParentRole(element: Locator, requiredParents: string[]): Promise<boolean> {
-    return element.evaluate((el, parents) => {
-      let current = el.parentElement;
-      while (current && current !== document.body) {
-        const role = current.getAttribute('role');
-        if (role && parents.includes(role)) {
-          return true;
-        }
-        current = current.parentElement;
-      }
-      return false;
-    }, requiredParents);
-  }
-
-  /**
-   * Check if element's children have valid roles
-   */
-  private async checkChildrenRoles(element: Locator, allowedChildren: string[]): Promise<boolean> {
-    return element.evaluate((el, allowed) => {
-      const children = Array.from(el.children);
-      return children.every(child => {
-        const role = child.getAttribute('role');
-        return !role || allowed.includes(role);
-      });
-    }, allowedChildren);
-  }
-
-  /**
    * Monitor live region updates
    */
   async monitorLiveRegion(element: Locator, duration: number = 5000): Promise<LiveRegionUpdate[]> {
-    const updates: LiveRegionUpdate[] = [];
+    const _updates: LiveRegionUpdate[] = [];
 
     // Set up mutation observer
     await element.evaluate((el, monitorDuration) => {
@@ -525,7 +404,7 @@ export class AriaHelpers {
               politeness: el.getAttribute('aria-live') || 'off',
               atomic: el.getAttribute('aria-atomic') === 'true'
             };
-            
+
             // Store update in element for retrieval
             if (!(el as unknown as { __liveUpdates: LiveRegionUpdate[] }).__liveUpdates) {
               (el as unknown as { __liveUpdates: LiveRegionUpdate[] }).__liveUpdates = [];
@@ -648,23 +527,23 @@ export class AriaHelpers {
 
     // Test keyboard navigation
     await container.focus();
-    
+
     const navigationKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
-    
+
     for (const key of navigationKeys.slice(0, 3)) {
       try {
         await this.page.keyboard.press(key);
         await this.page.waitForTimeout(100);
-        
+
         // Check if active descendant changed or focus moved
         const currentActiveDescendant = await container.getAttribute('aria-activedescendant');
         const focusedElement = this.page.locator(':focus');
-        
+
         if (currentActiveDescendant !== activeDescendant || await focusedElement.count() > 0) {
           // Navigation is working
           break;
         }
-      } catch (error) {
+      } catch {
         keyboardNavigable = false;
       }
     }
@@ -690,11 +569,11 @@ export class AriaHelpers {
           // Validate tab list pattern
           const tabs = await element.locator('[role="tab"]').all();
           const tabpanels = await this.page.locator('[role="tabpanel"]').all();
-          
+
           if (tabs.length === 0) {
             errors.push('Tablist must contain tab elements');
           }
-          
+
           if (tabpanels.length !== tabs.length) {
             warnings.push(`Tab count (${tabs.length}) does not match tabpanel count (${tabpanels.length})`);
           }
@@ -735,7 +614,7 @@ export class AriaHelpers {
       case 'menu':
         if (role === 'menu') {
           const menuItems = await element.locator('[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]').all();
-          
+
           if (menuItems.length === 0) {
             errors.push('Menu must contain menu items');
           }
@@ -751,7 +630,7 @@ export class AriaHelpers {
       case 'dialog':
         if (role === 'dialog' || role === 'alertdialog') {
           const modal = await element.getAttribute('aria-modal');
-          
+
           if (modal !== 'true') {
             warnings.push('Dialog should have aria-modal="true"');
           }
@@ -759,7 +638,7 @@ export class AriaHelpers {
           // Check for accessible name
           const label = await element.getAttribute('aria-label');
           const labelledBy = await element.getAttribute('aria-labelledby');
-          
+
           if (!label && !labelledBy) {
             errors.push('Dialog must have accessible name (aria-label or aria-labelledby)');
           }
@@ -796,7 +675,7 @@ export class AriaHelpers {
     if (role === 'button') {
       const expanded = await element.getAttribute('aria-expanded');
       const controls = await element.getAttribute('aria-controls');
-      
+
       if (expanded && !controls) {
         suggestions.push('Button with aria-expanded should have aria-controls');
       }
@@ -804,12 +683,137 @@ export class AriaHelpers {
 
     if (role === 'textbox') {
       const multiline = await element.getAttribute('aria-multiline');
-      
+
       if (!multiline && tagName === 'textarea') {
         suggestions.push('Textarea should have aria-multiline="true"');
       }
     }
 
     return suggestions;
+  }
+
+  /**
+   * Validate ARIA property value
+   */
+  private validateAriaPropertyValue(property: string, value: string): string | null {
+    switch (property) {
+      case 'aria-level': {
+        const level = parseInt(value);
+        if (isNaN(level) || level < 1) {
+          return `aria-level must be a positive integer, got: ${value}`;
+        }
+        break;
+      }
+
+      case 'aria-posinset':
+      case 'aria-setsize': {
+        const num = parseInt(value);
+        if (isNaN(num) || num < 1) {
+          return `${property} must be a positive integer, got: ${value}`;
+        }
+        break;
+      }
+
+      case 'aria-colspan':
+      case 'aria-rowspan': {
+        const span = parseInt(value);
+        if (isNaN(span) || span < 1) {
+          return `${property} must be a positive integer, got: ${value}`;
+        }
+        break;
+      }
+
+      case 'aria-autocomplete':
+        if (!['none', 'inline', 'list', 'both'].includes(value)) {
+          return `aria-autocomplete must be one of: none, inline, list, both. Got: ${value}`;
+        }
+        break;
+
+      case 'aria-orientation':
+        if (!['horizontal', 'vertical', 'undefined'].includes(value)) {
+          return `aria-orientation must be one of: horizontal, vertical, undefined. Got: ${value}`;
+        }
+        break;
+
+      case 'aria-sort':
+        if (!['ascending', 'descending', 'none', 'other'].includes(value)) {
+          return `aria-sort must be one of: ascending, descending, none, other. Got: ${value}`;
+        }
+        break;
+
+      case 'aria-live':
+        if (!['off', 'polite', 'assertive'].includes(value)) {
+          return `aria-live must be one of: off, polite, assertive. Got: ${value}`;
+        }
+        break;
+    }
+
+    return null;
+  }
+
+  /**
+   * Validate ARIA state value
+   */
+  private validateAriaStateValue(state: string, value: string): string | null {
+    switch (state) {
+      case 'aria-checked':
+        if (!['true', 'false', 'mixed'].includes(value)) {
+          return `aria-checked must be true, false, or mixed. Got: ${value}`;
+        }
+        break;
+
+      case 'aria-pressed':
+        if (!['true', 'false', 'mixed'].includes(value)) {
+          return `aria-pressed must be true, false, or mixed. Got: ${value}`;
+        }
+        break;
+
+      case 'aria-selected':
+      case 'aria-expanded':
+      case 'aria-hidden':
+      case 'aria-disabled':
+      case 'aria-invalid':
+      case 'aria-required':
+      case 'aria-readonly':
+      case 'aria-multiline':
+      case 'aria-multiselectable':
+      case 'aria-atomic':
+        if (!['true', 'false'].includes(value)) {
+          return `${state} must be true or false. Got: ${value}`;
+        }
+        break;
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if element has valid parent role
+   */
+  private async checkParentRole(element: Locator, requiredParents: string[]): Promise<boolean> {
+    return element.evaluate((el, parents) => {
+      let current = el.parentElement;
+      while (current && current !== document.body) {
+        const role = current.getAttribute('role');
+        if (role && parents.includes(role)) {
+          return true;
+        }
+        current = current.parentElement;
+      }
+      return false;
+    }, requiredParents);
+  }
+
+  /**
+   * Check if element's children have valid roles
+   */
+  private async checkChildrenRoles(element: Locator, allowedChildren: string[]): Promise<boolean> {
+    return element.evaluate((el, allowed) => {
+      const children = Array.from(el.children);
+      return children.every(child => {
+        const role = child.getAttribute('role');
+        return !role || allowed.includes(role);
+      });
+    }, allowedChildren);
   }
 }

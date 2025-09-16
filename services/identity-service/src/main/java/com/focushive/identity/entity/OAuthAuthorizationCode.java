@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -79,7 +79,7 @@ public class OAuthAuthorizationCode {
                      joinColumns = @JoinColumn(name = "auth_code_id"))
     @Column(name = "scope")
     @Builder.Default
-    private Set<String> scopes = new HashSet<>();
+    private Set<String> scopes = new LinkedHashSet<>();
     
     /**
      * State parameter for CSRF protection
@@ -177,21 +177,26 @@ public class OAuthAuthorizationCode {
         if (!isUsingPKCE()) {
             return true; // No PKCE required
         }
-        
+
         if (codeVerifier == null || codeVerifier.trim().isEmpty()) {
             return false;
         }
-        
-        // This would be implemented with actual SHA256 hashing in a real service
-        // For now, we'll just do a simple comparison
+
         if ("plain".equals(codeChallengeMethod)) {
             return codeChallenge.equals(codeVerifier);
         } else if ("S256".equals(codeChallengeMethod)) {
-            // In real implementation: SHA256(codeVerifier) base64url-encoded
-            // For testing purposes, we'll assume the challenge is already hashed
-            return codeChallenge.equals(codeVerifier);
+            try {
+                // S256 method: challenge = BASE64URL(SHA256(verifier))
+                java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                byte[] digest = md.digest(codeVerifier.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+                String calculatedChallenge = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+                return codeChallenge.equals(calculatedChallenge);
+            } catch (java.security.NoSuchAlgorithmException e) {
+                // This should never happen as SHA-256 is a standard algorithm
+                throw new RuntimeException("SHA-256 algorithm not available", e);
+            }
         }
-        
+
         return false;
     }
     

@@ -1,14 +1,14 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { useWebSocket } from './WebSocketContext'
-import { 
-  PresenceContextType, 
-  UserPresence, 
-  PresenceStatus, 
-  PresenceUpdate, 
-  HivePresenceInfo, 
-  FocusSession, 
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react'
+import {useWebSocket} from './WebSocketContext'
+import {
+  ActivityEvent,
+  FocusSession,
+  HivePresenceInfo,
+  PresenceContextType,
+  PresenceStatus,
+  PresenceUpdate,
   SessionBreak,
-  ActivityEvent 
+  UserPresence
 } from '../types/presence'
 
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined)
@@ -19,15 +19,15 @@ interface PresenceProviderProps {
 }
 
 export const PresenceProvider: React.FC<PresenceProviderProps> = ({
-  children,
-  userId,
-}) => {
-  const { isConnected, emit, on } = useWebSocket()
-  
+                                                                    children,
+                                                                    userId,
+                                                                  }) => {
+  const {isConnected, emit, on} = useWebSocket()
+
   const [currentPresence, setCurrentPresence] = useState<UserPresence | null>(null)
   const [hivePresence, setHivePresence] = useState<Record<string, HivePresenceInfo>>({})
   const [currentSession, setCurrentSession] = useState<FocusSession | null>(null)
-  
+
   // Use refs to track state for debouncing
   const lastStatusUpdate = useRef<Date>(new Date())
   const statusUpdateTimeoutRef = useRef<number | null>(null)
@@ -41,10 +41,15 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
       const hiveInfo = prev[data.hiveId]
       if (!hiveInfo) return prev
 
-      const updatedUsers = hiveInfo.activeUsers.map(user => 
-        user.userId === data.userId 
-          ? { ...user, status: data.status, currentActivity: data.activity, lastSeen: data.timestamp }
-          : user
+      const updatedUsers = hiveInfo.activeUsers.map(user =>
+          user.userId === data.userId
+              ? {
+                ...user,
+                status: data.status,
+                currentActivity: data.activity,
+                lastSeen: data.timestamp
+              }
+              : user
       )
 
       return {
@@ -76,7 +81,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
       if (userExists) return prev
 
       const updatedUsers = [...hiveInfo.activeUsers, data.user]
-      
+
       return {
         ...prev,
         [data.hiveId]: {
@@ -96,7 +101,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
       if (!hiveInfo) return prev
 
       const updatedUsers = hiveInfo.activeUsers.filter(u => u.userId !== data.userId)
-      
+
       return {
         ...prev,
         [data.hiveId]: {
@@ -137,10 +142,10 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
       // Update current session to mark break as ended
       setCurrentSession(prev => prev ? {
         ...prev,
-        breaks: prev.breaks.map(b => 
-          b.id === data.breakId 
-            ? { ...b, isActive: false, endTime: new Date().toISOString() }
-            : b
+        breaks: prev.breaks.map(b =>
+            b.id === data.breakId
+                ? {...b, isActive: false, endTime: new Date().toISOString()}
+                : b
         )
       } : null)
     }
@@ -163,7 +168,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
     }
 
     emit('presence:update', update)
-    
+
     setCurrentPresence(prev => prev ? {
       ...prev,
       status,
@@ -175,7 +180,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   const debouncedStatusUpdate = useCallback((status: PresenceStatus, activity?: string) => {
     const now = new Date()
     const timeSinceLastUpdate = now.getTime() - lastStatusUpdate.current.getTime()
-    
+
     // Clear existing timeout
     if (statusUpdateTimeoutRef.current) {
       clearTimeout(statusUpdateTimeoutRef.current)
@@ -203,19 +208,29 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
 
     const initialPresence: UserPresence = {
       userId,
-      user: { id: userId, name: '', username: '', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' }, // Will be populated by backend
+      user: {
+        id: userId,
+        name: '',
+        username: '',
+        email: '',
+        firstName: '',
+        lastName: '',
+        isEmailVerified: false,
+        createdAt: '',
+        updatedAt: ''
+      }, // Will be populated by backend
       status: 'online',
       lastSeen: new Date().toISOString(),
       deviceInfo: {
         type: 'web',
-        browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 
-                 navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Other',
+        browser: navigator.userAgent.includes('Chrome') ? 'Chrome' :
+            navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Other',
         os: navigator.platform,
       }
     }
 
     setCurrentPresence(initialPresence)
-    emit('presence:initialize', { userId, presence: initialPresence })
+    emit('presence:initialize', {userId, presence: initialPresence})
   }, [userId, emit])
 
   const stopHeartbeat = useCallback(() => {
@@ -230,9 +245,9 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
 
     heartbeatIntervalRef.current = setInterval(() => {
       if (isConnected && currentPresence) {
-        emit('presence:heartbeat', { 
-          userId, 
-          timestamp: new Date().toISOString() 
+        emit('presence:heartbeat', {
+          userId,
+          timestamp: new Date().toISOString()
         })
       }
     }, 30000) as unknown as number // Send heartbeat every 30 seconds
@@ -241,8 +256,8 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   const joinHivePresence = useCallback((hiveId: string) => {
     if (!isConnected || !userId) return
 
-    emit('presence:join_hive', { userId, hiveId })
-    
+    emit('presence:join_hive', {userId, hiveId})
+
     setCurrentPresence(prev => prev ? {
       ...prev,
       hiveId,
@@ -253,8 +268,8 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   const leaveHivePresence = useCallback((hiveId: string) => {
     if (!isConnected || !userId) return
 
-    emit('presence:leave_hive', { userId, hiveId })
-    
+    emit('presence:leave_hive', {userId, hiveId})
+
     setCurrentPresence(prev => prev ? {
       ...prev,
       hiveId: undefined,
@@ -263,7 +278,7 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
 
     // Remove hive from local state
     setHivePresence(prev => {
-      const updated = { ...prev }
+      const updated = {...prev}
       delete updated[hiveId]
       return updated
     })
@@ -287,13 +302,13 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   const endFocusSession = useCallback((productivity?: FocusSession['productivity']) => {
     if (!isConnected || !userId || !currentSession) return
 
-    emit('session:end', { 
-      userId, 
+    emit('session:end', {
+      userId,
       sessionId: currentSession.id,
       productivity,
       timestamp: new Date().toISOString(),
     })
-    
+
     updatePresence('online', 'Completed focus session')
     setCurrentSession(null)
   }, [isConnected, userId, currentSession, emit, updatePresence])
@@ -301,25 +316,25 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   const takeBreak = useCallback((type: SessionBreak['type']) => {
     if (!isConnected || !userId) return
 
-    emit('session:break_start', { 
-      userId, 
+    emit('session:break_start', {
+      userId,
       sessionId: currentSession?.id,
       breakType: type,
       timestamp: new Date().toISOString(),
     })
-    
+
     updatePresence('break', `Taking ${type} break`)
   }, [isConnected, userId, currentSession?.id, emit, updatePresence])
 
   const resumeFromBreak = useCallback(() => {
     if (!isConnected || !userId) return
 
-    emit('session:break_end', { 
-      userId, 
+    emit('session:break_end', {
+      userId,
       sessionId: currentSession?.id,
       timestamp: new Date().toISOString(),
     })
-    
+
     updatePresence('focusing', 'Resumed focus session')
   }, [isConnected, userId, currentSession?.id, emit, updatePresence])
 
@@ -342,12 +357,26 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
     const unsubscribeFunctions = [
       on('presence:update', (data: unknown) => handlePresenceUpdate(data as PresenceUpdate)),
       on('presence:hive_info', (data: unknown) => handleHivePresenceInfo(data as HivePresenceInfo)),
-      on('presence:user_joined', (data: unknown) => handleUserJoined(data as { user: UserPresence; hiveId: string })),
-      on('presence:user_left', (data: unknown) => handleUserLeft(data as { userId: string; hiveId: string })),
+      on('presence:user_joined', (data: unknown) => handleUserJoined(data as {
+        user: UserPresence;
+        hiveId: string
+      })),
+      on('presence:user_left', (data: unknown) => handleUserLeft(data as {
+        userId: string;
+        hiveId: string
+      })),
       on('session:started', (data: unknown) => handleSessionStarted(data as FocusSession)),
-      on('session:ended', (data: unknown) => handleSessionEnded(data as { sessionId: string; userId: string })),
-      on('session:break_started', (data: unknown) => handleBreakStarted(data as SessionBreak & { userId: string })),
-      on('session:break_ended', (data: unknown) => handleBreakEnded(data as { breakId: string; userId: string })),
+      on('session:ended', (data: unknown) => handleSessionEnded(data as {
+        sessionId: string;
+        userId: string
+      })),
+      on('session:break_started', (data: unknown) => handleBreakStarted(data as SessionBreak & {
+        userId: string
+      })),
+      on('session:break_ended', (data: unknown) => handleBreakEnded(data as {
+        breakId: string;
+        userId: string
+      })),
       on('activity:event', (data: unknown) => handleActivityEvent(data as ActivityEvent)),
     ]
 
@@ -379,9 +408,9 @@ export const PresenceProvider: React.FC<PresenceProviderProps> = ({
   }
 
   return (
-    <PresenceContext.Provider value={value}>
-      {children}
-    </PresenceContext.Provider>
+      <PresenceContext.Provider value={value}>
+        {children}
+      </PresenceContext.Provider>
   )
 }
 

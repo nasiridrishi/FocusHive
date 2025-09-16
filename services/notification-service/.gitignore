@@ -5,7 +5,15 @@ target/
 *.war
 *.ear
 *.class
+
+# Logs
 *.log
+logs/
+log/
+*.log.*
+bootrun.log
+app*.log
+notification-test.log
 
 # IDE files
 .idea/
@@ -29,6 +37,16 @@ application-local.yml
 *.bak
 *.swp
 *~
+temp-*/
+temp-disabled/
+
+# Test artifacts
+test_*.sh
+final_*.sh
+test_output.txt
+test_results.txt
+*.txt
+!requirements.txt
 
 # Node modules (if any)
 node_modules/
@@ -36,5 +54,5 @@ npm-debug.log*
 
 # Gradle
 .gradle/
-gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.properties
+!gradle/wrapper/gradle-wrapper.jar

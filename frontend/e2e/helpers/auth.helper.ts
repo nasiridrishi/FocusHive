@@ -2,8 +2,8 @@
  * Authentication helper functions for E2E tests
  */
 
-import { Page, expect } from '@playwright/test';
-import { TEST_USERS, SELECTORS, TIMEOUTS, generateUniqueUser } from './test-data';
+import {expect, Page} from '@playwright/test';
+import {generateUniqueUser, SELECTORS, TEST_USERS, TIMEOUTS} from './test-data';
 
 interface ApiRequestInfo {
   url: string;
@@ -13,7 +13,8 @@ interface ApiRequestInfo {
 }
 
 export class AuthHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   /**
    * Navigate to login page
@@ -21,10 +22,10 @@ export class AuthHelper {
   async navigateToLogin(): Promise<void> {
     await this.page.goto('/login');
     await this.page.waitForLoadState('networkidle');
-    
+
     // Verify we're on the login page
-    await expect(this.page.locator(SELECTORS.LOGIN_USERNAME_INPUT)).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await expect(this.page.locator(SELECTORS.LOGIN_PASSWORD_INPUT)).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.page.locator(SELECTORS.LOGIN_USERNAME_INPUT)).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+    await expect(this.page.locator(SELECTORS.LOGIN_PASSWORD_INPUT)).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -33,10 +34,10 @@ export class AuthHelper {
   async navigateToRegister(): Promise<void> {
     await this.page.goto('/register');
     await this.page.waitForLoadState('networkidle');
-    
+
     // Verify we're on the register page
-    await expect(this.page.locator(SELECTORS.REGISTER_USERNAME_INPUT)).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    await expect(this.page.locator(SELECTORS.REGISTER_EMAIL_INPUT)).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.page.locator(SELECTORS.REGISTER_USERNAME_INPUT)).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+    await expect(this.page.locator(SELECTORS.REGISTER_EMAIL_INPUT)).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -125,15 +126,15 @@ export class AuthHelper {
   async logout(): Promise<void> {
     // Try to find user menu first
     const userMenu = this.page.locator(SELECTORS.USER_MENU);
-    
+
     try {
       // Wait for user menu to be visible
-      await userMenu.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM });
+      await userMenu.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM});
       await userMenu.click();
-      
+
       // Wait for logout button and click it
       const logoutButton = this.page.locator(SELECTORS.LOGOUT_BUTTON);
-      await logoutButton.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT });
+      await logoutButton.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT});
       await logoutButton.click();
     } catch {
       // If user menu approach fails, try direct logout button
@@ -147,10 +148,10 @@ export class AuthHelper {
    */
   async verifyLoggedIn(): Promise<void> {
     // Should be redirected to dashboard or show user menu
-    await expect(this.page).toHaveURL(/\/dashboard|\/home|\/app/, { timeout: TIMEOUTS.NETWORK });
-    
+    await expect(this.page).toHaveURL(/\/dashboard|\/home|\/app/, {timeout: TIMEOUTS.NETWORK});
+
     // User menu should be visible
-    await expect(this.page.locator(SELECTORS.USER_MENU)).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.page.locator(SELECTORS.USER_MENU)).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -159,9 +160,9 @@ export class AuthHelper {
   async verifyLoggedOut(): Promise<void> {
     // Should be redirected to login page or home
     await expect(this.page).toHaveURL(/\/login|\/$/);
-    
+
     // Login form should be visible
-    await expect(this.page.locator(SELECTORS.LOGIN_USERNAME_INPUT)).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.page.locator(SELECTORS.LOGIN_USERNAME_INPUT)).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -169,8 +170,8 @@ export class AuthHelper {
    */
   async verifyErrorMessage(expectedMessage?: string): Promise<void> {
     const errorElement = this.page.locator(SELECTORS.ERROR_MESSAGE);
-    await expect(errorElement).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(errorElement).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     if (expectedMessage) {
       await expect(errorElement).toContainText(expectedMessage);
     }
@@ -181,8 +182,8 @@ export class AuthHelper {
    */
   async verifySuccessMessage(expectedMessage?: string): Promise<void> {
     const successElement = this.page.locator(SELECTORS.SUCCESS_MESSAGE);
-    await expect(successElement).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(successElement).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     if (expectedMessage) {
       await expect(successElement).toContainText(expectedMessage);
     }
@@ -194,14 +195,14 @@ export class AuthHelper {
   async verifyTokensStored(): Promise<void> {
     try {
       // Check sessionStorage for access token
-      const accessToken = await this.page.evaluate(() => 
-        sessionStorage.getItem('access_token')
+      const accessToken = await this.page.evaluate(() =>
+          sessionStorage.getItem('access_token')
       );
       expect(accessToken).toBeTruthy();
 
       // Check localStorage for refresh token
-      const refreshToken = await this.page.evaluate(() => 
-        localStorage.getItem('refresh_token')
+      const refreshToken = await this.page.evaluate(() =>
+          localStorage.getItem('refresh_token')
       );
       expect(refreshToken).toBeTruthy();
     } catch (error) {
@@ -215,13 +216,13 @@ export class AuthHelper {
   async verifyTokensCleared(): Promise<void> {
     try {
       // Check that tokens are removed from storage
-      const accessToken = await this.page.evaluate(() => 
-        sessionStorage.getItem('access_token')
+      const accessToken = await this.page.evaluate(() =>
+          sessionStorage.getItem('access_token')
       );
       expect(accessToken).toBeNull();
 
-      const refreshToken = await this.page.evaluate(() => 
-        localStorage.getItem('refresh_token')
+      const refreshToken = await this.page.evaluate(() =>
+          localStorage.getItem('refresh_token')
       );
       expect(refreshToken).toBeNull();
     } catch {
@@ -259,16 +260,16 @@ export class AuthHelper {
   async waitForLoadingComplete(): Promise<void> {
     // Wait for any loading spinners to disappear
     const loadingSpinner = this.page.locator(SELECTORS.LOADING_SPINNER);
-    
+
     try {
       // If loading spinner is present, wait for it to disappear
-      await loadingSpinner.waitFor({ state: 'hidden', timeout: TIMEOUTS.SHORT });
+      await loadingSpinner.waitFor({state: 'hidden', timeout: TIMEOUTS.SHORT});
     } catch {
       // Loading spinner might not be present, which is fine
     }
-    
+
     // Wait for network to be idle
-    await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
+    await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
   }
 
   /**

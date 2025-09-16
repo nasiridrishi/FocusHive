@@ -3,7 +3,8 @@
  * These types define the structure for productivity metrics, charts, and dashboard data
  */
 
-import { User } from '../../../shared/types/auth';
+import {User} from '../../../shared/types/auth';
+
 // Unused imports removed - these types are not used in this file
 
 export interface AnalyticsTimeRange {
@@ -140,7 +141,7 @@ export interface AnalyticsContextValue {
   filter: AnalyticsFilter;
   loading: boolean;
   error: string | null;
-  
+
   // Actions
   updateFilter: (filter: Partial<AnalyticsFilter>) => void;
   refreshData: () => Promise<void>;

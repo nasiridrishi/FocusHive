@@ -1,22 +1,25 @@
 /**
  * Reusable Test Helpers for Identity Service E2E Tests
- * 
+ *
  * Provides common utilities for authentication, persona management, OAuth2 flows,
  * and test setup/teardown operations across all identity-related E2E tests
- * 
+ *
  * @fileoverview Identity service E2E test helpers and utilities
  * @version 1.0.0
  */
 
-import { expect, type Page, type APIRequestContext, type Locator, type BrowserContext } from '@playwright/test';
-import { AxeBuilder } from '@axe-core/playwright';
-import type { TestUser, TestPersona, TestOAuth2Client, LoginResponse } from '../../fixtures/identity/identity-fixtures';
-import { 
-  IDENTITY_API, 
-  IDENTITY_ROUTES, 
-  PERFORMANCE_THRESHOLDS, 
+import {type APIRequestContext, type BrowserContext, expect, type Page} from '@playwright/test';
+import {AxeBuilder} from '@axe-core/playwright';
+import type {
+  LoginResponse,
+  TestOAuth2Client,
+  TestPersona
+} from '../../fixtures/identity/identity-fixtures';
+import {
   ACCESSIBILITY_CONFIG,
-  SECURITY_CONFIG 
+  IDENTITY_API,
+  IDENTITY_ROUTES,
+  PERFORMANCE_THRESHOLDS
 } from '../tests/identity/identity.config';
 
 /**
@@ -36,16 +39,16 @@ export class AuthenticationHelper {
    */
   async loginViaUI(email: string, password: string): Promise<void> {
     await this.page.goto(IDENTITY_ROUTES.LOGIN);
-    
+
     // Fill login form
     await this.page.locator('[data-testid="email-input"]').fill(email);
     await this.page.locator('[data-testid="password-input"]').fill(password);
-    
+
     // Click login button and wait for navigation
-    const loginPromise = this.page.waitForURL('**/dashboard', { timeout: 10000 });
+    const loginPromise = this.page.waitForURL('**/dashboard', {timeout: 10000});
     await this.page.locator('[data-testid="login-submit"]').click();
     await loginPromise;
-    
+
     // Verify successful login
     await expect(this.page.locator('[data-testid="user-menu"]')).toBeVisible();
   }
@@ -55,7 +58,7 @@ export class AuthenticationHelper {
    */
   async loginViaAPI(email: string, password: string): Promise<LoginResponse> {
     const response = await this.apiContext.post(`${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.LOGIN}`, {
-      data: { email, password }
+      data: {email, password}
     });
 
     if (!response.ok()) {
@@ -63,7 +66,7 @@ export class AuthenticationHelper {
     }
 
     const loginResult = await response.json() as LoginResponse;
-    
+
     // Set authentication state in browser
     await this.page.addInitScript((token: string) => {
       localStorage.setItem('focushive_token', token);
@@ -79,7 +82,7 @@ export class AuthenticationHelper {
   async logoutViaUI(): Promise<void> {
     await this.page.locator('[data-testid="user-menu"]').click();
     await this.page.locator('[data-testid="logout-button"]').click();
-    
+
     // Wait for redirect to login page
     await this.page.waitForURL('**/auth/login');
     await expect(this.page.locator('[data-testid="login-form"]')).toBeVisible();
@@ -90,7 +93,7 @@ export class AuthenticationHelper {
    */
   async logoutViaAPI(accessToken: string): Promise<void> {
     await this.apiContext.post(`${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.LOGOUT}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
+      headers: {'Authorization': `Bearer ${accessToken}`}
     });
 
     // Clear browser state
@@ -106,7 +109,7 @@ export class AuthenticationHelper {
    */
   async verifyAuthenticated(): Promise<void> {
     await expect(this.page.locator('[data-testid="user-menu"]')).toBeVisible();
-    
+
     // Verify token exists in localStorage
     const token = await this.page.evaluate(() => localStorage.getItem('focushive_token'));
     expect(token).toBeTruthy();
@@ -117,7 +120,7 @@ export class AuthenticationHelper {
    */
   async verifyNotAuthenticated(): Promise<void> {
     await expect(this.page.locator('[data-testid="login-form"]')).toBeVisible();
-    
+
     // Verify token is cleared
     const token = await this.page.evaluate(() => localStorage.getItem('focushive_token'));
     expect(token).toBeFalsy();
@@ -141,22 +144,22 @@ export class PersonaHelper {
    */
   async createPersonaViaUI(persona: Partial<TestPersona>): Promise<void> {
     await this.page.goto(IDENTITY_ROUTES.PERSONA_CREATE);
-    
+
     // Fill persona form
     await this.page.locator('[data-testid="persona-name"]').fill(persona.name || 'Test Persona');
     await this.page.locator('[data-testid="persona-type"]').selectOption(persona.type || 'PERSONAL');
-    
+
     if (persona.displayName) {
       await this.page.locator('[data-testid="persona-display-name"]').fill(persona.displayName);
     }
-    
+
     if (persona.bio) {
       await this.page.locator('[data-testid="persona-bio"]').fill(persona.bio);
     }
 
     // Submit form
     await this.page.locator('[data-testid="create-persona-submit"]').click();
-    
+
     // Wait for success message
     await expect(this.page.locator('[data-testid="success-message"]')).toBeVisible();
   }
@@ -166,7 +169,7 @@ export class PersonaHelper {
    */
   async createPersonaViaAPI(persona: TestPersona, accessToken: string): Promise<TestPersona> {
     const response = await this.apiContext.post(`${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.PERSONAS}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
+      headers: {'Authorization': `Bearer ${accessToken}`},
       data: persona
     });
 
@@ -183,10 +186,10 @@ export class PersonaHelper {
   async switchPersonaViaUI(personaName: string): Promise<void> {
     // Open persona switcher
     await this.page.locator('[data-testid="persona-switcher"]').click();
-    
+
     // Select persona
     await this.page.locator(`[data-testid="persona-option-${personaName}"]`).click();
-    
+
     // Wait for UI to update
     await expect(this.page.locator('[data-testid="current-persona"]')).toContainText(personaName);
   }
@@ -196,8 +199,8 @@ export class PersonaHelper {
    */
   async switchPersonaViaAPI(personaId: string, accessToken: string): Promise<TestPersona> {
     const response = await this.apiContext.post(
-      `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.PERSONA_SWITCH(personaId)}`,
-      { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.PERSONA_SWITCH(personaId)}`,
+        {headers: {'Authorization': `Bearer ${accessToken}`}}
     );
 
     if (!response.ok()) {
@@ -212,8 +215,8 @@ export class PersonaHelper {
    */
   async getActivePersona(accessToken: string): Promise<TestPersona | null> {
     const response = await this.apiContext.get(
-      `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.ACTIVE_PERSONA}`,
-      { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.ACTIVE_PERSONA}`,
+        {headers: {'Authorization': `Bearer ${accessToken}`}}
     );
 
     if (response.status() === 204) {
@@ -232,7 +235,7 @@ export class PersonaHelper {
    */
   async verifyPersonaSwitched(personaName: string): Promise<void> {
     await expect(this.page.locator('[data-testid="current-persona"]')).toContainText(personaName);
-    
+
     // Verify persona-specific UI elements
     await expect(this.page.locator('[data-testid="persona-avatar"]')).toBeVisible();
   }
@@ -242,8 +245,8 @@ export class PersonaHelper {
    */
   async deletePersonaViaAPI(personaId: string, accessToken: string): Promise<void> {
     const response = await this.apiContext.delete(
-      `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.PERSONA_BY_ID(personaId)}`,
-      { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.PERSONA_BY_ID(personaId)}`,
+        {headers: {'Authorization': `Bearer ${accessToken}`}}
     );
 
     if (!response.ok()) {
@@ -269,11 +272,11 @@ export class OAuth2Helper {
    */
   async createClient(client: TestOAuth2Client, accessToken: string): Promise<TestOAuth2Client> {
     const response = await this.apiContext.post(
-      `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.OAUTH2_CLIENTS}`,
-      {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-        data: client
-      }
+        `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.OAUTH2_CLIENTS}`,
+        {
+          headers: {'Authorization': `Bearer ${accessToken}`},
+          data: client
+        }
     );
 
     if (!response.ok()) {
@@ -287,17 +290,17 @@ export class OAuth2Helper {
    * Perform authorization code flow
    */
   async performAuthorizationFlow(
-    clientId: string,
-    redirectUri: string,
-    scopes: string[] = ['profile']
+      clientId: string,
+      redirectUri: string,
+      scopes: string[] = ['profile']
   ): Promise<string> {
     const state = Math.random().toString(36).substring(7);
     const scopeString = scopes.join(' ');
 
     // Navigate to authorization endpoint
     const authUrl = `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.OAUTH2_AUTHORIZE}?` +
-      `client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `scope=${encodeURIComponent(scopeString)}&state=${state}`;
+        `client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=${encodeURIComponent(scopeString)}&state=${state}`;
 
     await this.page.goto(authUrl);
 
@@ -320,7 +323,7 @@ export class OAuth2Helper {
     await this.page.waitForURL(`${redirectUri}*`);
     const url = new URL(this.page.url());
     const code = url.searchParams.get('code');
-    
+
     if (!code) {
       throw new Error('Authorization code not found in redirect URL');
     }
@@ -332,13 +335,18 @@ export class OAuth2Helper {
    * Exchange authorization code for tokens
    */
   async exchangeCodeForTokens(
-    code: string,
-    clientId: string,
-    clientSecret: string,
-    redirectUri: string
-  ): Promise<{ access_token: string; refresh_token: string; token_type: string; expires_in: number }> {
+      code: string,
+      clientId: string,
+      clientSecret: string,
+      redirectUri: string
+  ): Promise<{
+    access_token: string;
+    refresh_token: string;
+    token_type: string;
+    expires_in: number
+  }> {
     const response = await this.apiContext.post(`${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.OAUTH2_TOKEN}`, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       data: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
@@ -394,11 +402,11 @@ export class PrivacyHelper {
    */
   async requestDataExport(format: 'JSON' | 'CSV' = 'JSON', accessToken: string): Promise<string> {
     const response = await this.apiContext.post(
-      `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.DATA_EXPORT}`,
-      {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-        data: { format, requestType: 'FULL' }
-      }
+        `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.DATA_EXPORT}`,
+        {
+          headers: {'Authorization': `Bearer ${accessToken}`},
+          data: {format, requestType: 'FULL'}
+        }
     );
 
     if (!response.ok()) {
@@ -414,8 +422,8 @@ export class PrivacyHelper {
    */
   async checkExportStatus(requestId: string, accessToken: string): Promise<string> {
     const response = await this.apiContext.get(
-      `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.DATA_EXPORT}/${requestId}`,
-      { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        `${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.DATA_EXPORT}/${requestId}`,
+        {headers: {'Authorization': `Bearer ${accessToken}`}}
     );
 
     if (!response.ok()) {
@@ -442,7 +450,7 @@ export class PerformanceHelper {
    */
   async measurePageLoadTime(url: string): Promise<number> {
     const startTime = Date.now();
-    await this.page.goto(url, { waitUntil: 'networkidle' });
+    await this.page.goto(url, {waitUntil: 'networkidle'});
     return Date.now() - startTime;
   }
 
@@ -468,11 +476,11 @@ export class PerformanceHelper {
    */
   async measurePersonaSwitchTime(personaName: string): Promise<number> {
     const startTime = Date.now();
-    
+
     await this.page.locator('[data-testid="persona-switcher"]').click();
     await this.page.locator(`[data-testid="persona-option-${personaName}"]`).click();
     await expect(this.page.locator('[data-testid="current-persona"]')).toContainText(personaName);
-    
+
     return Date.now() - startTime;
   }
 }
@@ -491,9 +499,9 @@ export class AccessibilityHelper {
    * Run accessibility audit
    */
   async runAccessibilityAudit(selector?: string): Promise<void> {
-    const builder = new AxeBuilder({ page: this.page })
-      .withTags(ACCESSIBILITY_CONFIG.WCAG_RULES.tags)
-      .exclude('[data-testid="third-party-widget"]'); // Exclude third-party content
+    const builder = new AxeBuilder({page: this.page})
+    .withTags(ACCESSIBILITY_CONFIG.WCAG_RULES.tags)
+    .exclude('[data-testid="third-party-widget"]'); // Exclude third-party content
 
     if (selector) {
       builder.include(selector);
@@ -508,17 +516,17 @@ export class AccessibilityHelper {
    */
   async testKeyboardNavigation(startSelector: string, endSelector: string): Promise<void> {
     await this.page.locator(startSelector).focus();
-    
+
     // Tab through elements
     let currentElement = await this.page.locator(':focus').getAttribute('data-testid');
     const visitedElements: string[] = [];
-    
+
     while (currentElement !== endSelector && visitedElements.length < 20) {
       visitedElements.push(currentElement || '');
       await this.page.keyboard.press('Tab');
       currentElement = await this.page.locator(':focus').getAttribute('data-testid');
     }
-    
+
     expect(currentElement).toBe(endSelector);
   }
 
@@ -528,7 +536,7 @@ export class AccessibilityHelper {
   async verifyFocusIndicators(selectors: string[]): Promise<void> {
     for (const selector of selectors) {
       await this.page.locator(selector).focus();
-      
+
       // Check if focus indicator is visible (outline, box-shadow, or border)
       const focusStyles = await this.page.locator(selector).evaluate((el) => {
         const styles = window.getComputedStyle(el);
@@ -540,11 +548,11 @@ export class AccessibilityHelper {
         };
       });
 
-      const hasFocusIndicator = 
-        focusStyles.outline !== 'none' ||
-        focusStyles.outlineWidth !== '0px' ||
-        focusStyles.boxShadow !== 'none' ||
-        focusStyles.borderColor !== 'rgba(0, 0, 0, 0)';
+      const hasFocusIndicator =
+          focusStyles.outline !== 'none' ||
+          focusStyles.outlineWidth !== '0px' ||
+          focusStyles.boxShadow !== 'none' ||
+          focusStyles.borderColor !== 'rgba(0, 0, 0, 0)';
 
       expect(hasFocusIndicator).toBe(true);
     }
@@ -571,13 +579,13 @@ export class SecurityHelper {
     expect(parts).toHaveLength(3);
 
     const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-    
+
     // Verify required claims
     expect(payload.sub).toBeTruthy(); // Subject (user ID)
     expect(payload.iat).toBeTruthy(); // Issued at
     expect(payload.exp).toBeTruthy(); // Expires at
     expect(payload.iss).toBeTruthy(); // Issuer
-    
+
     // Verify expiration is in the future
     expect(payload.exp * 1000).toBeGreaterThan(Date.now());
   }
@@ -588,7 +596,7 @@ export class SecurityHelper {
   async testCSRFProtection(endpoint: string, accessToken: string): Promise<void> {
     // Attempt request without CSRF token (should fail)
     const response = await this.apiContext.post(`${IDENTITY_API.BASE_URL}${endpoint}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
+      headers: {'Authorization': `Bearer ${accessToken}`},
       data: {}
     });
 
@@ -608,7 +616,7 @@ export class SecurityHelper {
     expect(headers['x-content-type-options']).toBe('nosniff');
     expect(headers['referrer-policy']).toBeTruthy();
     expect(headers['permissions-policy']).toBeTruthy();
-    
+
     // CSP should be present for HTML pages
     if (headers['content-type']?.includes('text/html')) {
       expect(headers['content-security-policy']).toBeTruthy();
@@ -620,21 +628,21 @@ export class SecurityHelper {
    */
   async testRateLimit(endpoint: string, limit: number = 5): Promise<void> {
     const requests: Promise<unknown>[] = [];
-    
+
     // Send requests rapidly
     for (let i = 0; i < limit + 2; i++) {
       requests.push(
-        this.apiContext.post(`${IDENTITY_API.BASE_URL}${endpoint}`, {
-          data: { test: `request-${i}` }
-        })
+          this.apiContext.post(`${IDENTITY_API.BASE_URL}${endpoint}`, {
+            data: {test: `request-${i}`}
+          })
       );
     }
 
     const responses = await Promise.all(requests);
-    
+
     // At least one request should be rate limited
-    const rateLimited = responses.some(response => 
-      'status' in response && (response as { status: () => number }).status() === 429
+    const rateLimited = responses.some(response =>
+        'status' in response && (response as { status: () => number }).status() === 429
     );
     expect(rateLimited).toBe(true);
   }
@@ -647,11 +655,13 @@ export class MultiSessionHelper {
   private contexts: BrowserContext[] = [];
   private pages: Page[] = [];
 
-  async createSessions(count: number, browser: { newContext: () => Promise<BrowserContext> }): Promise<Page[]> {
+  async createSessions(count: number, browser: {
+    newContext: () => Promise<BrowserContext>
+  }): Promise<Page[]> {
     for (let i = 0; i < count; i++) {
       const context = await browser.newContext();
       const page = await context.newPage();
-      
+
       this.contexts.push(context);
       this.pages.push(page);
     }

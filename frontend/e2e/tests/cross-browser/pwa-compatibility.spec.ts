@@ -3,16 +3,15 @@
  * Tests PWA features, Service Workers, and app-like capabilities across browsers
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { getBrowserInfo } from './browser-helpers';
+import {expect, test} from '@playwright/test';
 
 test.describe('Service Worker Compatibility', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should support Service Worker API', async ({ page }) => {
+  test('should support Service Worker API', async ({page}) => {
     const serviceWorkerSupport = await page.evaluate(() => {
       return {
         supported: 'serviceWorker' in navigator,
@@ -28,10 +27,10 @@ test.describe('Service Worker Compatibility', () => {
     console.log('Service Worker Support:', serviceWorkerSupport);
   });
 
-  test('should handle Service Worker lifecycle', async ({ page }) => {
+  test('should handle Service Worker lifecycle', async ({page}) => {
     // Skip if not HTTPS or localhost (Service Workers require secure context)
     const isSecureContext = await page.evaluate(() => window.isSecureContext);
-    
+
     if (!isSecureContext) {
       console.log('Skipping Service Worker lifecycle test - requires secure context');
       return;
@@ -39,7 +38,7 @@ test.describe('Service Worker Compatibility', () => {
 
     const serviceWorkerTest = await page.evaluate(async () => {
       if (!('serviceWorker' in navigator)) {
-        return { supported: false, error: 'Service Worker not supported' };
+        return {supported: false, error: 'Service Worker not supported'};
       }
 
       try {
@@ -58,11 +57,11 @@ test.describe('Service Worker Compatibility', () => {
           });
         `;
 
-        const blob = new Blob([serviceWorkerScript], { type: 'application/javascript' });
+        const blob = new Blob([serviceWorkerScript], {type: 'application/javascript'});
         const serviceWorkerURL = URL.createObjectURL(blob);
 
         const registration = await navigator.serviceWorker.register(serviceWorkerURL);
-        
+
         return new Promise<{
           supported: boolean;
           registered: boolean;
@@ -70,15 +69,15 @@ test.describe('Service Worker Compatibility', () => {
           events: string[];
         }>((resolve) => {
           const events: string[] = [];
-          
+
           if (registration.installing) {
             events.push('installing');
           }
-          
+
           if (registration.waiting) {
             events.push('waiting');
           }
-          
+
           if (registration.active) {
             events.push('active');
           }
@@ -89,8 +88,9 @@ test.describe('Service Worker Compatibility', () => {
 
           setTimeout(() => {
             URL.revokeObjectURL(serviceWorkerURL);
-            registration.unregister().catch(() => {});
-            
+            registration.unregister().catch(() => {
+            });
+
             resolve({
               supported: true,
               registered: true,
@@ -118,28 +118,28 @@ test.describe('Service Worker Compatibility', () => {
     console.log('Service Worker Lifecycle:', serviceWorkerTest);
   });
 
-  test('should support Cache API', async ({ page }) => {
+  test('should support Cache API', async ({page}) => {
     const cacheAPISupport = await page.evaluate(async () => {
       if (!('caches' in window)) {
-        return { supported: false, error: 'Cache API not supported' };
+        return {supported: false, error: 'Cache API not supported'};
       }
 
       try {
         // Test cache operations
         const cacheName = 'test-cache-' + Date.now();
         const cache = await caches.open(cacheName);
-        
+
         const testResponse = new Response('test content', {
-          headers: { 'Content-Type': 'text/plain' }
+          headers: {'Content-Type': 'text/plain'}
         });
-        
+
         await cache.put('/test', testResponse);
         const cachedResponse = await cache.match('/test');
         const cachedText = await cachedResponse?.text();
-        
+
         // Clean up
         await caches.delete(cacheName);
-        
+
         return {
           supported: true,
           cacheOpened: !!cache,
@@ -161,7 +161,7 @@ test.describe('Service Worker Compatibility', () => {
     console.log('Cache API Support:', cacheAPISupport);
   });
 
-  test('should support Background Sync', async ({ page }) => {
+  test('should support Background Sync', async ({page}) => {
     const backgroundSyncSupport = await page.evaluate(() => {
       return {
         supported: 'serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype,
@@ -174,15 +174,15 @@ test.describe('Service Worker Compatibility', () => {
 });
 
 test.describe('Web App Manifest Compatibility', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should detect Web App Manifest', async ({ page }) => {
+  test('should detect Web App Manifest', async ({page}) => {
     const manifestDetection = await page.evaluate(() => {
       const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-      
+
       return {
         hasManifestLink: !!manifestLink,
         manifestHref: manifestLink?.href || null,
@@ -193,7 +193,7 @@ test.describe('Web App Manifest Compatibility', () => {
 
     // FocusHive should have a manifest
     expect(manifestDetection.hasManifestLink).toBe(true);
-    
+
     if (manifestDetection.manifestHref) {
       expect(manifestDetection.manifestHref).toContain('manifest');
     }
@@ -201,19 +201,19 @@ test.describe('Web App Manifest Compatibility', () => {
     console.log('Manifest Detection:', manifestDetection);
   });
 
-  test('should validate manifest properties', async ({ page }) => {
+  test('should validate manifest properties', async ({page}) => {
     // Try to fetch and parse the manifest
     const manifestValidation = await page.evaluate(async () => {
       const manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;
-      
+
       if (!manifestLink) {
-        return { hasManifest: false };
+        return {hasManifest: false};
       }
 
       try {
         const response = await fetch(manifestLink.href);
         const manifest = await response.json();
-        
+
         return {
           hasManifest: true,
           hasName: !!manifest.name,
@@ -245,7 +245,7 @@ test.describe('Web App Manifest Compatibility', () => {
     console.log('Manifest Validation:', manifestValidation);
   });
 
-  test('should handle install prompts', async ({ page, browserName }) => {
+  test('should handle install prompts', async ({page, browserName}) => {
     // Install prompts are primarily supported in Chromium browsers
     const installPromptTest = await page.evaluate(() => {
       return new Promise<{
@@ -254,18 +254,18 @@ test.describe('Web App Manifest Compatibility', () => {
         appInstalledSupported: boolean;
       }>((resolve) => {
         let promptReceived = false;
-        
-        const beforeInstallPromptHandler = (event: Event) => {
+
+        const beforeInstallPromptHandler = (event: Event): void => {
           promptReceived = true;
           event.preventDefault(); // Don't show the default prompt
         };
-        
+
         window.addEventListener('beforeinstallprompt', beforeInstallPromptHandler);
-        
+
         // Wait for potential prompt
         setTimeout(() => {
           window.removeEventListener('beforeinstallprompt', beforeInstallPromptHandler);
-          
+
           resolve({
             beforeInstallPromptSupported: 'onbeforeinstallprompt' in window,
             promptReceived,
@@ -285,12 +285,12 @@ test.describe('Web App Manifest Compatibility', () => {
 });
 
 test.describe('Offline Capabilities', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should detect online/offline status', async ({ page }) => {
+  test('should detect online/offline status', async ({page}) => {
     const onlineStatusTest = await page.evaluate(() => {
       return {
         onlineProperty: navigator.onLine,
@@ -306,17 +306,17 @@ test.describe('Offline Capabilities', () => {
     console.log('Online Status Test:', onlineStatusTest);
   });
 
-  test('should handle offline page loading', async ({ page, context }) => {
+  test('should handle offline page loading', async ({page, context}) => {
     // First visit the page to ensure it's cached
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
+
     // Simulate offline condition
     await context.setOffline(true);
-    
+
     // Try to navigate to a cached page
     await page.reload();
-    
+
     const offlineTest = await page.evaluate(() => {
       return {
         onlineStatus: navigator.onLine,
@@ -326,14 +326,14 @@ test.describe('Offline Capabilities', () => {
 
     // Reset online status
     await context.setOffline(false);
-    
+
     console.log('Offline Test:', offlineTest);
   });
 
-  test('should support IndexedDB for offline storage', async ({ page }) => {
+  test('should support IndexedDB for offline storage', async ({page}) => {
     const indexedDBTest = await page.evaluate(async () => {
       if (!('indexedDB' in window)) {
-        return { supported: false, error: 'IndexedDB not supported' };
+        return {supported: false, error: 'IndexedDB not supported'};
       }
 
       return new Promise<{
@@ -345,7 +345,7 @@ test.describe('Offline Capabilities', () => {
       }>((resolve) => {
         const dbName = 'test-db-' + Date.now();
         const request = indexedDB.open(dbName, 1);
-        
+
         request.onerror = () => {
           resolve({
             supported: false,
@@ -355,29 +355,29 @@ test.describe('Offline Capabilities', () => {
             error: 'Failed to open database'
           });
         };
-        
+
         request.onupgradeneeded = (event) => {
           const db = (event.target as IDBOpenDBRequest).result;
-          const objectStore = db.createObjectStore('testStore', { keyPath: 'id' });
+          const _objectStore = db.createObjectStore('testStore', {keyPath: 'id'});
         };
-        
+
         request.onsuccess = (event) => {
           const db = (event.target as IDBOpenDBRequest).result;
           const transaction = db.transaction(['testStore'], 'readwrite');
           const objectStore = transaction.objectStore('testStore');
-          
-          const testData = { id: 1, name: 'Test Data', timestamp: Date.now() };
+
+          const testData = {id: 1, name: 'Test Data', timestamp: Date.now()};
           const addRequest = objectStore.add(testData);
-          
+
           addRequest.onsuccess = () => {
             const getRequest = objectStore.get(1);
-            
+
             getRequest.onsuccess = () => {
               const retrievedData = getRequest.result;
-              
+
               db.close();
               indexedDB.deleteDatabase(dbName);
-              
+
               resolve({
                 supported: true,
                 dbOpened: true,
@@ -385,7 +385,7 @@ test.describe('Offline Capabilities', () => {
                 dataRetrieved: retrievedData && retrievedData.name === 'Test Data'
               });
             };
-            
+
             getRequest.onerror = () => {
               db.close();
               indexedDB.deleteDatabase(dbName);
@@ -398,7 +398,7 @@ test.describe('Offline Capabilities', () => {
               });
             };
           };
-          
+
           addRequest.onerror = () => {
             db.close();
             indexedDB.deleteDatabase(dbName);
@@ -415,7 +415,7 @@ test.describe('Offline Capabilities', () => {
     });
 
     expect(indexedDBTest.supported).toBe(true);
-    
+
     if (indexedDBTest.supported) {
       expect(indexedDBTest.dbOpened).toBe(true);
       expect(indexedDBTest.dataStored).toBe(true);
@@ -425,20 +425,20 @@ test.describe('Offline Capabilities', () => {
     console.log('IndexedDB Test:', indexedDBTest);
   });
 
-  test('should support localStorage for simple offline storage', async ({ page }) => {
+  test('should support localStorage for simple offline storage', async ({page}) => {
     const localStorageTest = await page.evaluate(() => {
       if (!('localStorage' in window)) {
-        return { supported: false };
+        return {supported: false};
       }
 
       try {
         const testKey = 'pwa-test-' + Date.now();
         const testValue = 'test-value-' + Date.now();
-        
+
         localStorage.setItem(testKey, testValue);
         const retrievedValue = localStorage.getItem(testKey);
         localStorage.removeItem(testKey);
-        
+
         return {
           supported: true,
           dataStored: retrievedValue === testValue,
@@ -453,7 +453,7 @@ test.describe('Offline Capabilities', () => {
     });
 
     expect(localStorageTest.supported).toBe(true);
-    
+
     if (localStorageTest.supported) {
       expect(localStorageTest.dataStored).toBe(true);
     }
@@ -463,12 +463,12 @@ test.describe('Offline Capabilities', () => {
 });
 
 test.describe('Push Notifications', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should support Notification API', async ({ page }) => {
+  test('should support Notification API', async ({page}) => {
     const notificationSupport = await page.evaluate(() => {
       return {
         supported: 'Notification' in window,
@@ -485,7 +485,7 @@ test.describe('Push Notifications', () => {
     console.log('Notification API Support:', notificationSupport);
   });
 
-  test('should support Push API', async ({ page }) => {
+  test('should support Push API', async ({page}) => {
     const pushSupport = await page.evaluate(() => {
       return {
         pushManager: 'serviceWorker' in navigator && 'pushManager' in ServiceWorkerRegistration.prototype,
@@ -497,11 +497,11 @@ test.describe('Push Notifications', () => {
     console.log('Push API Support:', pushSupport);
   });
 
-  test('should handle notification creation', async ({ page }) => {
+  test('should handle notification creation', async ({page}) => {
     // Note: This test doesn't actually create notifications as it requires user permission
     const notificationTest = await page.evaluate(() => {
       if (!('Notification' in window)) {
-        return { supported: false };
+        return {supported: false};
       }
 
       // Test notification options
@@ -514,10 +514,10 @@ test.describe('Push Notifications', () => {
         silent: false,
         requireInteraction: false,
         actions: [
-          { action: 'open', title: 'Open App' },
-          { action: 'close', title: 'Close' }
+          {action: 'open', title: 'Open App'},
+          {action: 'close', title: 'Close'}
         ],
-        data: { id: 'test-123' }
+        data: {id: 'test-123'}
       };
 
       return {
@@ -540,15 +540,15 @@ test.describe('Push Notifications', () => {
 });
 
 test.describe('App-like Features', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should support Fullscreen API', async ({ page }) => {
+  test('should support Fullscreen API', async ({page}) => {
     const fullscreenSupport = await page.evaluate(() => {
       const elem = document.documentElement;
-      
+
       return {
         requestFullscreen: 'requestFullscreen' in elem,
         webkitRequestFullscreen: 'webkitRequestFullscreen' in elem,
@@ -562,16 +562,16 @@ test.describe('App-like Features', () => {
 
     // At least one fullscreen method should be supported
     const hasFullscreenSupport = fullscreenSupport.requestFullscreen ||
-                                 fullscreenSupport.webkitRequestFullscreen ||
-                                 fullscreenSupport.mozRequestFullScreen ||
-                                 fullscreenSupport.msRequestFullscreen;
+        fullscreenSupport.webkitRequestFullscreen ||
+        fullscreenSupport.mozRequestFullScreen ||
+        fullscreenSupport.msRequestFullscreen;
 
     expect(hasFullscreenSupport).toBe(true);
 
     console.log('Fullscreen API Support:', fullscreenSupport);
   });
 
-  test('should support Screen Orientation API', async ({ page }) => {
+  test('should support Screen Orientation API', async ({page}) => {
     const orientationSupport = await page.evaluate(() => {
       return {
         screenOrientation: 'orientation' in screen,
@@ -585,7 +585,7 @@ test.describe('App-like Features', () => {
     console.log('Screen Orientation Support:', orientationSupport);
   });
 
-  test('should support Wake Lock API', async ({ page }) => {
+  test('should support Wake Lock API', async ({page}) => {
     const wakeLockSupport = await page.evaluate(() => {
       return {
         supported: 'wakeLock' in navigator,
@@ -596,7 +596,7 @@ test.describe('App-like Features', () => {
     console.log('Wake Lock API Support:', wakeLockSupport);
   });
 
-  test('should support Share API', async ({ page }) => {
+  test('should support Share API', async ({page}) => {
     const shareSupport = await page.evaluate(() => {
       return {
         supported: 'share' in navigator,
@@ -607,7 +607,7 @@ test.describe('App-like Features', () => {
     console.log('Share API Support:', shareSupport);
   });
 
-  test('should support BadgeAPI', async ({ page }) => {
+  test('should support BadgeAPI', async ({page}) => {
     const badgeSupport = await page.evaluate(() => {
       return {
         supported: 'setAppBadge' in navigator,
@@ -620,7 +620,7 @@ test.describe('App-like Features', () => {
 });
 
 test.describe('Browser-Specific PWA Features', () => {
-  test('should handle iOS Safari PWA features', async ({ page, browserName }) => {
+  test('should handle iOS Safari PWA features', async ({page, browserName}) => {
     test.skip(browserName !== 'webkit', 'iOS Safari-specific test');
 
     const iosPWAFeatures = await page.evaluate(() => {
@@ -636,7 +636,7 @@ test.describe('Browser-Specific PWA Features', () => {
     console.log('iOS PWA Features:', iosPWAFeatures);
   });
 
-  test('should handle Chrome PWA optimizations', async ({ page, browserName }) => {
+  test('should handle Chrome PWA optimizations', async ({page, browserName}) => {
     test.skip(browserName !== 'chromium', 'Chrome-specific test');
 
     const chromePWAFeatures = await page.evaluate(() => {
@@ -655,7 +655,7 @@ test.describe('Browser-Specific PWA Features', () => {
     console.log('Chrome PWA Features:', chromePWAFeatures);
   });
 
-  test('should handle Firefox PWA support', async ({ page, browserName }) => {
+  test('should handle Firefox PWA support', async ({page, browserName}) => {
     test.skip(browserName !== 'firefox', 'Firefox-specific test');
 
     const firefoxPWAFeatures = await page.evaluate(() => {

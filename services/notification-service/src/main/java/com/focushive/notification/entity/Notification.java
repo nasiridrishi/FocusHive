@@ -88,6 +88,9 @@ public class Notification extends BaseEntity {
     @Size(max = 500, message = "Failure reason must not exceed 500 characters")
     @Column(name = "failure_reason", length = 500)
     private String failureReason;
+    
+    @Column(name = "digest_processed_at")
+    private LocalDateTime digestProcessedAt;
 
     /**
      * Mark notification as read

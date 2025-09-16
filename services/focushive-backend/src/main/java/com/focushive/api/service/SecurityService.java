@@ -10,17 +10,32 @@ import com.focushive.user.entity.User;
 import com.focushive.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Security service for centralized authorization logic in the FocusHive Backend.
- * Provides methods for checking user access permissions to hives, timers, and other resources.
+ * Security service implementing comprehensive authorization rules.
+ * Phase 2, Task 2.4: Authorization Rules implementation with TDD approach.
+ *
+ * Features:
+ * - Resource ownership verification
+ * - Role-based access control (RBAC)
+ * - Permission-based access control
+ * - Dynamic SpEL expression evaluation
+ * - Security audit logging
+ * - Permission change tracking
  */
-@Service
+@Service("securityService")
 @Slf4j
 @RequiredArgsConstructor
 public class SecurityService {
@@ -29,6 +44,17 @@ public class SecurityService {
     private final HiveRepository hiveRepository;
     private final HiveMemberRepository hiveMemberRepository;
     private final FocusSessionRepository focusSessionRepository;
+
+    // For audit logging and permission tracking
+    private final Queue<SecurityAuditEvent> auditEvents = new ConcurrentLinkedQueue<>();
+    private final Map<String, List<PermissionChangeEvent>> permissionHistory = new ConcurrentHashMap<>();
+
+    // SpEL expression parser for dynamic permission evaluation
+    private final ExpressionParser expressionParser = new SpelExpressionParser();
+
+    // ========================================================================
+    // CORE USER AND AUTHENTICATION METHODS
+    // ========================================================================
 
     /**
      * Get the currently authenticated user.
@@ -71,6 +97,10 @@ public class SecurityService {
         return getCurrentUser().map(User::getId);
     }
 
+    // ========================================================================
+    // RESOURCE ACCESS CONTROL METHODS
+    // ========================================================================
+
     /**
      * Check if the current user can access user data for the given user ID.
      *
@@ -90,19 +120,18 @@ public class SecurityService {
         }
 
         User user = currentUser.get();
-        
+
         // Users can always access their own data
         if (userId.equals(user.getId())) {
             log.debug("User {} accessing own data", user.getUsername());
             return true;
         }
 
-        // Admins can access any user data (when Role is implemented)
-        // TODO: Add role check when User entity includes roles
-        // if (user.hasRoleLevel(Role.ADMIN)) {
-        //     log.debug("Admin user {} accessing user data for {}", user.getUsername(), userId);
-        //     return true;
-        // }
+        // Check if user has ADMIN role
+        if (hasSystemPermission("system:manage-users")) {
+            log.debug("Admin user {} accessing user data for {}", user.getUsername(), userId);
+            return true;
+        }
 
         log.debug("User {} denied access to user data for {}", user.getUsername(), userId);
         return false;
@@ -127,7 +156,7 @@ public class SecurityService {
         }
 
         User user = currentUser.get();
-        
+
         // Check if hive exists
         Optional<Hive> hive = hiveRepository.findById(hiveId);
         if (hive.isEmpty()) {
@@ -226,6 +255,259 @@ public class SecurityService {
     }
 
     /**
+     * Check if the current user can manage hives.
+     *
+     * @return true if current user can create and manage hives
+     */
+    public boolean canManageHives() {
+        // For now, all authenticated users can create hives
+        return getCurrentUser().isPresent();
+    }
+
+    // ========================================================================
+    // PERMISSION-BASED ACCESS CONTROL METHODS
+    // ========================================================================
+
+    /**
+     * Check if current user has a specific permission.
+     *
+     * @param permission The permission to check (e.g., "hive:create")
+     * @return true if user has the permission
+     */
+    public boolean hasPermission(String permission) {
+        if (permission == null) {
+            return false;
+        }
+
+        Optional<User> currentUser = getCurrentUser();
+        if (currentUser.isEmpty()) {
+            return false;
+        }
+
+        // Basic permission mapping based on user roles and authentication
+        return switch (permission) {
+            case "hive:create" -> canManageHives();
+            case "hive:read" -> true; // Authenticated users can read public hives
+            case "user:profile" -> true; // Users can access their own profile
+            default -> false;
+        };
+    }
+
+    /**
+     * Check if current user has a specific permission on a resource.
+     *
+     * @param permission The permission to check (e.g., "hive:update")
+     * @param resourceId The resource ID
+     * @return true if user has the permission on the resource
+     */
+    public boolean hasPermissionOnResource(String permission, String resourceId) {
+        if (permission == null || resourceId == null) {
+            return false;
+        }
+
+        Optional<User> currentUser = getCurrentUser();
+        if (currentUser.isEmpty()) {
+            return false;
+        }
+
+        return switch (permission) {
+            case "hive:read" -> hasAccessToHive(resourceId);
+            case "hive:update" -> canModerateHive(resourceId);
+            case "hive:delete" -> isHiveOwner(resourceId);
+            case "member:invite" -> canModerateHive(resourceId);
+            case "member:remove" -> canModerateHive(resourceId);
+            case "member:promote" -> isHiveOwner(resourceId);
+            default -> false;
+        };
+    }
+
+    /**
+     * Check if current user has system-level permissions.
+     *
+     * @param permission The system permission to check
+     * @return true if user has the system permission
+     */
+    public boolean hasSystemPermission(String permission) {
+        if (permission == null) {
+            return false;
+        }
+
+        // Get current user's authorities
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+
+        Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+        boolean hasAdminRole = authorities.stream()
+            .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+
+        return switch (permission) {
+            case "system:manage-users" -> hasAdminRole;
+            case "system:manage-hives" -> hasAdminRole;
+            case "system:access-any-hive" -> hasAdminRole;
+            case "system:admin-panel" -> hasAdminRole;
+            default -> false;
+        };
+    }
+
+    /**
+     * Evaluate a SpEL expression for dynamic permission checking.
+     *
+     * @param expression The SpEL expression to evaluate
+     * @return true if expression evaluates to true
+     */
+    public boolean evaluatePermission(String expression) {
+        if (expression == null || expression.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            StandardEvaluationContext context = new StandardEvaluationContext();
+
+            // Set up context with current authentication
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            context.setVariable("authentication", auth);
+
+            // Add common functions
+            context.setVariable("securityService", this);
+
+            // Add isAuthenticated() function
+            context.registerFunction("isAuthenticated",
+                SecurityService.class.getDeclaredMethod("isCurrentUserAuthenticated"));
+
+            // Add hasRole() function
+            context.registerFunction("hasRole",
+                SecurityService.class.getDeclaredMethod("hasRole", String.class));
+
+            Boolean result = expressionParser.parseExpression(expression).getValue(context, Boolean.class);
+            return Boolean.TRUE.equals(result);
+
+        } catch (Exception e) {
+            log.warn("Failed to evaluate permission expression: {}", expression, e);
+            return false;
+        }
+    }
+
+    /**
+     * Helper method for SpEL expression evaluation.
+     * @return true if current user is authenticated
+     */
+    public static boolean isCurrentUserAuthenticated() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal());
+    }
+
+    /**
+     * Check if the current user has the specified role.
+     *
+     * @param role The role to check for
+     * @return true if current user has the role
+     */
+    public boolean hasRole(String role) {
+        if (role == null) {
+            log.debug("hasRole called with null role");
+            return false;
+        }
+
+        // Get current user's authorities
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+
+        Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+        return authorities.stream()
+            .anyMatch(authority -> ("ROLE_" + role).equals(authority.getAuthority()));
+    }
+
+    // ========================================================================
+    // AUDIT AND PERMISSION CHANGE TRACKING
+    // ========================================================================
+
+    /**
+     * Log an authorization attempt for audit purposes.
+     *
+     * @param operation The operation being attempted
+     * @param resourceId The resource being accessed
+     * @param granted Whether access was granted
+     */
+    public void logAuthorizationAttempt(String operation, String resourceId, boolean granted) {
+        Optional<User> currentUser = getCurrentUser();
+        String userId = currentUser.map(User::getId).orElse("anonymous");
+        String username = currentUser.map(User::getUsername).orElse("anonymous");
+
+        // Create audit event
+        SecurityAuditEvent auditEvent = new SecurityAuditEvent(
+            userId, operation, resourceId, granted, LocalDateTime.now()
+        );
+        auditEvents.offer(auditEvent);
+
+        // Limit audit event queue size (keep last 10000 events)
+        while (auditEvents.size() > 10000) {
+            auditEvents.poll();
+        }
+
+        if (granted) {
+            log.info("Authorization granted - User: {}, Operation: {}, Resource: {}",
+                    username, operation, resourceId);
+        } else {
+            log.warn("Authorization denied - User: {}, Operation: {}, Resource: {}",
+                    username, operation, resourceId);
+        }
+    }
+
+    /**
+     * Get the last audit event (for testing purposes).
+     *
+     * @return The most recent audit event, or null if none
+     */
+    public SecurityAuditEvent getLastAuditEvent() {
+        return auditEvents.isEmpty() ? null :
+            auditEvents.toArray(new SecurityAuditEvent[0])[auditEvents.size() - 1];
+    }
+
+    /**
+     * Record a permission change event.
+     *
+     * @param userId The user whose permissions changed
+     * @param permission The permission that changed
+     * @param resourceId The resource affected
+     * @param changeType The type of change (GRANTED/REVOKED)
+     */
+    public void recordPermissionChange(String userId, String permission, String resourceId,
+                                     PermissionChangeEvent.PermissionChangeType changeType) {
+        Optional<User> currentUser = getCurrentUser();
+        String changedByUserId = currentUser.map(User::getId).orElse("system");
+
+        PermissionChangeEvent event = new PermissionChangeEvent(
+            userId, permission, resourceId, changeType, LocalDateTime.now(),
+            changedByUserId, "Permission change via SecurityService"
+        );
+
+        String key = userId + ":" + resourceId;
+        permissionHistory.computeIfAbsent(key, k -> new ArrayList<>()).add(event);
+
+        log.info("Permission change recorded: {}", event);
+    }
+
+    /**
+     * Get permission change history for a user and resource.
+     *
+     * @param userId The user ID
+     * @param resourceId The resource ID
+     * @return List of permission change events
+     */
+    public List<PermissionChangeEvent> getPermissionChangeHistory(String userId, String resourceId) {
+        String key = userId + ":" + resourceId;
+        return permissionHistory.getOrDefault(key, Collections.emptyList());
+    }
+
+    // ========================================================================
+    // ADDITIONAL HELPER METHODS
+    // ========================================================================
+
+    /**
      * Check if the current user can access the specified timer session.
      *
      * @param sessionId The session ID to check access for
@@ -276,63 +558,11 @@ public class SecurityService {
     }
 
     /**
-     * Check if the current user has the specified role.
-     * Note: This is a placeholder until Role enum is implemented in Backend User entity.
-     *
-     * @param role The role to check for
-     * @return true if current user has the role
-     */
-    public boolean hasRole(String role) {
-        if (role == null) {
-            log.debug("hasRole called with null role");
-            return false;
-        }
-
-        // TODO: Implement role checking when User entity includes roles
-        // For now, return true for basic USER role for authenticated users
-        return getCurrentUser().isPresent() && "USER".equals(role);
-    }
-
-    /**
      * Check if the current user can perform administrative actions.
-     * Note: This is a placeholder until role system is fully implemented.
      *
      * @return true if current user has administrative privileges
      */
     public boolean isAdmin() {
-        // TODO: Implement admin role check
-        return false; // For now, no admin access
-    }
-
-    /**
-     * Check if the current user can manage hives.
-     * Note: This is a placeholder until role system is fully implemented.
-     *
-     * @return true if current user can create and manage hives
-     */
-    public boolean canManageHives() {
-        // TODO: Implement hive owner role check
-        // For now, all authenticated users can create hives
-        return getCurrentUser().isPresent();
-    }
-
-    /**
-     * Log an authorization attempt for audit purposes.
-     *
-     * @param operation The operation being attempted
-     * @param resourceId The resource being accessed
-     * @param granted Whether access was granted
-     */
-    public void logAuthorizationAttempt(String operation, String resourceId, boolean granted) {
-        Optional<User> currentUser = getCurrentUser();
-        String username = currentUser.map(User::getUsername).orElse("anonymous");
-        
-        if (granted) {
-            log.info("Authorization granted - User: {}, Operation: {}, Resource: {}", 
-                    username, operation, resourceId);
-        } else {
-            log.warn("Authorization denied - User: {}, Operation: {}, Resource: {}", 
-                    username, operation, resourceId);
-        }
+        return hasSystemPermission("system:admin-panel");
     }
 }

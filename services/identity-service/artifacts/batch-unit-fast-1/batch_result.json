@@ -1,0 +1,10 @@
+{
+  "batch_name": "unit-fast-1",
+  "batch_index": 1,
+  "duration_minutes": 7.39,
+  "exit_code": 1,
+  "success": false,
+  "stdout": "> Task :checkKotlinGradlePluginConfigurationErrors\n> Task :compileKotlin NO-SOURCE\n> Task :compileJava UP-TO-DATE\n> Task :processResources UP-TO-DATE\n> Task :classes UP-TO-DATE\n> Task :compileTestKotlin NO-SOURCE\n> Task :compileTestJava UP-TO-DATE\n> Task :processTestResources UP-TO-DATE\n> Task :testClasses UP-TO-DATE\n> Task :test\n\n\ud83c\udf10 Network Failure Resilience Test Suite > initializationError FAILED\n    org.junit.platform.suite.engine.NoTestsDiscoveredException at ForEachOps.java:184\n\nIdentity Service Resilience Test Suite (RES-001 to RES-005) > initializationError FAILED\n    org.junit.platform.suite.engine.NoTestsDiscoveredException at ForEachOps.java:184\n\n> Task :test FAILED\n6 actionable tasks: 2 executed, 4 up-to-date\n",
+  "stderr": "\n2 tests completed, 2 failed\n\nFAILURE: Build failed with an exception.\n\n* What went wrong:\nExecution failed for task ':test'.\n> There were failing tests. See the report at: file:///Users/nasir/uol/focushive/services/identity-service/build/reports/tests/test/index.html\n\n* Try:\n> Run with --scan to get full insights.\n\nBUILD FAILED in 7m 23s\n",
+  "timestamp": "2025-09-19T22:02:30.989613"
+}

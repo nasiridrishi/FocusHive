@@ -3,9 +3,9 @@
  * Cleans up test environment and artifacts after authentication testing
  */
 
-import { chromium, FullConfig } from '@playwright/test';
+import {chromium, FullConfig} from '@playwright/test';
 
-async function globalTeardown(config: FullConfig) {
+async function globalTeardown(_config: FullConfig): Promise<void> {
   console.log('🧹 Cleaning up authentication E2E test environment...');
 
   const browser = await chromium.launch();
@@ -18,14 +18,14 @@ async function globalTeardown(config: FullConfig) {
       try {
         await page.request.delete(`${process.env.E2E_MAILHOG_API_URL}/api/v1/messages`);
         console.log('📧 Cleared all test emails from MailHog');
-      } catch (error) {
+      } catch {
         console.warn('⚠️  Could not clear MailHog emails (service may not be running)');
       }
     }
 
     // Clean up test users if database is accessible
     console.log('👥 Cleaning up test users...');
-    
+
     const testUsernames = [
       'e2e_test_user',
       'e2e_test_user_2',
@@ -38,10 +38,10 @@ async function globalTeardown(config: FullConfig) {
       try {
         // Try to delete test user (if endpoint exists)
         const deleteResponse = await page.request.delete(
-          `${process.env.E2E_IDENTITY_API_URL}/api/v1/admin/users/${username}`,
-          {
-            failOnStatusCode: false,
-          }
+            `${process.env.E2E_IDENTITY_API_URL}/api/v1/admin/users/${username}`,
+            {
+              failOnStatusCode: false,
+            }
         );
 
         if (deleteResponse.ok()) {
@@ -49,7 +49,7 @@ async function globalTeardown(config: FullConfig) {
         } else {
           console.log(`ℹ️  Test user ${username} not found or could not be deleted`);
         }
-      } catch (error) {
+      } catch {
         console.log(`ℹ️  Could not clean up test user ${username}`);
       }
     }
@@ -60,20 +60,20 @@ async function globalTeardown(config: FullConfig) {
         failOnStatusCode: false,
       });
       console.log('🔐 Cleared test authentication sessions');
-    } catch (error) {
+    } catch {
       console.log('ℹ️  Could not clear test sessions (admin endpoint may not exist)');
     }
 
     // Clean up OAuth test data if any
     console.log('🔧 Cleaning up OAuth test artifacts...');
-    
+
     // Clear any OAuth state/cache (implementation specific)
     try {
       await page.request.delete(`${process.env.E2E_IDENTITY_API_URL}/api/v1/oauth/test-cache`, {
         failOnStatusCode: false,
       });
       console.log('✅ Cleared OAuth test cache');
-    } catch (error) {
+    } catch {
       console.log('ℹ️  OAuth test cache cleanup not available');
     }
 
@@ -89,7 +89,7 @@ async function globalTeardown(config: FullConfig) {
       try {
         localStorage.clear();
         sessionStorage.clear();
-        
+
         // Clear cookies
         document.cookie.split(";").forEach(c => {
           const eqPos = c.indexOf("=");

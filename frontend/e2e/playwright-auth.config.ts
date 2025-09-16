@@ -3,14 +3,14 @@
  * Specialized configuration for comprehensive authentication testing
  */
 
-import { defineConfig, devices } from '@playwright/test';
+import {defineConfig, devices} from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e/tests/auth',
-  
+
   /* Global test timeout */
   timeout: 60000,
-  
+
   /* Expect timeout for assertions */
   expect: {
     timeout: 10000,
@@ -18,21 +18,21 @@ export default defineConfig({
 
   /* Run tests in files in parallel */
   fullyParallel: true,
-  
+
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  
+
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  
+
   /* Opt out of parallel tests on CI for more stable authentication testing */
   workers: process.env.CI ? 1 : 3,
-  
+
   /* Reporter configuration for authentication tests */
   reporter: [
-    ['html', { outputFolder: 'e2e-auth-report', open: 'never' }],
-    ['json', { outputFile: 'e2e-auth-results.json' }],
-    ['junit', { outputFile: 'e2e-auth-results.xml' }],
+    ['html', {outputFolder: 'e2e-auth-report', open: 'never'}],
+    ['json', {outputFile: 'e2e-auth-results.json'}],
+    ['junit', {outputFile: 'e2e-auth-results.xml'}],
     ['list'],
   ],
 
@@ -43,25 +43,25 @@ export default defineConfig({
 
     /* Collect trace on first retry */
     trace: 'on-first-retry',
-    
+
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
-    
+
     /* Record video for failed tests */
     video: 'retain-on-failure',
-    
+
     /* Ignore HTTPS errors for local testing */
     ignoreHTTPSErrors: true,
-    
+
     /* Wait for network idle by default for authentication flows */
     waitForLoadState: 'networkidle',
-    
+
     /* Timeout for individual actions */
     actionTimeout: 15000,
-    
+
     /* Store authentication state between tests */
     storageState: undefined, // Each test manages its own state
-    
+
     /* Additional context options for authentication testing */
     contextOptions: {
       // Clear cookies and storage between tests
@@ -88,7 +88,7 @@ export default defineConfig({
     // Desktop browsers
     {
       name: 'chromium-auth',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         // Chrome-specific authentication settings
         channel: 'chrome',
@@ -98,7 +98,7 @@ export default defineConfig({
 
     {
       name: 'firefox-auth',
-      use: { 
+      use: {
         ...devices['Desktop Firefox'],
         // Firefox-specific authentication settings
       },
@@ -107,7 +107,7 @@ export default defineConfig({
 
     {
       name: 'webkit-auth',
-      use: { 
+      use: {
         ...devices['Desktop Safari'],
         // Safari-specific authentication settings
       },
@@ -117,7 +117,7 @@ export default defineConfig({
     // Mobile testing
     {
       name: 'mobile-chrome-auth',
-      use: { 
+      use: {
         ...devices['Pixel 5'],
         // Mobile Chrome authentication testing
       },
@@ -126,7 +126,7 @@ export default defineConfig({
 
     {
       name: 'mobile-safari-auth',
-      use: { 
+      use: {
         ...devices['iPhone 12'],
         // Mobile Safari authentication testing
       },
@@ -136,7 +136,7 @@ export default defineConfig({
     // Tablet testing
     {
       name: 'tablet-auth',
-      use: { 
+      use: {
         ...devices['iPad'],
         // Tablet authentication testing
       },
@@ -209,7 +209,7 @@ export default defineConfig({
         VITE_E2E_MODE: 'true',
       },
     },
-    
+
     // MailHog server for email testing (optional)
     {
       command: 'docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog',
@@ -228,7 +228,7 @@ export default defineConfig({
     testType: 'authentication',
     coverage: [
       'user-registration',
-      'email-verification', 
+      'email-verification',
       'login-logout',
       'password-reset',
       'oauth-integration',

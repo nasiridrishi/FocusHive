@@ -1,6 +1,6 @@
 /**
  * Network Performance and Bundle Efficiency Tests
- * 
+ *
  * Comprehensive network performance analysis for FocusHive:
  * - Bundle size analysis and optimization validation
  * - Network request efficiency and caching
@@ -11,10 +11,10 @@
  * - Progressive loading strategies
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { PerformanceTestHelper, NetworkPerformanceMetrics, BundleMetrics } from './performance-helpers';
-import { performanceCollector, PerformanceMetrics } from './performance-metrics';
-import { AuthHelper } from '../../helpers/auth.helper';
+import {expect, test} from '@playwright/test';
+import {PerformanceTestHelper} from './performance-helpers';
+import {performanceCollector, PerformanceMetrics} from './performance-metrics';
+import {AuthHelper} from '../../helpers/auth.helper';
 
 // Network performance test configuration
 const NETWORK_TEST_CONFIG = {
@@ -24,7 +24,7 @@ const NETWORK_TEST_CONFIG = {
     route: 100 * 1024,      // 100KB per additional route
     vendor: 800 * 1024      // 800KB vendor bundle
   },
-  
+
   networkThresholds: {
     maxRequests: 20,         // Maximum requests per page load
     maxFailureRate: 1,       // Max 1% failure rate
@@ -33,29 +33,29 @@ const NETWORK_TEST_CONFIG = {
     maxTotalBytes: 3 * 1024 * 1024, // 3MB max per page
     compressionRatio: 0.7    // At least 30% compression
   },
-  
+
   testRoutes: [
-    { path: '/', name: 'Landing', requiresAuth: false, expectedRequests: 8 },
-    { path: '/dashboard', name: 'Dashboard', requiresAuth: true, expectedRequests: 12 },
-    { path: '/hives', name: 'Hives', requiresAuth: true, expectedRequests: 10 },
-    { path: '/profile', name: 'Profile', requiresAuth: true, expectedRequests: 6 },
-    { path: '/analytics', name: 'Analytics', requiresAuth: true, expectedRequests: 15 },
-    { path: '/settings', name: 'Settings', requiresAuth: true, expectedRequests: 5 }
+    {path: '/', name: 'Landing', requiresAuth: false, expectedRequests: 8},
+    {path: '/dashboard', name: 'Dashboard', requiresAuth: true, expectedRequests: 12},
+    {path: '/hives', name: 'Hives', requiresAuth: true, expectedRequests: 10},
+    {path: '/profile', name: 'Profile', requiresAuth: true, expectedRequests: 6},
+    {path: '/analytics', name: 'Analytics', requiresAuth: true, expectedRequests: 15},
+    {path: '/settings', name: 'Settings', requiresAuth: true, expectedRequests: 5}
   ],
-  
+
   networkConditions: [
-    { name: 'Fast WiFi', downloadThroughput: 10000000, uploadThroughput: 5000000, latency: 40 },
-    { name: 'Slow WiFi', downloadThroughput: 1000000, uploadThroughput: 500000, latency: 150 },
-    { name: 'Fast 3G', downloadThroughput: 1600000, uploadThroughput: 750000, latency: 150 },
-    { name: 'Slow 3G', downloadThroughput: 500000, uploadThroughput: 250000, latency: 300 }
+    {name: 'Fast WiFi', downloadThroughput: 10000000, uploadThroughput: 5000000, latency: 40},
+    {name: 'Slow WiFi', downloadThroughput: 1000000, uploadThroughput: 500000, latency: 150},
+    {name: 'Fast 3G', downloadThroughput: 1600000, uploadThroughput: 750000, latency: 150},
+    {name: 'Slow 3G', downloadThroughput: 500000, uploadThroughput: 250000, latency: 300}
   ],
-  
+
   apiEndpoints: [
-    { path: '/api/auth/me', method: 'GET', expectedLatency: 200 },
-    { path: '/api/hives', method: 'GET', expectedLatency: 300 },
-    { path: '/api/users/profile', method: 'GET', expectedLatency: 150 },
-    { path: '/api/analytics/dashboard', method: 'GET', expectedLatency: 500 },
-    { path: '/api/notifications', method: 'GET', expectedLatency: 200 }
+    {path: '/api/auth/me', method: 'GET', expectedLatency: 200},
+    {path: '/api/hives', method: 'GET', expectedLatency: 300},
+    {path: '/api/users/profile', method: 'GET', expectedLatency: 150},
+    {path: '/api/analytics/dashboard', method: 'GET', expectedLatency: 500},
+    {path: '/api/notifications', method: 'GET', expectedLatency: 200}
   ]
 };
 
@@ -63,7 +63,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
   let authHelper: AuthHelper;
   let performanceHelper: PerformanceTestHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
     performanceHelper = new PerformanceTestHelper(page);
     await performanceHelper.initializePerformanceMonitoring();
@@ -75,7 +75,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
   // Test bundle size and composition for each route
   for (const route of NETWORK_TEST_CONFIG.testRoutes) {
-    test(`Bundle Analysis - ${route.name} Route`, async ({ page }) => {
+    test(`Bundle Analysis - ${route.name} Route`, async ({page}) => {
       performanceCollector.startTest(`Bundle - ${route.name} Route`);
 
       // Clear cache to ensure fresh bundle loading
@@ -87,29 +87,29 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
       // Navigate and measure bundle loading
       const navigationStart = Date.now();
-      await page.goto(`http://localhost:3000${route.path}`, { waitUntil: 'networkidle' });
+      await page.goto(`http://localhost:3000${route.path}`, {waitUntil: 'networkidle'});
       const navigationEnd = Date.now();
 
       // Measure network performance
       const networkMetrics = await performanceHelper.measureNetworkPerformance();
-      
+
       // Validate bundle size thresholds
-      expect(networkMetrics.bundleMetrics.initialBundleSize, 
-        `${route.name} initial bundle should be under ${NETWORK_TEST_CONFIG.bundleSizeThresholds.initial / 1024}KB`)
-        .toBeLessThan(NETWORK_TEST_CONFIG.bundleSizeThresholds.initial);
+      expect(networkMetrics.bundleMetrics.initialBundleSize,
+          `${route.name} initial bundle should be under ${NETWORK_TEST_CONFIG.bundleSizeThresholds.initial / 1024}KB`)
+      .toBeLessThan(NETWORK_TEST_CONFIG.bundleSizeThresholds.initial);
 
-      expect(networkMetrics.totalRequests, 
-        `${route.name} should make reasonable number of requests`)
-        .toBeLessThan(route.expectedRequests + 5); // Allow some tolerance
+      expect(networkMetrics.totalRequests,
+          `${route.name} should make reasonable number of requests`)
+      .toBeLessThan(route.expectedRequests + 5); // Allow some tolerance
 
-      expect(networkMetrics.totalBytesTransferred, 
-        `${route.name} should transfer reasonable amount of data`)
-        .toBeLessThan(NETWORK_TEST_CONFIG.networkThresholds.maxTotalBytes);
+      expect(networkMetrics.totalBytesTransferred,
+          `${route.name} should transfer reasonable amount of data`)
+      .toBeLessThan(NETWORK_TEST_CONFIG.networkThresholds.maxTotalBytes);
 
       // Check for unused code
       const unusedCodePercentage = networkMetrics.bundleMetrics.unusedCodePercentage;
       expect(unusedCodePercentage, 'Unused code should be minimized')
-        .toBeLessThan(30); // Less than 30% unused code
+      .toBeLessThan(30); // Less than 30% unused code
 
       // Record results
       const metrics: PerformanceMetrics = {
@@ -124,7 +124,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
         }
       };
 
-      const result = performanceCollector.endTest(`Bundle - ${route.name} Route`, metrics);
+      const _result = performanceCollector.endTest(`Bundle - ${route.name} Route`, metrics);
 
       console.log(`📦 ${route.name} Bundle Analysis:`);
       console.log(`  Initial Bundle: ${(networkMetrics.bundleMetrics.initialBundleSize / 1024).toFixed(2)}KB`);
@@ -140,16 +140,19 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
   // Test network performance under different conditions
   for (const condition of NETWORK_TEST_CONFIG.networkConditions) {
-    test(`Network Performance - Dashboard under ${condition.name}`, async ({ page }) => {
+    test(`Network Performance - Dashboard under ${condition.name}`, async ({page}) => {
       performanceCollector.startTest(`Network - Dashboard - ${condition.name}`);
 
       // Apply network throttling
       await performanceHelper.simulateNetworkConditions('fast-3g'); // Use predefined condition
 
       await authHelper.loginWithTestUser();
-      
+
       const loadStart = Date.now();
-      await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle', timeout: 30000 });
+      await page.goto('http://localhost:3000/dashboard', {
+        waitUntil: 'networkidle',
+        timeout: 30000
+      });
       const loadEnd = Date.now();
 
       const loadTime = loadEnd - loadStart;
@@ -157,12 +160,12 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
       // Adjust expectations based on network condition
       const expectedLoadTime = condition.name.includes('Slow') ? 10000 : 5000;
-      
+
       expect(loadTime, `Load time under ${condition.name} should be reasonable`)
-        .toBeLessThan(expectedLoadTime);
+      .toBeLessThan(expectedLoadTime);
 
       expect(networkMetrics.failedRequests, 'Network errors should be minimal')
-        .toBeLessThan(networkMetrics.totalRequests * 0.05); // Less than 5% failure rate
+      .toBeLessThan(networkMetrics.totalRequests * 0.05); // Less than 5% failure rate
 
       // Record results
       const metrics: PerformanceMetrics = {
@@ -182,7 +185,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
         }
       };
 
-      const result = performanceCollector.endTest(`Network - Dashboard - ${condition.name}`, metrics);
+      const _result = performanceCollector.endTest(`Network - Dashboard - ${condition.name}`, metrics);
 
       console.log(`🌐 Dashboard Performance on ${condition.name}:`);
       console.log(`  Load Time: ${loadTime}ms`);
@@ -194,7 +197,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
   }
 
   // Test API performance for individual endpoints
-  test('Network Performance - API Endpoint Analysis', async ({ page }) => {
+  test('Network Performance - API Endpoint Analysis', async ({page}) => {
     performanceCollector.startTest('Network - API Performance');
 
     await authHelper.loginWithTestUser();
@@ -203,7 +206,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
     const apiPerformance = await page.evaluate((endpoints) => {
       return Promise.all(endpoints.map(async (endpoint) => {
         const startTime = performance.now();
-        
+
         try {
           const response = await fetch(endpoint.path, {
             method: endpoint.method,
@@ -212,10 +215,10 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
               'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
           });
-          
+
           const endTime = performance.now();
           const latency = endTime - startTime;
-          
+
           return {
             path: endpoint.path,
             method: endpoint.method,
@@ -225,7 +228,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
             success: response.ok,
             cached: response.headers.get('x-cache') === 'HIT'
           };
-        } catch (error) {
+        } catch {
           const endTime = performance.now();
           return {
             path: endpoint.path,
@@ -242,12 +245,12 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
     // Validate API performance
     for (let i = 0; i < apiPerformance.length; i++) {
-      const result = apiPerformance[i];
+      const _result = apiPerformance[i];
       const expected = NETWORK_TEST_CONFIG.apiEndpoints[i];
-      
+
       expect(result.success, `${result.path} should succeed`).toBe(true);
       expect(result.latency, `${result.path} should respond quickly`)
-        .toBeLessThan(expected.expectedLatency * 2); // Allow 2x tolerance
+      .toBeLessThan(expected.expectedLatency * 2); // Allow 2x tolerance
     }
 
     // Calculate overall API performance metrics
@@ -257,10 +260,10 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
     const cacheHitRate = (apiPerformance.filter(api => api.cached).length / apiPerformance.length) * 100;
 
     expect(averageLatency, 'Average API latency should be reasonable')
-      .toBeLessThan(NETWORK_TEST_CONFIG.networkThresholds.maxLatency);
-    
+    .toBeLessThan(NETWORK_TEST_CONFIG.networkThresholds.maxLatency);
+
     expect(successRate, 'API success rate should be high')
-      .toBeGreaterThan(95);
+    .toBeGreaterThan(95);
 
     // Record results
     const networkMetrics = {
@@ -277,28 +280,28 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
       networkMetrics
     };
 
-    const result = performanceCollector.endTest('Network - API Performance', metrics);
+    const _result = performanceCollector.endTest('Network - API Performance', metrics);
 
     console.log(`🔗 API Performance Analysis:`);
     console.log(`  Endpoints Tested: ${apiPerformance.length}`);
     console.log(`  Average Latency: ${averageLatency.toFixed(2)}ms`);
     console.log(`  Success Rate: ${successRate.toFixed(2)}%`);
     console.log(`  Cache Hit Rate: ${cacheHitRate.toFixed(2)}%`);
-    
+
     apiPerformance.forEach(api => {
       console.log(`  ${api.method} ${api.path}: ${api.latency.toFixed(2)}ms (${api.success ? 'OK' : 'FAIL'})`);
     });
   });
 
   // Test resource optimization and caching effectiveness
-  test('Network Performance - Resource Caching Analysis', async ({ page }) => {
+  test('Network Performance - Resource Caching Analysis', async ({page}) => {
     performanceCollector.startTest('Network - Resource Caching');
 
     await authHelper.loginWithTestUser();
 
     // First visit - populate cache
     const firstVisit = Date.now();
-    await page.goto('http://localhost:3000/dashboard', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000/dashboard', {waitUntil: 'networkidle'});
     const firstVisitEnd = Date.now();
     const firstLoadTime = firstVisitEnd - firstVisit;
 
@@ -306,7 +309,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
     // Second visit - should use cache
     const secondVisit = Date.now();
-    await page.reload({ waitUntil: 'networkidle' });
+    await page.reload({waitUntil: 'networkidle'});
     const secondVisitEnd = Date.now();
     const secondLoadTime = secondVisitEnd - secondVisit;
 
@@ -318,18 +321,18 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
     const bytesReduction = firstVisitMetrics.totalBytesTransferred - secondVisitMetrics.totalBytesTransferred;
 
     expect(loadTimeImprovement, 'Caching should improve load times')
-      .toBeGreaterThan(10); // At least 10% improvement
+    .toBeGreaterThan(10); // At least 10% improvement
 
     expect(secondVisitMetrics.cachedResources, 'Should have cached resources')
-      .toBeGreaterThan(0);
+    .toBeGreaterThan(0);
 
     // Test different cache scenarios
     const cacheScenarios = await page.evaluate(() => {
       const scenarios = [
-        { name: 'Static Assets', pattern: /\.(js|css|png|jpg|svg)$/ },
-        { name: 'API Responses', pattern: /^\/api\// },
-        { name: 'Fonts', pattern: /\.(woff|woff2|ttf)$/ },
-        { name: 'Images', pattern: /\.(png|jpg|jpeg|svg|webp)$/ }
+        {name: 'Static Assets', pattern: /\.(js|css|png|jpg|svg)$/},
+        {name: 'API Responses', pattern: /^\/api\//},
+        {name: 'Fonts', pattern: /\.(woff|woff2|ttf)$/},
+        {name: 'Images', pattern: /\.(png|jpg|jpeg|svg|webp)$/}
       ];
 
       return Promise.all(scenarios.map(async (scenario) => {
@@ -358,7 +361,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
       networkMetrics
     };
 
-    const result = performanceCollector.endTest('Network - Resource Caching', metrics);
+    const _result = performanceCollector.endTest('Network - Resource Caching', metrics);
 
     console.log(`💾 Resource Caching Analysis:`);
     console.log(`  First Visit: ${firstLoadTime}ms`);
@@ -367,14 +370,14 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
     console.log(`  Request Reduction: ${requestReduction}`);
     console.log(`  Bytes Saved: ${(bytesReduction / 1024).toFixed(2)}KB`);
     console.log(`  Cached Resources: ${secondVisitMetrics.cachedResources}`);
-    
+
     cacheScenarios.forEach(scenario => {
       console.log(`  ${scenario.name}: ${scenario.cacheHitRate.toFixed(2)}% hit rate, ${scenario.resources} resources`);
     });
   });
 
   // Test compression and optimization effectiveness
-  test('Network Performance - Compression Analysis', async ({ page }) => {
+  test('Network Performance - Compression Analysis', async ({page}) => {
     performanceCollector.startTest('Network - Compression Analysis');
 
     await authHelper.loginWithTestUser();
@@ -391,37 +394,37 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
       }>((resolve) => {
         // This would require detailed analysis of response headers
         // For now, simulate compression analysis
-        
+
         const textResources = {
           original: 500 * 1024, // 500KB
           compressed: 150 * 1024, // 150KB
           ratio: 0.7 // 70% compression
         };
-        
+
         const jsResources = {
           original: 800 * 1024, // 800KB
           compressed: 200 * 1024, // 200KB
           ratio: 0.75 // 75% compression
         };
-        
+
         const cssResources = {
           original: 100 * 1024, // 100KB
           compressed: 30 * 1024, // 30KB
           ratio: 0.7 // 70% compression
         };
-        
+
         const imageResources = {
           original: 2000 * 1024, // 2MB
           compressed: 1200 * 1024, // 1.2MB
           ratio: 0.4 // 40% compression
         };
-        
-        const totalOriginal = textResources.original + jsResources.original + 
-                            cssResources.original + imageResources.original;
-        const totalCompressed = textResources.compressed + jsResources.compressed + 
-                              cssResources.compressed + imageResources.compressed;
+
+        const totalOriginal = textResources.original + jsResources.original +
+            cssResources.original + imageResources.original;
+        const totalCompressed = textResources.compressed + jsResources.compressed +
+            cssResources.compressed + imageResources.compressed;
         const totalCompression = (totalOriginal - totalCompressed) / totalOriginal;
-        
+
         resolve({
           textResources,
           jsResources,
@@ -434,23 +437,23 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
     // Validate compression effectiveness
     expect(compressionAnalysis.jsResources.ratio, 'JavaScript should be well compressed')
-      .toBeGreaterThan(NETWORK_TEST_CONFIG.networkThresholds.compressionRatio);
-    
+    .toBeGreaterThan(NETWORK_TEST_CONFIG.networkThresholds.compressionRatio);
+
     expect(compressionAnalysis.cssResources.ratio, 'CSS should be well compressed')
-      .toBeGreaterThan(NETWORK_TEST_CONFIG.networkThresholds.compressionRatio);
-    
+    .toBeGreaterThan(NETWORK_TEST_CONFIG.networkThresholds.compressionRatio);
+
     expect(compressionAnalysis.totalCompression, 'Overall compression should be effective')
-      .toBeGreaterThan(0.5); // At least 50% overall compression
+    .toBeGreaterThan(0.5); // At least 50% overall compression
 
     // Record results
     const networkMetrics = {
       requestCount: 0,
       failedRequests: 0,
       averageLatency: 0,
-      totalBytes: compressionAnalysis.textResources.compressed + 
-                 compressionAnalysis.jsResources.compressed + 
-                 compressionAnalysis.cssResources.compressed + 
-                 compressionAnalysis.imageResources.compressed,
+      totalBytes: compressionAnalysis.textResources.compressed +
+          compressionAnalysis.jsResources.compressed +
+          compressionAnalysis.cssResources.compressed +
+          compressionAnalysis.imageResources.compressed,
       cachedResources: 0,
       compressionRatio: compressionAnalysis.totalCompression,
       httpVersion: 'HTTP/2'
@@ -460,7 +463,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
       networkMetrics
     };
 
-    const result = performanceCollector.endTest('Network - Compression Analysis', metrics);
+    const _result = performanceCollector.endTest('Network - Compression Analysis', metrics);
 
     console.log(`🗜️ Compression Analysis:`);
     console.log(`  JavaScript: ${(compressionAnalysis.jsResources.ratio * 100).toFixed(2)}% compression`);
@@ -471,7 +474,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
   });
 
   // Test progressive loading strategies
-  test('Network Performance - Progressive Loading', async ({ page }) => {
+  test('Network Performance - Progressive Loading', async ({page}) => {
     performanceCollector.startTest('Network - Progressive Loading');
 
     await authHelper.loginWithTestUser();
@@ -486,51 +489,51 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
       }>((resolve) => {
         let requestCount = 0;
         const startTime = performance.now();
-        
+
         // Override Image constructor to count requests
         const OriginalImage = window.Image;
-        window.Image = function(this: HTMLImageElement) {
+        window.Image = function (this: HTMLImageElement) {
           requestCount++;
           return new OriginalImage();
         } as {
           new(): HTMLImageElement;
           prototype: HTMLImageElement;
         };
-        
+
         // Simulate page with many images
         const imageContainer = document.createElement('div');
         imageContainer.style.height = '3000px';
         document.body.appendChild(imageContainer);
-        
+
         const totalImages = 20;
         const initiallyVisible = 3;
-        
+
         for (let i = 0; i < totalImages; i++) {
           const img = document.createElement('img');
-          img.src = i < initiallyVisible ? 
-            `https://via.placeholder.com/300x200?text=Image${i}` : 
-            '';
+          img.src = i < initiallyVisible ?
+              `https://via.placeholder.com/300x200?text=Image${i}` :
+              '';
           img.dataset.src = `https://via.placeholder.com/300x200?text=Image${i}`;
           img.style.height = '200px';
           img.style.display = 'block';
           img.style.marginBottom = '10px';
           imageContainer.appendChild(img);
         }
-        
+
         const initialRequests = requestCount;
-        
+
         // Simulate lazy loading by scrolling
         setTimeout(() => {
           window.scrollTo(0, 1500);
-          
+
           setTimeout(() => {
             const lazyLoadedImages = requestCount - initialRequests;
             const loadTime = performance.now() - startTime;
-            
+
             // Cleanup
             window.Image = OriginalImage;
             document.body.removeChild(imageContainer);
-            
+
             resolve({
               initialRequests,
               totalImages,
@@ -544,22 +547,22 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
 
     // Validate progressive loading effectiveness
     expect(lazyLoadingTest.initialRequests, 'Should load only visible images initially')
-      .toBeLessThan(lazyLoadingTest.totalImages);
-    
+    .toBeLessThan(lazyLoadingTest.totalImages);
+
     expect(lazyLoadingTest.lazyLoadedImages, 'Should lazy load images on scroll')
-      .toBeGreaterThan(0);
+    .toBeGreaterThan(0);
 
     // Test code splitting effectiveness
     await page.goto('http://localhost:3000/analytics');
     const analyticsNetworkMetrics = await performanceHelper.measureNetworkPerformance();
-    
+
     await page.goto('http://localhost:3000/profile');
     const profileNetworkMetrics = await performanceHelper.measureNetworkPerformance();
 
     // Code splitting should result in different bundle loads
-    expect(Math.abs(analyticsNetworkMetrics.bundleMetrics.initialBundleSize - 
-                   profileNetworkMetrics.bundleMetrics.initialBundleSize),
-      'Different routes should load different chunks').toBeGreaterThan(0);
+    expect(Math.abs(analyticsNetworkMetrics.bundleMetrics.initialBundleSize -
+            profileNetworkMetrics.bundleMetrics.initialBundleSize),
+        'Different routes should load different chunks').toBeGreaterThan(0);
 
     // Record results
     const networkMetrics = {
@@ -576,7 +579,7 @@ test.describe('Network Performance and Bundle Efficiency Tests', () => {
       networkMetrics
     };
 
-    const result = performanceCollector.endTest('Network - Progressive Loading', metrics);
+    const _result = performanceCollector.endTest('Network - Progressive Loading', metrics);
 
     console.log(`⚡ Progressive Loading Analysis:`);
     console.log(`  Total Images: ${lazyLoadingTest.totalImages}`);

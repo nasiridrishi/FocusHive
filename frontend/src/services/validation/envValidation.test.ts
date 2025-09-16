@@ -1,12 +1,12 @@
 /**
  * Environment Validation Tests
- * 
+ *
  * Tests for the environment variable validation service.
  * Note: Due to Vite's environment variable handling, these tests focus on
  * the validation logic rather than import.meta.env mocking.
  */
 
-import { describe, it, expect } from 'vitest';
+import {describe, expect, it} from 'vitest';
 
 // Mock environment variables for testing
 const createMockValidateFunction = (mockEnv: Record<string, unknown>) => {
@@ -41,7 +41,7 @@ const createMockValidateFunction = (mockEnv: Record<string, unknown>) => {
         }
       } catch {
         errors.push({
-          variable: 'VITE_API_BASE_URL', 
+          variable: 'VITE_API_BASE_URL',
           message: 'Environment variable VITE_API_BASE_URL failed validation. Base URL for the FocusHive backend API',
           severity: 'error'
         });
@@ -75,11 +75,11 @@ const createMockValidateFunction = (mockEnv: Record<string, unknown>) => {
 
     // Set defaults for optional variables
     validatedEnv.VITE_WEBSOCKET_RECONNECT_ATTEMPTS = mockEnv.VITE_WEBSOCKET_RECONNECT_ATTEMPTS ?
-      parseInt(mockEnv.VITE_WEBSOCKET_RECONNECT_ATTEMPTS, 10) : 10;
+        parseInt(mockEnv.VITE_WEBSOCKET_RECONNECT_ATTEMPTS, 10) : 10;
     validatedEnv.VITE_WEBSOCKET_RECONNECT_DELAY = mockEnv.VITE_WEBSOCKET_RECONNECT_DELAY ?
-      parseInt(mockEnv.VITE_WEBSOCKET_RECONNECT_DELAY, 10) : 1000;
+        parseInt(mockEnv.VITE_WEBSOCKET_RECONNECT_DELAY, 10) : 1000;
     validatedEnv.VITE_WEBSOCKET_HEARTBEAT_INTERVAL = mockEnv.VITE_WEBSOCKET_HEARTBEAT_INTERVAL ?
-      parseInt(mockEnv.VITE_WEBSOCKET_HEARTBEAT_INTERVAL, 10) : 30000;
+        parseInt(mockEnv.VITE_WEBSOCKET_HEARTBEAT_INTERVAL, 10) : 30000;
 
     // Validate numbers
     if (mockEnv.VITE_WEBSOCKET_RECONNECT_ATTEMPTS && isNaN(parseInt(mockEnv.VITE_WEBSOCKET_RECONNECT_ATTEMPTS, 10))) {
@@ -194,9 +194,9 @@ describe('Environment Validation Logic', () => {
       const result = mockValidate();
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(e => 
-        e.variable === 'VITE_WEBSOCKET_RECONNECT_ATTEMPTS' && 
-        e.message.includes('valid number')
+      expect(result.errors.some(e =>
+          e.variable === 'VITE_WEBSOCKET_RECONNECT_ATTEMPTS' &&
+          e.message.includes('valid number')
       )).toBe(true);
     });
 
@@ -226,9 +226,9 @@ describe('Environment Validation Logic', () => {
       const result = mockValidate();
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(e => 
-        e.variable === 'VITE_WEBSOCKET_URL' && 
-        e.message.includes('validation')
+      expect(result.errors.some(e =>
+          e.variable === 'VITE_WEBSOCKET_URL' &&
+          e.message.includes('validation')
       )).toBe(true);
     });
 
@@ -243,9 +243,9 @@ describe('Environment Validation Logic', () => {
 
       // Should be valid but with warning for invalid Spotify client ID
       expect(result.isValid).toBe(true);
-      expect(result.errors.some(e => 
-        e.variable === 'VITE_SPOTIFY_CLIENT_ID' && 
-        e.severity === 'warning'
+      expect(result.errors.some(e =>
+          e.variable === 'VITE_SPOTIFY_CLIENT_ID' &&
+          e.severity === 'warning'
       )).toBe(true);
     });
 

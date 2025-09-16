@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from 'react'
+import React, {useEffect, useState} from 'react'
 import {
   Box,
-  Typography,
   Card,
   CardContent,
   Chip,
+  LinearProgress,
   Paper,
   Stack,
-  LinearProgress,
+  Typography,
 } from '@mui/material'
 import {
-  TrendingUp as TrendingUpIcon,
-  Timer as TimerIcon,
   People as PeopleIcon,
-  Star as StarIcon,
   Rocket as RocketIcon,
+  Star as StarIcon,
+  Timer as TimerIcon,
+  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material'
-import { HiveList } from '../components'
-import { Hive, HiveMember } from '@shared/types'
+import {HiveList} from '../components'
+import {Hive, HiveMember} from '@shared/types'
 
 // Mock data - this would come from API calls in a real app
 const mockHives: Hive[] = [
@@ -254,29 +254,29 @@ export const DashboardPage: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
-  const handleEnterHive = (hiveId: string) => {
+  const handleEnterHive = (hiveId: string): void => {
     // Navigate to hive page
     window.location.href = `/hive/${hiveId}`
   }
 
-  const handleHiveSettings = (hiveId: string) => {
+  const handleHiveSettings = (hiveId: string): void => {
     // Navigate to settings page
     window.location.href = `/hive/${hiveId}/settings`
   }
 
-  const handleShareHive = (hiveId: string) => {
+  const handleShareHive = (hiveId: string): void => {
     // Will use hiveId when share dialog is implemented
     void hiveId;
     // Open share dialog
   }
 
-  const handleCreateHive = (hiveData: object) => {
+  const handleCreateHive = (hiveData: object): void => {
     // Will use hiveData when API is implemented
     void hiveData;
     // Simulate API call and update state
   }
 
-  const handleRefresh = () => {
+  const handleRefresh = (): void => {
     setIsLoading(true)
     setTimeout(() => {
       setHives(mockHives)
@@ -286,174 +286,178 @@ export const DashboardPage: React.FC = () => {
   }
 
   // Calculate dashboard stats
-  const joinedHives = hives.filter(hive => 
-    members[hive.id]?.some(member => member.userId === currentUserId)
+  const joinedHives = hives.filter(hive =>
+      members[hive.id]?.some(member => member.userId === currentUserId)
   )
   const totalFocusTime = 145 // Mock data - would come from API
   const weeklyGoal = 200
   const completedSessions = 12
 
   return (
-    <Box>
-      {/* Welcome Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" fontWeight={600} gutterBottom>
-          Welcome back! 👋
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Ready to focus and be productive? Check out your hives and start a new session.
-        </Typography>
+      <Box>
+        {/* Welcome Section */}
+        <Box sx={{mb: 4}}>
+          <Typography variant="h4" component="h1" fontWeight={600} gutterBottom>
+            Welcome back! 👋
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Ready to focus and be productive? Check out your hives and start a new session.
+          </Typography>
+        </Box>
+
+        {/* Stats Cards */}
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)'},
+          gap: 3,
+          mb: 4
+        }}>
+          <Card>
+            <CardContent>
+              <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <Box>
+                  <Typography color="text.secondary" gutterBottom variant="h6">
+                    Focus Time
+                  </Typography>
+                  <Typography variant="h4" component="div">
+                    {totalFocusTime}h
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    This week
+                  </Typography>
+                </Box>
+                <TimerIcon sx={{fontSize: 40, color: 'primary.main'}}/>
+              </Box>
+              <Box sx={{mt: 2}}>
+                <LinearProgress
+                    variant="determinate"
+                    value={(totalFocusTime / weeklyGoal) * 100}
+                    sx={{height: 6, borderRadius: 3}}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{mt: 1, display: 'block'}}>
+                  {Math.round((totalFocusTime / weeklyGoal) * 100)}% of weekly goal
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <Box>
+                  <Typography color="text.secondary" gutterBottom variant="h6">
+                    My Hives
+                  </Typography>
+                  <Typography variant="h4" component="div">
+                    {joinedHives.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Active memberships
+                  </Typography>
+                </Box>
+                <PeopleIcon sx={{fontSize: 40, color: 'success.main'}}/>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <Box>
+                  <Typography color="text.secondary" gutterBottom variant="h6">
+                    Sessions
+                  </Typography>
+                  <Typography variant="h4" component="div">
+                    {completedSessions}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    This week
+                  </Typography>
+                </Box>
+                <StarIcon sx={{fontSize: 40, color: 'warning.main'}}/>
+              </Box>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                <Box>
+                  <Typography color="text.secondary" gutterBottom variant="h6">
+                    Streak
+                  </Typography>
+                  <Typography variant="h4" component="div">
+                    7
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Days active
+                  </Typography>
+                </Box>
+                <TrendingUpIcon sx={{fontSize: 40, color: 'error.main'}}/>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Quick Actions */}
+        <Paper sx={{p: 3, mb: 4, bgcolor: 'primary.main', color: 'primary.contrastText'}}>
+          <Typography variant="h6" gutterBottom
+                      sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+            <RocketIcon/>
+            Quick Start
+          </Typography>
+          <Stack direction={{xs: 'column', sm: 'row'}} spacing={2}>
+            <Chip
+                label="Start 25min Pomodoro"
+                onClick={() => {
+                }}
+                sx={{
+                  bgcolor: 'primary.contrastText',
+                  color: 'primary.main',
+                  '&:hover': {bgcolor: 'grey.100'}
+                }}
+            />
+            <Chip
+                label="Join Active Hive"
+                onClick={() => {
+                }}
+                sx={{
+                  bgcolor: 'primary.contrastText',
+                  color: 'primary.main',
+                  '&:hover': {bgcolor: 'grey.100'}
+                }}
+            />
+            <Chip
+                label="Browse Discover"
+                onClick={() => {
+                }}
+                sx={{
+                  bgcolor: 'primary.contrastText',
+                  color: 'primary.main',
+                  '&:hover': {bgcolor: 'grey.100'}
+                }}
+            />
+          </Stack>
+        </Paper>
+
+        {/* Hives List */}
+        <HiveList
+            hives={hives}
+            members={members}
+            currentUserId={currentUserId}
+            isLoading={isLoading}
+            onJoin={handleJoinHive}
+            onLeave={handleLeaveHive}
+            onEnter={handleEnterHive}
+            onSettings={handleHiveSettings}
+            onShare={handleShareHive}
+            onRefresh={handleRefresh}
+            onCreateHive={handleCreateHive}
+            title="My Hives"
+            showCreateButton={true}
+            showFilters={true}
+        />
       </Box>
-
-      {/* Stats Cards */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-        gap: 3,
-        mb: 4 
-      }}>
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Box>
-                <Typography color="text.secondary" gutterBottom variant="h6">
-                  Focus Time
-                </Typography>
-                <Typography variant="h4" component="div">
-                  {totalFocusTime}h
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  This week
-                </Typography>
-              </Box>
-              <TimerIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-            </Box>
-            <Box sx={{ mt: 2 }}>
-              <LinearProgress 
-                variant="determinate" 
-                value={(totalFocusTime / weeklyGoal) * 100}
-                sx={{ height: 6, borderRadius: 3 }}
-              />
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                {Math.round((totalFocusTime / weeklyGoal) * 100)}% of weekly goal
-              </Typography>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Box>
-                <Typography color="text.secondary" gutterBottom variant="h6">
-                  My Hives
-                </Typography>
-                <Typography variant="h4" component="div">
-                  {joinedHives.length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Active memberships
-                </Typography>
-              </Box>
-              <PeopleIcon sx={{ fontSize: 40, color: 'success.main' }} />
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Box>
-                <Typography color="text.secondary" gutterBottom variant="h6">
-                  Sessions
-                </Typography>
-                <Typography variant="h4" component="div">
-                  {completedSessions}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  This week
-                </Typography>
-              </Box>
-              <StarIcon sx={{ fontSize: 40, color: 'warning.main' }} />
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Box>
-                <Typography color="text.secondary" gutterBottom variant="h6">
-                  Streak
-                </Typography>
-                <Typography variant="h4" component="div">
-                  7
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Days active
-                </Typography>
-              </Box>
-              <TrendingUpIcon sx={{ fontSize: 40, color: 'error.main' }} />
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* Quick Actions */}
-      <Paper sx={{ p: 3, mb: 4, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <RocketIcon />
-          Quick Start
-        </Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Chip
-            label="Start 25min Pomodoro"
-            onClick={() => {}}
-            sx={{ 
-              bgcolor: 'primary.contrastText', 
-              color: 'primary.main',
-              '&:hover': { bgcolor: 'grey.100' }
-            }}
-          />
-          <Chip
-            label="Join Active Hive"
-            onClick={() => {}}
-            sx={{ 
-              bgcolor: 'primary.contrastText', 
-              color: 'primary.main',
-              '&:hover': { bgcolor: 'grey.100' }
-            }}
-          />
-          <Chip
-            label="Browse Discover"
-            onClick={() => {}}
-            sx={{ 
-              bgcolor: 'primary.contrastText', 
-              color: 'primary.main',
-              '&:hover': { bgcolor: 'grey.100' }
-            }}
-          />
-        </Stack>
-      </Paper>
-
-      {/* Hives List */}
-      <HiveList
-        hives={hives}
-        members={members}
-        currentUserId={currentUserId}
-        isLoading={isLoading}
-        onJoin={handleJoinHive}
-        onLeave={handleLeaveHive}
-        onEnter={handleEnterHive}
-        onSettings={handleHiveSettings}
-        onShare={handleShareHive}
-        onRefresh={handleRefresh}
-        onCreateHive={handleCreateHive}
-        title="My Hives"
-        showCreateButton={true}
-        showFilters={true}
-      />
-    </Box>
   )
 }
 

@@ -1,20 +1,20 @@
 /**
  * Advanced Responsive Grid System
- * 
+ *
  * Enhanced grid component with CSS Grid support, container queries,
  * and intelligent auto-sizing based on content and screen size
  */
 
-import React, { forwardRef } from 'react'
-import { Box, BoxProps } from '@mui/material'
-import { styled } from '@mui/material/styles'
-import { useContainerQuery, useResponsive } from '../hooks'
-import { type BreakpointKey } from '../theme'
+import React, {forwardRef} from 'react'
+import {Box, BoxProps} from '@mui/material'
+import {styled} from '@mui/material/styles'
+import {useContainerQuery, useResponsive} from '../hooks'
+import {type BreakpointKey} from '../theme'
 
 // Base grid container with CSS Grid support
 const GridContainer = styled(Box, {
-  shouldForwardProp: (prop) => 
-    !['columns', 'gap', 'autoFit', 'minItemWidth', 'maxItemWidth', 'aspectRatio'].includes(prop as string),
+  shouldForwardProp: (prop) =>
+      !['columns', 'gap', 'autoFit', 'minItemWidth', 'maxItemWidth', 'aspectRatio'].includes(prop as string),
 })<{
   columns?: number | Partial<Record<BreakpointKey, number>>
   gap?: number | Partial<Record<BreakpointKey, number>>
@@ -22,14 +22,14 @@ const GridContainer = styled(Box, {
   minItemWidth?: number
   maxItemWidth?: number
   aspectRatio?: string
-}>(({ theme, columns = 1, gap = 2, autoFit, minItemWidth, maxItemWidth, aspectRatio }) => {
-  const getResponsiveValue = (value: number | Partial<Record<BreakpointKey, number>>, defaultValue: number) => {
+}>(({theme, columns = 1, gap = 2, autoFit, minItemWidth, maxItemWidth, aspectRatio}) => {
+  const getResponsiveValue = (value: number | Partial<Record<BreakpointKey, number>>, defaultValue: number): number | Record<string, unknown> => {
     if (typeof value === 'number') return value
-    
+
     // Create responsive CSS for the value
     const breakpointKeys = Object.keys(theme.breakpoints.values) as BreakpointKey[]
     let css = {}
-    
+
     breakpointKeys.forEach((breakpoint) => {
       if (value[breakpoint] !== undefined) {
         css = {
@@ -40,48 +40,54 @@ const GridContainer = styled(Box, {
         }
       }
     })
-    
+
     // Use defaultValue if no breakpoint values were found
     if (Object.keys(css).length === 0) {
-      return { '--grid-value': defaultValue }
+      return {'--grid-value': defaultValue}
     }
-    
+
     return css
   }
-  
+
   const baseColumns = typeof columns === 'number' ? columns : columns.mobile || 1
   const baseGap = typeof gap === 'number' ? gap : gap.mobile || 2
-  
+
   return {
     display: 'grid',
     gap: theme.spacing(baseGap),
     width: '100%',
-    
+
     // Auto-fit columns based on minimum item width
     ...(autoFit && minItemWidth && {
       gridTemplateColumns: `repeat(auto-fit, minmax(${minItemWidth}px, ${maxItemWidth ? `${maxItemWidth}px` : '1fr'}))`,
     }),
-    
+
     // Fixed column layout
     ...(!autoFit && {
       gridTemplateColumns: `repeat(${baseColumns}, 1fr)`,
     }),
-    
+
     // Aspect ratio for grid items
     ...(aspectRatio && {
       '& > *': {
         aspectRatio,
       },
     }),
-    
+
     // Responsive columns
-    ...(typeof columns === 'object' && getResponsiveValue(columns, baseColumns)),
-    
+    ...(typeof columns === 'object' ? (() => {
+      const responsiveValue = getResponsiveValue(columns, baseColumns)
+      return typeof responsiveValue === 'object' ? responsiveValue : {}
+    })() : {}),
+
     // Responsive gap
-    ...(typeof gap === 'object' && {
-      ...getResponsiveValue(gap, baseGap),
-      gap: 'var(--grid-gap, ' + theme.spacing(baseGap) + ')',
-    }),
+    ...(typeof gap === 'object' ? (() => {
+      const responsiveValue = getResponsiveValue(gap, baseGap)
+      return {
+        ...(typeof responsiveValue === 'object' ? responsiveValue : {}),
+        gap: 'var(--grid-gap, ' + theme.spacing(baseGap) + ')',
+      }
+    })() : {}),
   }
 })
 
@@ -92,18 +98,18 @@ interface ResponsiveGridProps extends Omit<BoxProps, 'columns'> {
   // Grid configuration
   columns?: number | Partial<Record<BreakpointKey, number>>
   gap?: number | Partial<Record<BreakpointKey, number>>
-  
+
   // Auto-sizing options
   autoFit?: boolean
   minItemWidth?: number
   maxItemWidth?: number
-  
+
   // Visual options
   aspectRatio?: string
-  
+
   // Container queries
   useContainerQueries?: boolean
-  
+
   children: React.ReactNode
 }
 
@@ -117,95 +123,95 @@ interface GridItemProps extends BoxProps {
 
 // Main ResponsiveGrid component
 export const ResponsiveGrid = forwardRef<HTMLDivElement, ResponsiveGridProps>(
-  ({ 
-    columns = { mobile: 1, tablet: 2, desktop: 3 },
-    gap = { mobile: 2, tablet: 3, desktop: 4 },
-    autoFit = false,
-    minItemWidth,
-    maxItemWidth,
-    aspectRatio,
-    useContainerQueries = false,
-    children,
-    ...props 
-  }, ref) => {
-    const { currentBreakpoint } = useResponsive()
-    const containerQuery = useContainerQuery()
-    
-    // Use container queries if enabled
-    const activeColumns = useContainerQueries 
-      ? containerQuery.responsiveValue({
-          xs: 1,
-          sm: 2,
-          md: 3,
-          lg: 4,
-          xl: 5,
-          xxl: 6,
-        }, 1)
-      : (typeof columns === 'number' ? columns : columns[currentBreakpoint] || 1)
-    
-    const activeGap = useContainerQueries
-      ? containerQuery.responsiveValue({
-          xs: 1,
-          sm: 2,
-          md: 3,
-        }, 2)
-      : (typeof gap === 'number' ? gap : gap[currentBreakpoint] || 2)
-    
-    return (
-      <GridContainer
-        ref={useContainerQueries ? containerQuery.containerRef : ref}
-        columns={activeColumns}
-        gap={activeGap}
-        autoFit={autoFit}
-        minItemWidth={minItemWidth}
-        maxItemWidth={maxItemWidth}
-        aspectRatio={aspectRatio}
-        {...props}
-      >
-        {children}
-      </GridContainer>
-    )
-  }
+    ({
+       columns = {mobile: 1, tablet: 2, desktop: 3},
+       gap = {mobile: 2, tablet: 3, desktop: 4},
+       autoFit = false,
+       minItemWidth,
+       maxItemWidth,
+       aspectRatio,
+       useContainerQueries = false,
+       children,
+       ...props
+     }, ref) => {
+      const {currentBreakpoint} = useResponsive()
+      const containerQuery = useContainerQuery()
+
+      // Use container queries if enabled
+      const activeColumns = useContainerQueries
+          ? containerQuery.responsiveValue({
+            xs: 1,
+            sm: 2,
+            md: 3,
+            lg: 4,
+            xl: 5,
+            xxl: 6,
+          }, 1)
+          : (typeof columns === 'number' ? columns : columns[currentBreakpoint] || 1)
+
+      const activeGap = useContainerQueries
+          ? containerQuery.responsiveValue({
+            xs: 1,
+            sm: 2,
+            md: 3,
+          }, 2)
+          : (typeof gap === 'number' ? gap : gap[currentBreakpoint] || 2)
+
+      return (
+          <GridContainer
+              ref={useContainerQueries ? containerQuery.containerRef : ref}
+              columns={activeColumns}
+              gap={activeGap}
+              autoFit={autoFit}
+              minItemWidth={minItemWidth}
+              maxItemWidth={maxItemWidth}
+              aspectRatio={aspectRatio}
+              {...props}
+          >
+            {children}
+          </GridContainer>
+      )
+    }
 )
 
 ResponsiveGrid.displayName = 'ResponsiveGrid'
 
 // Grid item component
 const StyledGridItem = styled(Box, {
-  shouldForwardProp: (prop) => 
-    !['span', 'spanRow', 'order', 'align', 'justify'].includes(prop as string),
+  shouldForwardProp: (prop) =>
+      !['span', 'spanRow', 'order', 'align', 'justify'].includes(prop as string),
 })<{
   span?: number | Partial<Record<BreakpointKey, number>>
   spanRow?: number | Partial<Record<BreakpointKey, number>>
   order?: number | Partial<Record<BreakpointKey, number>>
   align?: 'start' | 'center' | 'end' | 'stretch'
   justify?: 'start' | 'center' | 'end' | 'stretch'
-}>(({ theme, span, spanRow, order, align, justify }) => ({
+}>(({theme, span, spanRow, order, align, justify}) => ({
   // Grid column span
   ...(span && {
     gridColumn: typeof span === 'number' ? `span ${span}` : undefined,
   }),
-  
+
   // Grid row span
   ...(spanRow && {
     gridRow: typeof spanRow === 'number' ? `span ${spanRow}` : undefined,
   }),
-  
+
   // Grid order
   ...(order && {
     order: typeof order === 'number' ? order : undefined,
   }),
-  
+
   // Item alignment
   ...(align && {
     alignSelf: align === 'start' ? 'flex-start' : align === 'end' ? 'flex-end' : align,
   }),
-  
+
   // Item justification
   ...(justify && {
     justifySelf: justify === 'start' ? 'flex-start' : justify === 'end' ? 'flex-end' : justify,
   }),
-  
+
   // Responsive handling for span, spanRow, order
   ...(typeof span === 'object' && Object.keys(span).length > 0 && {
     [theme.breakpoints.up('mobile')]: {
@@ -224,7 +230,7 @@ const StyledGridItem = styled(Box, {
       gridColumn: span.desktopLg ? `span ${span.desktopLg}` : undefined,
     },
   }),
-  
+
   ...(typeof spanRow === 'object' && Object.keys(spanRow).length > 0 && {
     [theme.breakpoints.up('mobile')]: {
       gridRow: spanRow.mobile ? `span ${spanRow.mobile}` : undefined,
@@ -242,7 +248,7 @@ const StyledGridItem = styled(Box, {
       gridRow: spanRow.desktopLg ? `span ${spanRow.desktopLg}` : undefined,
     },
   }),
-  
+
   ...(typeof order === 'object' && Object.keys(order).length > 0 && {
     [theme.breakpoints.up('mobile')]: {
       order: order.mobile || undefined,
@@ -263,21 +269,21 @@ const StyledGridItem = styled(Box, {
 }))
 
 export const GridItem = forwardRef<HTMLDivElement, GridItemProps>(
-  ({ span, spanRow, order, align, justify, children, ...props }, ref) => {
-    return (
-      <StyledGridItem
-        ref={ref}
-        span={span}
-        spanRow={spanRow}
-        order={order}
-        align={align}
-        justify={justify}
-        {...props}
-      >
-        {children}
-      </StyledGridItem>
-    )
-  }
+    ({span, spanRow, order, align, justify, children, ...props}, ref) => {
+      return (
+          <StyledGridItem
+              ref={ref}
+              span={span}
+              spanRow={spanRow}
+              order={order}
+              align={align}
+              justify={justify}
+              {...props}
+          >
+            {children}
+          </StyledGridItem>
+      )
+    }
 )
 
 GridItem.displayName = 'GridItem'
@@ -287,26 +293,26 @@ export const MasonryGrid: React.FC<{
   columns?: number | Partial<Record<BreakpointKey, number>>
   gap?: number
   children: React.ReactNode
-}> = ({ columns = { mobile: 1, tablet: 2, desktop: 3 }, gap = 16, children }) => {
-  const { currentBreakpoint } = useResponsive()
-  
+}> = ({columns = {mobile: 1, tablet: 2, desktop: 3}, gap = 16, children}) => {
+  const {currentBreakpoint} = useResponsive()
+
   const activeColumns = typeof columns === 'number' ? columns : columns[currentBreakpoint] || 1
-  
+
   return (
-    <Box
-      sx={{
-        columnCount: activeColumns,
-        columnGap: `${gap}px`,
-        '& > *': {
-          breakInside: 'avoid',
-          marginBottom: `${gap}px`,
-          display: 'inline-block',
-          width: '100%',
-        },
-      }}
-    >
-      {children}
-    </Box>
+      <Box
+          sx={{
+            columnCount: activeColumns,
+            columnGap: `${gap}px`,
+            '& > *': {
+              breakInside: 'avoid',
+              marginBottom: `${gap}px`,
+              display: 'inline-block',
+              width: '100%',
+            },
+          }}
+      >
+        {children}
+      </Box>
   )
 }
 
@@ -318,34 +324,34 @@ export const ResponsiveStack: React.FC<{
   justify?: 'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly'
   wrap?: boolean
   children: React.ReactNode
-} & BoxProps> = ({ 
-  direction = 'column',
-  spacing = 2,
-  align = 'stretch',
-  justify = 'start',
-  wrap = false,
-  children,
-  ...props 
-}) => {
-  const { currentBreakpoint } = useResponsive()
-  
+} & BoxProps> = ({
+                   direction = 'column',
+                   spacing = 2,
+                   align = 'stretch',
+                   justify = 'start',
+                   wrap = false,
+                   children,
+                   ...props
+                 }) => {
+  const {currentBreakpoint} = useResponsive()
+
   const activeDirection = typeof direction === 'string' ? direction : direction[currentBreakpoint] || 'column'
   const activeSpacing = typeof spacing === 'number' ? spacing : spacing[currentBreakpoint] || 2
-  
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: activeDirection,
-        alignItems: align === 'start' ? 'flex-start' : align === 'end' ? 'flex-end' : align,
-        justifyContent: justify === 'start' ? 'flex-start' : justify === 'end' ? 'flex-end' : justify,
-        gap: (theme) => theme.spacing(activeSpacing),
-        flexWrap: wrap ? 'wrap' : 'nowrap',
-      }}
-      {...props}
-    >
-      {children}
-    </Box>
+      <Box
+          sx={{
+            display: 'flex',
+            flexDirection: activeDirection,
+            alignItems: align === 'start' ? 'flex-start' : align === 'end' ? 'flex-end' : align,
+            justifyContent: justify === 'start' ? 'flex-start' : justify === 'end' ? 'flex-end' : justify,
+            gap: (theme) => theme.spacing(activeSpacing),
+            flexWrap: wrap ? 'wrap' : 'nowrap',
+          }}
+          {...props}
+      >
+        {children}
+      </Box>
   )
 }
 
@@ -355,40 +361,40 @@ export const ResponsiveContainer: React.FC<{
   padding?: number | Partial<Record<BreakpointKey, number>>
   centerContent?: boolean
   children: React.ReactNode
-} & BoxProps> = ({ 
-  maxWidth = 'desktop',
-  padding = { mobile: 2, tablet: 3, desktop: 4 },
-  centerContent = true,
-  children,
-  ...props 
-}) => {
-  const { currentBreakpoint } = useResponsive()
-  
+} & BoxProps> = ({
+                   maxWidth = 'desktop',
+                   padding = {mobile: 2, tablet: 3, desktop: 4},
+                   centerContent = true,
+                   children,
+                   ...props
+                 }) => {
+  const {currentBreakpoint} = useResponsive()
+
   const activePadding = typeof padding === 'number' ? padding : padding[currentBreakpoint] || 2
-  
+
   return (
-    <Box
-      sx={{
-        width: '100%',
-        ...(maxWidth && {
-          maxWidth: (theme) => {
-            const breakpointKey = typeof maxWidth === 'string' 
-              ? maxWidth as keyof typeof theme.breakpoints.values
-              : 'desktop';
-            return theme.breakpoints.values[breakpointKey];
-          },
-        }),
-        ...(centerContent && {
-          marginX: 'auto',
-        }),
-        paddingX: (theme) => theme.spacing(activePadding),
-      }}
-      {...props}
-    >
-      {children}
-    </Box>
+      <Box
+          sx={{
+            width: '100%',
+            ...(maxWidth && {
+              maxWidth: (theme) => {
+                const breakpointKey = typeof maxWidth === 'string'
+                    ? maxWidth as keyof typeof theme.breakpoints.values
+                    : 'desktop';
+                return theme.breakpoints.values[breakpointKey];
+              },
+            }),
+            ...(centerContent && {
+              marginX: 'auto',
+            }),
+            paddingX: (theme) => theme.spacing(activePadding),
+          }}
+          {...props}
+      >
+        {children}
+      </Box>
   )
 }
 
 // Export all grid components
-export { GridContainer, StyledGridItem }
+export {GridContainer, StyledGridItem}

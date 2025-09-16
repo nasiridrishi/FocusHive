@@ -4,8 +4,8 @@
  * Following OWASP guidelines and industry security testing standards
  */
 
-import { Page, expect, BrowserContext } from '@playwright/test';
-import { TIMEOUTS, TEST_USERS, API_ENDPOINTS } from './test-data';
+import {expect, Page} from '@playwright/test';
+import {API_ENDPOINTS, TEST_USERS, TIMEOUTS} from './test-data';
 
 // Security payload interfaces
 interface XSSPayload {
@@ -27,6 +27,7 @@ interface JWTPayload {
   role?: string;
   iat: number;
   exp?: number;
+
   [key: string]: unknown;
 }
 
@@ -57,7 +58,8 @@ interface TestUser {
 }
 
 export class SecurityHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   /**
    * Get comprehensive XSS attack payloads
@@ -251,12 +253,12 @@ export class SecurityHelper {
     // Monitor login attempts
     await this.page.route('**/api/v1/auth/login', (route) => {
       metrics.failedAttempts++;
-      
-      const response = route.request();
+
+      const _response = route.request();
       if (metrics.failedAttempts >= 5) {
         metrics.lockoutTriggered = true;
         metrics.protectionActivated = true;
-        
+
         route.fulfill({
           status: 423, // Locked
           contentType: 'application/json',
@@ -271,7 +273,7 @@ export class SecurityHelper {
     });
 
     return {
-      getMetrics: async () => ({ ...metrics })
+      getMetrics: async () => ({...metrics})
     };
   }
 
@@ -289,18 +291,18 @@ export class SecurityHelper {
     });
 
     if (!token) {
-      return { token: '', isValid: false, hasExpiry: false, payload: null };
+      return {token: '', isValid: false, hasExpiry: false, payload: null};
     }
 
     try {
       // Decode JWT payload (base64url decode)
       const parts = token.split('.');
       if (parts.length !== 3) {
-        return { token, isValid: false, hasExpiry: false, payload: null };
+        return {token, isValid: false, hasExpiry: false, payload: null};
       }
 
       const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-      
+
       return {
         token,
         isValid: true,
@@ -308,7 +310,7 @@ export class SecurityHelper {
         payload
       };
     } catch {
-      return { token, isValid: false, hasExpiry: false, payload: null };
+      return {token, isValid: false, hasExpiry: false, payload: null};
     }
   }
 
@@ -355,12 +357,12 @@ export class SecurityHelper {
    */
   async verifySessionIntegrity(originalSession: SessionInfo): Promise<void> {
     const currentSession = await this.getSessionInfo();
-    
+
     // Session should have changed after login (protection against fixation)
     if (originalSession.sessionId) {
       expect(currentSession.sessionId).not.toBe(originalSession.sessionId);
     }
-    
+
     // Tokens should be valid
     expect(currentSession.accessToken).toBeTruthy();
     expect(currentSession.refreshToken).toBeTruthy();
@@ -381,7 +383,7 @@ export class SecurityHelper {
     for (const email of maliciousEmails) {
       await this.page.fill('input[name="email"]', email);
       await this.page.click('button[type="submit"]');
-      
+
       // Should handle malicious input gracefully
       await expect(this.page.locator('[role="alert"]')).not.toContainText(/error.*sql|script.*tag|passwd/i);
     }
@@ -394,9 +396,9 @@ export class SecurityHelper {
     // Mock expired reset token
     const expiredToken = 'expired_token_12345';
     await this.page.goto(`/reset-password?token=${expiredToken}`);
-    
+
     // Should show token expired message
-    await expect(this.page.locator('text=/token.*expired|link.*expired/i')).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.page.locator('text=/token.*expired|link.*expired/i')).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -412,9 +414,9 @@ export class SecurityHelper {
 
     for (const token of manipulatedTokens) {
       await this.page.goto(`/reset-password?token=${token}`);
-      
+
       // Should show invalid token message
-      await expect(this.page.locator('text=/invalid.*token|token.*not.*found/i')).toBeVisible({ timeout: TIMEOUTS.SHORT });
+      await expect(this.page.locator('text=/invalid.*token|token.*not.*found/i')).toBeVisible({timeout: TIMEOUTS.SHORT});
     }
   }
 
@@ -430,7 +432,7 @@ export class SecurityHelper {
 
     // Try to access protected resource
     const response = await this.page.goto('/admin/dashboard');
-    
+
     // Should not allow MFA bypass
     expect([401, 403, 302]).toContain(response?.status());
   }
@@ -440,14 +442,14 @@ export class SecurityHelper {
    */
   async testMFATokenValidation(): Promise<void> {
     const invalidTokens = ['000000', '123456', '111111', 'abcdef', '!@#$%^'];
-    
+
     for (const token of invalidTokens) {
       if (await this.page.locator('input[name="mfaToken"]').isVisible()) {
         await this.page.fill('input[name="mfaToken"]', token);
         await this.page.click('button[type="submit"]');
-        
+
         // Should reject invalid tokens
-        await expect(this.page.locator('text=/invalid.*code|incorrect.*token/i')).toBeVisible({ timeout: TIMEOUTS.SHORT });
+        await expect(this.page.locator('text=/invalid.*code|incorrect.*token/i')).toBeVisible({timeout: TIMEOUTS.SHORT});
       }
     }
   }
@@ -467,9 +469,9 @@ export class SecurityHelper {
       if (await this.page.locator('input[name="backupCode"]').isVisible()) {
         await this.page.fill('input[name="backupCode"]', code);
         await this.page.click('button[type="submit"]');
-        
+
         // Should validate backup codes properly
-        await expect(this.page.locator('text=/invalid.*code|backup.*code.*incorrect/i')).toBeVisible({ timeout: TIMEOUTS.SHORT });
+        await expect(this.page.locator('text=/invalid.*code|backup.*code.*incorrect/i')).toBeVisible({timeout: TIMEOUTS.SHORT});
       }
     }
   }
@@ -480,7 +482,7 @@ export class SecurityHelper {
   async createTestUser(role: 'admin' | 'user' | 'moderator'): Promise<TestUser> {
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(7);
-    
+
     const testUser: TestUser = {
       username: `test_${role}_${timestamp}_${randomId}`,
       email: `test_${role}_${timestamp}_${randomId}@example.com`,
@@ -515,7 +517,7 @@ export class SecurityHelper {
    */
   async createUserResource(): Promise<string> {
     const resourceId = `resource_${Date.now()}`;
-    
+
     // Mock resource creation
     await this.page.route('**/api/v1/resources', (route) => {
       if (route.request().method() === 'POST') {
@@ -596,7 +598,7 @@ export class SecurityHelper {
 
     for (const params of maliciousParams) {
       const response = await this.page.goto(`/dashboard${params}`);
-      
+
       // Should not grant elevated privileges
       expect(response?.status()).not.toBe(200);
     }
@@ -605,7 +607,7 @@ export class SecurityHelper {
   /**
    * Test unauthorized API access
    */
-  async testUnauthorizedAPI(endpoint: string): Promise<{status: number; body: string}> {
+  async testUnauthorizedAPI(endpoint: string): Promise<{ status: number; body: string }> {
     try {
       const response = await this.page.request.get(`${API_ENDPOINTS.BACKEND_BASE}${endpoint}`);
       return {
@@ -613,7 +615,7 @@ export class SecurityHelper {
         body: await response.text()
       };
     } catch (error) {
-      return { status: 500, body: (error as Error).message };
+      return {status: 500, body: (error as Error).message};
     }
   }
 
@@ -634,7 +636,7 @@ export class SecurityHelper {
       if (await this.page.locator(field).isVisible()) {
         await this.page.fill(field, payload);
         await this.page.click('button[type="submit"]');
-        
+
         // Wait for potential XSS execution
         await this.page.waitForTimeout(1000);
       }
@@ -647,10 +649,10 @@ export class SecurityHelper {
   async testReflectedXSS(): Promise<void> {
     const xssPayload = '<script>alert("reflected-xss")</script>';
     const encodedPayload = encodeURIComponent(xssPayload);
-    
+
     await this.page.goto(`/?search=${encodedPayload}`);
     await this.page.waitForTimeout(2000);
-    
+
     // Check if XSS payload is reflected in response
     const content = await this.page.content();
     expect(content).not.toContain('<script>alert("reflected-xss")</script>');
@@ -662,7 +664,7 @@ export class SecurityHelper {
   async testDOMBasedXSS(): Promise<void> {
     // Inject XSS via URL fragment
     await this.page.goto('/#<img src=x onerror=alert("dom-xss")>');
-    
+
     // Inject via search parameter that gets processed by JavaScript
     await this.page.evaluate(() => {
       const hash = location.hash.substring(1);
@@ -691,7 +693,7 @@ export class SecurityHelper {
       if (await this.page.locator(field).isVisible()) {
         await this.page.fill(field, payload);
         await this.page.click('button[type="submit"]');
-        
+
         // Check response for SQL errors
         await this.page.waitForLoadState('networkidle');
       }
@@ -703,18 +705,18 @@ export class SecurityHelper {
    */
   async testBlindSQLInjection(): Promise<void> {
     const timeBasedPayload = "'; WAITFOR DELAY '00:00:05'--";
-    
+
     const startTime = Date.now();
-    
+
     if (await this.page.locator('input[name="search"]').isVisible()) {
       await this.page.fill('input[name="search"]', timeBasedPayload);
       await this.page.click('button[type="submit"]');
-      await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.LONG });
+      await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.LONG});
     }
-    
+
     const endTime = Date.now();
     const responseTime = endTime - startTime;
-    
+
     // Should not have artificial delay from SQL injection
     expect(responseTime).toBeLessThan(10000); // Less than 10 seconds
   }
@@ -732,11 +734,11 @@ export class SecurityHelper {
     for (const endpoint of testEndpoints) {
       try {
         const response = await this.page.request.post(`${API_ENDPOINTS.BACKEND_BASE}${endpoint}`, {
-          data: { target: payload }
+          data: {target: payload}
         });
-        
+
         const responseBody = await response.text();
-        
+
         // Should not contain command output
         expect(responseBody).not.toMatch(/uid=|gid=|total.*\d+|windows.*version/i);
       } catch {
@@ -759,7 +761,7 @@ export class SecurityHelper {
       try {
         const response = await this.page.request.get(`${API_ENDPOINTS.BACKEND_BASE}${endpoint}`);
         const responseBody = await response.text();
-        
+
         // Should not contain system file contents
         expect(responseBody).not.toMatch(/root:.*:\/root:|password.*policy|system32/i);
       } catch {
@@ -775,26 +777,38 @@ export class SecurityHelper {
     if (await this.page.locator('input[type="file"]').isVisible()) {
       // Create malicious files in memory
       const maliciousFiles = [
-        { name: 'malware.exe', content: 'MZ\x90\x00\x03\x00\x00\x00', type: 'application/x-msdownload' },
-        { name: 'script.php', content: '<?php system($_GET["cmd"]); ?>', type: 'application/x-httpd-php' },
-        { name: 'exploit.jsp', content: '<% Runtime.getRuntime().exec(request.getParameter("cmd")); %>', type: 'application/x-jsp' },
-        { name: 'shell.asp', content: '<%eval request("cmd")%>', type: 'application/x-asp' }
+        {
+          name: 'malware.exe',
+          content: 'MZ\x90\x00\x03\x00\x00\x00',
+          type: 'application/x-msdownload'
+        },
+        {
+          name: 'script.php',
+          content: '<?php system($_GET["cmd"]); ?>',
+          type: 'application/x-httpd-php'
+        },
+        {
+          name: 'exploit.jsp',
+          content: '<% Runtime.getRuntime().exec(request.getParameter("cmd")); %>',
+          type: 'application/x-jsp'
+        },
+        {name: 'shell.asp', content: '<%eval request("cmd")%>', type: 'application/x-asp'}
       ];
 
       for (const file of maliciousFiles) {
         // Create file object
         const fileHandle = await this.page.evaluateHandle(
-          ({ name, content, type }) => {
-            const blob = new Blob([content], { type });
-            return new File([blob], name, { type });
-          },
-          file
+            ({name, content, type}) => {
+              const blob = new Blob([content], {type});
+              return new File([blob], name, {type});
+            },
+            file
         );
 
         // Attempt upload
         await this.page.locator('input[type="file"]').setInputFiles([fileHandle]);
         await this.page.click('button[type="submit"]');
-        
+
         await this.page.waitForTimeout(1000);
       }
     }
@@ -806,19 +820,19 @@ export class SecurityHelper {
   async testFileTypeValidation(): Promise<void> {
     if (await this.page.locator('input[type="file"]').isVisible()) {
       const disallowedTypes = [
-        { name: 'test.exe', type: 'application/x-msdownload' },
-        { name: 'test.bat', type: 'application/x-bat' },
-        { name: 'test.sh', type: 'application/x-sh' },
-        { name: 'test.php', type: 'application/x-httpd-php' }
+        {name: 'test.exe', type: 'application/x-msdownload'},
+        {name: 'test.bat', type: 'application/x-bat'},
+        {name: 'test.sh', type: 'application/x-sh'},
+        {name: 'test.php', type: 'application/x-httpd-php'}
       ];
 
       for (const file of disallowedTypes) {
         const fileHandle = await this.page.evaluateHandle(
-          ({ name, type }) => {
-            const blob = new Blob(['test content'], { type });
-            return new File([blob], name, { type });
-          },
-          file
+            ({name, type}) => {
+              const blob = new Blob(['test content'], {type});
+              return new File([blob], name, {type});
+            },
+            file
         );
 
         await this.page.locator('input[type="file"]').setInputFiles([fileHandle]);
@@ -835,13 +849,13 @@ export class SecurityHelper {
     if (await this.page.locator('input[type="file"]').isVisible()) {
       // Create large file (10MB)
       const largeContent = 'a'.repeat(10 * 1024 * 1024);
-      
+
       const largeFileHandle = await this.page.evaluateHandle(
-        (content) => {
-          const blob = new Blob([content], { type: 'text/plain' });
-          return new File([blob], 'large-file.txt', { type: 'text/plain' });
-        },
-        largeContent
+          (content) => {
+            const blob = new Blob([content], {type: 'text/plain'});
+            return new File([blob], 'large-file.txt', {type: 'text/plain'});
+          },
+          largeContent
       );
 
       await this.page.locator('input[type="file"]').setInputFiles([largeFileHandle]);
@@ -873,7 +887,7 @@ export class SecurityHelper {
     });
 
     return {
-      getMetrics: async () => ({ ...metrics })
+      getMetrics: async () => ({...metrics})
     };
   }
 
@@ -897,22 +911,22 @@ export class SecurityHelper {
    */
   async createConcurrentSessions(user: typeof TEST_USERS.VALID_USER, count: number): Promise<Page[]> {
     const sessions: Page[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const context = await this.page.context().browser()?.newContext();
       if (context) {
         const newPage = await context.newPage();
-        
+
         // Login with same user
         await newPage.goto('/login');
         await newPage.fill('input[name="email"]', user.email);
         await newPage.fill('input[name="password"]', user.password);
         await newPage.click('button[type="submit"]');
-        
+
         sessions.push(newPage);
       }
     }
-    
+
     return sessions;
   }
 
@@ -922,7 +936,7 @@ export class SecurityHelper {
   async verifyConcurrentSessionLimits(): Promise<void> {
     // Check if older sessions are invalidated
     const response = await this.page.request.get(`${API_ENDPOINTS.BACKEND_BASE}/api/v1/auth/me`);
-    
+
     // Should either work (within limit) or fail (limit exceeded)
     expect([200, 401, 403]).toContain(response.status());
   }
@@ -937,7 +951,7 @@ export class SecurityHelper {
         'Authorization': `Bearer ${token}`
       }
     });
-    
+
     expect([401, 403]).toContain(response.status());
   }
 
@@ -947,11 +961,11 @@ export class SecurityHelper {
   async testRememberMeSecurity(): Promise<void> {
     if (await this.page.locator('input[type="checkbox"][name*="remember"]').isVisible()) {
       await this.page.check('input[type="checkbox"][name*="remember"]');
-      
+
       await this.page.fill('input[name="email"]', TEST_USERS.VALID_USER.email);
       await this.page.fill('input[name="password"]', TEST_USERS.VALID_USER.password);
       await this.page.click('button[type="submit"]');
-      
+
       await this.page.waitForLoadState('networkidle');
     }
   }
@@ -961,7 +975,7 @@ export class SecurityHelper {
    */
   async verifySecureCookies(): Promise<void> {
     const cookies = await this.page.context().cookies();
-    
+
     for (const cookie of cookies) {
       if (cookie.name.includes('session') || cookie.name.includes('auth')) {
         expect(cookie.secure).toBe(true);
@@ -992,7 +1006,7 @@ export class SecurityHelper {
   async testPasswordStrength(password: string): Promise<void> {
     if (await this.page.locator('input[name="password"]').isVisible()) {
       await this.page.fill('input[name="password"]', password);
-      
+
       // Trigger validation
       await this.page.click('input[name="confirmPassword"]');
       await this.page.waitForTimeout(500);
@@ -1015,7 +1029,7 @@ export class SecurityHelper {
         await this.page.fill('input[name="newPassword"]', oldPassword);
         await this.page.fill('input[name="confirmPassword"]', oldPassword);
         await this.page.click('button[type="submit"]');
-        
+
         await this.page.waitForTimeout(1000);
       }
     }
@@ -1035,7 +1049,7 @@ export class SecurityHelper {
       await this.page.fill('input[name="email"]', TEST_USERS.VALID_USER.email);
       await this.page.fill('input[name="password"]', password);
       await this.page.click('button[type="submit"]');
-      
+
       await this.page.waitForTimeout(500);
     }
   }
@@ -1049,8 +1063,8 @@ export class SecurityHelper {
       const headers = route.request().headers();
       delete headers['x-csrf-token'];
       delete headers['csrf-token'];
-      
-      route.continue({ headers });
+
+      route.continue({headers});
     });
 
     // Attempt protected action
@@ -1068,8 +1082,8 @@ export class SecurityHelper {
     await this.page.route('**/api/v1/**', (route) => {
       const headers = route.request().headers();
       headers['x-csrf-token'] = 'manipulated_token_12345';
-      
-      route.continue({ headers });
+
+      route.continue({headers});
     });
 
     if (await this.page.locator('form').isVisible()) {
@@ -1091,11 +1105,11 @@ export class SecurityHelper {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ data: 'sensitive information' })
+          body: JSON.stringify({data: 'sensitive information'})
         });
-        
+
         return response.status;
-      } catch (error) {
+      } catch {
         return 0; // Network error expected
       }
     });
@@ -1107,18 +1121,18 @@ export class SecurityHelper {
   async testCORSBypass(): Promise<void> {
     // Attempt various CORS bypass techniques
     const bypassHeaders = [
-      { 'Origin': 'null' },
-      { 'Origin': 'http://localhost:8080' },
-      { 'Origin': 'https://focushive.com.evil.com' },
-      { 'X-Forwarded-Host': 'evil.com' },
-      { 'X-Real-IP': '127.0.0.1' }
+      {'Origin': 'null'},
+      {'Origin': 'http://localhost:8080'},
+      {'Origin': 'https://focushive.com.evil.com'},
+      {'X-Forwarded-Host': 'evil.com'},
+      {'X-Real-IP': '127.0.0.1'}
     ];
 
     for (const headers of bypassHeaders) {
       const response = await this.page.request.get(`${API_ENDPOINTS.BACKEND_BASE}/api/v1/auth/me`, {
         headers
       });
-      
+
       // Should not allow CORS bypass
       expect(response.headers()['access-control-allow-origin']).not.toBe('*');
     }
@@ -1143,7 +1157,7 @@ export class SecurityHelper {
     const requests = [];
     for (let i = 0; i < 50; i++) {
       requests.push(
-        this.page.request.get(`${API_ENDPOINTS.BACKEND_BASE}/api/v1/auth/me`)
+          this.page.request.get(`${API_ENDPOINTS.BACKEND_BASE}/api/v1/auth/me`)
           .then(response => {
             if (response.status() === 429) {
               metrics.rateLimitHit = true;
@@ -1158,7 +1172,7 @@ export class SecurityHelper {
     await Promise.all(requests);
 
     return {
-      getMetrics: async () => ({ ...metrics })
+      getMetrics: async () => ({...metrics})
     };
   }
 
@@ -1171,7 +1185,7 @@ export class SecurityHelper {
    * Get security headers
    */
   async getSecurityHeader(headerName: string): Promise<string | null> {
-    const response = await this.page.waitForResponse(/\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/\//, {timeout: TIMEOUTS.MEDIUM});
     return response.headers()[headerName.toLowerCase()] || null;
   }
 
@@ -1179,9 +1193,9 @@ export class SecurityHelper {
    * Get all security headers
    */
   async getAllSecurityHeaders(): Promise<Record<string, string>> {
-    const response = await this.page.waitForResponse(/\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/\//, {timeout: TIMEOUTS.MEDIUM});
     const headers = response.headers();
-    
+
     const securityHeaders: Record<string, string> = {};
     const securityHeaderNames = [
       'content-security-policy',
@@ -1208,16 +1222,16 @@ export class SecurityHelper {
   async cleanup(): Promise<void> {
     // Clear all route mocks
     await this.page.unrouteAll();
-    
+
     // Reset viewport
-    await this.page.setViewportSize({ width: 1280, height: 720 });
-    
+    await this.page.setViewportSize({width: 1280, height: 720});
+
     // Clear storage
     await this.page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
     });
-    
+
     // Clear cookies
     await this.page.context().clearCookies();
   }

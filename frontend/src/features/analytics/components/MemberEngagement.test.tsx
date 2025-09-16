@@ -1,17 +1,17 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import { MemberEngagement } from './MemberEngagement';
-import { MemberEngagementProps, MemberEngagementData } from '../types';
+import {render, screen} from '@testing-library/react';
+import {describe, expect, it} from 'vitest';
+import {MemberEngagement} from './MemberEngagement';
+import {MemberEngagementData, MemberEngagementProps} from '../types';
 
 const mockData: MemberEngagementData[] = [
   {
-    user: { 
-      id: '1', 
+    user: {
+      id: '1',
       email: 'alice@example.com',
       username: 'alice',
       firstName: 'Alice',
       lastName: 'Johnson',
-      name: 'Alice Johnson', 
+      name: 'Alice Johnson',
       avatar: 'https://example.com/alice.jpg',
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
@@ -25,13 +25,13 @@ const mockData: MemberEngagementData[] = [
     contribution: 35.2
   },
   {
-    user: { 
-      id: '2', 
+    user: {
+      id: '2',
       email: 'bob@example.com',
       username: 'bob',
       firstName: 'Bob',
       lastName: 'Smith',
-      name: 'Bob Smith', 
+      name: 'Bob Smith',
       avatar: 'https://example.com/bob.jpg',
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
@@ -45,13 +45,13 @@ const mockData: MemberEngagementData[] = [
     contribution: 26.4
   },
   {
-    user: { 
-      id: '3', 
+    user: {
+      id: '3',
       email: 'carol@example.com',
       username: 'carol',
       firstName: 'Carol',
       lastName: 'Davis',
-      name: 'Carol Davis', 
+      name: 'Carol Davis',
       avatar: 'https://example.com/carol.jpg',
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
@@ -65,13 +65,13 @@ const mockData: MemberEngagementData[] = [
     contribution: 17.6
   },
   {
-    user: { 
-      id: '4', 
+    user: {
+      id: '4',
       email: 'david@example.com',
       username: 'david',
       firstName: 'David',
       lastName: 'Wilson',
-      name: 'David Wilson', 
+      name: 'David Wilson',
       avatar: 'https://example.com/david.jpg',
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
@@ -85,13 +85,13 @@ const mockData: MemberEngagementData[] = [
     contribution: 8.8
   },
   {
-    user: { 
-      id: '5', 
+    user: {
+      id: '5',
       email: 'eve@example.com',
       username: 'eve',
       firstName: 'Eve',
       lastName: 'Brown',
-      name: 'Eve Brown', 
+      name: 'Eve Brown',
       avatar: 'https://example.com/eve.jpg',
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
@@ -118,7 +118,7 @@ describe('MemberEngagement', () => {
 
   it('displays all members when no maxMembers limit', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
     expect(screen.getByText('Bob Smith')).toBeInTheDocument();
     expect(screen.getByText('Carol Davis')).toBeInTheDocument();
@@ -127,8 +127,8 @@ describe('MemberEngagement', () => {
   });
 
   it('limits displayed members when maxMembers is set', () => {
-    render(<MemberEngagement {...defaultProps} maxMembers={3} />);
-    
+    render(<MemberEngagement {...defaultProps} maxMembers={3}/>);
+
     expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
     expect(screen.getByText('Bob Smith')).toBeInTheDocument();
     expect(screen.getByText('Carol Davis')).toBeInTheDocument();
@@ -137,23 +137,23 @@ describe('MemberEngagement', () => {
   });
 
   it('shows member ranks when showRank is true', () => {
-    render(<MemberEngagement {...defaultProps} showRank={true} />);
-    
+    render(<MemberEngagement {...defaultProps} showRank={true}/>);
+
     expect(screen.getByText('#1')).toBeInTheDocument();
     expect(screen.getByText('#2')).toBeInTheDocument();
     expect(screen.getByText('#3')).toBeInTheDocument();
   });
 
   it('hides member ranks when showRank is false', () => {
-    render(<MemberEngagement {...defaultProps} showRank={false} />);
-    
+    render(<MemberEngagement {...defaultProps} showRank={false}/>);
+
     expect(screen.queryByText('#1')).not.toBeInTheDocument();
     expect(screen.queryByText('#2')).not.toBeInTheDocument();
   });
 
   it('displays focus time in hours and minutes format', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     expect(screen.getByText('8h 0m')).toBeInTheDocument(); // Alice: 480 minutes = 8 hours
     expect(screen.getByText('6h 0m')).toBeInTheDocument(); // Bob: 360 minutes = 6 hours
     expect(screen.getByText('4h 0m')).toBeInTheDocument(); // Carol: 240 minutes = 4 hours
@@ -163,7 +163,7 @@ describe('MemberEngagement', () => {
 
   it('displays session counts correctly', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     expect(screen.getByText('12 sessions')).toBeInTheDocument();
     expect(screen.getByText('9 sessions')).toBeInTheDocument();
     expect(screen.getByText('6 sessions')).toBeInTheDocument();
@@ -173,15 +173,15 @@ describe('MemberEngagement', () => {
 
   it('shows engagement level indicators with correct colors', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     // High engagement - chips show lowercase, summary shows "High Engagement"
     expect(screen.getAllByText('high').length).toBeGreaterThan(0); // Individual chips
     expect(screen.getByText('High Engagement')).toBeInTheDocument(); // Summary
-    
+
     // Medium engagement 
     expect(screen.getByText('medium')).toBeInTheDocument(); // Individual chip
     expect(screen.getByText('Medium Engagement')).toBeInTheDocument(); // Summary
-    
+
     // Low engagement 
     expect(screen.getAllByText('low').length).toBeGreaterThan(0); // Individual chips
     expect(screen.getByText('Low Engagement')).toBeInTheDocument(); // Summary
@@ -189,7 +189,7 @@ describe('MemberEngagement', () => {
 
   it('displays contribution percentages', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     expect(screen.getByText('35.2%')).toBeInTheDocument();
     expect(screen.getByText('26.4%')).toBeInTheDocument();
     expect(screen.getByText('17.6%')).toBeInTheDocument();
@@ -199,7 +199,7 @@ describe('MemberEngagement', () => {
 
   it('shows last active timestamps', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     // Check for "Last active:" text which contains the dates
     expect(screen.getByText(/Last active: Jan 15, 2024/)).toBeInTheDocument();
     expect(screen.getByText(/Last active: Jan 14, 2024/)).toBeInTheDocument();
@@ -209,15 +209,15 @@ describe('MemberEngagement', () => {
   });
 
   it('highlights current user when currentUserId is provided', () => {
-    render(<MemberEngagement {...defaultProps} currentUserId="2" />);
-    
+    render(<MemberEngagement {...defaultProps} currentUserId="2"/>);
+
     const bobCard = screen.getByTestId('member-card-2');
     expect(bobCard).toHaveClass('highlighted-member');
   });
 
   it('sorts by focus time by default', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     const memberCards = screen.getAllByTestId(/member-card-/);
     expect(memberCards[0]).toHaveAttribute('data-testid', 'member-card-1'); // Alice (highest focus time)
     expect(memberCards[1]).toHaveAttribute('data-testid', 'member-card-2'); // Bob
@@ -225,32 +225,32 @@ describe('MemberEngagement', () => {
   });
 
   it('sorts by sessions when sortBy is sessions', () => {
-    render(<MemberEngagement {...defaultProps} sortBy="sessions" />);
-    
+    render(<MemberEngagement {...defaultProps} sortBy="sessions"/>);
+
     const memberCards = screen.getAllByTestId(/member-card-/);
     expect(memberCards[0]).toHaveAttribute('data-testid', 'member-card-1'); // Alice (12 sessions)
     expect(memberCards[1]).toHaveAttribute('data-testid', 'member-card-2'); // Bob (9 sessions)
   });
 
   it('sorts by engagement level when sortBy is engagement', () => {
-    render(<MemberEngagement {...defaultProps} sortBy="engagement" />);
-    
+    render(<MemberEngagement {...defaultProps} sortBy="engagement"/>);
+
     // High engagement members should come first
     const memberCards = screen.getAllByTestId(/member-card-/);
     const firstTwoCards = memberCards.slice(0, 2);
-    
+
     // Alice and Bob should be first (both high engagement)
     expect(['member-card-1', 'member-card-2']).toContain(
-      firstTwoCards[0].getAttribute('data-testid')
+        firstTwoCards[0].getAttribute('data-testid')
     );
     expect(['member-card-1', 'member-card-2']).toContain(
-      firstTwoCards[1].getAttribute('data-testid')
+        firstTwoCards[1].getAttribute('data-testid')
     );
   });
 
   it('renders user avatars when available', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     const avatars = screen.getAllByRole('img');
     expect(avatars).toHaveLength(5);
     expect(avatars[0]).toHaveAttribute('src', 'https://example.com/alice.jpg');
@@ -260,11 +260,11 @@ describe('MemberEngagement', () => {
   it('shows user initials when avatar is not available', () => {
     const dataWithoutAvatars: MemberEngagementData[] = mockData.map(member => ({
       ...member,
-      user: { ...member.user, avatar: undefined }
+      user: {...member.user, avatar: undefined}
     }));
-    
-    render(<MemberEngagement data={dataWithoutAvatars} />);
-    
+
+    render(<MemberEngagement data={dataWithoutAvatars}/>);
+
     expect(screen.getByText('AJ')).toBeInTheDocument(); // Alice Johnson
     expect(screen.getByText('BS')).toBeInTheDocument(); // Bob Smith
     expect(screen.getByText('CD')).toBeInTheDocument(); // Carol Davis
@@ -273,8 +273,8 @@ describe('MemberEngagement', () => {
   });
 
   it('handles empty data gracefully', () => {
-    render(<MemberEngagement data={[]} />);
-    
+    render(<MemberEngagement data={[]}/>);
+
     expect(screen.getByText('Member Engagement')).toBeInTheDocument();
     expect(screen.getByText('No member engagement data available')).toBeInTheDocument();
     expect(screen.getByText('Invite members to your hive to see engagement metrics.')).toBeInTheDocument();
@@ -282,13 +282,13 @@ describe('MemberEngagement', () => {
 
   it('displays engagement chart bars with correct widths', () => {
     render(<MemberEngagement {...defaultProps} />);
-    
+
     // Alice should have the widest bar (highest contribution)
     const aliceBar = screen.getByTestId('engagement-bar-1');
-    expect(aliceBar).toHaveStyle({ width: '100%' }); // Normalized to 100%
-    
+    expect(aliceBar).toHaveStyle({width: '100%'}); // Normalized to 100%
+
     // Bob should have proportionally smaller bar
     const bobBar = screen.getByTestId('engagement-bar-2');
-    expect(bobBar).toHaveStyle({ width: '75%' }); // 26.4/35.2 * 100 ≈ 75%
+    expect(bobBar).toHaveStyle({width: '75%'}); // 26.4/35.2 * 100 ≈ 75%
   });
 });

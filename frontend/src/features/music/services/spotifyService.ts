@@ -1,17 +1,17 @@
 // Spotify Web SDK Service
 // Handles SDK initialization, authentication, and device management
 
-import type { 
-  SpotifyConfig, 
-  SpotifyAuthState, 
-  SpotifyPlayerState,
-  TransferPlaybackOptions,
+import type {
   PlayOptions,
+  Spotify,
+  SpotifyAuthState,
+  SpotifyConfig,
   SpotifyDevice,
-  SpotifyUserProfile,
-  SpotifyPlaybackContext,
   SpotifyError,
-  Spotify
+  SpotifyPlaybackContext,
+  SpotifyPlayerState,
+  SpotifyUserProfile,
+  TransferPlaybackOptions
 } from '../../../types/spotify'
 
 export class SpotifyService {
@@ -44,7 +44,7 @@ export class SpotifyService {
   }
 
   updateConfig(newConfig: Partial<SpotifyConfig>): void {
-    this.config = { ...this.config, ...newConfig }
+    this.config = {...this.config, ...newConfig}
   }
 
   // Authentication State Management
@@ -54,49 +54,6 @@ export class SpotifyService {
 
   getPlayerState(): SpotifyPlayerState {
     return this.playerState
-  }
-
-  private updateAuthState(updates: Partial<SpotifyAuthState>): void {
-    this.authState = { ...this.authState, ...updates }
-    if (updates.token || updates.refreshToken || updates.expiresAt !== undefined) {
-      this.saveAuthToStorage()
-    }
-  }
-
-  private updatePlayerState(updates: Partial<SpotifyPlayerState>): void {
-    this.playerState = { ...this.playerState, ...updates }
-  }
-
-  // Local Storage Management
-  private saveAuthToStorage(): void {
-    const authData = {
-      token: this.authState.token,
-      refreshToken: this.authState.refreshToken,
-      expiresAt: this.authState.expiresAt,
-      user: this.authState.user,
-      isPremium: this.authState.isPremium
-    }
-    localStorage.setItem('spotify_auth', JSON.stringify(authData))
-  }
-
-  private loadAuthFromStorage(): void {
-    try {
-      const stored = localStorage.getItem('spotify_auth')
-      if (stored) {
-        const authData = JSON.parse(stored)
-        this.updateAuthState({
-          ...authData,
-          isAuthenticated: authData.token && authData.expiresAt > Date.now()
-        })
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      this.clearAuth()
-    }
-  }
-
-  private clearAuthFromStorage(): void {
-    localStorage.removeItem('spotify_auth')
   }
 
   // Authentication Flow
@@ -115,14 +72,14 @@ export class SpotifyService {
 
   async handleAuthCallback(code: string, state: string): Promise<boolean> {
     try {
-      this.updateAuthState({ isAuthenticating: true, error: null })
+      this.updateAuthState({isAuthenticating: true, error: null})
 
       const response = await fetch(`${this.config.musicServiceUrl}/spotify/callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code, state, redirect_uri: this.config.redirectUri })
+        body: JSON.stringify({code, state, redirect_uri: this.config.redirectUri})
       })
 
       if (!response.ok) {
@@ -130,10 +87,10 @@ export class SpotifyService {
       }
 
       const authData = await response.json()
-      
+
       // Get user profile to check premium status
       const user = await this.getUserProfile(authData.access_token)
-      
+
       this.updateAuthState({
         isAuthenticated: true,
         isAuthenticating: false,
@@ -166,7 +123,7 @@ export class SpotifyService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refresh_token: this.authState.refreshToken })
+        body: JSON.stringify({refresh_token: this.authState.refreshToken})
       })
 
       if (!response.ok) {
@@ -174,7 +131,7 @@ export class SpotifyService {
       }
 
       const authData = await response.json()
-      
+
       this.updateAuthState({
         token: authData.access_token,
         expiresAt: Date.now() + (authData.expires_in * 1000),
@@ -182,8 +139,8 @@ export class SpotifyService {
       })
 
       return true
-    } catch (error) {
-      console.error('Error:', error);
+    } catch {
+      // console.error('Token refresh error');
       this.clearAuth()
       return false
     }
@@ -193,7 +150,7 @@ export class SpotifyService {
     if (this.playerState.player) {
       this.playerState.player.disconnect()
     }
-    
+
     this.updateAuthState({
       isAuthenticated: false,
       isAuthenticating: false,
@@ -204,14 +161,14 @@ export class SpotifyService {
       isPremium: false,
       error: null
     })
-    
+
     this.updatePlayerState({
       isReady: false,
       isConnected: false,
       deviceId: null,
       player: null
     })
-    
+
     this.clearAuthFromStorage()
   }
 
@@ -249,7 +206,7 @@ export class SpotifyService {
       script.src = 'https://sdk.scdn.co/spotify-player.js'
       script.async = true
       script.onerror = () => resolve(false)
-      
+
       window.onSpotifyWebPlaybackSDKReady = () => {
         resolve(true)
       }
@@ -261,7 +218,7 @@ export class SpotifyService {
   async initializePlayer(name: string, volume: number = 0.5): Promise<boolean> {
     const token = await this.getValidToken()
     if (!token) {
-      this.updatePlayerState({ player: null })
+      this.updatePlayerState({player: null})
       return false
     }
 
@@ -283,53 +240,14 @@ export class SpotifyService {
       })
 
       this.setupPlayerListeners(player)
-      this.updatePlayerState({ player })
+      this.updatePlayerState({player})
 
       const connected = await player.connect()
       return connected
-    } catch (error) {
-      console.error('Error:', error);
+    } catch {
+      // console.error('Player initialization error');
       return false
-    ;
     }
-  }
-
-  private setupPlayerListeners(player: Spotify.Player): void {
-    // Ready
-    player.addListener('ready', ({ device_id: deviceId }: { device_id: string }) => {
-      this.updatePlayerState({
-        isReady: true,
-        isConnected: true,
-        deviceId: deviceId
-      })
-    })
-
-    // Not ready
-    player.addListener('not_ready', () => {
-      this.updatePlayerState({
-        isReady: false,
-        isConnected: false
-      })
-    })
-
-    // Error handling
-    player.addListener('initialization_error', ({ message }: { message: string }) => {
-      this.updateAuthState({ error: `Initialization error: ${message}` })
-    })
-
-    player.addListener('authentication_error', ({ message }: { message: string }) => {
-      this.updateAuthState({ error: `Authentication error: ${message}` })
-      // Try to refresh token
-      this.refreshAuth()
-    })
-
-    player.addListener('account_error', ({ message }: { message: string }) => {
-      this.updateAuthState({ error: `Account error: ${message}` })
-    })
-
-    player.addListener('playback_error', () => {
-      // Playback error occurred
-    })
   }
 
   disconnect(): void {
@@ -342,34 +260,6 @@ export class SpotifyService {
         player: null
       })
     }
-  }
-
-  // Spotify Web API calls
-  private async makeSpotifyAPICall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const token = await this.getValidToken()
-    if (!token) {
-      throw new Error('No valid Spotify token available')
-    }
-
-    const response = await fetch(`https://api.spotify.com/v1${endpoint}`, {
-      ...options,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: { message: response.statusText } }))
-      const error: SpotifyError = {
-        status: response.status,
-        message: errorData.error?.message || response.statusText
-      }
-      throw error
-    }
-
-    return response.json()
   }
 
   async getUserProfile(token?: string): Promise<SpotifyUserProfile> {
@@ -470,6 +360,115 @@ export class SpotifyService {
     await this.makeSpotifyAPICall(endpoint, {
       method: 'PUT'
     })
+  }
+
+  private updateAuthState(updates: Partial<SpotifyAuthState>): void {
+    this.authState = {...this.authState, ...updates}
+    if (updates.token || updates.refreshToken || updates.expiresAt !== undefined) {
+      this.saveAuthToStorage()
+    }
+  }
+
+  private updatePlayerState(updates: Partial<SpotifyPlayerState>): void {
+    this.playerState = {...this.playerState, ...updates}
+  }
+
+  // Local Storage Management
+  private saveAuthToStorage(): void {
+    const authData = {
+      token: this.authState.token,
+      refreshToken: this.authState.refreshToken,
+      expiresAt: this.authState.expiresAt,
+      user: this.authState.user,
+      isPremium: this.authState.isPremium
+    }
+    localStorage.setItem('spotify_auth', JSON.stringify(authData))
+  }
+
+  private loadAuthFromStorage(): void {
+    try {
+      const stored = localStorage.getItem('spotify_auth')
+      if (stored) {
+        const authData = JSON.parse(stored)
+        this.updateAuthState({
+          ...authData,
+          isAuthenticated: authData.token && authData.expiresAt > Date.now()
+        })
+      }
+    } catch {
+      // console.error('Error loading auth from storage');
+      this.clearAuth()
+    }
+  }
+
+  private clearAuthFromStorage(): void {
+    localStorage.removeItem('spotify_auth')
+  }
+
+  private setupPlayerListeners(player: Spotify.Player): void {
+    // Ready
+    player.addListener('ready', ({device_id: deviceId}: { device_id: string }) => {
+      this.updatePlayerState({
+        isReady: true,
+        isConnected: true,
+        deviceId: deviceId
+      })
+    })
+
+    // Not ready
+    player.addListener('not_ready', () => {
+      this.updatePlayerState({
+        isReady: false,
+        isConnected: false
+      })
+    })
+
+    // Error handling
+    player.addListener('initialization_error', ({message}: { message: string }) => {
+      this.updateAuthState({error: `Initialization error: ${message}`})
+    })
+
+    player.addListener('authentication_error', ({message}: { message: string }) => {
+      this.updateAuthState({error: `Authentication error: ${message}`})
+      // Try to refresh token
+      this.refreshAuth()
+    })
+
+    player.addListener('account_error', ({message}: { message: string }) => {
+      this.updateAuthState({error: `Account error: ${message}`})
+    })
+
+    player.addListener('playback_error', () => {
+      // Playback error occurred
+    })
+  }
+
+  // Spotify Web API calls
+  private async makeSpotifyAPICall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const token = await this.getValidToken()
+    if (!token) {
+      throw new Error('No valid Spotify token available')
+    }
+
+    const response = await fetch(`https://api.spotify.com/v1${endpoint}`, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({error: {message: response.statusText}}))
+      const error: SpotifyError = {
+        status: response.status,
+        message: errorData.error?.message || response.statusText
+      }
+      throw error
+    }
+
+    return response.json()
   }
 }
 

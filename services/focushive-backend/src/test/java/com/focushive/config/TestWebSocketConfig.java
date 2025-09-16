@@ -4,6 +4,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.stereotype.Controller;
@@ -22,6 +23,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 @TestConfiguration
 @Profile("test")
 @EnableWebSocketMessageBroker
+@ComponentScan("com.focushive.config")
 @ConditionalOnProperty(name = "websocket.test.enabled", havingValue = "true", matchIfMissing = false)
 public class TestWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
@@ -35,37 +37,14 @@ public class TestWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Register test endpoint
-        registry.addEndpoint("/test-ws")
+        // Register endpoints matching production configuration
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
+
+        // Also register raw WebSocket endpoint for tests
+        registry.addEndpoint("/ws-raw")
                 .setAllowedOriginPatterns("*");
     }
 
-    /**
-     * Test WebSocket controller that provides at least one message handler
-     * to prevent the "No handlers" error.
-     */
-    @Controller
-    public static class TestWebSocketController {
-        
-        @MessageMapping("/test")
-        public void testMessage(String message) {
-            // Minimal test message handler - does nothing but prevents "No handlers" error
-        }
-        
-        @MessageMapping("/echo")
-        public String echoMessage(String message) {
-            return "Echo: " + message;
-        }
-    }
-    
-    /**
-     * Provide a mock SimpMessagingTemplate for testing
-     * Note: Removed this bean as it's provided by Spring Boot auto-configuration
-     * when WebSocket messaging is enabled
-     */
-    // @Bean
-    // @Primary
-    // public SimpMessagingTemplate simpMessagingTemplate() {
-    //     return new SimpMessagingTemplate(null);
-    // }
 }

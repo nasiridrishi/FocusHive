@@ -21,7 +21,9 @@ public interface HiveMemberRepository extends JpaRepository<HiveMember, String> 
     
     // Find members by hive
     Page<HiveMember> findByHiveId(String hiveId, Pageable pageable);
-    
+
+    Page<HiveMember> findByHiveIdOrderByJoinedAtAsc(String hiveId, Pageable pageable);
+
     @Query("SELECT hm FROM HiveMember hm WHERE hm.hive.id = :hiveId ORDER BY hm.lastActiveAt DESC NULLS LAST")
     Page<HiveMember> findByHiveIdOrderByActivity(@Param("hiveId") String hiveId, Pageable pageable);
     

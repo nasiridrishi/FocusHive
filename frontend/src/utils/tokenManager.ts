@@ -1,6 +1,6 @@
 /**
  * Enhanced JWT Token Management Utility
- * 
+ *
  * Implements secure token storage and management with:
  * - Secure storage options (sessionStorage for access tokens, localStorage for refresh tokens)
  * - Token validation and parsing
@@ -39,10 +39,12 @@ class TokenManager {
   private readonly ACCESS_TOKEN_KEY = 'focushive_access_token';
   private readonly REFRESH_TOKEN_KEY = 'focushive_refresh_token';
   private readonly TOKEN_EXPIRES_KEY = 'focushive_token_expires';
-  
+
   // Buffer time before token expiry to trigger refresh (5 minutes)
   private readonly REFRESH_BUFFER_MS = 5 * 60 * 1000;
-  
+  // Private timer management for automatic token refresh
+  private refreshTimer: NodeJS.Timeout | null = null;
+
   /**
    * Store tokens securely
    * Access token in sessionStorage (cleared on browser close)
@@ -63,10 +65,10 @@ class TokenManager {
 
       // Store access token in sessionStorage (more secure, cleared on browser close)
       sessionStorage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
-      
+
       // Store refresh token in localStorage (persistent for auto-login)
       localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-      
+
       // Store expiration time for quick checks
       if (accessTokenValidation.expiresAt) {
         localStorage.setItem(this.TOKEN_EXPIRES_KEY, accessTokenValidation.expiresAt.toISOString());
@@ -74,7 +76,7 @@ class TokenManager {
 
       // Security: Clear any existing timeout and set up new refresh timer
       this.setupTokenRefreshTimer();
-      
+
     } catch (error) {
       // If storing fails, clear any partial state
       this.clearTokens();
@@ -88,7 +90,7 @@ class TokenManager {
   getAccessToken(): string | null {
     try {
       const token = sessionStorage.getItem(this.ACCESS_TOKEN_KEY);
-      
+
       if (!token) {
         return null;
       }
@@ -101,8 +103,8 @@ class TokenManager {
       }
 
       return token;
-    } catch (error) {
-      console.warn('Failed to retrieve access token:', error);
+    } catch {
+      // Debug statement removed
       return null;
     }
   }
@@ -113,7 +115,7 @@ class TokenManager {
   getRefreshToken(): string | null {
     try {
       const token = localStorage.getItem(this.REFRESH_TOKEN_KEY);
-      
+
       if (!token) {
         return null;
       }
@@ -126,8 +128,8 @@ class TokenManager {
       }
 
       return token;
-    } catch (error) {
-      console.warn('Failed to retrieve refresh token:', error);
+    } catch {
+      // Debug statement removed
       return null;
     }
   }
@@ -140,11 +142,11 @@ class TokenManager {
       sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.TOKEN_EXPIRES_KEY);
-      
+
       // Clear any pending refresh timers
       this.clearTokenRefreshTimer();
-    } catch (error) {
-      console.warn('Failed to clear tokens:', error);
+    } catch {
+      // Debug statement removed
     }
   }
 
@@ -154,7 +156,7 @@ class TokenManager {
   isTokenExpired(token?: string): boolean {
     try {
       const tokenToCheck = token || this.getAccessToken();
-      
+
       if (!tokenToCheck) {
         return true;
       }
@@ -166,8 +168,8 @@ class TokenManager {
 
       // Consider token expired if it expires within the buffer time
       return validation.expiresAt.getTime() <= (Date.now() + this.REFRESH_BUFFER_MS);
-    } catch (error) {
-      console.warn('Error checking token expiration:', error);
+    } catch {
+      // Debug statement removed
       return true;
     }
   }
@@ -188,10 +190,10 @@ class TokenManager {
 
       // Decode the payload (second part)
       const payload = parts[1];
-      
+
       // Add padding if needed for proper base64 decoding
       const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
-      
+
       const decodedPayload = atob(paddedPayload);
       const claims = JSON.parse(decodedPayload) as TokenClaims;
 
@@ -201,8 +203,8 @@ class TokenManager {
       }
 
       return claims;
-    } catch (error) {
-      console.warn('Failed to parse JWT token:', error);
+    } catch {
+      // Debug statement removed
       return null;
     }
   }
@@ -213,12 +215,12 @@ class TokenManager {
   validateToken(token: string): TokenValidationResult {
     try {
       if (!token || typeof token !== 'string') {
-        return { isValid: false, isExpired: true, error: 'Token is empty or invalid type' };
+        return {isValid: false, isExpired: true, error: 'Token is empty or invalid type'};
       }
 
       const claims = this.parseJWT(token);
       if (!claims) {
-        return { isValid: false, isExpired: true, error: 'Failed to parse token claims' };
+        return {isValid: false, isExpired: true, error: 'Failed to parse token claims'};
       }
 
       const now = Math.floor(Date.now() / 1000);
@@ -264,8 +266,8 @@ class TokenManager {
   /**
    * Get token expiration information
    */
-  getTokenExpirationInfo(): { 
-    accessTokenExpiresAt: Date | null; 
+  getTokenExpirationInfo(): {
+    accessTokenExpiresAt: Date | null;
     refreshTokenExpiresAt: Date | null;
     needsRefresh: boolean;
   } {
@@ -302,14 +304,20 @@ class TokenManager {
         email: claims.email,
         username: claims.username
       };
-    } catch (error) {
-      console.warn('Failed to get user from token:', error);
+    } catch {
+      // Debug statement removed
       return null;
     }
   }
 
-  // Private timer management for automatic token refresh
-  private refreshTimer: NodeJS.Timeout | null = null;
+  /**
+   * Prepare for httpOnly cookie implementation
+   * This method will be used when backend supports httpOnly cookies
+   */
+  supportsHttpOnlyCookies(): boolean {
+    // Check if running in secure context and cookies are enabled
+    return window.isSecureContext && navigator.cookieEnabled;
+  }
 
   private setupTokenRefreshTimer(): void {
     this.clearTokenRefreshTimer();
@@ -340,15 +348,6 @@ class TokenManager {
   }
 
   /**
-   * Prepare for httpOnly cookie implementation
-   * This method will be used when backend supports httpOnly cookies
-   */
-  supportsHttpOnlyCookies(): boolean {
-    // Check if running in secure context and cookies are enabled
-    return window.isSecureContext && navigator.cookieEnabled;
-  }
-
-  /**
    * Security utility: Check for XSS attempts in token
    */
   private isTokenSecure(token: string): boolean {
@@ -368,6 +367,6 @@ class TokenManager {
 export const tokenManager = new TokenManager();
 
 // Export types for use in other modules
-export type { TokenClaims, TokenPair, TokenValidationResult };
+export type {TokenClaims, TokenPair, TokenValidationResult};
 
 export default tokenManager;

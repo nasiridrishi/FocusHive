@@ -3,7 +3,7 @@
  * Helper functions for cross-browser testing and feature detection
  */
 
-import { BrowserContext, Page, Browser } from '@playwright/test';
+import {BrowserContext, Page} from '@playwright/test';
 
 export interface BrowserInfo {
   name: string;
@@ -63,7 +63,7 @@ declare global {
     WebSocket?: typeof WebSocket;
     indexedDB?: IDBFactory;
   }
-  
+
   interface Performance {
     memory?: PerformanceMemory;
   }
@@ -76,12 +76,12 @@ export async function getBrowserInfo(page: Page): Promise<BrowserInfo> {
   return await page.evaluate(() => {
     const ua = navigator.userAgent;
     const platform = navigator.platform;
-    
+
     // Browser detection
     let name = 'unknown';
     let version = 'unknown';
     let engine = 'unknown';
-    
+
     if (ua.includes('Chrome') && !ua.includes('Chromium')) {
       name = 'chrome';
       version = ua.match(/Chrome\/([0-9.]+)/)?.[1] || 'unknown';
@@ -99,11 +99,11 @@ export async function getBrowserInfo(page: Page): Promise<BrowserInfo> {
       version = ua.match(/Edg\/([0-9.]+)/)?.[1] || 'unknown';
       engine = 'blink';
     }
-    
+
     // Device detection
     const isMobile = /Mobile|Android|iPhone|iPad/i.test(ua);
     const isTablet = /iPad|Android.*(?!Mobile)/i.test(ua);
-    
+
     return {
       name,
       version,
@@ -125,17 +125,19 @@ export async function getBrowserInfo(page: Page): Promise<BrowserInfo> {
 export async function detectFeatureSupport(page: Page): Promise<FeatureSupport> {
   return await page.evaluate(() => {
     const features: { [key: string]: boolean } = {};
-    
+
     // JavaScript features
     features['es6-modules'] = typeof Symbol !== 'undefined';
-    features['async-await'] = (async () => {})().constructor.name === 'AsyncFunction';
-    features['arrow-functions'] = (() => {}).constructor.name === 'Function';
+    features['async-await'] = (async () => {
+    })().constructor.name === 'AsyncFunction';
+    features['arrow-functions'] = (() => {
+    }).constructor.name === 'Function';
     features['template-literals'] = true; // If we get here, it's supported
     features['destructuring'] = true; // If we get here, it's supported
     features['spread-operator'] = true; // If we get here, it's supported
     features['promises'] = typeof Promise !== 'undefined';
     features['fetch'] = typeof fetch !== 'undefined';
-    
+
     // Web APIs
     features['websocket'] = typeof WebSocket !== 'undefined';
     features['serviceworker'] = 'serviceWorker' in navigator;
@@ -145,9 +147,9 @@ export async function detectFeatureSupport(page: Page): Promise<FeatureSupport> 
     features['geolocation'] = 'geolocation' in navigator;
     features['notifications'] = 'Notification' in window;
     features['fullscreen'] = 'requestFullscreen' in document.documentElement ||
-                            'webkitRequestFullscreen' in document.documentElement ||
-                            'mozRequestFullScreen' in document.documentElement ||
-                            'msRequestFullscreen' in document.documentElement;
+        'webkitRequestFullscreen' in document.documentElement ||
+        'mozRequestFullScreen' in document.documentElement ||
+        'msRequestFullscreen' in document.documentElement;
     features['web-audio'] = 'AudioContext' in window || 'webkitAudioContext' in window;
     features['webrtc'] = 'RTCPeerConnection' in window;
     features['webgl'] = (() => {
@@ -166,7 +168,7 @@ export async function detectFeatureSupport(page: Page): Promise<FeatureSupport> 
         return false;
       }
     })();
-    
+
     // CSS features
     features['css-grid'] = CSS.supports('display', 'grid');
     features['css-flexbox'] = CSS.supports('display', 'flex');
@@ -179,47 +181,47 @@ export async function detectFeatureSupport(page: Page): Promise<FeatureSupport> 
     features['css-sticky'] = CSS.supports('position', 'sticky');
     features['css-aspect-ratio'] = CSS.supports('aspect-ratio', '1/1');
     features['css-container-queries'] = CSS.supports('container-type', 'inline-size');
-    
+
     // Media format support
     features['webp'] = (() => {
       const canvas = document.createElement('canvas');
       canvas.width = canvas.height = 1;
       return canvas.toDataURL('image/webp').indexOf('webp') !== -1;
     })();
-    
+
     features['avif'] = (() => {
       const canvas = document.createElement('canvas');
       canvas.width = canvas.height = 1;
       return canvas.toDataURL('image/avif').indexOf('avif') !== -1;
     })();
-    
+
     // Video/Audio support
     const video = document.createElement('video');
     features['video-mp4'] = video.canPlayType('video/mp4') !== '';
     features['video-webm'] = video.canPlayType('video/webm') !== '';
     features['video-ogg'] = video.canPlayType('video/ogg') !== '';
-    
+
     const audio = document.createElement('audio');
     features['audio-mp3'] = audio.canPlayType('audio/mpeg') !== '';
     features['audio-ogg'] = audio.canPlayType('audio/ogg') !== '';
     features['audio-wav'] = audio.canPlayType('audio/wav') !== '';
     features['audio-aac'] = audio.canPlayType('audio/aac') !== '';
-    
+
     // Touch and input
     features['touch-events'] = 'ontouchstart' in window;
     features['pointer-events'] = 'onpointerdown' in window;
     features['device-orientation'] = 'ondeviceorientation' in window;
-    
+
     // PWA features
     features['app-manifest'] = 'onappinstalled' in window;
     features['beforeinstallprompt'] = 'onbeforeinstallprompt' in window;
-    
+
     // Performance APIs
     features['performance-observer'] = 'PerformanceObserver' in window;
     features['intersection-observer'] = 'IntersectionObserver' in window;
     features['resize-observer'] = 'ResizeObserver' in window;
     features['mutation-observer'] = 'MutationObserver' in window;
-    
+
     return features;
   });
 }
@@ -238,10 +240,10 @@ export async function supportsFeature(page: Page, feature: string): Promise<bool
 export async function getBrowserPerformanceMetrics(page: Page): Promise<BrowserPerformanceMetrics | null> {
   return await page.evaluate(() => {
     if (!window.performance) return null;
-    
+
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     const paintEntries = performance.getEntriesByType('paint');
-    
+
     return {
       navigation: {
         domContentLoaded: navigation?.domContentLoadedEventEnd - navigation?.domContentLoadedEventStart,
@@ -272,35 +274,35 @@ export async function testWebSocketConnection(page: Page, url: string): Promise<
 }> {
   return await page.evaluate(async (wsUrl) => {
     if (typeof WebSocket === 'undefined') {
-      return { supported: false, error: 'WebSocket not supported' };
+      return {supported: false, error: 'WebSocket not supported'};
     }
-    
+
     return new Promise((resolve) => {
       const startTime = Date.now();
       const ws = new WebSocket(wsUrl);
-      
-      const cleanup = () => {
+
+      const cleanup = (): void => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.close();
         }
       };
-      
+
       const timeout = setTimeout(() => {
         cleanup();
-        resolve({ supported: false, error: 'Connection timeout' });
+        resolve({supported: false, error: 'Connection timeout'});
       }, 5000);
-      
+
       ws.onopen = () => {
         clearTimeout(timeout);
         const connectionTime = Date.now() - startTime;
         cleanup();
-        resolve({ supported: true, connectionTime });
+        resolve({supported: true, connectionTime});
       };
-      
-      ws.onerror = (error) => {
+
+      ws.onerror = (_error) => {
         clearTimeout(timeout);
         cleanup();
-        resolve({ supported: false, error: 'Connection failed' });
+        resolve({supported: false, error: 'Connection failed'});
       };
     });
   }, url);
@@ -336,7 +338,7 @@ export async function testCSSSupport(page: Page, property: string, value: string
 /**
  * Capture detailed viewport information
  */
-export async function getViewportInfo(page: Page) {
+export async function getViewportInfo(page: Page): Promise<boolean> {
   return await page.evaluate(() => {
     return {
       width: window.innerWidth,
@@ -364,7 +366,7 @@ export async function testMediaSupport(page: Page): Promise<{
     // Image format testing
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 1;
-    
+
     const images = {
       webp: canvas.toDataURL('image/webp').indexOf('webp') !== -1,
       avif: canvas.toDataURL('image/avif').indexOf('avif') !== -1,
@@ -373,7 +375,7 @@ export async function testMediaSupport(page: Page): Promise<{
       gif: true,  // Always supported
       svg: true   // Always supported
     };
-    
+
     // Video format testing
     const video = document.createElement('video');
     const videoFormats = {
@@ -383,7 +385,7 @@ export async function testMediaSupport(page: Page): Promise<{
       mov: video.canPlayType('video/quicktime'),
       avi: video.canPlayType('video/x-msvideo')
     };
-    
+
     // Audio format testing
     const audio = document.createElement('audio');
     const audioFormats = {
@@ -393,7 +395,7 @@ export async function testMediaSupport(page: Page): Promise<{
       aac: audio.canPlayType('audio/aac'),
       flac: audio.canPlayType('audio/flac')
     };
-    
+
     return {
       images,
       video: videoFormats,
@@ -406,10 +408,10 @@ export async function testMediaSupport(page: Page): Promise<{
  * Generate compatibility report
  */
 export function generateCompatibilityReport(
-  browserInfo: BrowserInfo,
-  features: FeatureSupport,
-  performanceMetrics: BrowserPerformanceMetrics | null,
-  mediaSupport: MediaSupport
+    browserInfo: BrowserInfo,
+    features: FeatureSupport,
+    performanceMetrics: BrowserPerformanceMetrics | null,
+    mediaSupport: MediaSupport
 ): CompatibilityReport {
   return {
     browser: browserInfo,
@@ -470,7 +472,7 @@ export const BrowserSpecificUtils = {
               delete window.indexedDB;
             }
             break;
-          // Add more feature mocking as needed
+            // Add more feature mocking as needed
         }
       });
     }, features);

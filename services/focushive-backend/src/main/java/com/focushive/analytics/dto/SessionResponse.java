@@ -26,14 +26,14 @@ public class SessionResponse {
         this.id = session.getId();
         this.userId = session.getUserId();
         this.hiveId = session.getHiveId();
-        this.startTime = session.getStartTime();
-        this.endTime = session.getEndTime();
+        this.startTime = session.getStartedAt();
+        this.endTime = session.getCompletedAt();
         this.targetDurationMinutes = session.getDurationMinutes(); // Using durationMinutes as target
-        this.actualDurationMinutes = session.getActualDurationMinutes();
+        this.actualDurationMinutes = session.getElapsedMinutes();
         this.type = session.getSessionType();
-        this.completed = session.getCompleted();
-        this.breaksTaken = 0; // Timer entity doesn't have breaksTaken
-        this.distractionsLogged = session.getInterruptions(); // Using interruptions as distractionsLogged
+        this.completed = session.getStatus() == FocusSession.SessionStatus.COMPLETED;
+        this.breaksTaken = session.getFocusBreaks() != null ? session.getFocusBreaks() : 0;
+        this.distractionsLogged = session.getTabSwitches() != null ? session.getTabSwitches() : 0;
         this.notes = session.getNotes();
     }
     

@@ -45,7 +45,7 @@ public class AnalyticsService {
         log.info("Starting session for user: {} with duration: {} minutes", userId, request.getTargetDurationMinutes());
         
         // Check if user already has an active session
-        Optional<FocusSession> activeSession = focusSessionRepository.findByUserIdAndCompletedFalse(userId);
+        Optional<FocusSession> activeSession = focusSessionRepository.findActiveSessionByUserId(userId);
         if (activeSession.isPresent()) {
             throw new BadRequestException("User already has an active session. Please end the current session first.");
         }
@@ -64,9 +64,10 @@ public class AnalyticsService {
             .hiveId(request.getHiveId())
             .sessionType(request.getType())
             .durationMinutes(request.getTargetDurationMinutes())
-            .startTime(LocalDateTime.now())
-            .completed(false)
-            .interruptions(0)
+            .startedAt(LocalDateTime.now())
+            .status(FocusSession.SessionStatus.ACTIVE)
+            .tabSwitches(0)
+            .distractionMinutes(0)
             .notes(request.getNotes())
             .build();
         
@@ -88,21 +89,20 @@ public class AnalyticsService {
             throw new BadRequestException("User can only end their own sessions");
         }
         
-        if (session.getCompleted()) {
+        if (session.getStatus() == FocusSession.SessionStatus.COMPLETED) {
             throw new BadRequestException("Session is already completed");
         }
         
         // Update session with completion data
         LocalDateTime endTime = LocalDateTime.now();
-        session.setEndTime(endTime);
-        session.setCompleted(request.completed() != null ? request.completed() : true);
-        session.setActualDurationMinutes(request.actualDurationMinutes() != null ? 
-            request.actualDurationMinutes() : 
-            (int) ChronoUnit.MINUTES.between(session.getStartTime(), endTime));
-        
-        // Update interruptions if provided (maps to distractionsLogged in the request)
+        session.setCompletedAt(endTime);
+        session.setStatus(request.completed() != null && request.completed()
+            ? FocusSession.SessionStatus.COMPLETED
+            : FocusSession.SessionStatus.CANCELLED);
+
+        // Update distractions if provided (maps to distractionsLogged in the request)
         if (request.distractionsLogged() != null) {
-            session.setInterruptions(request.distractionsLogged());
+            session.setTabSwitches(request.distractionsLogged());
         }
         
         // Update notes if provided
@@ -111,7 +111,7 @@ public class AnalyticsService {
         }
         
         FocusSession savedSession = focusSessionRepository.save(session);
-        log.info("Session ended successfully. Duration: {} minutes", savedSession.getActualDurationMinutes());
+        log.info("Session ended successfully. Duration: {} minutes", savedSession.getElapsedMinutes());
         
         // Update daily summary
         updateDailySummary(savedSession);
@@ -142,7 +142,7 @@ public class AnalyticsService {
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
         
         // Get sessions in date range
-        List<FocusSession> sessions = focusSessionRepository.findByUserIdAndDateRange(
+        List<FocusSession> sessions = focusSessionRepository.findByUserIdAndCompletedAtBetween(
             userId, startDateTime, endDateTime);
         
         // Calculate statistics
@@ -152,7 +152,9 @@ public class AnalyticsService {
         stats.setEndDate(endDate);
         
         int totalSessions = sessions.size();
-        int completedSessions = (int) sessions.stream().filter(FocusSession::getCompleted).count();
+        int completedSessions = (int) sessions.stream()
+            .filter(s -> s.getStatus() == FocusSession.SessionStatus.COMPLETED)
+            .count();
         
         stats.setTotalSessions(totalSessions);
         stats.setCompletedSessions(completedSessions);
@@ -160,8 +162,8 @@ public class AnalyticsService {
         
         // Calculate total minutes from completed sessions
         int totalMinutes = sessions.stream()
-            .filter(FocusSession::getCompleted)
-            .mapToInt(s -> s.getActualDurationMinutes() != null ? s.getActualDurationMinutes() : 0)
+            .filter(s -> s.getStatus() == FocusSession.SessionStatus.COMPLETED)
+            .mapToInt(s -> s.getElapsedMinutes() != null ? s.getElapsedMinutes() : 0)
             .sum();
         stats.setTotalMinutes(totalMinutes);
         
@@ -179,7 +181,7 @@ public class AnalyticsService {
         
         // Group sessions by type
         Map<String, Integer> sessionsByType = sessions.stream()
-            .filter(FocusSession::getCompleted)
+            .filter(s -> s.getStatus() == FocusSession.SessionStatus.COMPLETED)
             .collect(Collectors.groupingBy(
                 s -> s.getSessionType().toString(),
                 Collectors.summingInt(s -> 1)
@@ -188,11 +190,11 @@ public class AnalyticsService {
         
         // Group minutes by hive
         Map<String, Integer> minutesByHive = sessions.stream()
-            .filter(FocusSession::getCompleted)
+            .filter(s -> s.getStatus() == FocusSession.SessionStatus.COMPLETED)
             .filter(s -> s.getHiveId() != null)
             .collect(Collectors.groupingBy(
                 FocusSession::getHiveId,
-                Collectors.summingInt(s -> s.getActualDurationMinutes() != null ? s.getActualDurationMinutes() : 0)
+                Collectors.summingInt(s -> s.getElapsedMinutes() != null ? s.getElapsedMinutes() : 0)
             ));
         stats.setMinutesByHive(minutesByHive);
         
@@ -235,22 +237,22 @@ public class AnalyticsService {
             String userId = user.getId();
             
             // Get sessions for this user in the hive during the period
-            List<FocusSession> userSessions = focusSessionRepository.findByUserIdAndDateRange(
+            List<FocusSession> userSessions = focusSessionRepository.findByUserIdAndCompletedAtBetween(
                 userId, startDateTime, endDateTime)
                 .stream()
                 .filter(session -> hiveId.equals(session.getHiveId()))
-                .filter(FocusSession::getCompleted)
+                .filter(s -> s.getStatus() == FocusSession.SessionStatus.COMPLETED)
                 .toList();
             
             if (!userSessions.isEmpty()) {
                 int totalMinutes = userSessions.stream()
-                    .mapToInt(s -> s.getActualDurationMinutes() != null ? s.getActualDurationMinutes() : 0)
+                    .mapToInt(s -> s.getElapsedMinutes() != null ? s.getElapsedMinutes() : 0)
                     .sum();
                 
                 int sessionsCompleted = userSessions.size();
                 
                 // Calculate completion rate (sessions completed vs total sessions attempted)
-                List<FocusSession> allUserSessions = focusSessionRepository.findByUserIdAndDateRange(
+                List<FocusSession> allUserSessions = focusSessionRepository.findByUserIdAndCompletedAtBetween(
                     userId, startDateTime, endDateTime)
                     .stream()
                     .filter(session -> hiveId.equals(session.getHiveId()))
@@ -300,7 +302,7 @@ public class AnalyticsService {
     }
     
     private void updateDailySummary(FocusSession session) {
-        LocalDate sessionDate = session.getStartTime().toLocalDate();
+        LocalDate sessionDate = session.getStartedAt().toLocalDate();
         String userId = session.getUserId();
         
         DailySummary summary = dailySummaryRepository.findByUserIdAndDate(userId, sessionDate)
@@ -314,26 +316,26 @@ public class AnalyticsService {
         
         // Update session counts
         summary.setSessionsCount(summary.getSessionsCount() + 1);
-        if (session.getCompleted()) {
+        if (session.getStatus() == FocusSession.SessionStatus.COMPLETED) {
             summary.setCompletedSessions(summary.getCompletedSessions() + 1);
         }
         
         // Update minutes based on session type and completion
-        if (session.getCompleted() && session.getActualDurationMinutes() != null) {
-            int duration = session.getActualDurationMinutes();
+        if (session.getStatus() == FocusSession.SessionStatus.COMPLETED && session.getElapsedMinutes() != null) {
+            int duration = session.getElapsedMinutes();
             summary.setTotalMinutes(summary.getTotalMinutes() + duration);
             
-            if (session.getSessionType() == FocusSession.SessionType.WORK || 
-                session.getSessionType() == FocusSession.SessionType.STUDY) {
+            if (session.getSessionType() == FocusSession.SessionType.FOCUS) {
                 summary.setFocusMinutes(summary.getFocusMinutes() + duration);
-            } else if (session.getSessionType() == FocusSession.SessionType.BREAK) {
+            } else if (session.getSessionType() == FocusSession.SessionType.SHORT_BREAK ||
+                       session.getSessionType() == FocusSession.SessionType.LONG_BREAK) {
                 summary.setBreakMinutes(summary.getBreakMinutes() + duration);
             }
         }
         
         // Update interruptions/distractions
-        if (session.getInterruptions() != null) {
-            summary.setDistractionsCount(summary.getDistractionsCount() + session.getInterruptions());
+        if (session.getTabSwitches() != null) {
+            summary.setDistractionsCount(summary.getDistractionsCount() + session.getTabSwitches());
         }
         
         // Recalculate average session length

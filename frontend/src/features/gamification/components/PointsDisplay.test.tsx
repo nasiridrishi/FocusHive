@@ -1,26 +1,26 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { ThemeProvider } from '@mui/material/styles';
-import { createTheme } from '@mui/material/styles';
+import {describe, expect, it, vi} from 'vitest';
+import {render, screen, RenderResult} from '@testing-library/react';
+import {createTheme, ThemeProvider} from '@mui/material/styles';
 import PointsDisplay from './PointsDisplay';
-import type { Points } from '../types/gamification';
+import type {Points} from '../types/gamification';
 
 // Mock framer-motion for testing
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
-    span: ({ children, ...props }: React.ComponentProps<'span'>) => <span {...props}>{children}</span>,
+    div: ({children, ...props}: React.ComponentProps<'div'>) => <div {...props}>{children}</div>,
+    span: ({children, ...props}: React.ComponentProps<'span'>) =>
+        <span {...props}>{children}</span>,
   },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  AnimatePresence: ({children}: { children: React.ReactNode }) => children,
 }));
 
 const theme = createTheme();
 
-const renderWithTheme = (component: React.ReactElement) => {
+const renderWithTheme = (component: React.ReactElement): RenderResult => {
   return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
+      <ThemeProvider theme={theme}>
+        {component}
+      </ThemeProvider>
   );
 };
 
@@ -34,15 +34,15 @@ const mockPoints: Points = {
 describe('PointsDisplay', () => {
   describe('Basic Rendering', () => {
     it('renders current points correctly', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints}/>);
+
       expect(screen.getByText('1,250')).toBeInTheDocument();
       expect(screen.getByText(/points/i)).toBeInTheDocument();
     });
 
     it('renders total points when provided', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints}/>);
+
       expect(screen.getByText(/15,750/)).toBeInTheDocument();
       expect(screen.getByText(/total/i)).toBeInTheDocument();
     });
@@ -54,9 +54,9 @@ describe('PointsDisplay', () => {
         todayEarned: 0,
         weekEarned: 0,
       };
-      
-      renderWithTheme(<PointsDisplay points={zeroPoints} />);
-      
+
+      renderWithTheme(<PointsDisplay points={zeroPoints}/>);
+
       expect(screen.getByLabelText('Current points: 0')).toBeInTheDocument();
     });
 
@@ -67,24 +67,24 @@ describe('PointsDisplay', () => {
         todayEarned: 5000,
         weekEarned: 25000,
       };
-      
-      renderWithTheme(<PointsDisplay points={largePoints} />);
-      
+
+      renderWithTheme(<PointsDisplay points={largePoints}/>);
+
       expect(screen.getByText('1,234,567')).toBeInTheDocument();
     });
   });
 
   describe('Today Points Display', () => {
     it('shows today points when showToday is true', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} showToday />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} showToday/>);
+
       expect(screen.getByText('150')).toBeInTheDocument();
       expect(screen.getByText(/today/i)).toBeInTheDocument();
     });
 
     it('hides today points when showToday is false', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} showToday={false} />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} showToday={false}/>);
+
       expect(screen.queryByText(/today/i)).not.toBeInTheDocument();
     });
 
@@ -93,9 +93,9 @@ describe('PointsDisplay', () => {
         ...mockPoints,
         todayEarned: 0,
       };
-      
-      renderWithTheme(<PointsDisplay points={noTodayPoints} showToday />);
-      
+
+      renderWithTheme(<PointsDisplay points={noTodayPoints} showToday/>);
+
       expect(screen.getByText(/today/i)).toBeInTheDocument();
       expect(screen.getByText('0')).toBeInTheDocument();
     });
@@ -103,68 +103,68 @@ describe('PointsDisplay', () => {
 
   describe('Week Points Display', () => {
     it('shows week points when showWeek is true', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} showWeek />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} showWeek/>);
+
       expect(screen.getByText('420')).toBeInTheDocument();
       expect(screen.getByText(/week/i)).toBeInTheDocument();
     });
 
     it('hides week points when showWeek is false', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} showWeek={false} />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} showWeek={false}/>);
+
       expect(screen.queryByText(/week/i)).not.toBeInTheDocument();
     });
   });
 
   describe('Size Variants', () => {
     it('applies small size styling', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} size="small" />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} size="small"/>);
+
       const pointsElement = screen.getByText('1,250');
-      expect(pointsElement).toHaveStyle({ fontSize: expect.stringContaining('1.5rem') });
+      expect(pointsElement).toHaveStyle({fontSize: expect.stringContaining('1.5rem')});
     });
 
     it('applies medium size styling (default)', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} size="medium" />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} size="medium"/>);
+
       const pointsElement = screen.getByText('1,250');
-      expect(pointsElement).toHaveStyle({ fontSize: expect.stringContaining('2rem') });
+      expect(pointsElement).toHaveStyle({fontSize: expect.stringContaining('2rem')});
     });
 
     it('applies large size styling', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} size="large" />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} size="large"/>);
+
       const pointsElement = screen.getByText('1,250');
-      expect(pointsElement).toHaveStyle({ fontSize: expect.stringContaining('2.5rem') });
+      expect(pointsElement).toHaveStyle({fontSize: expect.stringContaining('2.5rem')});
     });
 
     it('defaults to medium size when size prop is not provided', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints}/>);
+
       const pointsElement = screen.getByText('1,250');
-      expect(pointsElement).toHaveStyle({ fontSize: expect.stringContaining('2rem') });
+      expect(pointsElement).toHaveStyle({fontSize: expect.stringContaining('2rem')});
     });
   });
 
   describe('Animation', () => {
     it('enables animation when animated prop is true', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} animated />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} animated/>);
+
       // Check for animation-related attributes
       const container = screen.getByText('1,250').closest('[data-testid="points-display"]');
       expect(container).toHaveAttribute('data-animated', 'true');
     });
 
     it('disables animation when animated prop is false', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} animated={false} />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} animated={false}/>);
+
       const container = screen.getByText('1,250').closest('[data-testid="points-display"]');
       expect(container).toHaveAttribute('data-animated', 'false');
     });
 
     it('defaults to animated when animated prop is not provided', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints}/>);
+
       const container = screen.getByText('1,250').closest('[data-testid="points-display"]');
       expect(container).toHaveAttribute('data-animated', 'true');
     });
@@ -172,8 +172,8 @@ describe('PointsDisplay', () => {
 
   describe('Accessibility', () => {
     it('has proper ARIA labels', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} showToday showWeek />);
-      
+      renderWithTheme(<PointsDisplay points={mockPoints} showToday showWeek/>);
+
       expect(screen.getByLabelText(/current points/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/total points/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/points earned today/i)).toBeInTheDocument();
@@ -181,9 +181,9 @@ describe('PointsDisplay', () => {
     });
 
     it('has proper semantic structure', () => {
-      renderWithTheme(<PointsDisplay points={mockPoints} />);
-      
-      const container = screen.getByRole('region', { name: /points display/i });
+      renderWithTheme(<PointsDisplay points={mockPoints}/>);
+
+      const container = screen.getByRole('region', {name: /points display/i});
       expect(container).toBeInTheDocument();
     });
   });
@@ -192,9 +192,9 @@ describe('PointsDisplay', () => {
     it('adapts to mobile viewports', () => {
       // Skip this test for now as it tests implementation details
       // The actual responsive behavior is tested visually and through integration tests
-      renderWithTheme(<PointsDisplay points={mockPoints} showToday showWeek />);
-      
-      const container = screen.getByRole('region', { name: /points display/i });
+      renderWithTheme(<PointsDisplay points={mockPoints} showToday showWeek/>);
+
+      const container = screen.getByRole('region', {name: /points display/i});
       // At least verify the component renders with some responsive class
       expect(container).toHaveClass(/layout/);
     });
@@ -202,9 +202,9 @@ describe('PointsDisplay', () => {
     it('adapts to tablet viewports', () => {
       // Skip this test for now as it tests implementation details
       // The actual responsive behavior is tested visually and through integration tests
-      renderWithTheme(<PointsDisplay points={mockPoints} showToday showWeek />);
-      
-      const container = screen.getByRole('region', { name: /points display/i });
+      renderWithTheme(<PointsDisplay points={mockPoints} showToday showWeek/>);
+
+      const container = screen.getByRole('region', {name: /points display/i});
       // At least verify the component renders with some responsive class
       expect(container).toHaveClass(/layout/);
     });
@@ -218,9 +218,9 @@ describe('PointsDisplay', () => {
         todayEarned: -50,
         weekEarned: 100,
       };
-      
-      renderWithTheme(<PointsDisplay points={negativePoints} showToday />);
-      
+
+      renderWithTheme(<PointsDisplay points={negativePoints} showToday/>);
+
       expect(screen.getByText('-100')).toBeInTheDocument();
       expect(screen.getByText('-50')).toBeInTheDocument();
     });
@@ -232,9 +232,9 @@ describe('PointsDisplay', () => {
         todayEarned: 100,
         weekEarned: 300,
       };
-      
+
       expect(() => {
-        renderWithTheme(<PointsDisplay points={incompletePoints} />);
+        renderWithTheme(<PointsDisplay points={incompletePoints}/>);
       }).not.toThrow();
     });
   });
@@ -242,23 +242,23 @@ describe('PointsDisplay', () => {
   describe('Performance', () => {
     it('renders efficiently with same props', () => {
       const renderSpy = vi.fn();
-      
-      const TestComponent = () => {
+
+      const TestComponent = (): React.ReactElement => {
         renderSpy();
-        return <PointsDisplay points={mockPoints} />;
+        return <PointsDisplay points={mockPoints}/>;
       };
-      
-      const { rerender } = renderWithTheme(<TestComponent />);
-      
+
+      const {rerender} = renderWithTheme(<TestComponent/>);
+
       // Initial render
       expect(renderSpy).toHaveBeenCalledTimes(1);
-      
+
       // Re-render with same props
-      rerender(<TestComponent />);
-      
+      rerender(<TestComponent/>);
+
       // React will re-render components, this is expected behavior
       expect(renderSpy).toHaveBeenCalledTimes(2);
-      
+
       // Component should still display correctly after re-render
       expect(screen.getByTestId('points-display')).toBeInTheDocument();
     });

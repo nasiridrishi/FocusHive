@@ -2,22 +2,18 @@
  * E2E Tests for User Logout Flow
  */
 
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../../pages/LoginPage';
-import { DashboardPage } from '../../pages/DashboardPage';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { 
-  TEST_USERS, 
-  validateTestEnvironment,
-  TIMEOUTS 
-} from '../../helpers/test-data';
+import {expect, test} from '@playwright/test';
+import {LoginPage} from '../../pages/LoginPage';
+import {DashboardPage} from '../../pages/DashboardPage';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {TEST_USERS, TIMEOUTS, validateTestEnvironment} from '../../helpers/test-data';
 
 test.describe('User Logout Flow', () => {
   let loginPage: LoginPage;
   let dashboardPage: DashboardPage;
   let authHelper: AuthHelper;
 
-  test.beforeEach(async ({ page: _page }) => {
+  test.beforeEach(async ({page: _page}) => {
     // Initialize page objects
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);
@@ -25,12 +21,12 @@ test.describe('User Logout Flow', () => {
 
     // Clear any existing authentication
     await authHelper.clearStorage();
-    
+
     // Validate test environment
     validateTestEnvironment();
   });
 
-  test.afterEach(async ({ page: _page }) => {
+  test.afterEach(async ({page: _page}) => {
     // Cleanup: Clear storage after each test
     await authHelper.clearStorage();
   });
@@ -38,7 +34,7 @@ test.describe('User Logout Flow', () => {
   /**
    * Helper function to ensure user is logged in before logout tests
    */
-  async function ensureUserLoggedIn() {
+  async function ensureUserLoggedIn(): Promise<void> {
     await loginPage.goto();
     await loginPage.login(TEST_USERS.VALID_USER.username, TEST_USERS.VALID_USER.password);
     await loginPage.waitForLoading();
@@ -55,13 +51,13 @@ test.describe('User Logout Flow', () => {
 
     // Verify logout redirect
     await dashboardPage.verifyLogoutRedirect();
-    
+
     // Verify tokens are cleared from storage
     await authHelper.verifyTokensCleared();
-    
+
     // Verify user is now on login page or home page
     await expect(dashboardPage.page).toHaveURL(/\/login|\/$/);
-    
+
     // If on login page, verify login form is visible
     if (dashboardPage.page.url().includes('/login')) {
       await loginPage.waitForPageLoad();
@@ -72,13 +68,13 @@ test.describe('User Logout Flow', () => {
   test('should clear JWT tokens from browser storage on logout', async () => {
     // First, login user and verify tokens exist
     await ensureUserLoggedIn();
-    
+
     // Double-check tokens are present before logout
     const beforeLogout = {
       accessToken: await dashboardPage.page.evaluate(() => sessionStorage.getItem('access_token')),
       refreshToken: await dashboardPage.page.evaluate(() => localStorage.getItem('refresh_token'))
     };
-    
+
     expect(beforeLogout.accessToken).toBeTruthy();
     expect(beforeLogout.refreshToken).toBeTruthy();
 
@@ -91,7 +87,7 @@ test.describe('User Logout Flow', () => {
       accessToken: await dashboardPage.page.evaluate(() => sessionStorage.getItem('access_token')),
       refreshToken: await dashboardPage.page.evaluate(() => localStorage.getItem('refresh_token'))
     };
-    
+
     expect(afterLogout.accessToken).toBeNull();
     expect(afterLogout.refreshToken).toBeNull();
   });
@@ -106,21 +102,21 @@ test.describe('User Logout Flow', () => {
 
     // Try to access protected routes
     const protectedRoutes = ['/dashboard', '/profile', '/settings'];
-    
+
     for (const route of protectedRoutes) {
       try {
         await dashboardPage.page.goto(route);
-        await dashboardPage.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.MEDIUM });
-        
+        await dashboardPage.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.MEDIUM});
+
         // Should be redirected to login or show access denied
         const currentUrl = dashboardPage.page.url();
-        
+
         if (!currentUrl.includes('/login') && !currentUrl.includes('/')) {
           // If not redirected, check for access denied message
           const accessDenied = dashboardPage.page.locator(':text("Access Denied"), :text("Unauthorized"), :text("Please log in")');
-          await expect(accessDenied.first()).toBeVisible({ timeout: TIMEOUTS.SHORT });
+          await expect(accessDenied.first()).toBeVisible({timeout: TIMEOUTS.SHORT});
         }
-        
+
       } catch {
         // Network errors are expected in this test scenario
       }
@@ -145,7 +141,7 @@ test.describe('User Logout Flow', () => {
     await authHelper.verifyTokensCleared();
   });
 
-  test('should handle logout API call failure gracefully', async ({ page }) => {
+  test('should handle logout API call failure gracefully', async ({page}) => {
     // First, login user
     await ensureUserLoggedIn();
 
@@ -154,7 +150,7 @@ test.describe('User Logout Flow', () => {
       route.fulfill({
         status: 500,
         contentType: 'application/json',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: 'Server error during logout',
           error: 'Internal server error'
         })
@@ -166,12 +162,12 @@ test.describe('User Logout Flow', () => {
 
     // Verify tokens are still cleared locally (client-side logout)
     await authHelper.verifyTokensCleared();
-    
+
     // Verify redirect still happens
     await dashboardPage.verifyLogoutRedirect();
   });
 
-  test('should handle logout with network connectivity issues', async ({ page }) => {
+  test('should handle logout with network connectivity issues', async ({page}) => {
     // First, login user
     await ensureUserLoggedIn();
 
@@ -210,11 +206,11 @@ test.describe('User Logout Flow', () => {
 
     // Try to access protected content with old tokens
     await dashboardPage.page.goto('/dashboard');
-    await dashboardPage.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.MEDIUM });
+    await dashboardPage.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.MEDIUM});
 
     // Should still be redirected to login (tokens should be invalid)
     const currentUrl = dashboardPage.page.url();
-    
+
     // Either redirected to login or tokens automatically cleared
     if (currentUrl.includes('/login') || currentUrl.includes('/')) {
       // Successful - old tokens are invalid
@@ -225,7 +221,7 @@ test.describe('User Logout Flow', () => {
         accessToken: await dashboardPage.page.evaluate(() => sessionStorage.getItem('access_token')),
         refreshToken: await dashboardPage.page.evaluate(() => localStorage.getItem('refresh_token'))
       };
-      
+
       expect(tokensAfterAttempt.accessToken).toBeNull();
       expect(tokensAfterAttempt.refreshToken).toBeNull();
     }
@@ -237,21 +233,21 @@ test.describe('User Logout Flow', () => {
 
     // Try to logout and handle potential confirmation dialog
     await dashboardPage.openUserMenu();
-    
+
     // Click logout button
     const logoutButton = dashboardPage.logoutButton;
     await logoutButton.click();
 
     // Check if confirmation dialog appears
     const confirmDialog = dashboardPage.page.locator('[role="dialog"], .confirmation, .modal');
-    
+
     try {
-      await confirmDialog.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT });
-      
+      await confirmDialog.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT});
+
       // If confirmation dialog exists, confirm logout
       const confirmButton = dashboardPage.page.locator('button:has-text("Confirm"), button:has-text("Yes"), button:has-text("Logout")');
       await confirmButton.click();
-      
+
     } catch {
       // No confirmation dialog, direct logout
     }
@@ -295,12 +291,12 @@ test.describe('User Logout Flow', () => {
     await dashboardPage.logout();
 
     // Verify redirect destination
-    await dashboardPage.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
+    await dashboardPage.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
     const redirectUrl = dashboardPage.page.url();
-    
+
     // Should redirect to login page or home page
     expect(redirectUrl).toMatch(/\/login|\/$/);
-    
+
   });
 
   test('should maintain logout state across page refreshes', async () => {
@@ -318,7 +314,7 @@ test.describe('User Logout Flow', () => {
 
     // Verify still logged out after refresh
     await authHelper.verifyTokensCleared();
-    
+
     // Should still be on login page or home page
     const urlAfterRefresh = dashboardPage.page.url();
     expect(urlAfterRefresh).toMatch(/\/login|\/$/);

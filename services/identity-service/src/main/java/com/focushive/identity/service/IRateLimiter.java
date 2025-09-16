@@ -40,11 +40,81 @@ public interface IRateLimiter {
     /**
      * Gets the current violation count for a key.
      * Used for progressive penalties and monitoring.
-     * 
+     *
      * @param key unique identifier for the rate limit bucket
      * @return number of violations for this key
      */
     default int getViolationCount(String key) {
         return 0; // Default implementation for backwards compatibility
+    }
+
+    /**
+     * Increments the violation count for a key.
+     * Used for progressive penalties and monitoring.
+     *
+     * @param key unique identifier for the rate limit bucket
+     * @return new violation count
+     */
+    default long incrementViolationCount(String key) {
+        return 0; // Default implementation for backwards compatibility
+    }
+
+    /**
+     * Suspends a client for a specified duration.
+     * Used for progressive penalties when violations exceed threshold.
+     *
+     * @param key unique identifier for the rate limit bucket
+     * @param durationSeconds suspension duration in seconds
+     */
+    default void suspendClient(String key, long durationSeconds) {
+        // Default implementation for backwards compatibility - no-op
+    }
+
+    /**
+     * Checks if a client is currently suspended.
+     *
+     * @param key unique identifier for the rate limit bucket
+     * @return true if client is suspended, false otherwise
+     */
+    default boolean isSuspended(String key) {
+        return false; // Default implementation for backwards compatibility
+    }
+
+    /**
+     * Gets the reset time for a rate limit bucket.
+     *
+     * @param key unique identifier for the rate limit bucket
+     * @param windowMinutes window duration in minutes
+     * @return timestamp when the rate limit resets
+     */
+    default long getResetTime(String key, int windowMinutes) {
+        return System.currentTimeMillis() / 1000 + (windowMinutes * 60); // Default implementation
+    }
+
+    /**
+     * Resets the rate limit for a specific key.
+     *
+     * @param key unique identifier for the rate limit bucket
+     */
+    default void resetLimit(String key) {
+        // Default implementation for backwards compatibility - no-op
+    }
+
+    /**
+     * Clears violations for a pattern of keys.
+     *
+     * @param pattern pattern to match keys for clearing violations
+     */
+    default void clearViolations(String pattern) {
+        // Default implementation for backwards compatibility - no-op
+    }
+
+    /**
+     * Clears suspension for a specific key.
+     *
+     * @param key unique identifier for the rate limit bucket
+     */
+    default void clearSuspension(String key) {
+        // Default implementation for backwards compatibility - no-op
     }
 }

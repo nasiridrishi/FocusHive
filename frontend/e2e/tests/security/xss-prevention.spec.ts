@@ -1,11 +1,11 @@
 /**
  * XSS Prevention Security Tests (UOL-44.15)
- * 
+ *
  * Comprehensive Cross-Site Scripting (XSS) prevention testing for FocusHive
- * 
+ *
  * Test Categories:
  * 1. Reflected XSS Prevention
- * 2. Stored XSS Prevention  
+ * 2. Stored XSS Prevention
  * 3. DOM-based XSS Prevention
  * 4. Content Security Policy (CSP) Enforcement
  * 5. Input Sanitization Validation
@@ -16,8 +16,7 @@
  * 10. Event Handler XSS Prevention
  */
 
-import { test, expect } from '@playwright/test';
-import { Page } from '@playwright/test';
+import {expect, Page, test} from '@playwright/test';
 
 // XSS payload library for comprehensive testing
 const XSS_PAYLOADS = {
@@ -65,38 +64,39 @@ const XSS_PAYLOADS = {
 };
 
 class XSSTestHelper {
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
 
   async testInputField(selector: string, payloads: string[]): Promise<boolean[]> {
     const results: boolean[] = [];
-    
+
     for (const payload of payloads) {
       try {
         // Clear any existing value
         await this.page.fill(selector, '');
-        
+
         // Inject payload
         await this.page.fill(selector, payload);
-        
+
         // Submit or trigger the input
         await this.page.press(selector, 'Enter');
-        
+
         // Wait for potential XSS execution
         await this.page.waitForTimeout(500);
-        
+
         // Check if XSS executed by looking for alert dialogs
         const hasAlert = await this.page.evaluate(() => {
-          return window.hasOwnProperty('___xss_executed___');
+          return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
         });
-        
+
         results.push(!hasAlert); // true if XSS was prevented
-        
-      } catch (error) {
+
+      } catch {
         // If error occurred, likely XSS was prevented
         results.push(true);
       }
     }
-    
+
     return results;
   }
 
@@ -107,10 +107,10 @@ class XSSTestHelper {
         ___xss_executed___?: boolean;
         ___xss_message___?: string;
       }
-      
+
       const testWindow = window as XSSTestWindow;
       const originalAlert = window.alert;
-      window.alert = function(message: string) {
+      window.alert = function (message: string) {
         testWindow.___xss_executed___ = true;
         testWindow.___xss_message___ = message;
         console.error('XSS ALERT DETECTED:', message);
@@ -123,15 +123,15 @@ class XSSTestHelper {
     try {
       const url = `${this.page.url()}?${paramName}=${encodeURIComponent(payload)}`;
       await this.page.goto(url);
-      
+
       await this.page.waitForTimeout(1000);
-      
+
       const hasAlert = await this.page.evaluate(() => {
-        return window.hasOwnProperty('___xss_executed___');
+        return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
       });
-      
+
       return !hasAlert; // true if XSS was prevented
-    } catch (error) {
+    } catch {
       return true; // Error likely means XSS was prevented
     }
   }
@@ -144,15 +144,15 @@ class XSSTestHelper {
           element.innerHTML = html;
         }
       }, elementSelector, payload);
-      
+
       await this.page.waitForTimeout(500);
-      
+
       const hasAlert = await this.page.evaluate(() => {
-        return window.hasOwnProperty('___xss_executed___');
+        return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
       });
-      
+
       return !hasAlert;
-    } catch (error) {
+    } catch {
       return true;
     }
   }
@@ -160,9 +160,9 @@ class XSSTestHelper {
   async validateCSP(): Promise<boolean> {
     const response = await this.page.goto(this.page.url());
     const headers = response?.headers() || {};
-    
+
     const csp = headers['content-security-policy'] || headers['content-security-policy-report-only'];
-    
+
     if (!csp) {
       return false;
     }
@@ -176,8 +176,8 @@ class XSSTestHelper {
       'img-src'
     ];
 
-    return requiredDirectives.every(directive => 
-      csp.includes(directive)
+    return requiredDirectives.every(directive =>
+        csp.includes(directive)
     );
   }
 
@@ -187,7 +187,7 @@ class XSSTestHelper {
         ___xss_executed___?: boolean;
         ___xss_message___?: string;
       }
-      
+
       const testWindow = window as XSSTestWindow;
       delete testWindow.___xss_executed___;
       delete testWindow.___xss_message___;
@@ -198,11 +198,11 @@ class XSSTestHelper {
 test.describe('XSS Prevention Security Tests', () => {
   let xssHelper: XSSTestHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page: _page}) => {
     xssHelper = new XSSTestHelper(page);
     await xssHelper.setupXSSDetection();
     await page.goto('/');
-    
+
     // Login with test user
     await page.click('[data-testid="login-button"]');
     await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -211,105 +211,105 @@ test.describe('XSS Prevention Security Tests', () => {
     await page.waitForURL('/dashboard');
   });
 
-  test.afterEach(async ({ page }) => {
+  test.afterEach(async ({page: _page}) => {
     await xssHelper.clearXSSDetection();
   });
 
   test.describe('Reflected XSS Prevention', () => {
-    test('should prevent XSS in search parameters', async ({ page }) => {
+    test('should prevent XSS in search parameters', async ({page: _page}) => {
       const searchPayloads = XSS_PAYLOADS.basic;
-      
+
       for (const payload of searchPayloads) {
         const prevented = await xssHelper.testUrlParameter('search', payload);
         expect(prevented).toBe(true);
       }
     });
 
-    test('should prevent XSS in URL fragments', async ({ page }) => {
+    test('should prevent XSS in URL fragments', async ({page: _page}) => {
       for (const payload of XSS_PAYLOADS.domBased) {
         const url = `${page.url()}${payload}`;
         await page.goto(url);
-        
+
         await page.waitForTimeout(1000);
-        
+
         const hasAlert = await page.evaluate(() => {
-          return window.hasOwnProperty('___xss_executed___');
+          return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
         });
-        
+
         expect(hasAlert).toBe(false);
       }
     });
 
-    test('should sanitize reflected input in error messages', async ({ page }) => {
+    test('should sanitize reflected input in error messages', async ({page: _page}) => {
       // Navigate to login page with malicious parameter
       await page.goto('/login?error=<script>alert("XSS")</script>');
-      
+
       await page.waitForTimeout(1000);
-      
+
       const hasAlert = await page.evaluate(() => {
-        return window.hasOwnProperty('___xss_executed___');
+        return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
       });
-      
+
       expect(hasAlert).toBe(false);
     });
   });
 
   test.describe('Stored XSS Prevention', () => {
-    test('should prevent XSS in hive names', async ({ page }) => {
+    test('should prevent XSS in hive names', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const results = await xssHelper.testInputField(
-        '[data-testid="hive-name-input"]',
-        XSS_PAYLOADS.basic
+          '[data-testid="hive-name-input"]',
+          XSS_PAYLOADS.basic
       );
-      
+
       results.forEach(prevented => {
         expect(prevented).toBe(true);
       });
     });
 
-    test('should prevent XSS in hive descriptions', async ({ page }) => {
+    test('should prevent XSS in hive descriptions', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const results = await xssHelper.testInputField(
-        '[data-testid="hive-description-input"]',
-        XSS_PAYLOADS.advanced
+          '[data-testid="hive-description-input"]',
+          XSS_PAYLOADS.advanced
       );
-      
+
       results.forEach(prevented => {
         expect(prevented).toBe(true);
       });
     });
 
-    test('should prevent XSS in chat messages', async ({ page }) => {
+    test('should prevent XSS in chat messages', async ({page: _page}) => {
       // Navigate to a hive with chat
       await page.goto('/hive/test-hive');
-      
+
       const results = await xssHelper.testInputField(
-        '[data-testid="chat-message-input"]',
-        XSS_PAYLOADS.basic.concat(XSS_PAYLOADS.eventHandlers)
+          '[data-testid="chat-message-input"]',
+          XSS_PAYLOADS.basic.concat(XSS_PAYLOADS.eventHandlers)
       );
-      
+
       results.forEach(prevented => {
         expect(prevented).toBe(true);
       });
     });
 
-    test('should prevent XSS in user profile data', async ({ page }) => {
+    test('should prevent XSS in user profile data', async ({page: _page}) => {
       await page.goto('/profile');
-      
+
       // Test display name
       const nameResults = await xssHelper.testInputField(
-        '[data-testid="display-name-input"]',
-        XSS_PAYLOADS.basic
+          '[data-testid="display-name-input"]',
+          XSS_PAYLOADS.basic
       );
-      
+
       // Test bio
       const bioResults = await xssHelper.testInputField(
-        '[data-testid="bio-input"]',
-        XSS_PAYLOADS.eventHandlers
+          '[data-testid="bio-input"]',
+          XSS_PAYLOADS.eventHandlers
       );
-      
+
       [...nameResults, ...bioResults].forEach(prevented => {
         expect(prevented).toBe(true);
       });
@@ -317,14 +317,14 @@ test.describe('XSS Prevention Security Tests', () => {
   });
 
   test.describe('DOM-based XSS Prevention', () => {
-    test('should prevent DOM manipulation XSS', async ({ page }) => {
+    test('should prevent DOM manipulation XSS', async ({page: _page}) => {
       // Test DOM manipulation through various elements
       const testSelectors = [
         '[data-testid="user-content"]',
         '[data-testid="dynamic-content"]',
         '[data-testid="search-results"]'
       ];
-      
+
       for (const selector of testSelectors) {
         if (await page.locator(selector).count() > 0) {
           for (const payload of XSS_PAYLOADS.basic) {
@@ -335,137 +335,137 @@ test.describe('XSS Prevention Security Tests', () => {
       }
     });
 
-    test('should prevent innerHTML XSS injection', async ({ page }) => {
+    test('should prevent innerHTML XSS injection', async ({page: _page}) => {
       await page.evaluate(() => {
         const testDiv = document.createElement('div');
         testDiv.id = 'xss-test-div';
         document.body.appendChild(testDiv);
       });
-      
+
       for (const payload of XSS_PAYLOADS.svg) {
         const prevented = await xssHelper.testDOMInjection('#xss-test-div', payload);
         expect(prevented).toBe(true);
       }
     });
 
-    test('should prevent hash-based XSS', async ({ page }) => {
+    test('should prevent hash-based XSS', async ({page: _page}) => {
       for (const payload of XSS_PAYLOADS.domBased) {
         await page.goto(`${page.url()}#${encodeURIComponent(payload)}`);
-        
+
         await page.waitForTimeout(1000);
-        
+
         const hasAlert = await page.evaluate(() => {
-          return window.hasOwnProperty('___xss_executed___');
+          return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
         });
-        
+
         expect(hasAlert).toBe(false);
       }
     });
   });
 
   test.describe('Content Security Policy (CSP) Enforcement', () => {
-    test('should have proper CSP headers', async ({ page }) => {
+    test('should have proper CSP headers', async ({page: _page}) => {
       const hasValidCSP = await xssHelper.validateCSP();
       expect(hasValidCSP).toBe(true);
     });
 
-    test('should block inline script execution', async ({ page }) => {
+    test('should block inline script execution', async ({page: _page}) => {
       // Try to inject inline script
       await page.addScriptTag({
         content: 'window.___inline_script_executed___ = true;'
       }).catch(() => {
         // Script should be blocked by CSP
       });
-      
+
       const inlineExecuted = await page.evaluate(() => {
-        return window.hasOwnProperty('___inline_script_executed___');
+        return Object.prototype.hasOwnProperty.call(window, '___inline_script_executed___');
       });
-      
+
       expect(inlineExecuted).toBe(false);
     });
 
-    test('should block eval() usage', async ({ page }) => {
+    test('should block eval() usage', async ({page: _page}) => {
       const evalBlocked = await page.evaluate(() => {
         try {
           eval('window.___eval_executed___ = true;');
           return false;
-        } catch (error) {
+        } catch {
           return true; // eval was blocked
         }
       });
-      
+
       expect(evalBlocked).toBe(true);
     });
   });
 
   test.describe('Input Sanitization and Output Encoding', () => {
-    test('should encode HTML entities in user input', async ({ page }) => {
+    test('should encode HTML entities in user input', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const htmlPayload = '<div>Test &amp; Content</div>';
       await page.fill('[data-testid="hive-name-input"]', htmlPayload);
       await page.press('[data-testid="hive-name-input"]', 'Tab');
-      
+
       // Check if HTML is properly encoded
       const displayedValue = await page.textContent('[data-testid="hive-name-display"]');
       expect(displayedValue).not.toContain('<div>');
       expect(displayedValue).toContain('&');
     });
 
-    test('should sanitize markdown content', async ({ page }) => {
+    test('should sanitize markdown content', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const markdownPayload = '[Click me](javascript:alert("XSS"))';
       await page.fill('[data-testid="hive-description-input"]', markdownPayload);
       await page.press('[data-testid="hive-description-input"]', 'Tab');
-      
+
       // Check if javascript: protocol is sanitized
       const linkHref = await page.getAttribute('a', 'href');
       expect(linkHref).not.toContain('javascript:');
     });
 
-    test('should prevent attribute injection', async ({ page }) => {
+    test('should prevent attribute injection', async ({page: _page}) => {
       const attrPayload = 'normal-value" onmouseover="alert(\'XSS\')" x="';
-      
+
       await page.fill('[data-testid="search-input"]', attrPayload);
-      
+
       // Check if the attribute injection was prevented
       const hasOnMouseOver = await page.evaluate(() => {
         const searchInput = document.querySelector('[data-testid="search-input"]');
         return searchInput?.hasAttribute('onmouseover') || false;
       });
-      
+
       expect(hasOnMouseOver).toBe(false);
     });
   });
 
   test.describe('File Upload XSS Prevention', () => {
-    test('should validate file type for uploads', async ({ page }) => {
+    test('should validate file type for uploads', async ({page: _page}) => {
       await page.goto('/profile');
-      
+
       // Try to upload an HTML file as image
       const fileInput = page.locator('[data-testid="avatar-upload"]');
-      
+
       if (await fileInput.count() > 0) {
         const htmlContent = '<script>alert("XSS")</script>';
-        
+
         await fileInput.setInputFiles({
           name: 'malicious.html',
           mimeType: 'text/html',
           buffer: Buffer.from(htmlContent)
         });
-        
+
         // Check for error message
         const errorMessage = await page.textContent('[data-testid="upload-error"]');
         expect(errorMessage).toContain('Invalid file type');
       }
     });
 
-    test('should scan uploaded files for XSS content', async ({ page }) => {
+    test('should scan uploaded files for XSS content', async ({page: _page}) => {
       await page.goto('/profile');
-      
+
       const fileInput = page.locator('[data-testid="avatar-upload"]');
-      
+
       if (await fileInput.count() > 0) {
         // Create a malicious SVG file
         const svgContent = `
@@ -473,13 +473,13 @@ test.describe('XSS Prevention Security Tests', () => {
             <script>alert('XSS')</script>
           </svg>
         `;
-        
+
         await fileInput.setInputFiles({
           name: 'malicious.svg',
           mimeType: 'image/svg+xml',
           buffer: Buffer.from(svgContent)
         });
-        
+
         // Check if upload was rejected
         const uploadSuccess = await page.locator('[data-testid="upload-success"]').count();
         expect(uploadSuccess).toBe(0);
@@ -488,10 +488,10 @@ test.describe('XSS Prevention Security Tests', () => {
   });
 
   test.describe('JSONP and API XSS Prevention', () => {
-    test('should prevent JSONP callback injection', async ({ page }) => {
+    test('should prevent JSONP callback injection', async ({page: _page}) => {
       // Test JSONP callback parameter
       const maliciousCallback = 'alert("XSS");//';
-      
+
       await page.route('**/api/**', route => {
         const url = route.request().url();
         if (url.includes('callback=')) {
@@ -504,28 +504,28 @@ test.describe('XSS Prevention Security Tests', () => {
         }
         route.continue();
       });
-      
+
       await page.goto(`/api/data?callback=${encodeURIComponent(maliciousCallback)}`);
     });
 
-    test('should validate API response content-type', async ({ page }) => {
+    test('should validate API response content-type', async ({page: _page}) => {
       await page.route('**/api/**', route => {
         const headers = route.request().headers();
         const contentType = headers['content-type'];
-        
+
         if (contentType) {
           expect(contentType).toMatch(/^application\/json/);
         }
-        
+
         route.continue();
       });
-      
+
       await page.goto('/dashboard');
     });
   });
 
   test.describe('Browser-specific XSS Prevention', () => {
-    test('should prevent IE-specific XSS vectors', async ({ page }) => {
+    test('should prevent IE-specific XSS vectors', async ({page: _page}) => {
       // Test IE expression() CSS injection
       await page.addStyleTag({
         content: `
@@ -536,28 +536,28 @@ test.describe('XSS Prevention Security Tests', () => {
       }).catch(() => {
         // Style should be blocked
       });
-      
+
       await page.waitForTimeout(1000);
-      
+
       const hasAlert = await page.evaluate(() => {
-        return window.hasOwnProperty('___xss_executed___');
+        return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
       });
-      
+
       expect(hasAlert).toBe(false);
     });
 
-    test('should prevent data URI XSS', async ({ page }) => {
+    test('should prevent data URI XSS', async ({page: _page}) => {
       const dataURI = 'data:text/html,<script>alert("XSS")</script>';
-      
+
       try {
         await page.goto(dataURI);
-        
+
         await page.waitForTimeout(1000);
-        
+
         const hasAlert = await page.evaluate(() => {
-          return window.hasOwnProperty('___xss_executed___');
+          return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
         });
-        
+
         expect(hasAlert).toBe(false);
       } catch (error) {
         // Navigation blocked - this is expected
@@ -567,15 +567,15 @@ test.describe('XSS Prevention Security Tests', () => {
   });
 
   test.describe('XSS Prevention in Real-time Features', () => {
-    test('should prevent XSS in WebSocket messages', async ({ page }) => {
+    test('should prevent XSS in WebSocket messages', async ({page: _page}) => {
       await page.goto('/hive/test-hive');
-      
+
       // Wait for WebSocket connection
       await page.waitForTimeout(2000);
-      
+
       // Inject XSS payload through WebSocket
       await page.evaluate(() => {
-        const ws = (window as any).webSocket;
+        const ws = (window as unknown).webSocket;
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
             type: 'chat_message',
@@ -584,22 +584,22 @@ test.describe('XSS Prevention Security Tests', () => {
           }));
         }
       });
-      
+
       await page.waitForTimeout(1000);
-      
+
       const hasAlert = await page.evaluate(() => {
-        return window.hasOwnProperty('___xss_executed___');
+        return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
       });
-      
+
       expect(hasAlert).toBe(false);
     });
 
-    test('should prevent XSS in presence updates', async ({ page }) => {
+    test('should prevent XSS in presence updates', async ({page: _page}) => {
       await page.goto('/hive/test-hive');
-      
+
       // Inject XSS through presence update
       await page.evaluate(() => {
-        const ws = (window as any).webSocket;
+        const ws = (window as unknown).webSocket;
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
             type: 'presence_update',
@@ -608,13 +608,13 @@ test.describe('XSS Prevention Security Tests', () => {
           }));
         }
       });
-      
+
       await page.waitForTimeout(1000);
-      
+
       const hasAlert = await page.evaluate(() => {
-        return window.hasOwnProperty('___xss_executed___');
+        return Object.prototype.hasOwnProperty.call(window, '___xss_executed___');
       });
-      
+
       expect(hasAlert).toBe(false);
     });
   });

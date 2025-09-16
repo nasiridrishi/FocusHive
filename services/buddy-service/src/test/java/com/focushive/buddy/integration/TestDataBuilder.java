@@ -1,6 +1,13 @@
 package com.focushive.buddy.integration;
 
+import com.focushive.buddy.constant.PartnershipStatus;
+import com.focushive.buddy.entity.BuddyPartnership;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,7 +30,7 @@ public class TestDataBuilder {
     public static final String DEFAULT_AGREEMENT_TEXT = "Let's support each other in achieving our goals through mutual accountability and encouragement!";
     public static final int DEFAULT_PARTNERSHIP_DURATION = 30; // days
     public static final double DEFAULT_COMPATIBILITY_SCORE = 0.85;
-    public static final double DEFAULT_HEALTH_SCORE = 0.90;
+    public static final double DEFAULT_HEALTH_SCORE = 1.00; // Match entity default
 
     // Default interests and goals for testing
     public static final String DEFAULT_INTERESTS = "programming,studying,productivity,fitness";
@@ -92,5 +99,123 @@ public class TestDataBuilder {
             case "flexible" -> "morning,afternoon,evening";
             default -> DEFAULT_FOCUS_TIMES;
         };
+    }
+
+    // BuddyPartnership Builder
+
+    /**
+     * Creates a BuddyPartnership builder with default values
+     */
+    public BuddyPartnershipBuilder buildBuddyPartnership() {
+        return new BuddyPartnershipBuilder();
+    }
+
+    /**
+     * Creates a list of test BuddyPartnerships
+     */
+    public List<BuddyPartnership> buildBuddyPartnerships(int count) {
+        List<BuddyPartnership> partnerships = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            partnerships.add(buildBuddyPartnership()
+                .withUser1Id(UUID.randomUUID())
+                .withUser2Id(UUID.randomUUID())
+                .build());
+        }
+        return partnerships;
+    }
+
+    /**
+     * Builder class for BuddyPartnership test data
+     */
+    public static class BuddyPartnershipBuilder {
+        private UUID user1Id = UUID.randomUUID();
+        private UUID user2Id = UUID.randomUUID();
+        private PartnershipStatus status = PartnershipStatus.PENDING;
+        private ZonedDateTime startedAt;
+        private ZonedDateTime endedAt;
+        private String endReason;
+        private String agreementText = DEFAULT_AGREEMENT_TEXT;
+        private Integer durationDays = DEFAULT_PARTNERSHIP_DURATION;
+        private BigDecimal compatibilityScore = BigDecimal.valueOf(DEFAULT_COMPATIBILITY_SCORE);
+        private BigDecimal healthScore = BigDecimal.valueOf(DEFAULT_HEALTH_SCORE);
+        private ZonedDateTime lastInteractionAt;
+        private LocalDateTime createdAt;
+
+        public BuddyPartnershipBuilder withUser1Id(UUID user1Id) {
+            this.user1Id = user1Id;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withUser2Id(UUID user2Id) {
+            this.user2Id = user2Id;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withStatus(PartnershipStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withStartedAt(ZonedDateTime startedAt) {
+            this.startedAt = startedAt;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withEndedAt(ZonedDateTime endedAt) {
+            this.endedAt = endedAt;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withEndReason(String endReason) {
+            this.endReason = endReason;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withAgreementText(String agreementText) {
+            this.agreementText = agreementText;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withDurationDays(Integer durationDays) {
+            this.durationDays = durationDays;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withCompatibilityScore(BigDecimal compatibilityScore) {
+            this.compatibilityScore = compatibilityScore;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withHealthScore(BigDecimal healthScore) {
+            this.healthScore = healthScore;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withLastInteractionAt(ZonedDateTime lastInteractionAt) {
+            this.lastInteractionAt = lastInteractionAt;
+            return this;
+        }
+
+        public BuddyPartnershipBuilder withCreatedAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public BuddyPartnership build() {
+            return BuddyPartnership.builder()
+                .user1Id(user1Id)
+                .user2Id(user2Id)
+                .status(status)
+                .startedAt(startedAt)
+                .endedAt(endedAt)
+                .endReason(endReason)
+                .agreementText(agreementText)
+                .durationDays(durationDays)
+                .compatibilityScore(compatibilityScore)
+                .healthScore(healthScore)
+                .lastInteractionAt(lastInteractionAt)
+                .createdAt(createdAt)
+                .build();
+        }
     }
 }

@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -69,12 +69,18 @@ public class OAuthAccessToken {
      * Scopes granted to this token
      */
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "oauth_access_token_scopes", 
+    @CollectionTable(name = "oauth_access_token_scopes",
                      joinColumns = @JoinColumn(name = "token_id"))
     @Column(name = "scope")
     @Builder.Default
-    private Set<String> scopes = new HashSet<>();
-    
+    private Set<String> scopes = new LinkedHashSet<>();
+
+    /**
+     * Refresh token ID if this access token was issued from a refresh token
+     */
+    @Column(name = "refresh_token_id")
+    private UUID refreshTokenId;
+
     /**
      * Token expiration time
      */

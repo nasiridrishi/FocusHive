@@ -1,0 +1,8 @@
+{
+  "email": "test555@focushive.test",
+  "password": "TestPassword123",
+  "confirmPassword": "TestPassword123",
+  "firstName": "Test",
+  "lastName": "User",
+  "acceptTerms": true
+}

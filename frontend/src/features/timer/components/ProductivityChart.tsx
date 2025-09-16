@@ -1,47 +1,43 @@
-import React, { useMemo, useState } from 'react'
+import React, {useMemo, useState} from 'react'
 import {
+  Box,
   Card,
   CardContent,
   CardHeader,
-  Box,
-  Typography,
-  Stack,
+  Chip,
   IconButton,
-  Tooltip,
+  Paper,
+  Stack,
   ToggleButton,
   ToggleButtonGroup,
-  Chip,
-  Paper,
+  Tooltip,
+  Typography,
   useTheme,
 } from '@mui/material'
 import {
+  CheckCircle,
+  Coffee,
   Download,
   Fullscreen,
-  TrendingUp,
-  Timer,
-  CheckCircle,
   Star,
-  Coffee,
+  Timer,
+  TrendingUp,
 } from '@mui/icons-material'
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-} from '@mui/x-charts'
-import { ProductivityChartProps } from '../../../shared/types/timer'
+import {BarChart, LineChart, PieChart,} from '@mui/x-charts'
+import {ProductivityChartProps} from '../../../shared/types/timer'
 
 // Mock data generator for charts
 const generateMockData = (period: string) => {
   const today = new Date()
   const data = []
-  
+
   switch (period) {
     case 'week':
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today)
         date.setDate(date.getDate() - i)
-        const dayName = date.toLocaleDateString('en', { weekday: 'short' })
-        
+        const dayName = date.toLocaleDateString('en', {weekday: 'short'})
+
         data.push({
           date: dayName,
           focusTime: Math.floor(Math.random() * 180) + 60, // 60-240 minutes
@@ -53,12 +49,12 @@ const generateMockData = (period: string) => {
         })
       }
       break
-      
+
     case 'month':
       for (let i = 29; i >= 0; i--) {
         const date = new Date(today)
         date.setDate(date.getDate() - i)
-        
+
         data.push({
           date: date.getDate().toString(),
           focusTime: Math.floor(Math.random() * 200) + 40,
@@ -70,7 +66,7 @@ const generateMockData = (period: string) => {
         })
       }
       break
-      
+
     default: // today
       for (let i = 23; i >= 0; i--) {
         const hour = 24 - i
@@ -85,7 +81,7 @@ const generateMockData = (period: string) => {
         })
       }
   }
-  
+
   return data
 }
 
@@ -97,46 +93,46 @@ const StatSummary: React.FC<{
   unit?: string
   color?: string
   icon?: React.ReactNode
-}> = ({ title, value, unit, color, icon }) => {
+}> = ({title, value, unit, color, icon}) => {
   const theme = useTheme()
-  
+
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
-      {icon && (
-        <Box sx={{ color: color || theme.palette.primary.main }}>
-          {icon}
+      <Stack direction="row" alignItems="center" spacing={1}>
+        {icon && (
+            <Box sx={{color: color || theme.palette.primary.main}}>
+              {icon}
+            </Box>
+        )}
+        <Box>
+          <Typography variant="body2" color="text.secondary">
+            {title}
+          </Typography>
+          <Typography variant="h6" sx={{color: color}}>
+            {value}{unit}
+          </Typography>
         </Box>
-      )}
-      <Box>
-        <Typography variant="body2" color="text.secondary">
-          {title}
-        </Typography>
-        <Typography variant="h6" sx={{ color: color }}>
-          {value}{unit}
-        </Typography>
-      </Box>
-    </Stack>
+      </Stack>
   )
 }
 
 export const ProductivityChart: React.FC<ProductivityChartProps> = ({
-  // data: _propData, // Currently using mock data only - commenting out unused param
-  type = 'line',
-  height = 400,
-}) => {
+                                                                      // data: _propData, // Currently using mock data only - commenting out unused param
+                                                                      type = 'line',
+                                                                      height = 400,
+                                                                    }) => {
   const theme = useTheme()
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area' | 'pie'>(type === 'doughnut' ? 'pie' : type as 'line' | 'bar')
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('week')
-  
+
   // Use mock data if no data provided
   const mockData = generateMockData(period)
   // If propData is provided and is not in the expected format, use mockData
   const data = mockData
-  
+
   // Calculate summary statistics
   const summaryStats = useMemo(() => {
     if (!data || data.length === 0) return null
-    
+
     const totalFocusTime = data.reduce((sum, item) => {
       return sum + ('focusTime' in item ? item.focusTime || 0 : 0)
     }, 0)
@@ -152,7 +148,7 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
     const totalDistractions = data.reduce((sum, item) => {
       return sum + ('distractions' in item ? item.distractions || 0 : 0)
     }, 0)
-    
+
     return {
       totalFocusTime: Math.round(totalFocusTime),
       totalSessions,
@@ -169,25 +165,25 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
   }
 
-  const handleChartTypeChange = (_: React.MouseEvent<HTMLElement>, newType: string | null) => {
+  const handleChartTypeChange = (_: React.MouseEvent<HTMLElement>, newType: string | null): void => {
     if (newType) setChartType(newType as 'line' | 'bar' | 'area' | 'pie')
   }
 
-  const handlePeriodChange = (_: React.MouseEvent<HTMLElement>, newPeriod: string | null) => {
+  const handlePeriodChange = (_: React.MouseEvent<HTMLElement>, newPeriod: string | null): void => {
     if (newPeriod) setPeriod(newPeriod as 'today' | 'week' | 'month')
   }
 
 
-  const exportData = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + 
-      "Date,Focus Time,Sessions,Productivity,Goals,Distractions\n" +
-      data.map(item => {
-        if ('date' in item && 'focusTime' in item && 'sessions' in item && 'productivity' in item && 'goals' in item && 'distractions' in item) {
-          return `${item.date},${item.focusTime},${item.sessions},${item.productivity},${item.goals},${item.distractions}`
-        }
-        return ''
-      }).filter(line => line !== '').join("\n")
-    
+  const exportData = (): void => {
+    const csvContent = "data:text/csv;charset=utf-8," +
+        "Date,Focus Time,Sessions,Productivity,Goals,Distractions\n" +
+        data.map(item => {
+          if ('date' in item && 'focusTime' in item && 'sessions' in item && 'productivity' in item && 'goals' in item && 'distractions' in item) {
+            return `${item.date},${item.focusTime},${item.sessions},${item.productivity},${item.goals},${item.distractions}`
+          }
+          return ''
+        }).filter(line => line !== '').join("\n")
+
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement("a")
     link.setAttribute("href", encodedUri)
@@ -197,7 +193,7 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
     document.body.removeChild(link)
   }
 
-  const renderChart = () => {
+  const renderChart = (): React.ReactElement => {
     // Prepare data for MUI X Charts
     const xAxisData = data.map(item => 'date' in item ? item.date : '')
     const focusTimeData = data.map(item => 'focusTime' in item ? item.focusTime : 0)
@@ -207,258 +203,258 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
     switch (chartType) {
       case 'bar':
         return (
-          <BarChart
-            height={height}
-            series={[
-              { 
-                data: focusTimeData, 
-                label: 'Focus Time (min)',
-                color: theme.palette.primary.main,
-              },
-              { 
-                data: sessionsData, 
-                label: 'Sessions',
-                color: theme.palette.secondary.main,
-              },
-            ]}
-            xAxis={[{ 
-              data: xAxisData, 
-              scaleType: 'band',
-            }]}
-            margin={{ top: 20, bottom: 30, left: 40, right: 10 }}
-          />
+            <BarChart
+                height={height}
+                series={[
+                  {
+                    data: focusTimeData,
+                    label: 'Focus Time (min)',
+                    color: theme.palette.primary.main,
+                  },
+                  {
+                    data: sessionsData,
+                    label: 'Sessions',
+                    color: theme.palette.secondary.main,
+                  },
+                ]}
+                xAxis={[{
+                  data: xAxisData,
+                  scaleType: 'band',
+                }]}
+                margin={{top: 20, bottom: 30, left: 40, right: 10}}
+            />
         )
-        
+
       case 'area':
         return (
-          <LineChart
-            height={height}
-            series={[
-              { 
-                data: focusTimeData, 
-                label: 'Focus Time (min)',
-                color: theme.palette.primary.main,
-                area: true,
-              },
-            ]}
-            xAxis={[{ 
-              data: xAxisData, 
-              scaleType: 'band',
-            }]}
-            margin={{ top: 20, bottom: 30, left: 40, right: 10 }}
-          />
+            <LineChart
+                height={height}
+                series={[
+                  {
+                    data: focusTimeData,
+                    label: 'Focus Time (min)',
+                    color: theme.palette.primary.main,
+                    area: true,
+                  },
+                ]}
+                xAxis={[{
+                  data: xAxisData,
+                  scaleType: 'band',
+                }]}
+                margin={{top: 20, bottom: 30, left: 40, right: 10}}
+            />
         )
-        
+
       case 'pie': {
         const pieData = [
-          { 
-            id: 'focus', 
-            value: summaryStats?.totalFocusTime || 0, 
+          {
+            id: 'focus',
+            value: summaryStats?.totalFocusTime || 0,
             label: 'Focus Time',
-            color: theme.palette.primary.main 
+            color: theme.palette.primary.main
           },
-          { 
-            id: 'breaks', 
-            value: data.reduce((sum, item) => sum + ('breaks' in item ? item.breaks || 0 : 0), 0), 
+          {
+            id: 'breaks',
+            value: data.reduce((sum, item) => sum + ('breaks' in item ? item.breaks || 0 : 0), 0),
             label: 'Break Time',
-            color: theme.palette.success.main 
+            color: theme.palette.success.main
           },
-          { 
-            id: 'distractions', 
-            value: summaryStats?.totalDistractions || 0, 
+          {
+            id: 'distractions',
+            value: summaryStats?.totalDistractions || 0,
             label: 'Distractions',
-            color: theme.palette.warning.main 
+            color: theme.palette.warning.main
           },
         ]
-        
+
         return (
-          <PieChart
-            height={height}
-            series={[
-              {
-                data: pieData,
-                highlightScope: { faded: 'global', highlighted: 'item' },
-                faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
-                innerRadius: 30,
-                outerRadius: 100,
-                paddingAngle: 5,
-                cornerRadius: 5,
-              },
-            ]}
-            margin={{ top: 20, bottom: 20, left: 20, right: 20 }}
-          />
+            <PieChart
+                height={height}
+                series={[
+                  {
+                    data: pieData,
+                    highlightScope: {faded: 'global', highlighted: 'item'},
+                    faded: {innerRadius: 30, additionalRadius: -30, color: 'gray'},
+                    innerRadius: 30,
+                    outerRadius: 100,
+                    paddingAngle: 5,
+                    cornerRadius: 5,
+                  },
+                ]}
+                margin={{top: 20, bottom: 20, left: 20, right: 20}}
+            />
         )
       }
-        
+
       default: // line
         return (
-          <LineChart
-            height={height}
-            series={[
-              { 
-                data: focusTimeData, 
-                label: 'Focus Time (min)',
-                color: theme.palette.primary.main,
-                curve: 'linear',
-              },
-              { 
-                data: productivityData, 
-                label: 'Productivity (1-5)',
-                color: theme.palette.success.main,
-                curve: 'linear',
-              },
-            ]}
-            xAxis={[{ 
-              data: xAxisData, 
-              scaleType: 'band',
-            }]}
-            margin={{ top: 20, bottom: 30, left: 40, right: 10 }}
-            grid={{ vertical: true, horizontal: true }}
-          />
+            <LineChart
+                height={height}
+                series={[
+                  {
+                    data: focusTimeData,
+                    label: 'Focus Time (min)',
+                    color: theme.palette.primary.main,
+                    curve: 'linear',
+                  },
+                  {
+                    data: productivityData,
+                    label: 'Productivity (1-5)',
+                    color: theme.palette.success.main,
+                    curve: 'linear',
+                  },
+                ]}
+                xAxis={[{
+                  data: xAxisData,
+                  scaleType: 'band',
+                }]}
+                margin={{top: 20, bottom: 30, left: 40, right: 10}}
+                grid={{vertical: true, horizontal: true}}
+            />
         )
     }
   }
 
   return (
-    <Card>
-      <CardHeader
-        title="Productivity Analytics"
-        subheader={`${period.charAt(0).toUpperCase() + period.slice(1)} overview`}
-        action={
-          <Stack direction="row" spacing={1}>
-            <Tooltip title="Export Data">
-              <IconButton onClick={exportData} size="small">
-                <Download />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Fullscreen">
-              <IconButton size="small">
-                <Fullscreen />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        }
-      />
-      
-      <CardContent>
-        {/* Controls */}
-        <Stack spacing={2} sx={{ mb: 3 }}>
-          <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
-            <Typography variant="subtitle2">Period:</Typography>
-            <ToggleButtonGroup
-              value={period}
-              exclusive
-              onChange={handlePeriodChange}
-              size="small"
-            >
-              <ToggleButton value="today">Today</ToggleButton>
-              <ToggleButton value="week">Week</ToggleButton>
-              <ToggleButton value="month">Month</ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>
-          
-          <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
-            <Typography variant="subtitle2">Chart Type:</Typography>
-            <ToggleButtonGroup
-              value={chartType}
-              exclusive
-              onChange={handleChartTypeChange}
-              size="small"
-            >
-              <ToggleButton value="line">Line</ToggleButton>
-              <ToggleButton value="bar">Bar</ToggleButton>
-              <ToggleButton value="area">Area</ToggleButton>
-              <ToggleButton value="pie">Pie</ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>
-        </Stack>
+      <Card>
+        <CardHeader
+            title="Productivity Analytics"
+            subheader={`${period.charAt(0).toUpperCase() + period.slice(1)} overview`}
+            action={
+              <Stack direction="row" spacing={1}>
+                <Tooltip title="Export Data">
+                  <IconButton onClick={exportData} size="small">
+                    <Download/>
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Fullscreen">
+                  <IconButton size="small">
+                    <Fullscreen/>
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            }
+        />
 
-        {/* Summary Statistics */}
-        {summaryStats && (
-          <Paper sx={{ p: 2, mb: 3, bgcolor: 'background.default' }}>
+        <CardContent>
+          {/* Controls */}
+          <Stack spacing={2} sx={{mb: 3}}>
+            <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
+              <Typography variant="subtitle2">Period:</Typography>
+              <ToggleButtonGroup
+                  value={period}
+                  exclusive
+                  onChange={handlePeriodChange}
+                  size="small"
+              >
+                <ToggleButton value="today">Today</ToggleButton>
+                <ToggleButton value="week">Week</ToggleButton>
+                <ToggleButton value="month">Month</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+
+            <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center">
+              <Typography variant="subtitle2">Chart Type:</Typography>
+              <ToggleButtonGroup
+                  value={chartType}
+                  exclusive
+                  onChange={handleChartTypeChange}
+                  size="small"
+              >
+                <ToggleButton value="line">Line</ToggleButton>
+                <ToggleButton value="bar">Bar</ToggleButton>
+                <ToggleButton value="area">Area</ToggleButton>
+                <ToggleButton value="pie">Pie</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+          </Stack>
+
+          {/* Summary Statistics */}
+          {summaryStats && (
+              <Paper sx={{p: 2, mb: 3, bgcolor: 'background.default'}}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Summary Statistics
+                </Typography>
+                <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: {
+                        mobile: '1fr 1fr',
+                        tablet: 'repeat(4, 1fr)'
+                      },
+                      gap: 3
+                    }}
+                >
+                  <StatSummary
+                      title="Total Focus"
+                      value={formatTime(summaryStats.totalFocusTime)}
+                      color={theme.palette.primary.main}
+                      icon={<Timer fontSize="small"/>}
+                  />
+                  <StatSummary
+                      title="Sessions"
+                      value={summaryStats.totalSessions}
+                      color={theme.palette.secondary.main}
+                      icon={<CheckCircle fontSize="small"/>}
+                  />
+                  <StatSummary
+                      title="Avg Productivity"
+                      value={summaryStats.avgProductivity}
+                      unit="/5"
+                      color={theme.palette.success.main}
+                      icon={<Star fontSize="small"/>}
+                  />
+                  <StatSummary
+                      title="Avg Session"
+                      value={formatTime(summaryStats.avgSessionLength)}
+                      color={theme.palette.info.main}
+                      icon={<Coffee fontSize="small"/>}
+                  />
+                </Box>
+              </Paper>
+          )}
+
+          {/* Chart */}
+          <Box sx={{width: '100%', height: height}}>
+            {renderChart()}
+          </Box>
+
+          {/* Insights */}
+          <Box sx={{mt: 3}}>
             <Typography variant="subtitle2" gutterBottom>
-              Summary Statistics
+              Insights
             </Typography>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { 
-                  mobile: '1fr 1fr', 
-                  tablet: 'repeat(4, 1fr)' 
-                },
-                gap: 3
-              }}
-            >
-              <StatSummary
-                title="Total Focus"
-                value={formatTime(summaryStats.totalFocusTime)}
-                color={theme.palette.primary.main}
-                icon={<Timer fontSize="small" />}
+            <Stack spacing={1}>
+              <Chip
+                  icon={<TrendingUp/>}
+                  label={`Best day: ${(() => {
+                    const bestDay = data.reduce((max, current) => {
+                      const maxFocus = 'focusTime' in max ? max.focusTime : 0
+                      const currentFocus = 'focusTime' in current ? current.focusTime : 0
+                      return currentFocus > maxFocus ? current : max
+                    }, data[0])
+                    return 'date' in bestDay ? bestDay.date : 'N/A'
+                  })()}`}
+                  size="small"
+                  color="success"
+                  variant="outlined"
               />
-              <StatSummary
-                title="Sessions"
-                value={summaryStats.totalSessions}
-                color={theme.palette.secondary.main}
-                icon={<CheckCircle fontSize="small" />}
+              <Chip
+                  label={`Average productivity trending ${Math.random() > 0.5 ? 'up' : 'down'}`}
+                  size="small"
+                  color="info"
+                  variant="outlined"
               />
-              <StatSummary
-                title="Avg Productivity"
-                value={summaryStats.avgProductivity}
-                unit="/5"
-                color={theme.palette.success.main}
-                icon={<Star fontSize="small" />}
+              <Chip
+                  label={`${summaryStats?.totalGoals || 0} goals completed this ${period}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
               />
-              <StatSummary
-                title="Avg Session"
-                value={formatTime(summaryStats.avgSessionLength)}
-                color={theme.palette.info.main}
-                icon={<Coffee fontSize="small" />}
-              />
-            </Box>
-          </Paper>
-        )}
-
-        {/* Chart */}
-        <Box sx={{ width: '100%', height: height }}>
-          {renderChart()}
-        </Box>
-
-        {/* Insights */}
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Insights
-          </Typography>
-          <Stack spacing={1}>
-            <Chip
-              icon={<TrendingUp />}
-              label={`Best day: ${(() => {
-                const bestDay = data.reduce((max, current) => {
-                  const maxFocus = 'focusTime' in max ? max.focusTime : 0
-                  const currentFocus = 'focusTime' in current ? current.focusTime : 0
-                  return currentFocus > maxFocus ? current : max
-                }, data[0])
-                return 'date' in bestDay ? bestDay.date : 'N/A'
-              })()}`}
-              size="small"
-              color="success"
-              variant="outlined"
-            />
-            <Chip
-              label={`Average productivity trending ${Math.random() > 0.5 ? 'up' : 'down'}`}
-              size="small"
-              color="info"
-              variant="outlined"
-            />
-            <Chip
-              label={`${summaryStats?.totalGoals || 0} goals completed this ${period}`}
-              size="small"
-              color="primary"
-              variant="outlined"
-            />
-          </Stack>
-        </Box>
-      </CardContent>
-    </Card>
+            </Stack>
+          </Box>
+        </CardContent>
+      </Card>
   )
 }
 

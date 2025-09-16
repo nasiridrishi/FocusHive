@@ -1,0 +1,259 @@
+stages:
+  - build
+  - test
+  - security
+  - quality
+  - deploy
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  DOCKER_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+
+before_script:
+  - echo "Starting CI/CD Pipeline for $CI_PROJECT_NAME"
+
+# Build Stage
+build:
+  stage: build
+  image: gradle:8.5-jdk21
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - .gradle/
+      - build/
+  script:
+    - gradle clean build -x test
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 1 week
+
+# Unit Tests
+test:unit:
+  stage: test
+  image: gradle:8.5-jdk21
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - .gradle/
+  script:
+    - gradle test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - build/test-results/test/**/TEST-*.xml
+    paths:
+      - build/reports/tests/
+    expire_in: 1 week
+
+# Integration Tests
+test:integration:
+  stage: test
+  image: gradle:8.5-jdk21
+  services:
+    - postgres:15
+    - redis:7
+    - rabbitmq:3.12
+  variables:
+    POSTGRES_DB: notification_test
+    POSTGRES_USER: test_user
+    POSTGRES_PASSWORD: test_pass
+    SPRING_PROFILES_ACTIVE: test
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - .gradle/
+  script:
+    - gradle integrationTest
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - build/test-results/integrationTest/**/TEST-*.xml
+    expire_in: 1 week
+
+# OWASP Dependency Check
+security:dependency-check:
+  stage: security
+  image: gradle:8.5-jdk21
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - .gradle/
+  script:
+    - gradle dependencyCheckAnalyze
+  artifacts:
+    when: always
+    paths:
+      - build/reports/dependency-check-report.html
+    expire_in: 1 month
+  allow_failure: true
+
+# SAST with Semgrep
+security:sast:
+  stage: security
+  image: returntocorp/semgrep
+  script:
+    - semgrep --config=auto --json --output=semgrep-report.json .
+  artifacts:
+    reports:
+      sast: semgrep-report.json
+    paths:
+      - semgrep-report.json
+    expire_in: 1 month
+
+# Container Scanning with Trivy
+security:container:
+  stage: security
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache curl
+    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+  script:
+    - docker build -t $DOCKER_IMAGE .
+    - trivy image --exit-code 1 --severity CRITICAL,HIGH --no-progress $DOCKER_IMAGE
+  artifacts:
+    when: always
+    reports:
+      container_scanning: trivy-results.json
+    expire_in: 1 month
+  allow_failure: true
+
+# Secret Detection
+security:secrets:
+  stage: security
+  image: python:3.11
+  before_script:
+    - pip install detect-secrets
+  script:
+    - detect-secrets scan --baseline .secrets.baseline
+    - detect-secrets audit .secrets.baseline
+  artifacts:
+    when: always
+    paths:
+      - .secrets.baseline
+    expire_in: 1 month
+
+# License Scanning
+security:license:
+  stage: security
+  image: gradle:8.5-jdk21
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - .gradle/
+  script:
+    - gradle checkLicense
+  artifacts:
+    when: always
+    paths:
+      - build/reports/license/
+    expire_in: 1 month
+  allow_failure: true
+
+# SonarQube Analysis
+quality:sonarqube:
+  stage: quality
+  image: gradle:8.5-jdk21
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - gradle sonarqube
+      -Dsonar.projectKey=$CI_PROJECT_NAME
+      -Dsonar.host.url=$SONAR_HOST_URL
+      -Dsonar.login=$SONAR_TOKEN
+      -Dsonar.branch.name=$CI_COMMIT_REF_NAME
+  only:
+    - main
+    - develop
+    - merge_requests
+
+# Code Coverage
+quality:coverage:
+  stage: quality
+  image: gradle:8.5-jdk21
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - .gradle/
+  script:
+    - gradle jacocoTestReport
+    - gradle jacocoTestCoverageVerification
+  coverage: '/Total.*?(\d+\%)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: build/reports/jacoco/test/jacocoTestReport.xml
+    paths:
+      - build/reports/jacoco/
+    expire_in: 1 month
+
+# Security Report Generation
+security:report:
+  stage: quality
+  image: alpine:latest
+  dependencies:
+    - security:dependency-check
+    - security:sast
+    - security:container
+    - security:secrets
+  script:
+    - |
+      echo "# Security Scan Report" > security-report.md
+      echo "Generated: $(date)" >> security-report.md
+      echo "" >> security-report.md
+      echo "## Scan Results" >> security-report.md
+      echo "- Dependency Check: Completed" >> security-report.md
+      echo "- SAST: Completed" >> security-report.md
+      echo "- Container Scan: Completed" >> security-report.md
+      echo "- Secret Detection: Completed" >> security-report.md
+      echo "" >> security-report.md
+      echo "See individual artifacts for detailed reports." >> security-report.md
+  artifacts:
+    paths:
+      - security-report.md
+    expire_in: 1 month
+
+# Deploy to Development
+deploy:dev:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $DOCKER_IMAGE .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $DOCKER_IMAGE
+    - echo "Deploy to development environment"
+  environment:
+    name: development
+    url: https://dev.notification.focushive.com
+  only:
+    - develop
+
+# Deploy to Production
+deploy:prod:
+  stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - echo "Deploy to production environment"
+  environment:
+    name: production
+    url: https://notification.focushive.com
+  only:
+    - main
+  when: manual

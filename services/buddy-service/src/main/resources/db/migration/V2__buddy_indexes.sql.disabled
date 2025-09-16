@@ -1,0 +1,190 @@
+-- Buddy Service Performance Indexes Migration
+-- Creates indexes for optimal query performance
+
+-- Add missing columns if they don't exist (for backward compatibility)
+DO $$
+BEGIN
+    -- Add matching_enabled if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'buddy_preferences'
+                   AND column_name = 'matching_enabled') THEN
+        ALTER TABLE buddy_preferences ADD COLUMN matching_enabled BOOLEAN NOT NULL DEFAULT true;
+    END IF;
+
+    -- Add preferred_timezone if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'buddy_preferences'
+                   AND column_name = 'preferred_timezone') THEN
+        ALTER TABLE buddy_preferences ADD COLUMN preferred_timezone VARCHAR(50);
+    END IF;
+
+    -- Add focus_areas if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'buddy_preferences'
+                   AND column_name = 'focus_areas') THEN
+        ALTER TABLE buddy_preferences ADD COLUMN focus_areas TEXT[];
+    END IF;
+
+    -- Add updated_at if missing
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'buddy_preferences'
+                   AND column_name = 'updated_at') THEN
+        ALTER TABLE buddy_preferences ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    END IF;
+END $$;
+
+-- ==============================================================================
+-- BUDDY PREFERENCES INDEXES
+-- ==============================================================================
+CREATE INDEX IF NOT EXISTS idx_buddy_preferences_user_id ON buddy_preferences(user_id);
+CREATE INDEX IF NOT EXISTS idx_buddy_preferences_matching_enabled ON buddy_preferences(matching_enabled) WHERE matching_enabled = true;
+CREATE INDEX IF NOT EXISTS idx_buddy_preferences_timezone ON buddy_preferences(preferred_timezone) WHERE preferred_timezone IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_buddy_preferences_focus_areas ON buddy_preferences USING GIN(focus_areas) WHERE focus_areas IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_buddy_preferences_updated ON buddy_preferences(updated_at);
+
+-- ==============================================================================
+-- BUDDY PARTNERSHIPS INDEXES
+-- ==============================================================================
+CREATE INDEX idx_buddy_partnerships_user1 ON buddy_partnerships(user1_id, status);
+CREATE INDEX idx_buddy_partnerships_user2 ON buddy_partnerships(user2_id, status);
+CREATE INDEX idx_buddy_partnerships_status ON buddy_partnerships(status);
+CREATE INDEX idx_buddy_partnerships_active ON buddy_partnerships(user1_id, user2_id) WHERE status = 'ACTIVE';
+CREATE INDEX idx_buddy_partnerships_initiated_by ON buddy_partnerships(initiated_by);
+CREATE INDEX idx_buddy_partnerships_started_at ON buddy_partnerships(started_at) WHERE started_at IS NOT NULL;
+CREATE INDEX idx_buddy_partnerships_compatibility ON buddy_partnerships(compatibility_score DESC) WHERE compatibility_score IS NOT NULL;
+CREATE INDEX idx_buddy_partnerships_health ON buddy_partnerships(health_score DESC) WHERE health_score IS NOT NULL AND status = 'ACTIVE';
+
+-- Composite index for finding user partnerships
+CREATE INDEX idx_buddy_partnerships_user_composite ON buddy_partnerships(user1_id, user2_id, status, created_at);
+
+-- ==============================================================================
+-- BUDDY REQUESTS INDEXES
+-- ==============================================================================
+CREATE INDEX idx_buddy_requests_requester ON buddy_requests(requester_id, status);
+CREATE INDEX idx_buddy_requests_recipient ON buddy_requests(recipient_id, status);
+CREATE INDEX idx_buddy_requests_pending ON buddy_requests(recipient_id, created_at) WHERE status = 'PENDING';
+CREATE INDEX idx_buddy_requests_expires_at ON buddy_requests(expires_at) WHERE status = 'PENDING';
+CREATE INDEX idx_buddy_requests_created ON buddy_requests(created_at);
+
+-- ==============================================================================
+-- SHARED GOALS INDEXES
+-- ==============================================================================
+CREATE INDEX idx_shared_goals_partnership ON shared_goals(partnership_id, status);
+CREATE INDEX idx_shared_goals_created_by ON shared_goals(created_by);
+CREATE INDEX idx_shared_goals_active ON shared_goals(partnership_id, target_date) WHERE status = 'ACTIVE';
+CREATE INDEX idx_shared_goals_progress ON shared_goals(progress_percentage, status);
+CREATE INDEX idx_shared_goals_target_date ON shared_goals(target_date) WHERE target_date IS NOT NULL AND status = 'ACTIVE';
+CREATE INDEX idx_shared_goals_completed ON shared_goals(completed_at, completed_by) WHERE status = 'COMPLETED';
+CREATE INDEX idx_shared_goals_updated ON shared_goals(updated_at);
+
+-- ==============================================================================
+-- GOAL MILESTONES INDEXES
+-- ==============================================================================
+CREATE INDEX idx_goal_milestones_goal_id ON goal_milestones(goal_id, order_index);
+CREATE INDEX idx_goal_milestones_target_date ON goal_milestones(target_date) WHERE target_date IS NOT NULL;
+CREATE INDEX idx_goal_milestones_completed ON goal_milestones(completed_at, completed_by) WHERE completed_at IS NOT NULL;
+CREATE INDEX idx_goal_milestones_pending ON goal_milestones(goal_id, target_date) WHERE completed_at IS NULL;
+
+-- ==============================================================================
+-- BUDDY CHECK-INS INDEXES
+-- ==============================================================================
+CREATE INDEX idx_buddy_checkins_partnership ON buddy_checkins(partnership_id, created_at DESC);
+CREATE INDEX idx_buddy_checkins_user ON buddy_checkins(user_id, created_at DESC);
+CREATE INDEX idx_buddy_checkins_type ON buddy_checkins(checkin_type, created_at DESC);
+CREATE INDEX idx_buddy_checkins_mood ON buddy_checkins(partnership_id, mood) WHERE mood IS NOT NULL;
+CREATE INDEX idx_buddy_checkins_productivity ON buddy_checkins(partnership_id, productivity_rating) WHERE productivity_rating IS NOT NULL;
+-- CREATE INDEX idx_buddy_checkins_recent ON buddy_checkins(created_at DESC) WHERE created_at >= CURRENT_DATE - INTERVAL '7 days'; -- Removed: non-immutable function
+CREATE INDEX idx_buddy_checkins_daily ON buddy_checkins(user_id, DATE(created_at)) WHERE checkin_type = 'DAILY';
+
+-- Composite index for check-in analysis
+CREATE INDEX idx_buddy_checkins_analysis ON buddy_checkins(partnership_id, user_id, checkin_type, created_at DESC);
+
+-- ==============================================================================
+-- ACCOUNTABILITY SCORES INDEXES
+-- ==============================================================================
+CREATE INDEX idx_accountability_scores_user ON accountability_scores(user_id, calculated_at DESC);
+CREATE INDEX idx_accountability_scores_partnership ON accountability_scores(partnership_id, calculated_at DESC);
+CREATE INDEX idx_accountability_scores_score ON accountability_scores(score DESC);
+CREATE INDEX idx_accountability_scores_streak ON accountability_scores(streak_days DESC);
+CREATE INDEX idx_accountability_scores_updated ON accountability_scores(updated_at);
+CREATE INDEX idx_accountability_scores_last_checkin ON accountability_scores(last_checkin_at) WHERE last_checkin_at IS NOT NULL;
+
+-- ==============================================================================
+-- BUDDY INTERACTIONS INDEXES
+-- ==============================================================================
+CREATE INDEX idx_buddy_interactions_partnership ON buddy_interactions(partnership_id, created_at DESC);
+CREATE INDEX idx_buddy_interactions_sender ON buddy_interactions(sender_id, created_at DESC);
+CREATE INDEX idx_buddy_interactions_recipient ON buddy_interactions(recipient_id, read_at) WHERE recipient_id IS NOT NULL;
+CREATE INDEX idx_buddy_interactions_type ON buddy_interactions(type, created_at DESC);
+CREATE INDEX idx_buddy_interactions_unread ON buddy_interactions(recipient_id, created_at DESC) WHERE read_at IS NULL;
+CREATE INDEX idx_buddy_interactions_goal_related ON buddy_interactions(related_goal_id) WHERE related_goal_id IS NOT NULL;
+CREATE INDEX idx_buddy_interactions_checkin_related ON buddy_interactions(related_checkin_id) WHERE related_checkin_id IS NOT NULL;
+
+-- ==============================================================================
+-- PARTNERSHIP HEALTH INDEXES
+-- ==============================================================================
+CREATE INDEX idx_partnership_health_partnership ON partnership_health(partnership_id, metric_date DESC);
+CREATE INDEX idx_partnership_health_date ON partnership_health(metric_date DESC);
+CREATE INDEX idx_partnership_health_overall ON partnership_health(overall_health DESC);
+CREATE INDEX idx_partnership_health_risk ON partnership_health(partnership_id) WHERE jsonb_array_length(risk_indicators) > 0;
+-- CREATE INDEX idx_partnership_health_recent ON partnership_health(metric_date DESC, overall_health DESC) WHERE metric_date >= CURRENT_DATE - INTERVAL '30 days'; -- Removed: non-immutable function
+
+-- ==============================================================================
+-- SUCCESS STORIES INDEXES
+-- ==============================================================================
+CREATE INDEX idx_success_stories_partnership ON success_stories(partnership_id);
+CREATE INDEX idx_success_stories_approved ON success_stories(approved, created_at DESC) WHERE approved = true;
+CREATE INDEX idx_success_stories_featured ON success_stories(featured, featured_from, featured_until) WHERE featured = true;
+CREATE INDEX idx_success_stories_submitted_by ON success_stories(submitted_by);
+CREATE INDEX idx_success_stories_pending ON success_stories(created_at DESC) WHERE approved = false;
+
+-- ==============================================================================
+-- MATCHING QUEUE INDEXES
+-- ==============================================================================
+CREATE INDEX idx_matching_queue_user ON matching_queue(user_id);
+CREATE INDEX idx_matching_queue_priority ON matching_queue(priority_score DESC, entered_queue_at);
+CREATE INDEX idx_matching_queue_expires ON matching_queue(expires_at);
+CREATE INDEX idx_matching_queue_last_attempt ON matching_queue(last_matched_attempt) WHERE last_matched_attempt IS NOT NULL;
+-- CREATE INDEX idx_matching_queue_active ON matching_queue(entered_queue_at) WHERE expires_at > CURRENT_TIMESTAMP; -- Removed: non-immutable function
+
+-- GIN index for search criteria JSON
+CREATE INDEX idx_matching_queue_criteria ON matching_queue USING GIN(search_criteria);
+
+-- ==============================================================================
+-- FUNCTIONAL INDEXES FOR COMPLEX QUERIES
+-- ==============================================================================
+
+-- Index for finding partnerships involving a specific user
+CREATE INDEX idx_partnerships_involving_user ON buddy_partnerships(LEAST(user1_id, user2_id), GREATEST(user1_id, user2_id), status);
+
+-- Index for daily check-in streaks
+CREATE INDEX idx_checkins_streak_calc ON buddy_checkins(user_id, DATE(created_at)) WHERE checkin_type = 'DAILY';
+
+-- Index for partnership activity (recent interactions)
+-- CREATE INDEX idx_partnership_recent_activity ON buddy_interactions(partnership_id, created_at DESC) WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'; -- Removed: non-immutable function
+
+-- Index for goal deadline monitoring
+-- CREATE INDEX idx_goals_deadline_monitoring ON shared_goals(target_date, status) WHERE status = 'ACTIVE' AND target_date <= CURRENT_DATE + INTERVAL '7 days'; -- Removed: non-immutable function
+
+-- ==============================================================================
+-- PARTIAL INDEXES FOR BETTER PERFORMANCE
+-- ==============================================================================
+
+-- Only index active partnerships for health monitoring
+CREATE INDEX idx_active_partnerships_health_monitoring ON buddy_partnerships(id, updated_at, health_score) WHERE status = 'ACTIVE';
+
+-- Only index pending requests for faster notification queries
+CREATE INDEX idx_pending_requests_notifications ON buddy_requests(recipient_id, created_at DESC, expires_at) WHERE status = 'PENDING';
+
+-- Only index recent check-ins for dashboard queries
+-- CREATE INDEX idx_recent_checkins_dashboard ON buddy_checkins(user_id, partnership_id, created_at DESC, mood, productivity_rating)
+-- WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'; -- Removed: non-immutable function
+
+-- ==============================================================================
+-- COMMENTS ON INDEXES
+-- ==============================================================================
+COMMENT ON INDEX idx_buddy_partnerships_user_composite IS 'Optimizes queries for finding all partnerships involving a user';
+COMMENT ON INDEX idx_buddy_checkins_analysis IS 'Supports partnership analysis and check-in trend queries';
+COMMENT ON INDEX idx_partnerships_involving_user IS 'Functional index for bidirectional partnership lookups';
+-- COMMENT ON INDEX idx_partnership_recent_activity IS 'Optimizes partnership activity monitoring queries'; -- Removed: index was removed
+-- COMMENT ON INDEX idx_goals_deadline_monitoring IS 'Supports deadline reminder and monitoring queries'; -- Removed: index was removed

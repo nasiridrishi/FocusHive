@@ -1,2 +1,2 @@
 // CollaborativeQueue component exports
-export { default as CollaborativeQueue } from './CollaborativeQueue'
+export {default as CollaborativeQueue} from './CollaborativeQueue'

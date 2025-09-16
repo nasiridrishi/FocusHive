@@ -1,13 +1,15 @@
-import { defineConfig } from 'vite'
+import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import {VitePWA} from 'vite-plugin-pwa'
 import path from 'path'
 
+const isPwaEnabled = process.env.ENABLE_PWA === 'true'
+
 // Security headers configuration
-const securityHeaders = {
+const securityHeaders: Record<string, string> = {
   // Content Security Policy - strict for production, lenient for dev
-  'Content-Security-Policy': process.env.NODE_ENV === 'production' 
-    ? `
+  'Content-Security-Policy': process.env.NODE_ENV === 'production'
+      ? `
       default-src 'self';
       script-src 'self' 'unsafe-inline' https://www.spotify.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -23,7 +25,7 @@ const securityHeaders = {
       form-action 'self';
       frame-ancestors 'none';
     `.replace(/\s+/g, ' ').trim()
-    : `
+      : `
       default-src 'self';
       script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.spotify.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
@@ -39,19 +41,19 @@ const securityHeaders = {
       form-action 'self';
       frame-ancestors 'none';
     `.replace(/\s+/g, ' ').trim(),
-  
+
   // Prevent clickjacking
   'X-Frame-Options': 'DENY',
-  
+
   // Prevent MIME type sniffing
   'X-Content-Type-Options': 'nosniff',
-  
+
   // Enable XSS protection
   'X-XSS-Protection': '1; mode=block',
-  
+
   // Referrer policy
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  
+
   // Permissions policy - restrict sensitive features
   'Permissions-Policy': [
     'geolocation=()',
@@ -83,7 +85,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Security headers plugin for Vite dev server
-const securityHeadersPlugin = () => ({
+const securityHeadersPlugin = (): { name: string; configureServer: (server: { middlewares: { use: (middleware: (req: unknown, res: { setHeader: (key: string, value: string) => void }, next: () => void) => void) => void } }) => void } => ({
   name: 'security-headers',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
@@ -106,6 +108,8 @@ export default defineConfig({
     }),
     securityHeadersPlugin(),
     VitePWA({
+      disable: !isPwaEnabled,
+      minify: false,
       registerType: 'autoUpdate',
       includeAssets: [
         'favicon.ico',
@@ -236,6 +240,7 @@ export default defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 500,
     rollupOptions: {
+      external: ['@sentry/react', 'logrocket'],
       output: {
         manualChunks: (id) => {
           // Vendor chunk for React ecosystem
@@ -244,63 +249,63 @@ export default defineConfig({
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
               return 'react-vendor'
             }
-            
+
             // Material UI libraries
             if (id.includes('@mui/material')) {
               return 'mui-material'
             }
-            
+
             // Material UI icons (heavy)
             if (id.includes('@mui/icons-material')) {
               return 'mui-icons'
             }
-            
+
             // Chart libraries (load on demand)
             if (id.includes('recharts') || id.includes('d3') || id.includes('@mui/x-charts')) {
               return 'charts'
             }
-            
+
             // Date utilities
             if (id.includes('date-fns') || id.includes('@mui/x-date-pickers')) {
               return 'date-utils'
             }
-            
+
             // State management
             if (id.includes('@tanstack/react-query') || id.includes('zustand')) {
               return 'state-management'
             }
-            
+
             // Communication libraries
             if (id.includes('socket.io') || id.includes('ws')) {
               return 'realtime'
             }
-            
+
             // Utility libraries
             if (id.includes('lodash') || id.includes('clsx') || id.includes('uuid')) {
               return 'utils'
             }
-            
+
             // Other vendor libraries
             return 'vendor'
           }
-          
+
           // Feature-based code splitting
           if (id.includes('/features/analytics')) {
             return 'analytics'
           }
-          
+
           if (id.includes('/features/gamification')) {
             return 'gamification'
           }
-          
+
           if (id.includes('/features/music')) {
             return 'music'
           }
-          
+
           if (id.includes('/features/chat') || id.includes('/features/forum') || id.includes('/features/buddy')) {
             return 'communication'
           }
-          
+
           // Shared utilities
           if (id.includes('/shared/components')) {
             return 'shared-components'

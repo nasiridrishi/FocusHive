@@ -1,18 +1,18 @@
-import React, { createContext, useReducer, useCallback, useEffect } from 'react';
-import { 
-  AnalyticsContextValue, 
-  AnalyticsDashboardData, 
-  AnalyticsFilter, 
-  ExportOptions,
+import React, {createContext, useCallback, useEffect, useReducer} from 'react';
+import {
+  AnalyticsContextValue,
+  AnalyticsDashboardData,
+  AnalyticsFilter,
   AnalyticsTimeRange,
   ChartDataPoint,
-  ProductivityMetrics,
-  TaskCompletionData,
+  ExportOptions,
+  GoalProgressData,
   HiveActivityData,
   MemberEngagementData,
-  GoalProgressData
+  ProductivityMetrics,
+  TaskCompletionData
 } from '../types';
-import { startOfWeek, endOfWeek, subDays, format } from 'date-fns';
+import {endOfWeek, format, startOfWeek, subDays} from 'date-fns';
 
 interface AnalyticsState {
   data: AnalyticsDashboardData | null;
@@ -22,16 +22,16 @@ interface AnalyticsState {
 }
 
 type AnalyticsAction =
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'SET_DATA'; payload: AnalyticsDashboardData }
-  | { type: 'SET_FILTER'; payload: Partial<AnalyticsFilter> }
-  | { type: 'RESET_FILTER' };
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_ERROR'; payload: string | null }
+    | { type: 'SET_DATA'; payload: AnalyticsDashboardData }
+    | { type: 'SET_FILTER'; payload: Partial<AnalyticsFilter> }
+    | { type: 'RESET_FILTER' };
 
 const initialFilter: AnalyticsFilter = {
   timeRange: {
-    start: startOfWeek(new Date(), { weekStartsOn: 1 }),
-    end: endOfWeek(new Date(), { weekStartsOn: 1 }),
+    start: startOfWeek(new Date(), {weekStartsOn: 1}),
+    end: endOfWeek(new Date(), {weekStartsOn: 1}),
     period: 'week'
   },
   viewType: 'individual',
@@ -50,19 +50,19 @@ const initialState: AnalyticsState = {
 const analyticsReducer = (state: AnalyticsState, action: AnalyticsAction): AnalyticsState => {
   switch (action.type) {
     case 'SET_LOADING':
-      return { ...state, loading: action.payload };
+      return {...state, loading: action.payload};
     case 'SET_ERROR':
-      return { ...state, error: action.payload, loading: false };
+      return {...state, error: action.payload, loading: false};
     case 'SET_DATA':
-      return { ...state, data: action.payload, loading: false, error: null };
+      return {...state, data: action.payload, loading: false, error: null};
     case 'SET_FILTER':
-      return { 
-        ...state, 
-        filter: { ...state.filter, ...action.payload },
+      return {
+        ...state,
+        filter: {...state.filter, ...action.payload},
         error: null
       };
     case 'RESET_FILTER':
-      return { ...state, filter: initialFilter };
+      return {...state, filter: initialFilter};
     default:
       return state;
   }
@@ -73,7 +73,7 @@ const generateMockProductivityData = (timeRange: AnalyticsTimeRange): Productivi
   const daysDiff = Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (1000 * 60 * 60 * 24));
   const completedSessions = Math.floor(daysDiff * 1.5 + Math.random() * 10);
   const totalSessions = Math.floor(completedSessions / 0.8);
-  
+
   return {
     totalFocusTime: completedSessions * 25 + Math.floor(Math.random() * 100),
     averageSessionLength: 25 + Math.floor(Math.random() * 15),
@@ -95,22 +95,42 @@ const generateMockProductivityData = (timeRange: AnalyticsTimeRange): Productivi
 const generateMockTaskCompletionData = (): TaskCompletionData => {
   const completed = Math.floor(Math.random() * 30) + 10;
   const total = Math.floor(completed / 0.75) + Math.floor(Math.random() * 10);
-  
+
   return {
     completed,
     total,
     rate: completed / total,
     trend: (Math.random() - 0.5) * 20,
     byPriority: {
-      high: { completed: Math.floor(completed * 0.3), total: Math.floor(total * 0.3) },
-      medium: { completed: Math.floor(completed * 0.5), total: Math.floor(total * 0.5) },
-      low: { completed: Math.floor(completed * 0.2), total: Math.floor(total * 0.2) }
+      high: {completed: Math.floor(completed * 0.3), total: Math.floor(total * 0.3)},
+      medium: {completed: Math.floor(completed * 0.5), total: Math.floor(total * 0.5)},
+      low: {completed: Math.floor(completed * 0.2), total: Math.floor(total * 0.2)}
     },
     byCategory: [
-      { category: 'Development', completed: Math.floor(completed * 0.4), total: Math.floor(total * 0.4), rate: 0.8 },
-      { category: 'Design', completed: Math.floor(completed * 0.3), total: Math.floor(total * 0.3), rate: 0.75 },
-      { category: 'Research', completed: Math.floor(completed * 0.2), total: Math.floor(total * 0.2), rate: 0.7 },
-      { category: 'Planning', completed: Math.floor(completed * 0.1), total: Math.floor(total * 0.1), rate: 0.9 }
+      {
+        category: 'Development',
+        completed: Math.floor(completed * 0.4),
+        total: Math.floor(total * 0.4),
+        rate: 0.8
+      },
+      {
+        category: 'Design',
+        completed: Math.floor(completed * 0.3),
+        total: Math.floor(total * 0.3),
+        rate: 0.75
+      },
+      {
+        category: 'Research',
+        completed: Math.floor(completed * 0.2),
+        total: Math.floor(total * 0.2),
+        rate: 0.7
+      },
+      {
+        category: 'Planning',
+        completed: Math.floor(completed * 0.1),
+        total: Math.floor(total * 0.1),
+        rate: 0.9
+      }
     ]
   };
 };
@@ -118,7 +138,7 @@ const generateMockTaskCompletionData = (): TaskCompletionData => {
 const generateMockChartData = (timeRange: AnalyticsTimeRange): ChartDataPoint[] => {
   const data: ChartDataPoint[] = [];
   const daysDiff = Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   for (let i = 0; i < Math.min(daysDiff, 30); i++) {
     const date = subDays(timeRange.end, daysDiff - i - 1);
     data.push({
@@ -127,14 +147,14 @@ const generateMockChartData = (timeRange: AnalyticsTimeRange): ChartDataPoint[] 
       label: format(date, 'MMM d')
     });
   }
-  
+
   return data;
 };
 
 const generateMockHiveActivity = (timeRange: AnalyticsTimeRange): HiveActivityData[] => {
   const data: HiveActivityData[] = [];
   const daysDiff = Math.ceil((timeRange.end.getTime() - timeRange.start.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   for (let i = 0; i < Math.min(daysDiff, 100); i++) {
     const date = subDays(timeRange.end, daysDiff - i - 1);
     const value = Math.floor(Math.random() * 5); // 0-4 activity level
@@ -146,78 +166,78 @@ const generateMockHiveActivity = (timeRange: AnalyticsTimeRange): HiveActivityDa
       members: value + Math.floor(Math.random() * 5)
     });
   }
-  
+
   return data;
 };
 
 const generateMockMemberEngagement = (): MemberEngagementData[] => {
   const members = [
-    { 
-      id: '1', 
+    {
+      id: '1',
       email: 'alice@example.com',
       username: 'alice',
       firstName: 'Alice',
       lastName: 'Johnson',
-      name: 'Alice Johnson', 
+      name: 'Alice Johnson',
       avatar: undefined,
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z'
     },
-    { 
-      id: '2', 
+    {
+      id: '2',
       email: 'bob@example.com',
       username: 'bob',
       firstName: 'Bob',
       lastName: 'Smith',
-      name: 'Bob Smith', 
+      name: 'Bob Smith',
       avatar: undefined,
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z'
     },
-    { 
-      id: '3', 
+    {
+      id: '3',
       email: 'carol@example.com',
       username: 'carol',
       firstName: 'Carol',
       lastName: 'Davis',
-      name: 'Carol Davis', 
+      name: 'Carol Davis',
       avatar: undefined,
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z'
     },
-    { 
-      id: '4', 
+    {
+      id: '4',
       email: 'david@example.com',
       username: 'david',
       firstName: 'David',
       lastName: 'Wilson',
-      name: 'David Wilson', 
+      name: 'David Wilson',
       avatar: undefined,
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z'
     },
-    { 
-      id: '5', 
+    {
+      id: '5',
       email: 'eve@example.com',
       username: 'eve',
       firstName: 'Eve',
       lastName: 'Brown',
-      name: 'Eve Brown', 
+      name: 'Eve Brown',
       avatar: undefined,
       isEmailVerified: true,
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z'
     }
   ];
-  
+
   return members.map((member, index) => {
     const focusTime = Math.floor(Math.random() * 400) + 100;
     const sessions = Math.floor(focusTime / 30) + Math.floor(Math.random() * 5);
-    
+
     return {
       user: member,
       focusTime,
@@ -261,20 +281,20 @@ const generateMockGoalProgress = (): GoalProgressData[] => {
       priority: 'low' as const
     }
   ];
-  
+
   return goals.map(goal => {
     const current = Math.floor(Math.random() * goal.target * 1.2);
     const progress = Math.min(current / goal.target, 1.2);
-    
+
     return {
       ...goal,
       current,
       progress,
       milestones: [
-        { value: goal.target * 0.25, label: '25%', achieved: current >= goal.target * 0.25 },
-        { value: goal.target * 0.5, label: '50%', achieved: current >= goal.target * 0.5 },
-        { value: goal.target * 0.75, label: '75%', achieved: current >= goal.target * 0.75 },
-        { value: goal.target, label: 'Complete', achieved: current >= goal.target }
+        {value: goal.target * 0.25, label: '25%', achieved: current >= goal.target * 0.25},
+        {value: goal.target * 0.5, label: '50%', achieved: current >= goal.target * 0.5},
+        {value: goal.target * 0.75, label: '75%', achieved: current >= goal.target * 0.75},
+        {value: goal.target, label: 'Complete', achieved: current >= goal.target}
       ].map(milestone => ({
         ...milestone,
         achievedAt: milestone.achieved ? subDays(new Date(), Math.floor(Math.random() * 7)) : undefined
@@ -285,7 +305,7 @@ const generateMockGoalProgress = (): GoalProgressData[] => {
 
 const generateMockData = (filter: AnalyticsFilter): AnalyticsDashboardData => {
   const productivity = generateMockProductivityData(filter.timeRange);
-  
+
   return {
     productivity,
     taskCompletion: generateMockTaskCompletionData(),
@@ -304,29 +324,29 @@ const generateMockData = (filter: AnalyticsFilter): AnalyticsDashboardData => {
 
 const AnalyticsContext = createContext<AnalyticsContextValue | undefined>(undefined);
 
-export { AnalyticsContext };
-export type { AnalyticsContextValue };
+export {AnalyticsContext};
+export type {AnalyticsContextValue};
 
-export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
   const [state, dispatch] = useReducer(analyticsReducer, initialState);
 
   const fetchData = useCallback(async (filter: AnalyticsFilter) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    
+    dispatch({type: 'SET_LOADING', payload: true});
+
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const mockData = generateMockData(filter);
-      dispatch({ type: 'SET_DATA', payload: mockData });
-    } catch (error) {
+      dispatch({type: 'SET_DATA', payload: mockData});
+    } catch {
       // Error logged to error service
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch analytics data' });
+      dispatch({type: 'SET_ERROR', payload: 'Failed to fetch analytics data'});
     }
   }, []);
 
   const updateFilter = useCallback((filterUpdate: Partial<AnalyticsFilter>) => {
-    dispatch({ type: 'SET_FILTER', payload: filterUpdate });
+    dispatch({type: 'SET_FILTER', payload: filterUpdate});
   }, []);
 
   const refreshData = useCallback(async () => {
@@ -336,12 +356,12 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const exportData = useCallback(async (options: ExportOptions) => {
     // Simulate export process
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     // In a real implementation, this would generate and download the file
-    
+
     // Create a mock download
     const data = JSON.stringify(state.data, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
+    const blob = new Blob([data], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -353,11 +373,11 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [state.data]);
 
   const setTimeRange = useCallback((timeRange: AnalyticsTimeRange) => {
-    updateFilter({ timeRange });
+    updateFilter({timeRange});
   }, [updateFilter]);
 
   const setViewType = useCallback((viewType: AnalyticsFilter['viewType']) => {
-    updateFilter({ viewType });
+    updateFilter({viewType});
   }, [updateFilter]);
 
   // Fetch initial data
@@ -378,9 +398,9 @@ export const AnalyticsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   return (
-    <AnalyticsContext.Provider value={contextValue}>
-      {children}
-    </AnalyticsContext.Provider>
+      <AnalyticsContext.Provider value={contextValue}>
+        {children}
+      </AnalyticsContext.Provider>
   );
 };
 

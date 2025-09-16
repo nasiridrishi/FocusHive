@@ -3,8 +3,8 @@
  * Provides utilities for testing various error scenarios across the FocusHive application
  */
 
-import { Page, expect, Locator } from '@playwright/test';
-import { SELECTORS, TIMEOUTS, TEST_URLS } from '../helpers/test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {SELECTORS, TIMEOUTS} from '../helpers/test-data';
 
 export interface NetworkCondition {
   name: string;
@@ -22,7 +22,7 @@ export interface ErrorBoundaryState {
 
 export class ErrorHandlingPage {
   readonly page: Page;
-  
+
   // Error display elements
   readonly errorMessage: Locator;
   readonly errorBoundary: Locator;
@@ -30,16 +30,16 @@ export class ErrorHandlingPage {
   readonly refreshButton: Locator;
   readonly offlineIndicator: Locator;
   readonly loadingSpinner: Locator;
-  
+
   // Form elements for testing validation errors
   readonly formInputs: Locator;
   readonly submitButton: Locator;
   readonly validationErrors: Locator;
-  
+
   // Network and connectivity
   readonly connectionStatus: Locator;
   readonly reconnectButton: Locator;
-  
+
   // Notifications and toast messages
   readonly toastContainer: Locator;
   readonly successToast: Locator;
@@ -48,7 +48,7 @@ export class ErrorHandlingPage {
 
   constructor(page: Page) {
     this.page = page;
-    
+
     // Error display elements
     this.errorMessage = page.locator(SELECTORS.ERROR_MESSAGE);
     this.errorBoundary = page.locator('[data-testid="error-boundary"], .error-boundary');
@@ -56,16 +56,16 @@ export class ErrorHandlingPage {
     this.refreshButton = page.locator('button:has-text("Refresh"), button:has-text("Reload"), [data-testid="refresh-button"]');
     this.offlineIndicator = page.locator('[data-testid="offline-indicator"], .offline-indicator');
     this.loadingSpinner = page.locator(SELECTORS.LOADING_SPINNER);
-    
+
     // Form elements
     this.formInputs = page.locator('input, textarea, select');
     this.submitButton = page.locator('button[type="submit"]');
     this.validationErrors = page.locator('.MuiFormHelperText-error, .error-message, [role="alert"]');
-    
+
     // Network and connectivity
     this.connectionStatus = page.locator('[data-testid="connection-status"], .connection-status');
     this.reconnectButton = page.locator('button:has-text("Reconnect"), [data-testid="reconnect-button"]');
-    
+
     // Notifications
     this.toastContainer = page.locator('[data-testid="toast-container"], .MuiSnackbar-root, .toast-container');
     this.successToast = page.locator('.MuiAlert-standardSuccess, .success-toast, [data-severity="success"]');
@@ -78,7 +78,7 @@ export class ErrorHandlingPage {
    */
   async navigateToPage(url: string): Promise<void> {
     await this.page.goto(url);
-    await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
+    await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
   }
 
   /**
@@ -86,7 +86,7 @@ export class ErrorHandlingPage {
    */
   async setNetworkConditions(condition: NetworkCondition): Promise<void> {
     const cdpSession = await this.page.context().newCDPSession(this.page);
-    
+
     await cdpSession.send('Network.emulateNetworkConditions', {
       offline: condition.downloadSpeed === 0,
       downloadThroughput: condition.downloadSpeed * 1024, // Convert KB/s to bytes/s
@@ -148,7 +148,7 @@ export class ErrorHandlingPage {
    */
   async mockApiResponse(endpoint: string, statusCode: number, responseData?: unknown): Promise<void> {
     await this.page.route(`**${endpoint}`, (route) => {
-      const response = responseData || { 
+      const response = responseData || {
         message: `HTTP ${statusCode} error`,
         status: statusCode,
         timestamp: new Date().toISOString()
@@ -194,14 +194,14 @@ export class ErrorHandlingPage {
    * Wait for error message to appear
    */
   async waitForError(timeout = TIMEOUTS.MEDIUM): Promise<void> {
-    await expect(this.errorMessage).toBeVisible({ timeout });
+    await expect(this.errorMessage).toBeVisible({timeout});
   }
 
   /**
    * Wait for error boundary to catch error
    */
   async waitForErrorBoundary(timeout = TIMEOUTS.MEDIUM): Promise<void> {
-    await expect(this.errorBoundary).toBeVisible({ timeout });
+    await expect(this.errorBoundary).toBeVisible({timeout});
   }
 
   /**
@@ -267,7 +267,7 @@ export class ErrorHandlingPage {
    */
   async verifyFormValidationErrors(expectedCount?: number): Promise<void> {
     await expect(this.validationErrors.first()).toBeVisible();
-    
+
     if (expectedCount !== undefined) {
       await expect(this.validationErrors).toHaveCount(expectedCount);
     }
@@ -296,19 +296,19 @@ export class ErrorHandlingPage {
    */
   async submitFormAndWait(): Promise<void> {
     await this.submitButton.click();
-    await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
+    await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
   }
 
   /**
    * Verify toast notification
    */
   async verifyToastNotification(type: 'success' | 'error' | 'warning', message?: string): Promise<void> {
-    const toast = type === 'success' ? this.successToast : 
-                  type === 'error' ? this.errorToast : 
-                  this.warningToast;
-    
+    const toast = type === 'success' ? this.successToast :
+        type === 'error' ? this.errorToast :
+            this.warningToast;
+
     await expect(toast).toBeVisible();
-    
+
     if (message) {
       await expect(toast).toContainText(message);
     }
@@ -318,12 +318,12 @@ export class ErrorHandlingPage {
    * Verify toast auto-dismissal
    */
   async verifyToastAutoDismissal(type: 'success' | 'error' | 'warning', timeoutMs = 5000): Promise<void> {
-    const toast = type === 'success' ? this.successToast : 
-                  type === 'error' ? this.errorToast : 
-                  this.warningToast;
-    
+    const toast = type === 'success' ? this.successToast :
+        type === 'error' ? this.errorToast :
+            this.warningToast;
+
     await expect(toast).toBeVisible();
-    await expect(toast).not.toBeVisible({ timeout: timeoutMs + 1000 });
+    await expect(toast).not.toBeVisible({timeout: timeoutMs + 1000});
   }
 
   /**
@@ -341,7 +341,7 @@ export class ErrorHandlingPage {
   async verifyErrorBoundaryRecovery(): Promise<void> {
     await this.verifyErrorBoundaryDisplayed();
     await this.clickRetry();
-    await expect(this.errorBoundary).not.toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.errorBoundary).not.toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -389,24 +389,32 @@ export class ErrorHandlingPage {
    */
   async testFileUploadError(fileInput: string, errorType: 'size' | 'type' | 'network'): Promise<void> {
     const input = this.page.locator(fileInput);
-    
+
     switch (errorType) {
       case 'size':
         // Create a large file blob
         await this.page.evaluate((selector) => {
           const input = document.querySelector(selector) as HTMLInputElement;
-          const file = new File(['x'.repeat(10 * 1024 * 1024)], 'large-file.txt', { type: 'text/plain' });
+          const file = new File(['x'.repeat(10 * 1024 * 1024)], 'large-file.txt', {type: 'text/plain'});
           const dt = new DataTransfer();
           dt.items.add(file);
           input.files = dt.files;
         }, fileInput);
         break;
       case 'type':
-        await input.setInputFiles({ name: 'test.exe', mimeType: 'application/octet-stream', buffer: Buffer.from('test') });
+        await input.setInputFiles({
+          name: 'test.exe',
+          mimeType: 'application/octet-stream',
+          buffer: Buffer.from('test')
+        });
         break;
       case 'network':
-        await this.mockApiResponse('/api/upload', 500, { message: 'Upload failed' });
-        await input.setInputFiles({ name: 'test.txt', mimeType: 'text/plain', buffer: Buffer.from('test') });
+        await this.mockApiResponse('/api/upload', 500, {message: 'Upload failed'});
+        await input.setInputFiles({
+          name: 'test.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('test')
+        });
         break;
     }
   }
@@ -416,23 +424,23 @@ export class ErrorHandlingPage {
    */
   async verifyDataLossPrevention(formSelector: string): Promise<void> {
     const form = this.page.locator(formSelector);
-    
+
     // Fill form with test data
-    const testData = { name: 'Test Name', email: 'test@example.com', message: 'Test message' };
-    
+    const testData = {name: 'Test Name', email: 'test@example.com', message: 'Test message'};
+
     for (const [field, value] of Object.entries(testData)) {
       await form.locator(`[name="${field}"]`).fill(value);
     }
-    
+
     // Simulate error condition
     await this.goOffline();
     await this.submitButton.click();
-    
+
     // Verify form data is preserved
     for (const [field, value] of Object.entries(testData)) {
       await expect(form.locator(`[name="${field}"]`)).toHaveValue(value);
     }
-    
+
     // Restore connection
     await this.goOnline();
   }
@@ -444,13 +452,13 @@ export class ErrorHandlingPage {
     // Disconnect network
     await this.goOffline();
     await this.page.waitForTimeout(2000);
-    
+
     // Restore connection
     await this.goOnline();
-    
+
     // Verify reconnection indicator or successful data sync
     const reconnectedIndicator = this.page.locator('[data-testid="connected"], .connection-restored');
-    await expect(reconnectedIndicator).toBeVisible({ timeout: TIMEOUTS.LONG });
+    await expect(reconnectedIndicator).toBeVisible({timeout: TIMEOUTS.LONG});
   }
 
   /**
@@ -463,9 +471,9 @@ export class ErrorHandlingPage {
       this.mockApiResponse('/api/data', 404),
       this.mockApiResponse('/api/settings', 403),
     ];
-    
+
     await Promise.all(promises);
-    
+
     // Verify that all errors are handled appropriately
     await expect(this.errorMessage).toBeVisible();
   }
@@ -476,7 +484,7 @@ export class ErrorHandlingPage {
   async verifyErrorAccessibility(): Promise<void> {
     await expect(this.errorMessage).toHaveAttribute('role', 'alert');
     await expect(this.errorMessage).toHaveAttribute('aria-live', 'polite');
-    
+
     if (await this.retryButton.isVisible()) {
       await expect(this.retryButton).toHaveAttribute('aria-label');
     }
@@ -499,15 +507,15 @@ export class ErrorHandlingPage {
   async verifyLoadingStateHandling(): Promise<void> {
     // Trigger loading state
     await this.page.click('button:has-text("Load Data")');
-    
+
     // Verify loading indicator appears
     await expect(this.loadingSpinner).toBeVisible();
-    
+
     // Simulate error during loading
     await this.mockApiResponse('/api/data', 500);
-    
+
     // Verify loading state is cleared and error is shown
-    await expect(this.loadingSpinner).not.toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.loadingSpinner).not.toBeVisible({timeout: TIMEOUTS.MEDIUM});
     await expect(this.errorMessage).toBeVisible();
   }
 }

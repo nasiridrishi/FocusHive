@@ -74,9 +74,21 @@ public class OAuth2ClientResponse {
     @Schema(description = "Whether the client is enabled", example = "true")
     private Boolean enabled;
 
+    @JsonProperty("trusted")
+    @Schema(description = "Whether the client is trusted", example = "false")
+    private Boolean trusted;
+
+    @JsonProperty("require_pkce")
+    @Schema(description = "Whether PKCE is required for this client", example = "true")
+    private Boolean requirePkce;
+
     @JsonProperty("created_at")
     @Schema(description = "Creation timestamp")
     private Instant createdAt;
+
+    @JsonProperty("updated_at")
+    @Schema(description = "Last update timestamp")
+    private Instant updatedAt;
 
     @JsonProperty("last_used_at")
     @Schema(description = "Last usage timestamp")

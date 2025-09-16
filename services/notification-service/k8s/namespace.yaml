@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: focushive-notification
+  labels:
+    app.kubernetes.io/name: focushive-notification
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: focushive
+    environment: production
+  annotations:
+    description: "Namespace for FocusHive notification service and related components"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: notification-service-quota
+  namespace: focushive-notification
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "20"
+    services: "10"
+    persistentvolumeclaims: "5"
+    secrets: "20"
+    configmaps: "20"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: notification-service-limits
+  namespace: focushive-notification
+spec:
+  limits:
+  - default:
+      cpu: "500m"
+      memory: "1Gi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "256Mi"
+    type: Container
+  - max:
+      cpu: "2"
+      memory: "4Gi"
+    min:
+      cpu: "50m"
+      memory: "128Mi"
+    type: Container

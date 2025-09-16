@@ -21,7 +21,8 @@ public class PresenceUpdate {
     private String currentActivity;
     private LocalDateTime lastSeen;
     private Integer focusMinutesRemaining;
-    
+    private Integer activeSessionCount;
+
     public enum PresenceStatus {
         ONLINE,
         AWAY,

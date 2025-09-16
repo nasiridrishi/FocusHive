@@ -1,10 +1,10 @@
 /**
  * TypeScript Environment Variable Declarations for FocusHive Frontend
- * 
+ *
  * This file provides TypeScript type definitions for all VITE_* environment
  * variables used in the FocusHive application. It ensures type safety when
  * accessing environment variables through import.meta.env.
- * 
+ *
  * All variables are declared as optional (string | undefined) to match
  * the runtime behavior where environment variables may not be set.
  */
@@ -208,9 +208,9 @@ export interface ValidatedEnvironmentConfig {
 /**
  * Environment variable validation status
  */
-export type EnvironmentValidationStatus = 
-  | { status: 'valid'; config: ValidatedEnvironmentConfig }
-  | { status: 'invalid'; errors: string[] };
+export type EnvironmentValidationStatus =
+    | { status: 'valid'; config: ValidatedEnvironmentConfig }
+    | { status: 'invalid'; errors: string[] };
 
 /**
  * Environment validation error details

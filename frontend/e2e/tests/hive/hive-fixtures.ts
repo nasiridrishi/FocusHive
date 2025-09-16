@@ -3,7 +3,7 @@
  * Provides consistent test data for hive workflow E2E tests
  */
 
-import { Hive, HiveSettings, HiveMember, CreateHiveRequest, UpdateHiveRequest } from '../../../src/services/api/hiveApi';
+import {CreateHiveRequest, Hive, HiveMember, HiveSettings} from '../../../src/services/api/hiveApi';
 
 export interface TestHive extends Partial<Hive> {
   id: number;
@@ -225,13 +225,13 @@ export const ANALYTICS_MOCK_DATA = {
     weeklyGoalProgress: 0.75,
     productivityScore: 85,
     weeklyData: [
-      { day: 'Mon', focusTime: 180, sessions: 5 },
-      { day: 'Tue', focusTime: 210, sessions: 6 },
-      { day: 'Wed', focusTime: 165, sessions: 4 },
-      { day: 'Thu', focusTime: 195, sessions: 5 },
-      { day: 'Fri', focusTime: 240, sessions: 7 },
-      { day: 'Sat', focusTime: 120, sessions: 3 },
-      { day: 'Sun', focusTime: 150, sessions: 4 }
+      {day: 'Mon', focusTime: 180, sessions: 5},
+      {day: 'Tue', focusTime: 210, sessions: 6},
+      {day: 'Wed', focusTime: 165, sessions: 4},
+      {day: 'Thu', focusTime: 195, sessions: 5},
+      {day: 'Fri', focusTime: 240, sessions: 7},
+      {day: 'Sat', focusTime: 120, sessions: 3},
+      {day: 'Sun', focusTime: 150, sessions: 4}
     ]
   },
   HIVE_STATS: {
@@ -240,12 +240,12 @@ export const ANALYTICS_MOCK_DATA = {
     avgSessionsPerMember: 3.2,
     totalHiveFocusTime: 5280, // 88 hours
     popularTimes: [
-      { hour: 9, count: 12 },
-      { hour: 10, count: 18 },
-      { hour: 11, count: 15 },
-      { hour: 14, count: 20 },
-      { hour: 15, count: 22 },
-      { hour: 16, count: 16 }
+      {hour: 9, count: 12},
+      {hour: 10, count: 18},
+      {hour: 11, count: 15},
+      {hour: 14, count: 20},
+      {hour: 15, count: 22},
+      {hour: 16, count: 16}
     ],
     weeklyActivity: [85, 92, 78, 88, 95, 42, 38] // Activity percentage by day
   }
@@ -349,7 +349,7 @@ export const PERFORMANCE_SCENARIOS = {
 export function generateUniqueHiveData(template: string = 'PUBLIC_STUDY_HIVE'): CreateHiveRequest {
   const timestamp = Date.now();
   const baseTemplate = HIVE_TEMPLATES[template as keyof typeof HIVE_TEMPLATES];
-  
+
   return {
     name: `${baseTemplate.name} ${timestamp}`,
     description: `${baseTemplate.description} (Test ${timestamp})`,
@@ -364,7 +364,7 @@ export function generateUniqueHiveData(template: string = 'PUBLIC_STUDY_HIVE'): 
 // Helper function to create test member data
 export function generateTestMember(userId: number, role: 'OWNER' | 'ADMIN' | 'MODERATOR' | 'MEMBER' = 'MEMBER'): HiveMember {
   const user = Object.values(HIVE_TEST_USERS).find(u => u.id === userId) || HIVE_TEST_USERS.MEMBER_1;
-  
+
   return {
     id: userId * 10, // Unique member ID
     userId,

@@ -1,0 +1,46 @@
+# =============================================================================
+# Simple Production Dockerfile for Testing
+# =============================================================================
+
+FROM gcr.io/distroless/java21-debian12:nonroot
+
+WORKDIR /app
+
+# Copy the built jar
+COPY build/libs/buddy-service.jar buddy-service.jar
+
+# Copy configuration
+COPY src/main/resources/application-docker.properties config/application-docker.properties
+
+USER nonroot:nonroot
+
+EXPOSE 8087
+
+# Ultra-optimized JVM configuration for fast startup and low memory
+ENV JVM_OPTS="-XX:+UseContainerSupport \
+              -XX:MaxRAMPercentage=70.0 \
+              -XX:+UseSerialGC \
+              -XX:+UseStringDeduplication \
+              -XX:+UseCompressedOops \
+              -XX:+UseCompressedClassPointers \
+              -XX:+TieredCompilation \
+              -XX:TieredStopAtLevel=1 \
+              -XX:+ExitOnOutOfMemoryError \
+              -Xss256k \
+              -XX:MetaspaceSize=128m \
+              -XX:MaxMetaspaceSize=256m \
+              -Djava.security.egd=file:/dev/./urandom \
+              -Djava.awt.headless=true \
+              -Dspring.backgroundpreinitializer.ignore=true \
+              -Dspring.jmx.enabled=false \
+              -Dfile.encoding=UTF-8 \
+              -Duser.timezone=UTC \
+              -Djava.net.preferIPv4Stack=true"
+
+ENV SPRING_PROFILES_ACTIVE=docker \
+    SPRING_MAIN_LAZY_INITIALIZATION=true \
+    LOGGING_LEVEL_ROOT=WARN \
+    MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info \
+    MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=never
+
+ENTRYPOINT ["java", "-jar", "buddy-service.jar"]

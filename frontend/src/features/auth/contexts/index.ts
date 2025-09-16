@@ -1,11 +1,12 @@
 // Auth Context Exports
-export { AuthProvider } from './AuthContext';
+export {AuthProvider} from './AuthContext';
 
 // Auth Hook Exports (from separate file to avoid Fast Refresh warnings)
-export { useAuth, useAuthState, useAuthActions } from '../hooks/useAuth';
+export {useAuth, useAuthState, useAuthActions} from '../hooks/useAuth';
 
 // Context Exports (from separate file to avoid Fast Refresh warnings)
-export { AuthStateContext, AuthActionsContext } from './authContexts';
+export {AuthStateContext, AuthActionsContext} from './authContexts';
 
-import { AuthProvider } from './AuthContext';
+import {AuthProvider} from './AuthContext';
+
 export default AuthProvider;

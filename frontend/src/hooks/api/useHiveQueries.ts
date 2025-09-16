@@ -1,6 +1,6 @@
 /**
  * Hive Query Hooks
- * 
+ *
  * Provides React Query hooks for hive operations with:
  * - Optimized caching strategies
  * - Real-time updates
@@ -8,14 +8,13 @@
  * - Background refetching
  */
 
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { hiveApiService } from '@services/api';
-import { queryKeys, STALE_TIMES, CACHE_TIMES, invalidateQueries } from '@lib/queryClient';
-import { transformHiveDTO, type HiveDTO } from './transformers';
-import { useAuth } from './useAuthQueries';
-import type { 
-  Hive 
-} from './types';
+import {useInfiniteQuery, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {hiveApiService} from '@services/api';
+import {CACHE_TIMES, invalidateQueries, queryKeys, STALE_TIMES} from '@lib/queryClient';
+import {type HiveDTO, transformHiveDTO} from './transformers';
+import {useAuth} from './useAuthQueries';
+import type {Hive, HiveListResult, CreateHiveMutation, UpdateHiveMutation, DeleteHiveMutation, JoinHiveMutation, LeaveHiveMutation, InfiniteQueryResult, QueryResult} from './types';
+import type {CreateHiveRequest, HiveSearchFilters, UpdateHiveRequest} from '@shared/types/hive';
 
 // Type for paginated responses
 interface PaginatedResponse<T> {
@@ -26,11 +25,6 @@ interface PaginatedResponse<T> {
   last: boolean;
   numberOfElements: number;
 }
-import type { 
-  CreateHiveRequest, 
-  UpdateHiveRequest,
-  HiveSearchFilters 
-} from '@shared/types/hive';
 
 // ============================================================================
 // QUERY HOOKS
@@ -39,8 +33,8 @@ import type {
 /**
  * Get all hives for current user
  */
-export const useHives = (filters?: HiveSearchFilters) => {
-  const { user } = useAuth();
+export const useHives = (filters?: HiveSearchFilters): HiveListResult => {
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
@@ -66,13 +60,13 @@ export const useHives = (filters?: HiveSearchFilters) => {
 /**
  * Get infinite list of hives with pagination
  */
-export const useInfiniteHives = (filters?: HiveSearchFilters) => {
-  const { user } = useAuth();
+export const useInfiniteHives = (filters?: HiveSearchFilters): InfiniteQueryResult<{content: Hive[]; page: number; size: number; totalElements: number; totalPages: number; first: boolean; last: boolean}> => {
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useInfiniteQuery({
     queryKey: [...queryKeys.hives.all, 'infinite', filters],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({pageParam = 0}) => {
       const response = await hiveApiService.getHives(pageParam, 20);
       // Transform the paginated response
       return {
@@ -97,8 +91,8 @@ export const useInfiniteHives = (filters?: HiveSearchFilters) => {
 /**
  * Get specific hive by ID
  */
-export const useHive = (hiveId: string, enabled = true) => {
-  const { user } = useAuth();
+export const useHive = (hiveId: string, enabled = true): QueryResult<Hive> => {
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
@@ -150,13 +144,13 @@ export const useHiveMembers = (hiveId: string, enabled = true) => {
  * Search hives with debounced query
  */
 export const useSearchHives = (searchQuery: string, enabled = true) => {
-  const { user } = useAuth();
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
     queryKey: queryKeys.hives.search(searchQuery),
     queryFn: async () => {
-      const results = await hiveApiService.searchHives({ query: searchQuery });
+      const results = await hiveApiService.searchHives({query: searchQuery});
       // Transform the search results if they contain hive DTOs
       return Array.isArray(results) ? results.map((dto: unknown) => transformHiveDTO(dto as unknown as HiveDTO, currentUserId)) : [];
     },
@@ -174,13 +168,13 @@ export const useSearchHives = (searchQuery: string, enabled = true) => {
  * Get recommended hives for user
  */
 export const useRecommendedHives = (enabled = true) => {
-  const { user } = useAuth();
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
     queryKey: [...queryKeys.hives.all, 'recommended'],
     queryFn: async () => {
-      const results = await hiveApiService.searchHives({ query: '' }); // Use search with empty query as recommendation
+      const results = await hiveApiService.searchHives({query: ''}); // Use search with empty query as recommendation
       // Transform the recommended hives
       return Array.isArray(results) ? results.map((dto: unknown) => transformHiveDTO(dto as unknown as HiveDTO, currentUserId)) : [];
     },
@@ -201,9 +195,9 @@ export const useRecommendedHives = (enabled = true) => {
 /**
  * Create new hive mutation
  */
-export const useCreateHive = () => {
+export const useCreateHive = (): CreateHiveMutation => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useMutation({
@@ -215,7 +209,7 @@ export const useCreateHive = () => {
 
     onMutate: async (newHive) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.hives.all });
+      await queryClient.cancelQueries({queryKey: queryKeys.hives.all});
 
       // Snapshot previous value
       const previousHives = queryClient.getQueryData(queryKeys.hives.list());
@@ -233,24 +227,24 @@ export const useCreateHive = () => {
           createdAt: new Date().toISOString(),
           ...newHive,
         };
-        
+
         queryClient.setQueryData(
-          queryKeys.hives.list(), 
-          [optimisticHive, ...previousHives]
+            queryKeys.hives.list(),
+            [optimisticHive, ...previousHives]
         );
       }
 
-      return { previousHives };
+      return {previousHives};
     },
 
     onSuccess: (newHive) => {
       // Remove optimistic update and add real hive
       queryClient.setQueryData(
-        queryKeys.hives.list(),
-        (old: Hive[] | undefined) => {
-          if (!old) return [newHive];
-          return [newHive, ...old.filter(h => !h.id.toString().startsWith('temp-'))];
-        }
+          queryKeys.hives.list(),
+          (old: Hive[] | undefined) => {
+            if (!old) return [newHive];
+            return [newHive, ...old.filter(h => !h.id.toString().startsWith('temp-'))];
+          }
       );
 
       // Cache the new hive details
@@ -267,7 +261,7 @@ export const useCreateHive = () => {
 
     onError: (error, newHive, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic update
       if (context?.previousHives) {
         queryClient.setQueryData(queryKeys.hives.list(), context.previousHives);
@@ -276,7 +270,7 @@ export const useCreateHive = () => {
 
     onSettled: () => {
       // Always refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.hives.all });
+      queryClient.invalidateQueries({queryKey: queryKeys.hives.all});
     },
 
     meta: {
@@ -289,76 +283,76 @@ export const useCreateHive = () => {
 /**
  * Update hive mutation
  */
-export const useUpdateHive = () => {
+export const useUpdateHive = (): UpdateHiveMutation => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useMutation({
-    mutationFn: async ({ hiveId, updates }: { hiveId: string; updates: UpdateHiveRequest }) => {
+    mutationFn: async ({hiveId, updates}: { hiveId: string; updates: UpdateHiveRequest }) => {
       const dto = await hiveApiService.updateHive(parseInt(hiveId, 10), updates);
       return transformHiveDTO(dto as unknown as HiveDTO, currentUserId);
     },
     mutationKey: ['hives', 'update'],
 
-    onMutate: async ({ hiveId, updates }) => {
+    onMutate: async ({hiveId, updates}) => {
       // Cancel outgoing refetches for this hive
-      await queryClient.cancelQueries({ queryKey: queryKeys.hives.detail(hiveId) });
+      await queryClient.cancelQueries({queryKey: queryKeys.hives.detail(hiveId)});
 
       // Snapshot previous value
       const previousHive = queryClient.getQueryData<Hive>(queryKeys.hives.detail(hiveId));
 
       // Optimistically update hive data
       if (previousHive) {
-        const optimisticHive = { ...previousHive, ...updates };
+        const optimisticHive = {...previousHive, ...updates};
         queryClient.setQueryData(queryKeys.hives.detail(hiveId), optimisticHive);
 
         // Also update in the list if it exists
         queryClient.setQueryData(
+            queryKeys.hives.list(),
+            (old: Hive[] | undefined) => {
+              if (!old) return old;
+              return old.map(hive =>
+                  hive.id === hiveId ? optimisticHive : hive
+              );
+            }
+        );
+      }
+
+      return {previousHive, hiveId};
+    },
+
+    onSuccess: (updatedHive, {hiveId}) => {
+      // Update with server response
+      queryClient.setQueryData(queryKeys.hives.detail(hiveId), updatedHive);
+
+      // Update in list as well
+      queryClient.setQueryData(
           queryKeys.hives.list(),
           (old: Hive[] | undefined) => {
             if (!old) return old;
-            return old.map(hive => 
-              hive.id === hiveId ? optimisticHive : hive
+            return old.map(hive =>
+                hive.id === hiveId ? updatedHive : hive
             );
           }
-        );
-      }
-
-      return { previousHive, hiveId };
-    },
-
-    onSuccess: (updatedHive, { hiveId }) => {
-      // Update with server response
-      queryClient.setQueryData(queryKeys.hives.detail(hiveId), updatedHive);
-      
-      // Update in list as well
-      queryClient.setQueryData(
-        queryKeys.hives.list(),
-        (old: Hive[] | undefined) => {
-          if (!old) return old;
-          return old.map(hive => 
-            hive.id === hiveId ? updatedHive : hive
-          );
-        }
       );
     },
 
-    onError: (error, { hiveId }, context) => {
+    onError: (error, {hiveId}, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic update
       if (context?.previousHive) {
         queryClient.setQueryData(
-          queryKeys.hives.detail(hiveId), 
-          context.previousHive
+            queryKeys.hives.detail(hiveId),
+            context.previousHive
         );
       }
     },
 
-    onSettled: (data, error, { hiveId }) => {
+    onSettled: (data, error, {hiveId}) => {
       // Always refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.hives.detail(hiveId) });
+      queryClient.invalidateQueries({queryKey: queryKeys.hives.detail(hiveId)});
     },
 
     meta: {
@@ -371,7 +365,7 @@ export const useUpdateHive = () => {
 /**
  * Delete hive mutation
  */
-export const useDeleteHive = () => {
+export const useDeleteHive = (): DeleteHiveMutation => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -380,7 +374,7 @@ export const useDeleteHive = () => {
 
     onMutate: async (hiveId) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.hives.all });
+      await queryClient.cancelQueries({queryKey: queryKeys.hives.all});
 
       // Snapshot previous data
       const previousHives = queryClient.getQueryData(queryKeys.hives.list());
@@ -388,22 +382,22 @@ export const useDeleteHive = () => {
 
       // Optimistically remove hive from list
       queryClient.setQueryData(
-        queryKeys.hives.list(),
-        (old: Hive[] | undefined) => {
-          if (!old) return old;
-          return old.filter(hive => hive.id !== hiveId);
-        }
+          queryKeys.hives.list(),
+          (old: Hive[] | undefined) => {
+            if (!old) return old;
+            return old.filter(hive => hive.id !== hiveId);
+          }
       );
 
       // Remove hive detail from cache
-      queryClient.removeQueries({ queryKey: queryKeys.hives.detail(hiveId) });
+      queryClient.removeQueries({queryKey: queryKeys.hives.detail(hiveId)});
 
-      return { previousHives, previousHive, hiveId };
+      return {previousHives, previousHive, hiveId};
     },
 
     onError: (error, hiveId, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic updates
       if (context?.previousHives) {
         queryClient.setQueryData(queryKeys.hives.list(), context.previousHives);
@@ -415,7 +409,7 @@ export const useDeleteHive = () => {
 
     onSettled: () => {
       // Always refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.hives.all });
+      queryClient.invalidateQueries({queryKey: queryKeys.hives.all});
     },
 
     meta: {
@@ -428,9 +422,9 @@ export const useDeleteHive = () => {
 /**
  * Join hive mutation
  */
-export const useJoinHive = () => {
+export const useJoinHive = (): JoinHiveMutation => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useMutation({
@@ -442,7 +436,7 @@ export const useJoinHive = () => {
 
     onMutate: async (hiveId) => {
       // Cancel outgoing refetches for this hive
-      await queryClient.cancelQueries({ queryKey: queryKeys.hives.detail(hiveId) });
+      await queryClient.cancelQueries({queryKey: queryKeys.hives.detail(hiveId)});
 
       // Snapshot previous value
       const previousHive = queryClient.getQueryData<Hive>(queryKeys.hives.detail(hiveId));
@@ -457,35 +451,35 @@ export const useJoinHive = () => {
         queryClient.setQueryData(queryKeys.hives.detail(hiveId), optimisticHive);
       }
 
-      return { previousHive, hiveId };
+      return {previousHive, hiveId};
     },
 
     onSuccess: (hiveData, hiveId) => {
       // Update hive data
       queryClient.setQueryData(queryKeys.hives.detail(hiveId), hiveData);
-      
+
       // Add to user's hive list if not already there
       queryClient.setQueryData(
-        queryKeys.hives.list(),
-        (old: Hive[] | undefined) => {
-          if (!old) return [hiveData];
-          const exists = old.find(h => h.id === hiveId);
-          return exists ? old.map(h => h.id === hiveId ? hiveData : h) : [hiveData, ...old];
-        }
+          queryKeys.hives.list(),
+          (old: Hive[] | undefined) => {
+            if (!old) return [hiveData];
+            const exists = old.find(h => h.id === hiveId);
+            return exists ? old.map(h => h.id === hiveId ? hiveData : h) : [hiveData, ...old];
+          }
       );
 
       // Invalidate members list to include new member
-      queryClient.invalidateQueries({ queryKey: queryKeys.hives.members(hiveId) });
+      queryClient.invalidateQueries({queryKey: queryKeys.hives.members(hiveId)});
     },
 
     onError: (error, hiveId, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic update
       if (context?.previousHive) {
         queryClient.setQueryData(
-          queryKeys.hives.detail(hiveId),
-          context.previousHive
+            queryKeys.hives.detail(hiveId),
+            context.previousHive
         );
       }
     },
@@ -500,7 +494,7 @@ export const useJoinHive = () => {
 /**
  * Leave hive mutation
  */
-export const useLeaveHive = () => {
+export const useLeaveHive = (): LeaveHiveMutation => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -509,8 +503,8 @@ export const useLeaveHive = () => {
 
     onMutate: async (hiveId) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.hives.detail(hiveId) });
-      await queryClient.cancelQueries({ queryKey: queryKeys.hives.list() });
+      await queryClient.cancelQueries({queryKey: queryKeys.hives.detail(hiveId)});
+      await queryClient.cancelQueries({queryKey: queryKeys.hives.list()});
 
       // Snapshot previous values
       const previousHive = queryClient.getQueryData<Hive>(queryKeys.hives.detail(hiveId));
@@ -528,24 +522,24 @@ export const useLeaveHive = () => {
 
       // Remove from user's hive list
       queryClient.setQueryData(
-        queryKeys.hives.list(),
-        (old: Hive[] | undefined) => {
-          if (!old) return old;
-          return old.filter(hive => hive.id !== hiveId);
-        }
+          queryKeys.hives.list(),
+          (old: Hive[] | undefined) => {
+            if (!old) return old;
+            return old.filter(hive => hive.id !== hiveId);
+          }
       );
 
-      return { previousHive, previousHives, hiveId };
+      return {previousHive, previousHives, hiveId};
     },
 
     onSuccess: (data, hiveId) => {
       // Ensure hive is removed from lists
       queryClient.setQueryData(
-        queryKeys.hives.list(),
-        (old: Hive[] | undefined) => {
-          if (!old) return old;
-          return old.filter(hive => hive.id !== hiveId);
-        }
+          queryKeys.hives.list(),
+          (old: Hive[] | undefined) => {
+            if (!old) return old;
+            return old.filter(hive => hive.id !== hiveId);
+          }
       );
 
       // Invalidate presence and other related data
@@ -554,7 +548,7 @@ export const useLeaveHive = () => {
 
     onError: (error, hiveId, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic updates
       if (context?.previousHive) {
         queryClient.setQueryData(queryKeys.hives.detail(hiveId), context.previousHive);
@@ -579,31 +573,41 @@ export const useLeaveHive = () => {
  * Complete hive data hook with all related information
  */
 export const useHiveDetails = (hiveId: string, enabled = true) => {
+  const {user} = useAuth();
   const hiveQuery = useHive(hiveId, enabled);
   const membersQuery = useHiveMembers(hiveId, enabled && !!hiveQuery.data);
+
+  // Compute authorization states
+  const currentUserId = user?.id || '';
+  const hiveOwnerId = (hiveQuery.data as { ownerId?: string })?.ownerId || '';
+  const isOwner = !!currentUserId && currentUserId === hiveOwnerId;
+
+  // Check if user is a member (including if they're the owner)
+  const members = membersQuery.data || [];
+  const isMember = isOwner || (!!currentUserId && members.some((member: any) => member.id === currentUserId));
 
   return {
     // Data
     hive: hiveQuery.data,
-    members: membersQuery.data || [],
-    
+    members: members,
+
     // Loading states
     isLoading: hiveQuery.isLoading || membersQuery.isLoading,
     isHiveLoading: hiveQuery.isLoading,
     isMembersLoading: membersQuery.isLoading,
-    
-    // Error states  
+
+    // Error states
     error: hiveQuery.error || membersQuery.error,
     hiveError: hiveQuery.error,
     membersError: membersQuery.error,
-    
+
     // Computed values
     memberCount: hiveQuery.data?.memberCount || 0,
-    // Note: isOwner/isMember should be computed on frontend based on current user
-    isOwner: false, // TODO: Compare hiveQuery.data?.ownerId with current user ID
-    isMember: false, // TODO: Check if current user is in members list
+    // Authorization checks based on current user
+    isOwner,
+    isMember,
     isPublic: !(hiveQuery.data as { isPrivate?: boolean })?.isPrivate,
-    
+
     // Utilities
     refetchHive: hiveQuery.refetch,
     refetchMembers: membersQuery.refetch,
@@ -631,21 +635,21 @@ export const useHiveManagement = () => {
     deleteHive: deleteMutation.mutate,
     joinHive: joinMutation.mutate,
     leaveHive: leaveMutation.mutate,
-    
+
     // Loading states
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
     isJoining: joinMutation.isPending,
     isLeaving: leaveMutation.isPending,
-    
+
     // Error states
     createError: createMutation.error,
     updateError: updateMutation.error,
     deleteError: deleteMutation.error,
     joinError: joinMutation.error,
     leaveError: leaveMutation.error,
-    
+
     // Success states
     isCreateSuccess: createMutation.isSuccess,
     isUpdateSuccess: updateMutation.isSuccess,

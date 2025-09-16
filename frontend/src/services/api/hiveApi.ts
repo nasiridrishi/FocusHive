@@ -1,10 +1,10 @@
-import { AxiosInstance, AxiosError } from 'axios';
-import { apiClient } from './httpInterceptors';
-import { API_ENDPOINTS, buildEndpoint } from './index';
+import {AxiosError, AxiosInstance} from 'axios';
+import {apiClient} from './httpInterceptors';
+import {API_ENDPOINTS, buildEndpoint} from './index';
 
 /**
  * Hive API Service
- * 
+ *
  * Provides comprehensive hive management functionality with:
  * - CRUD operations for hives
  * - Membership management
@@ -115,7 +115,7 @@ class HiveApiService {
    */
   async getHiveById(id: number): Promise<Hive> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_ID, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_ID, {id});
       const response = await this.api.get<Hive>(endpoint);
       return response.data;
     } catch (error) {
@@ -129,7 +129,7 @@ class HiveApiService {
    */
   async getHiveBySlug(slug: string): Promise<Hive> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_SLUG, { slug });
+      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_SLUG, {slug});
       const response = await this.api.get<Hive>(endpoint);
       return response.data;
     } catch (error) {
@@ -143,7 +143,7 @@ class HiveApiService {
    */
   async updateHive(id: number, hiveData: UpdateHiveRequest): Promise<Hive> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_ID, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_ID, {id});
       const response = await this.api.put<Hive>(endpoint, hiveData);
       return response.data;
     } catch (error) {
@@ -157,7 +157,7 @@ class HiveApiService {
    */
   async deleteHive(id: number): Promise<void> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_ID, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.BY_ID, {id});
       await this.api.delete(endpoint);
     } catch (error) {
       this.handleError(error, 'Failed to delete hive');
@@ -171,7 +171,7 @@ class HiveApiService {
   async getHives(page = 0, size = 20): Promise<PaginatedResponse<Hive>> {
     try {
       const response = await this.api.get<PaginatedResponse<Hive>>(API_ENDPOINTS.HIVES.BASE, {
-        params: { page, size }
+        params: {page, size}
       });
       return response.data;
     } catch (error) {
@@ -200,7 +200,7 @@ class HiveApiService {
    */
   async joinHive(id: number): Promise<HiveMember> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.JOIN, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.JOIN, {id});
       const response = await this.api.post<HiveMember>(endpoint);
       return response.data;
     } catch (error) {
@@ -214,7 +214,7 @@ class HiveApiService {
    */
   async leaveHive(id: number): Promise<void> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.LEAVE, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.LEAVE, {id});
       await this.api.post(endpoint);
     } catch (error) {
       this.handleError(error, 'Failed to leave hive');
@@ -227,7 +227,7 @@ class HiveApiService {
    */
   async getHiveMembers(id: number): Promise<HiveMember[]> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.MEMBERS, { id });
+      const endpoint = buildEndpoint(API_ENDPOINTS.HIVES.MEMBERS, {id});
       const response = await this.api.get<HiveMember[]>(endpoint);
       return response.data;
     } catch (error) {
@@ -241,9 +241,9 @@ class HiveApiService {
    */
   private handleError(error: unknown, defaultMessage: string): never {
     if (error instanceof AxiosError) {
-      const message = error.response?.data?.message || 
-                     error.response?.data?.error || 
-                     defaultMessage;
+      const message = error.response?.data?.message ||
+          error.response?.data?.error ||
+          defaultMessage;
       throw new Error(message);
     }
     throw new Error('Network error occurred');

@@ -3,8 +3,8 @@
  * Provides comprehensive error simulation and recovery testing capabilities
  */
 
-import { Page, expect, Browser, BrowserContext } from '@playwright/test';
-import { TIMEOUTS, API_ENDPOINTS } from './test-data';
+import {BrowserContext, expect, Page} from '@playwright/test';
+import {API_ENDPOINTS, TIMEOUTS} from './test-data';
 
 export interface NetworkConditions {
   offline: boolean;
@@ -51,7 +51,8 @@ export interface ReactFiberNode {
   _reactInternalFiber?: unknown;
 }
 
-export interface ComponentElement extends Element, ReactFiberNode {}
+export interface ComponentElement extends Element, ReactFiberNode {
+}
 
 export interface ApiError {
   status: number;
@@ -69,12 +70,13 @@ export interface RecoveryMetrics {
 }
 
 export class ErrorHandlingHelper {
-  constructor(private page: Page, private context?: BrowserContext) {}
+  constructor(private page: Page, private context?: BrowserContext) {
+  }
 
   /**
    * Network Error Simulation
    */
-  async simulateNetworkErrors() {
+  async simulateNetworkErrors(): Promise<void> {
     return {
       // Connection timeout
       timeout: async (endpoint: string, timeoutMs = 30000) => {
@@ -161,7 +163,7 @@ export class ErrorHandlingHelper {
   /**
    * API Error Response Simulation
    */
-  async simulateApiErrors() {
+  async simulateApiErrors(): Promise<void> {
     return {
       // 400 Bad Request
       badRequest: async (endpoint: string, errors?: Record<string, string>) => {
@@ -172,7 +174,7 @@ export class ErrorHandlingHelper {
             body: JSON.stringify({
               message: 'Bad Request',
               code: 'VALIDATION_ERROR',
-              errors: errors || { field: 'Invalid value' },
+              errors: errors || {field: 'Invalid value'},
             }),
           });
         });
@@ -226,7 +228,7 @@ export class ErrorHandlingHelper {
           route.fulfill({
             status: 429,
             contentType: 'application/json',
-            headers: { 'Retry-After': retryAfter.toString() },
+            headers: {'Retry-After': retryAfter.toString()},
             body: JSON.stringify({
               message: 'Rate limit exceeded',
               code: 'RATE_LIMITED',
@@ -244,14 +246,14 @@ export class ErrorHandlingHelper {
             message: 'Internal server error',
             code: 'INTERNAL_ERROR',
           };
-          
+
           if (includeStack) {
             response.details = {
               stack: 'Error at sensitive-function.js:123',
               database: 'postgres://user:pass@localhost/db',
             };
           }
-          
+
           route.fulfill({
             status: 500,
             contentType: 'application/json',
@@ -280,7 +282,7 @@ export class ErrorHandlingHelper {
           route.fulfill({
             status: 503,
             contentType: 'application/json',
-            headers: { 'Retry-After': retryAfter.toString() },
+            headers: {'Retry-After': retryAfter.toString()},
             body: JSON.stringify({
               message: 'Service temporarily unavailable',
               code: 'SERVICE_UNAVAILABLE',
@@ -317,7 +319,7 @@ export class ErrorHandlingHelper {
   /**
    * Client-Side Error Simulation
    */
-  async simulateClientErrors() {
+  async simulateClientErrors(): Promise<void> {
     return {
       // JavaScript runtime error
       runtimeError: async (errorMessage = 'Test runtime error') => {
@@ -373,7 +375,7 @@ export class ErrorHandlingHelper {
                 const request = new EventTarget();
                 setTimeout(() => {
                   const event = new Event('error') as ErrorEvent;
-                  event.target = { error: new Error('IndexedDB failed') };
+                  event.target = {error: new Error('IndexedDB failed')};
                   request.dispatchEvent(event);
                 }, 100);
                 return request;
@@ -400,7 +402,7 @@ export class ErrorHandlingHelper {
   /**
    * WebSocket Error Simulation
    */
-  async simulateWebSocketErrors() {
+  async simulateWebSocketErrors(): Promise<void> {
     return {
       // Connection failure
       connectionFailure: async (wsUrl: string) => {
@@ -423,7 +425,7 @@ export class ErrorHandlingHelper {
           // Intercept WebSocket send method
           const originalWebSocket = window.WebSocket;
           window.WebSocket = class extends originalWebSocket {
-            send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
+            send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
               // Simulate message loss
               if (Math.random() < 0.3) {
                 console.warn('Simulating WebSocket message loss');
@@ -448,14 +450,14 @@ export class ErrorHandlingHelper {
   /**
    * Form Validation Error Testing
    */
-  async testFormValidationErrors() {
+  async testFormValidationErrors(): Promise<void> {
     return {
       // Required field validation
       requiredFieldValidation: async (fieldName: string) => {
         const field = this.page.locator(`[name="${fieldName}"]`);
         await field.fill('');
         await field.blur();
-        
+
         const errorMessage = this.page.locator(`[name="${fieldName}"] + .error, [data-testid="${fieldName}-error"]`);
         await expect(errorMessage).toBeVisible();
         await expect(errorMessage).toContainText(/required|mandatory/i);
@@ -465,11 +467,11 @@ export class ErrorHandlingHelper {
       emailFormatValidation: async (emailField: string) => {
         const field = this.page.locator(`[name="${emailField}"]`);
         const invalidEmails = ['invalid-email', 'test@', '@example.com', 'test.example.com'];
-        
+
         for (const email of invalidEmails) {
           await field.fill(email);
           await field.blur();
-          
+
           const errorMessage = this.page.locator(`[name="${emailField}"] + .error`);
           await expect(errorMessage).toBeVisible();
           await expect(errorMessage).toContainText(/email|format|invalid/i);
@@ -480,20 +482,23 @@ export class ErrorHandlingHelper {
       passwordStrengthValidation: async (passwordField: string) => {
         const field = this.page.locator(`[name="${passwordField}"]`);
         const weakPasswords = ['123', 'password', 'abc123', '12345678'];
-        
+
         for (const password of weakPasswords) {
           await field.fill(password);
           await field.blur();
-          
+
           const errorMessage = this.page.locator(`[name="${passwordField}"] + .error`);
           await expect(errorMessage).toBeVisible();
         }
       },
 
       // File upload validation
-      fileUploadValidation: async (fileInput: string, validationRules: { maxSize?: number; allowedTypes?: string[] }) => {
+      fileUploadValidation: async (fileInput: string, validationRules: {
+        maxSize?: number;
+        allowedTypes?: string[]
+      }) => {
         const input = this.page.locator(fileInput);
-        
+
         if (validationRules.maxSize) {
           // Test file size limit
           const largeFileBuffer = Buffer.alloc(validationRules.maxSize + 1024, 'x');
@@ -502,10 +507,10 @@ export class ErrorHandlingHelper {
             mimeType: 'text/plain',
             buffer: largeFileBuffer,
           });
-          
+
           await expect(this.page.locator('.error, [role="alert"]')).toContainText(/size|large|limit/i);
         }
-        
+
         if (validationRules.allowedTypes) {
           // Test file type restriction
           await input.setInputFiles({
@@ -513,7 +518,7 @@ export class ErrorHandlingHelper {
             mimeType: 'application/octet-stream',
             buffer: Buffer.from('test'),
           });
-          
+
           await expect(this.page.locator('.error, [role="alert"]')).toContainText(/type|format|allowed/i);
         }
       },
@@ -536,7 +541,7 @@ export class ErrorHandlingHelper {
 
     // Wait for error detection
     try {
-      await expect(this.page.locator('[role="alert"], .error-message')).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+      await expect(this.page.locator('[role="alert"], .error-message')).toBeVisible({timeout: TIMEOUTS.MEDIUM});
       detectionTime = Date.now() - startTime;
     } catch {
       detectionTime = TIMEOUTS.MEDIUM;
@@ -544,7 +549,7 @@ export class ErrorHandlingHelper {
 
     // Check for automatic retry mechanisms
     await this.page.waitForTimeout(2000);
-    
+
     // Test user-initiated recovery
     const retryButton = this.page.locator('button:has-text("Retry"), button:has-text("Try Again")');
     if (await retryButton.isVisible()) {
@@ -554,9 +559,9 @@ export class ErrorHandlingHelper {
 
     // Restore network and test recovery
     await networkSim.goOnline();
-    
+
     try {
-      await expect(this.page.locator('[role="alert"], .error-message')).not.toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+      await expect(this.page.locator('[role="alert"], .error-message')).not.toBeVisible({timeout: TIMEOUTS.MEDIUM});
       recoveryTime = Date.now() - startTime - detectionTime;
     } catch {
       recoveryTime = TIMEOUTS.MEDIUM;
@@ -583,7 +588,7 @@ export class ErrorHandlingHelper {
   /**
    * Error Boundary Testing
    */
-  async testErrorBoundaries() {
+  async testErrorBoundaries(): Promise<void> {
     return {
       // Trigger component error
       triggerComponentError: async (componentSelector: string) => {
@@ -600,8 +605,8 @@ export class ErrorHandlingHelper {
       // Verify error boundary catch
       verifyErrorBoundaryCatch: async () => {
         const errorBoundary = this.page.locator('[data-testid="error-boundary"], .error-boundary');
-        await expect(errorBoundary).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-        
+        await expect(errorBoundary).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
         const errorMessage = errorBoundary.locator('.error-message, [role="alert"]');
         await expect(errorMessage).toBeVisible();
       },
@@ -611,9 +616,9 @@ export class ErrorHandlingHelper {
         const retryButton = this.page.locator('button:has-text("Retry"), button:has-text("Try Again")');
         await expect(retryButton).toBeVisible();
         await retryButton.click();
-        
+
         const errorBoundary = this.page.locator('[data-testid="error-boundary"], .error-boundary');
-        await expect(errorBoundary).not.toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+        await expect(errorBoundary).not.toBeVisible({timeout: TIMEOUTS.MEDIUM});
       },
     };
   }
@@ -621,13 +626,13 @@ export class ErrorHandlingHelper {
   /**
    * Accessibility Testing for Error States
    */
-  async testErrorAccessibility() {
+  async testErrorAccessibility(): Promise<void> {
     return {
       // Verify ARIA attributes for errors
       verifyErrorAria: async () => {
         const errorMessages = this.page.locator('[role="alert"]');
         const count = await errorMessages.count();
-        
+
         for (let i = 0; i < count; i++) {
           const error = errorMessages.nth(i);
           await expect(error).toHaveAttribute('role', 'alert');
@@ -638,7 +643,7 @@ export class ErrorHandlingHelper {
       testScreenReaderAnnouncements: async () => {
         const ariaLive = this.page.locator('[aria-live]');
         await expect(ariaLive).toBeVisible();
-        
+
         const liveValue = await ariaLive.getAttribute('aria-live');
         expect(['polite', 'assertive']).toContain(liveValue);
       },
@@ -647,7 +652,7 @@ export class ErrorHandlingHelper {
       testFocusManagement: async () => {
         // Trigger error
         await this.page.keyboard.press('Tab');
-        
+
         // Verify focus is managed appropriately
         const focusedElement = this.page.locator(':focus');
         await expect(focusedElement).toBeVisible();
@@ -672,7 +677,7 @@ export class ErrorHandlingHelper {
 
     // Measure detection time
     const startTime = Date.now();
-    await expect(this.page.locator('[role="alert"]')).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.page.locator('[role="alert"]')).toBeVisible({timeout: TIMEOUTS.MEDIUM});
     const detectionTime = Date.now() - startTime;
 
     // Measure UI response time
@@ -688,7 +693,7 @@ export class ErrorHandlingHelper {
       const entries = performance.getEntriesByType('measure');
       const performanceWithMemory = performance as PerformanceWithMemory;
       const memory = performanceWithMemory.memory;
-      
+
       return {
         uiResponseTime: entries.length > 0 ? entries[entries.length - 1].duration : 0,
         memoryUsage: memory ? memory.usedJSHeapSize : 0,

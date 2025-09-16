@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { BeforeInstallPromptEvent, PWAInstallState } from '../../../types/pwa';
+import {useCallback, useEffect, useState} from 'react';
+import type {BeforeInstallPromptEvent, PWAInstallState} from '../../../types/pwa';
 
 export interface UsePWAInstallReturn extends PWAInstallState {
   isInstalling: boolean;
@@ -23,33 +23,35 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
   // Check if app is running in standalone mode
   const checkStandaloneMode = useCallback(() => {
     // Check iOS Safari standalone mode
-    const isIOSStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-    
+    const isIOSStandalone = (window.navigator as Navigator & {
+      standalone?: boolean
+    }).standalone === true;
+
     // Check display-mode: standalone media query
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    
+
     return isIOSStandalone || isStandalone;
   }, []);
 
   const promptInstall = useCallback(async () => {
-    const { installPrompt } = state;
-    
+    const {installPrompt} = state;
+
     if (!installPrompt) {
       return;
     }
 
-    setState(prev => ({ ...prev, isInstalling: true }));
+    setState(prev => ({...prev, isInstalling: true}));
 
     try {
       // Prevent the default mini-infobar from appearing
       installPrompt.preventDefault();
-      
+
       // Show the install prompt
       await installPrompt.prompt();
-      
+
       // Wait for the user to respond to the prompt
       const result = await installPrompt.userChoice;
-      
+
       // Clear the install prompt regardless of outcome
       setState(prev => ({
         ...prev,
@@ -63,8 +65,8 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
       } else {
         // User dismissed the install prompt
       }
-    } catch (error) {
-      console.error('PWA install error:', error);
+    } catch {
+      // console.error('PWA install error');
       setState(prev => ({
         ...prev,
         isInstalling: false,
@@ -85,7 +87,7 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
   useEffect(() => {
     // Check initial standalone mode
     const isStandalone = checkStandaloneMode();
-    
+
     setState(prev => ({
       ...prev,
       isStandalone,
@@ -93,12 +95,12 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
     }));
 
     // Handle beforeinstallprompt event
-    const handleBeforeInstallPrompt = (event: Event) => {
+    const handleBeforeInstallPrompt = (event: Event): void => {
       const beforeInstallPromptEvent = event as BeforeInstallPromptEvent;
-      
+
       // Prevent the mini-infobar from appearing on mobile
       beforeInstallPromptEvent.preventDefault();
-      
+
       // Save the event so it can be triggered later
       setState(prev => ({
         ...prev,
@@ -108,7 +110,7 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
     };
 
     // Handle app installed event
-    const handleAppInstalled = () => {
+    const handleAppInstalled = (): void => {
       setState(prev => ({
         ...prev,
         isInstalled: true,
@@ -123,7 +125,7 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
 
     // Listen for display mode changes
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
-    const handleDisplayModeChange = (e: MediaQueryListEvent) => {
+    const handleDisplayModeChange = (e: MediaQueryListEvent): void => {
       setState(prev => ({
         ...prev,
         isStandalone: e.matches,
@@ -142,7 +144,7 @@ export const usePWAInstall = (): UsePWAInstallReturn => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
-      
+
       if (mediaQuery.removeEventListener) {
         mediaQuery.removeEventListener('change', handleDisplayModeChange);
       } else {

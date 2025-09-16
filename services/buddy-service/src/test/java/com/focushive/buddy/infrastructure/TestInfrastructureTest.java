@@ -137,7 +137,7 @@ class TestInfrastructureTest {
         assertThat(TestDataBuilder.DEFAULT_AGREEMENT_TEXT).isNotBlank();
         assertThat(TestDataBuilder.DEFAULT_PARTNERSHIP_DURATION).isEqualTo(30);
         assertThat(TestDataBuilder.DEFAULT_COMPATIBILITY_SCORE).isEqualTo(0.85);
-        assertThat(TestDataBuilder.DEFAULT_HEALTH_SCORE).isEqualTo(0.90);
+        assertThat(TestDataBuilder.DEFAULT_HEALTH_SCORE).isEqualTo(1.00);
 
         assertThat(TestDataBuilder.DEFAULT_INTERESTS).contains("programming");
         assertThat(TestDataBuilder.DEFAULT_GOALS).contains("complete_project");

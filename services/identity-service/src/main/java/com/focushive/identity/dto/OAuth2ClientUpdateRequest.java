@@ -1,46 +1,198 @@
 package com.focushive.identity.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.Size;
 import java.util.Set;
 
+/**
+ * Request DTO for updating an existing OAuth2 client.
+ * All fields are optional - only provided fields will be updated.
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "OAuth2 client update request")
 public class OAuth2ClientUpdateRequest {
 
-    @NotBlank(message = "Client name is required")
-    @Schema(description = "Human-readable client name", example = "FocusHive Mobile App v2")
+    /**
+     * Display name for the client.
+     */
+    @Size(max = 255, message = "Client name must not exceed 255 characters")
     private String clientName;
 
-    @Schema(description = "Client description", example = "Updated FocusHive mobile application")
+    /**
+     * Description of the client.
+     */
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
 
-    @Schema(description = "Authorized redirect URIs")
+    /**
+     * Redirect URIs for authorization code flow.
+     */
     private Set<String> redirectUris;
 
-    @Schema(description = "Grant types")
+    /**
+     * Authorized grant types.
+     */
     private Set<String> grantTypes;
 
-    @Schema(description = "Scopes")
+    /**
+     * Authorized scopes.
+     */
     private Set<String> scopes;
 
-    @Schema(description = "Access token validity in seconds", example = "7200")
+    /**
+     * Access token validity in seconds.
+     */
     private Integer accessTokenValiditySeconds;
 
-    @Schema(description = "Refresh token validity in seconds", example = "1209600")
+    /**
+     * Refresh token validity in seconds.
+     */
     private Integer refreshTokenValiditySeconds;
 
-    @Schema(description = "Whether to auto-approve requests", example = "true")
+    /**
+     * Whether to auto-approve scopes (skip consent).
+     */
     private Boolean autoApprove;
 
-    @Schema(description = "Whether the client is enabled", example = "true")
+    /**
+     * Whether the client is trusted (system client).
+     */
+    private Boolean trusted;
+
+    /**
+     * Whether PKCE is required for this client.
+     */
+    private Boolean requirePkce;
+
+    /**
+     * Whether the client is enabled.
+     */
     private Boolean enabled;
+
+    /**
+     * Contact email for the client.
+     */
+    private String contactEmail;
+
+    /**
+     * Client website URL.
+     */
+    private String websiteUrl;
+
+    /**
+     * Client logo URL.
+     */
+    private String logoUrl;
+
+    /**
+     * Terms of service URL.
+     */
+    private String tosUrl;
+
+    /**
+     * Privacy policy URL.
+     */
+    private String privacyPolicyUrl;
+
+    /**
+     * Additional metadata.
+     */
+    private String metadata;
+
+    /**
+     * Check if any fields are being updated.
+     */
+    public boolean hasUpdates() {
+        return clientName != null ||
+               description != null ||
+               redirectUris != null ||
+               grantTypes != null ||
+               scopes != null ||
+               accessTokenValiditySeconds != null ||
+               refreshTokenValiditySeconds != null ||
+               autoApprove != null ||
+               trusted != null ||
+               requirePkce != null ||
+               enabled != null ||
+               contactEmail != null ||
+               websiteUrl != null ||
+               logoUrl != null ||
+               tosUrl != null ||
+               privacyPolicyUrl != null ||
+               metadata != null;
+    }
+
+    /**
+     * Validate redirect URIs format if provided.
+     */
+    public boolean validateRedirectUris() {
+        if (redirectUris == null) {
+            return true; // Not updating redirect URIs
+        }
+
+        if (redirectUris.isEmpty()) {
+            return false; // Can't have empty redirect URIs
+        }
+
+        for (String uri : redirectUris) {
+            if (!isValidRedirectUri(uri)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Check if a redirect URI is valid.
+     */
+    private boolean isValidRedirectUri(String uri) {
+        if (uri == null || uri.isEmpty()) {
+            return false;
+        }
+
+        // Allow localhost for development
+        if (uri.startsWith("http://localhost") || uri.startsWith("https://localhost")) {
+            return true;
+        }
+
+        // Must be HTTPS for production
+        if (!uri.startsWith("https://")) {
+            return false;
+        }
+
+        // No fragments allowed
+        if (uri.contains("#")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Validate grant types if provided.
+     */
+    public boolean validateGrantTypes() {
+        if (grantTypes == null) {
+            return true; // Not updating grant types
+        }
+
+        if (grantTypes.isEmpty()) {
+            return false; // Can't have empty grant types
+        }
+
+        Set<String> validGrantTypes = Set.of(
+            "authorization_code",
+            "refresh_token",
+            "client_credentials",
+            "implicit" // Deprecated but still supported
+        );
+
+        return validGrantTypes.containsAll(grantTypes);
+    }
 }

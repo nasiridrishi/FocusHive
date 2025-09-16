@@ -1,0 +1,290 @@
+spring:
+  application:
+    name: identity-service
+  
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:identity_db}
+    username: ${DB_USER:identity_user}
+    password: ${DB_PASSWORD:identity_pass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: ${FORMAT_SQL:false}
+        use_sql_comments: ${USE_SQL_COMMENTS:false}
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+        # Performance optimization for N+1 query prevention
+        default_batch_fetch_size: 16
+        enable_lazy_load_no_trans: false
+        query:
+          in_clause_parameter_padding: true
+    show-sql: false
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:identity_db}
+    user: ${DB_USER:identity_user}
+    password: ${DB_PASSWORD:identity_pass}
+  
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6380}
+    password: ${REDIS_PASSWORD}  # REQUIRED: Must be set in environment
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 8
+        min-idle: 0
+  
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 # 1 hour
+      cache-null-values: false
+  
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: ${ISSUER_URI:http://localhost:8081}
+
+server:
+  port: 8081
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}  # REQUIRED: Must be set in environment
+  access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:3600000} # 1 hour
+  refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:2592000000} # 30 days
+  remember-me-expiration-ms: ${JWT_REMEMBER_ME_EXPIRATION:7776000000} # 90 days
+  issuer: identity-service
+  # Cookie Configuration for secure httpOnly JWT storage
+  cookie:
+    access-token-name: ${JWT_COOKIE_ACCESS_NAME:access_token}
+    refresh-token-name: ${JWT_COOKIE_REFRESH_NAME:refresh_token}
+    domain: ${JWT_COOKIE_DOMAIN:} # Leave empty for same-origin, set for subdomains
+    path: ${JWT_COOKIE_PATH:/}
+    secure: ${JWT_COOKIE_SECURE:true} # false for localhost development
+    same-site: ${JWT_COOKIE_SAME_SITE:Strict} # Strict, Lax, or None
+
+# Security Configuration
+security:
+  jwt:
+    key-store: classpath:keystore.p12
+    key-store-password: ${KEY_STORE_PASSWORD}  # REQUIRED: Must be set in environment
+    key-alias: identity-service
+    private-key-passphrase: ${PRIVATE_KEY_PASSWORD}  # REQUIRED: Must be set in environment
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
+# OAuth2 Configuration
+oauth2:
+  authorization:
+    consent-required: true
+    device-code-time-to-live: PT5M
+    access-token-time-to-live: PT15M
+    refresh-token-time-to-live: P30D
+    authorization-code-time-to-live: PT5M
+    device-verification-uri: /oauth2/device/verify
+  clients:
+    focushive:
+      client-id: focushive-backend
+      client-secret: ${FOCUSHIVE_CLIENT_SECRET}  # REQUIRED: Must be set in environment
+      redirect-uris:
+        - http://localhost:8080/login/oauth2/code/identity
+      scopes:
+        - openid
+        - profile
+        - email
+        - personas
+        - identity.read
+        - identity.write
+
+# Application Configuration
+app:
+  base-url: ${APP_BASE_URL:http://localhost:3000}
+  email:
+    from: ${EMAIL_FROM:noreply@focushive.com}
+
+# Encryption Configuration
+encryption:
+  master-key: ${ENCRYPTION_MASTER_KEY}  # Required: Must be at least 32 characters
+  salt: ${ENCRYPTION_SALT:FocusHive2024Salt}  # Optional: Default salt for key derivation
+    
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+# Logging Configuration
+logging:
+  level:
+    com.focushive.identity: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
+    org.springframework.security.oauth2: ${OAUTH_LOG_LEVEL:WARN}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${SQL_BINDER_LOG_LEVEL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    groups-order: DESC
+    operations-sorter: method
+    tags-sorter: alpha
+
+# Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      identity-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+
+# Rate Limiting Configuration
+focushive:
+  rate-limiting:
+    enabled: ${RATE_LIMITING_ENABLED:true}
+    redis:
+      enabled: ${RATE_LIMITING_REDIS_ENABLED:true}
+    endpoints:
+      # Login endpoint: 5 requests per minute (IP + User)
+      login:
+        limit: ${LOGIN_RATE_LIMIT:5}
+        window: 1
+        unit: MINUTES
+        type: IP_AND_USER
+      # Registration: 2 requests per minute (IP only)  
+      register:
+        limit: ${REGISTER_RATE_LIMIT:2}
+        window: 1
+        unit: MINUTES
+        type: IP
+      # Token refresh: 10 requests per minute (User only)
+      refresh:
+        limit: ${REFRESH_RATE_LIMIT:10}
+        window: 1
+        unit: MINUTES
+        type: USER
+      # Password reset request: 1 request per minute (IP only)
+      password-reset-request:
+        limit: ${PASSWORD_RESET_REQUEST_LIMIT:1}
+        window: 1
+        unit: MINUTES
+        type: IP
+      # Password reset: 3 requests per 5 minutes (IP only)
+      password-reset:
+        limit: ${PASSWORD_RESET_LIMIT:3}
+        window: 5
+        unit: MINUTES
+        type: IP
+  
+  # Account Lockout Configuration (OWASP A04:2021 Insecure Design Protection)
+  security:
+    account-lockout:
+      enabled: ${ACCOUNT_LOCKOUT_ENABLED:true}
+      max-failed-attempts: ${ACCOUNT_LOCKOUT_MAX_ATTEMPTS:5}
+      lockout-duration-minutes: ${ACCOUNT_LOCKOUT_DURATION:30}
+      auto-unlock-enabled: ${ACCOUNT_LOCKOUT_AUTO_UNLOCK:true}
+      reset-attempts-on-success: ${ACCOUNT_LOCKOUT_RESET_ON_SUCCESS:true}
+      audit-lockout-events: ${ACCOUNT_LOCKOUT_AUDIT:true}
+      track-ip-address: ${ACCOUNT_LOCKOUT_TRACK_IP:true}
+
+    # Security Headers Configuration
+    headers:
+      enabled: ${SECURITY_HEADERS_ENABLED:true}
+      mode: AUTO # AUTO, DEVELOPMENT, PRODUCTION
+      
+      # HTTP Strict Transport Security (HSTS)
+      hsts:
+        enabled: ${HSTS_ENABLED:true}
+        max-age: ${HSTS_MAX_AGE:31536000} # 1 year
+        include-subdomains: ${HSTS_INCLUDE_SUBDOMAINS:true}
+        preload: ${HSTS_PRELOAD:true}
+      
+      # Content Security Policy (CSP)
+      csp:
+        enabled: ${CSP_ENABLED:true}
+        report-only: ${CSP_REPORT_ONLY:false}
+        report-uri: ${CSP_REPORT_URI:}
+        custom-directives: []
+      
+      # Frame Options
+      frame-options:
+        enabled: ${FRAME_OPTIONS_ENABLED:true}
+        policy: DENY # DENY, SAMEORIGIN, ALLOW_FROM
+        allow-from: []
+      
+      # Permissions Policy
+      permissions-policy:
+        enabled: ${PERMISSIONS_POLICY_ENABLED:true}
+        disabled-features:
+          - camera
+          - microphone  
+          - geolocation
+          - interest-cohort
+          - payment
+          - usb
+          - serial
+          - bluetooth
+          - magnetometer
+          - gyroscope
+          - accelerometer
+          - ambient-light-sensor
+        custom-directives: []
+      
+      # Additional Security Headers
+      additional-headers:
+        x-content-type-options: ${X_CONTENT_TYPE_OPTIONS:true}
+        x-xss-protection: ${X_XSS_PROTECTION:true}
+        x-permitted-cross-domain-policies: ${X_PERMITTED_CROSS_DOMAIN_POLICIES:true}
+        referrer-policy: ${REFERRER_POLICY:strict-origin-when-cross-origin}
+        cross-origin-embedder-policy: ${CROSS_ORIGIN_EMBEDDER_POLICY:false}
+        cross-origin-opener-policy: ${CROSS_ORIGIN_OPENER_POLICY:false}
+        cross-origin-resource-policy: ${CROSS_ORIGIN_RESOURCE_POLICY:false}

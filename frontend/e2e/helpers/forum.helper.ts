@@ -3,16 +3,16 @@
  * Provides mock data, test utilities, and helper functions for forum testing
  */
 
-import { Page, expect } from '@playwright/test';
-import { 
-  ForumUser, 
-  ForumCategory, 
-  ForumPost, 
-  ForumReply, 
-  ForumStats,
-  ForumNotification,
+import {expect, Page} from '@playwright/test';
+import {
+  ForumCategory,
   ForumCreatePostRequest,
-  ForumCreateReplyRequest
+  ForumCreateReplyRequest,
+  ForumNotification,
+  ForumPost,
+  ForumReply,
+  ForumStats,
+  ForumUser
 } from '../../src/features/forum/types';
 
 /**
@@ -560,7 +560,7 @@ export class ForumHelper {
       const url = new URL(route.request().url());
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = parseInt(url.searchParams.get('limit') || '20');
-      
+
       const startIndex = (page - 1) * limit;
       const endIndex = startIndex + limit;
       const paginatedPosts = MOCK_FORUM_POSTS.slice(startIndex, endIndex);
@@ -581,7 +581,7 @@ export class ForumHelper {
     await this.page.route('**/api/forum/posts/*', async route => {
       const postId = route.request().url().split('/').pop();
       const post = MOCK_FORUM_POSTS.find(p => p.id.toString() === postId);
-      
+
       if (post) {
         await route.fulfill({
           status: 200,
@@ -589,7 +589,7 @@ export class ForumHelper {
           body: JSON.stringify(post)
         });
       } else {
-        await route.fulfill({ status: 404 });
+        await route.fulfill({status: 404});
       }
     });
 
@@ -597,7 +597,7 @@ export class ForumHelper {
     await this.page.route('**/api/forum/posts/*/replies', async route => {
       const postId = route.request().url().split('/')[6]; // Extract post ID
       const replies = MOCK_FORUM_REPLIES.filter(r => r.postId.toString() === postId);
-      
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -614,12 +614,12 @@ export class ForumHelper {
     await this.page.route('**/api/forum/search', async route => {
       const url = new URL(route.request().url());
       const query = url.searchParams.get('query') || '';
-      
+
       // Simple search simulation
       const searchResults = MOCK_FORUM_POSTS.filter(post =>
-        post.title.toLowerCase().includes(query.toLowerCase()) ||
-        post.content.toLowerCase().includes(query.toLowerCase()) ||
-        post.tags?.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+          post.title.toLowerCase().includes(query.toLowerCase()) ||
+          post.content.toLowerCase().includes(query.toLowerCase()) ||
+          post.tags?.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
       );
 
       await route.fulfill({
@@ -648,7 +648,7 @@ export class ForumHelper {
     await this.page.route('**/api/forum/notifications', async route => {
       const userId = 1; // Assume current user ID is 1 for testing
       const notifications = MOCK_FORUM_NOTIFICATIONS.filter(n => n.userId === userId);
-      
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -723,7 +723,7 @@ export class ForumHelper {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ success: true, likeCount: Math.floor(Math.random() * 50) })
+        body: JSON.stringify({success: true, likeCount: Math.floor(Math.random() * 50)})
       });
     });
 
@@ -732,7 +732,7 @@ export class ForumHelper {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ success: true })
+        body: JSON.stringify({success: true})
       });
     });
   }
@@ -766,8 +766,8 @@ export class ForumHelper {
    */
   async waitForApiResponse(endpoint: string, timeout = 5000): Promise<void> {
     await this.page.waitForResponse(
-      response => response.url().includes(endpoint) && response.status() === 200,
-      { timeout }
+        response => response.url().includes(endpoint) && response.status() === 200,
+        {timeout}
     );
   }
 
@@ -778,8 +778,8 @@ export class ForumHelper {
     // Simulate WebSocket messages or server-sent events
     await this.page.evaluate((updateType) => {
       // Dispatch custom event to simulate real-time update
-      window.dispatchEvent(new CustomEvent('forum_update', { 
-        detail: { type: updateType, timestamp: Date.now() } 
+      window.dispatchEvent(new CustomEvent('forum_update', {
+        detail: {type: updateType, timestamp: Date.now()}
       }));
     }, type);
   }
@@ -789,14 +789,14 @@ export class ForumHelper {
    */
   async createTestAttachment(type: 'image' | 'document' = 'image'): Promise<string> {
     const fileName = type === 'image' ? 'test-image.png' : 'test-document.pdf';
-    const mimeType = type === 'image' ? 'image/png' : 'application/pdf';
-    
+    const _mimeType = type === 'image' ? 'image/png' : 'application/pdf';
+
     // Create a small test file in memory
-    const buffer = Buffer.from(`Test ${type} content`);
-    
+    const _buffer = Buffer.from(`Test ${type} content`);
+
     // Create temporary file path for testing
     const tempFilePath = `/tmp/${fileName}`;
-    
+
     // In real tests, you would write the buffer to a temp file
     // For now, return the path for mock purposes
     return tempFilePath;
@@ -807,16 +807,16 @@ export class ForumHelper {
    */
   async verifyPerformance(operation: keyof typeof FORUM_PERFORMANCE_THRESHOLDS): Promise<void> {
     const threshold = FORUM_PERFORMANCE_THRESHOLDS[operation];
-    
+
     // Start performance measurement
     const startTime = Date.now();
-    
+
     // Wait for operation to complete (implementation depends on specific operation)
     await this.page.waitForLoadState('networkidle');
-    
+
     const endTime = Date.now();
     const duration = endTime - startTime;
-    
+
     // Verify performance meets threshold
     expect(duration).toBeLessThan(threshold);
   }
@@ -827,13 +827,13 @@ export class ForumHelper {
   async cleanup(): Promise<void> {
     // Clear any test data, reset state, clean up temporary files
     await this.page.unrouteAll();
-    
+
     // Clear local storage
     await this.page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
     });
-    
+
     // Clear any test attachments
     // In a real implementation, you would clean up temporary files
   }
@@ -867,16 +867,16 @@ export class ForumHelper {
    */
   async testMobileResponsiveness(): Promise<void> {
     // Set mobile viewport
-    await this.page.setViewportSize({ width: 375, height: 667 });
-    
+    await this.page.setViewportSize({width: 375, height: 667});
+
     // Wait for responsive changes
     await this.page.waitForTimeout(500);
-    
+
     // Verify mobile-specific elements are visible
     const mobileElements = await this.page.locator('[data-testid*="mobile"]').count();
     expect(mobileElements).toBeGreaterThan(0);
-    
+
     // Reset to desktop viewport
-    await this.page.setViewportSize({ width: 1920, height: 1080 });
+    await this.page.setViewportSize({width: 1920, height: 1080});
   }
 }

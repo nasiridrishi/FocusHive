@@ -3,16 +3,16 @@
  * Tests CSS features and styling across different browsers with visual regression
  */
 
-import { test, expect, Page } from '@playwright/test';
-import { getBrowserInfo, testCSSSupport } from './browser-helpers';
+import {expect, test} from '@playwright/test';
+import {testCSSSupport} from './browser-helpers';
 
 test.describe('CSS Layout Features', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
   });
 
-  test('should support CSS Flexbox', async ({ page }) => {
+  test('should support CSS Flexbox', async ({page}) => {
     const flexboxSupport = await testCSSSupport(page, 'display', 'flex');
     expect(flexboxSupport).toBe(true);
 
@@ -34,7 +34,7 @@ test.describe('CSS Layout Features', () => {
     await expect(container).toHaveScreenshot('flexbox-layout.png');
   });
 
-  test('should support CSS Grid', async ({ page }) => {
+  test('should support CSS Grid', async ({page}) => {
     const gridSupport = await testCSSSupport(page, 'display', 'grid');
     expect(gridSupport).toBe(true);
 
@@ -55,7 +55,7 @@ test.describe('CSS Layout Features', () => {
     await expect(container).toHaveScreenshot('grid-layout.png');
   });
 
-  test('should support CSS Custom Properties (Variables)', async ({ page }) => {
+  test('should support CSS Custom Properties (Variables)', async ({page}) => {
     const customPropsSupport = await testCSSSupport(page, 'color', 'var(--test-color)');
     expect(customPropsSupport).toBe(true);
 
@@ -98,7 +98,7 @@ test.describe('CSS Layout Features', () => {
     await expect(element).toHaveScreenshot('css-custom-properties.png');
   });
 
-  test('should support CSS Sticky positioning', async ({ page }) => {
+  test('should support CSS Sticky positioning', async ({page}) => {
     const stickySupport = await testCSSSupport(page, 'position', 'sticky');
     expect(stickySupport).toBe(true);
 
@@ -115,7 +115,7 @@ test.describe('CSS Layout Features', () => {
 
     const stickyElement = page.locator('#sticky');
     await expect(stickyElement).toBeVisible();
-    
+
     // Scroll the container to test sticky behavior
     await page.locator('div').first().evaluate((el) => {
       el.scrollTop = 50;
@@ -127,11 +127,11 @@ test.describe('CSS Layout Features', () => {
 });
 
 test.describe('CSS Visual Features', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
   });
 
-  test('should support CSS Transforms', async ({ page }) => {
+  test('should support CSS Transforms', async ({page}) => {
     const transformSupport = await testCSSSupport(page, 'transform', 'rotate(45deg)');
     expect(transformSupport).toBe(true);
 
@@ -149,7 +149,7 @@ test.describe('CSS Visual Features', () => {
     await expect(container).toHaveScreenshot('css-transforms.png');
   });
 
-  test('should support CSS Animations', async ({ page }) => {
+  test('should support CSS Animations', async ({page}) => {
     const animationSupport = await testCSSSupport(page, 'animation', 'test 1s ease-in-out');
     expect(animationSupport).toBe(true);
 
@@ -172,13 +172,13 @@ test.describe('CSS Visual Features', () => {
 
     const animatedElement = page.locator('.animated');
     await expect(animatedElement).toBeVisible();
-    
+
     // Wait for animation to complete
     await page.waitForTimeout(600);
     await expect(animatedElement).toHaveScreenshot('css-animation.png');
   });
 
-  test('should support CSS Transitions', async ({ page }) => {
+  test('should support CSS Transitions', async ({page}) => {
     const transitionSupport = await testCSSSupport(page, 'transition', 'all 0.3s ease');
     expect(transitionSupport).toBe(true);
 
@@ -203,19 +203,19 @@ test.describe('CSS Visual Features', () => {
     `);
 
     const element = page.locator('.transition-test');
-    
+
     // Take initial screenshot
     await expect(element).toHaveScreenshot('css-transition-before.png');
-    
+
     // Trigger hover to start transition
     await element.hover();
     await page.waitForTimeout(400); // Wait for transition to complete
-    
+
     // Take final screenshot
     await expect(element).toHaveScreenshot('css-transition-after.png');
   });
 
-  test('should support CSS Filters', async ({ page }) => {
+  test('should support CSS Filters', async ({page}) => {
     const filterSupport = await testCSSSupport(page, 'filter', 'blur(5px)');
     expect(filterSupport).toBe(true);
 
@@ -235,9 +235,9 @@ test.describe('CSS Visual Features', () => {
     await expect(container).toHaveScreenshot('css-filters.png');
   });
 
-  test('should support Backdrop Filter', async ({ page, browserName }) => {
+  test('should support Backdrop Filter', async ({page, browserName}) => {
     const backdropFilterSupport = await testCSSSupport(page, 'backdrop-filter', 'blur(10px)');
-    
+
     // Safari and some browsers support backdrop-filter
     if (backdropFilterSupport) {
       await page.setContent(`
@@ -260,11 +260,11 @@ test.describe('CSS Visual Features', () => {
 });
 
 test.describe('CSS Responsive Features', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
   });
 
-  test('should support CSS Media Queries', async ({ page }) => {
+  test('should support CSS Media Queries', async ({page}) => {
     await page.setContent(`
       <style>
         .responsive-box {
@@ -303,23 +303,23 @@ test.describe('CSS Responsive Features', () => {
     const element = page.locator('.responsive-box');
 
     // Test desktop view
-    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.setViewportSize({width: 1024, height: 768});
     await expect(element).toHaveScreenshot('responsive-desktop.png');
 
     // Test tablet view
-    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.setViewportSize({width: 768, height: 1024});
     await page.waitForTimeout(100);
     await expect(element).toHaveScreenshot('responsive-tablet.png');
 
     // Test mobile view
-    await page.setViewportSize({ width: 375, height: 667 });
+    await page.setViewportSize({width: 375, height: 667});
     await page.waitForTimeout(100);
     await expect(element).toHaveScreenshot('responsive-mobile.png');
   });
 
-  test('should support Container Queries', async ({ page }) => {
+  test('should support Container Queries', async ({page}) => {
     const containerQuerySupport = await testCSSSupport(page, 'container-type', 'inline-size');
-    
+
     if (containerQuerySupport) {
       await page.setContent(`
         <style>
@@ -357,9 +357,9 @@ test.describe('CSS Responsive Features', () => {
     }
   });
 
-  test('should support CSS Aspect Ratio', async ({ page }) => {
+  test('should support CSS Aspect Ratio', async ({page}) => {
     const aspectRatioSupport = await testCSSSupport(page, 'aspect-ratio', '16/9');
-    
+
     if (aspectRatioSupport) {
       await page.setContent(`
         <style>
@@ -375,7 +375,7 @@ test.describe('CSS Responsive Features', () => {
 
       const element = page.locator('.aspect-ratio-box');
       const boundingBox = await element.boundingBox();
-      
+
       if (boundingBox) {
         const expectedHeight = (boundingBox.width * 9) / 16;
         expect(boundingBox.height).toBeCloseTo(expectedHeight, 1);
@@ -389,11 +389,11 @@ test.describe('CSS Responsive Features', () => {
 });
 
 test.describe('CSS Typography Features', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     await page.goto('/');
   });
 
-  test('should support Web Fonts loading', async ({ page }) => {
+  test('should support Web Fonts loading', async ({page}) => {
     await page.setContent(`
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
@@ -420,7 +420,7 @@ test.describe('CSS Typography Features', () => {
     await expect(container).toHaveScreenshot('web-fonts.png');
   });
 
-  test('should support CSS Text Features', async ({ page }) => {
+  test('should support CSS Text Features', async ({page}) => {
     await page.setContent(`
       <style>
         .text-features {
@@ -470,7 +470,7 @@ test.describe('CSS Typography Features', () => {
 });
 
 test.describe('Browser-Specific CSS Behavior', () => {
-  test('should handle vendor prefixes correctly', async ({ page, browserName }) => {
+  test('should handle vendor prefixes correctly', async ({page, browserName}) => {
     await page.setContent(`
       <style>
         .vendor-prefix-test {
@@ -514,10 +514,10 @@ test.describe('Browser-Specific CSS Behavior', () => {
     await expect(element).toHaveScreenshot(`vendor-prefixes-hover-${browserName}.png`);
   });
 
-  test('should test Material UI component rendering', async ({ page }) => {
+  test('should test Material UI component rendering', async ({page}) => {
     // Navigate to a page that uses Material UI components
     await page.goto('/login'); // Assuming login page uses MUI components
-    
+
     // Wait for components to render
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
@@ -526,7 +526,7 @@ test.describe('Browser-Specific CSS Behavior', () => {
     const muiButton = page.locator('button').first();
     if (await muiButton.count() > 0) {
       await expect(muiButton).toBeVisible();
-      
+
       // Take screenshot of MUI components
       await expect(page).toHaveScreenshot('material-ui-components.png', {
         fullPage: true,
@@ -535,10 +535,10 @@ test.describe('Browser-Specific CSS Behavior', () => {
     }
   });
 
-  test('should test dark mode support', async ({ page }) => {
+  test('should test dark mode support', async ({page}) => {
     // Test system preference for dark mode
-    await page.emulateMedia({ colorScheme: 'dark' });
-    
+    await page.emulateMedia({colorScheme: 'dark'});
+
     await page.setContent(`
       <style>
         body {
@@ -569,18 +569,18 @@ test.describe('Browser-Specific CSS Behavior', () => {
     await expect(page).toHaveScreenshot('dark-mode-test.png');
 
     // Test light mode
-    await page.emulateMedia({ colorScheme: 'light' });
+    await page.emulateMedia({colorScheme: 'light'});
     await page.waitForTimeout(400); // Wait for transition
     await expect(page).toHaveScreenshot('light-mode-test.png');
   });
 
-  test('should test high contrast mode', async ({ page }) => {
+  test('should test high contrast mode', async ({page}) => {
     // Emulate high contrast preferences
-    await page.emulateMedia({ forcedColors: 'active' });
-    
+    await page.emulateMedia({forcedColors: 'active'});
+
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
-    
+
     // Test that the page is still usable in high contrast mode
     const mainContent = page.locator('main, [role="main"], .main-content').first();
     if (await mainContent.count() > 0) {
@@ -591,14 +591,14 @@ test.describe('Browser-Specific CSS Behavior', () => {
     }
   });
 
-  test('should test print styles', async ({ page }) => {
+  test('should test print styles', async ({page}) => {
     await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
-    
+
     // Emulate print media
-    await page.emulateMedia({ media: 'print' });
+    await page.emulateMedia({media: 'print'});
     await page.waitForTimeout(500);
-    
+
     // Take screenshot of print styles
     await expect(page).toHaveScreenshot('print-styles.png', {
       fullPage: true

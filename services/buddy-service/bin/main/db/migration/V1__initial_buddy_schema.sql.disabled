@@ -1,0 +1,262 @@
+-- Buddy Service Initial Schema Migration
+-- Creates all necessary tables for buddy system functionality
+
+-- ==============================================================================
+-- BUDDY PREFERENCES TABLE
+-- Stores user matching preferences for buddy system
+-- ==============================================================================
+CREATE TABLE buddy_preferences (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR(255) NOT NULL UNIQUE,
+    preferred_timezone VARCHAR(50),
+    preferred_work_hours JSONB DEFAULT '{}' NOT NULL,
+    focus_areas TEXT[],
+    communication_style VARCHAR(50) CHECK (communication_style IN ('FREQUENT', 'MODERATE', 'MINIMAL')),
+    matching_enabled BOOLEAN NOT NULL DEFAULT true,
+    timezone_flexibility INTEGER DEFAULT 2, -- hours of flexibility
+    min_commitment_hours INTEGER DEFAULT 10, -- minimum weekly commitment
+    max_partners INTEGER DEFAULT 3,
+    language VARCHAR(10) DEFAULT 'en',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- BUDDY PARTNERSHIPS TABLE
+-- Manages buddy relationships between users
+-- ==============================================================================
+CREATE TABLE buddy_partnerships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user1_id VARCHAR(255) NOT NULL,
+    user2_id VARCHAR(255) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ACTIVE', 'ENDED', 'BLOCKED')),
+    initiated_by VARCHAR(255) NOT NULL,
+    agreement_text TEXT,
+    duration_days INTEGER DEFAULT 30,
+    compatibility_score DECIMAL(5,4) CHECK (compatibility_score BETWEEN 0.0000 AND 1.0000),
+    health_score DECIMAL(5,4) CHECK (health_score BETWEEN 0.0000 AND 1.0000),
+    started_at TIMESTAMP,
+    ended_at TIMESTAMP,
+    end_reason TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Ensure no self-partnerships and unique partnerships
+    CHECK (user1_id != user2_id),
+    UNIQUE (user1_id, user2_id)
+);
+
+-- ==============================================================================
+-- BUDDY REQUESTS TABLE
+-- Tracks partnership requests sent between users
+-- ==============================================================================
+CREATE TABLE buddy_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requester_id VARCHAR(255) NOT NULL,
+    recipient_id VARCHAR(255) NOT NULL,
+    message TEXT,
+    proposed_goals TEXT[] DEFAULT '{}',
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ACCEPTED', 'DECLINED', 'EXPIRED')),
+    responded_at TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '7 days'),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Ensure no self-requests
+    CHECK (requester_id != recipient_id)
+);
+
+-- ==============================================================================
+-- SHARED GOALS TABLE
+-- Goals shared between buddy partners
+-- ==============================================================================
+CREATE TABLE shared_goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    partnership_id UUID NOT NULL REFERENCES buddy_partnerships(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_by VARCHAR(255) NOT NULL,
+    target_date DATE,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'COMPLETED', 'PAUSED', 'CANCELLED')),
+    progress_percentage INTEGER DEFAULT 0 CHECK (progress_percentage BETWEEN 0 AND 100),
+    metrics JSONB DEFAULT '{}',
+    completed_at TIMESTAMP,
+    completed_by VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- GOAL MILESTONES TABLE
+-- Milestones for shared goals
+-- ==============================================================================
+CREATE TABLE goal_milestones (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    goal_id UUID NOT NULL REFERENCES shared_goals(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    target_date DATE,
+    order_index INTEGER NOT NULL DEFAULT 0,
+    completed_at TIMESTAMP,
+    completed_by VARCHAR(255),
+    celebration_sent BOOLEAN DEFAULT false,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- BUDDY CHECK-INS TABLE
+-- Daily/weekly check-ins between buddies
+-- ==============================================================================
+CREATE TABLE buddy_checkins (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    partnership_id UUID NOT NULL REFERENCES buddy_partnerships(id) ON DELETE CASCADE,
+    user_id VARCHAR(255) NOT NULL,
+    checkin_type VARCHAR(20) NOT NULL DEFAULT 'DAILY' CHECK (checkin_type IN ('DAILY', 'WEEKLY', 'MILESTONE')),
+    content TEXT NOT NULL,
+    mood VARCHAR(20) CHECK (mood IN ('EXCELLENT', 'GOOD', 'NEUTRAL', 'STRUGGLING', 'DIFFICULT')),
+    mood_rating INTEGER CHECK (mood_rating BETWEEN 1 AND 5),
+    productivity_rating INTEGER CHECK (productivity_rating BETWEEN 1 AND 10),
+    progress_rating INTEGER CHECK (progress_rating BETWEEN 1 AND 5),
+    current_focus VARCHAR(500),
+    challenges VARCHAR(500),
+    wins VARCHAR(500),
+    productivity_score INTEGER CHECK (productivity_score BETWEEN 1 AND 10),
+    goals_progress JSONB DEFAULT '{}', -- Map of goal_id to progress percentage
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- ACCOUNTABILITY SCORES TABLE
+-- Tracks accountability metrics for users and partnerships
+-- ==============================================================================
+CREATE TABLE accountability_scores (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR(255) NOT NULL,
+    partnership_id UUID REFERENCES buddy_partnerships(id) ON DELETE CASCADE,
+    score DECIMAL(5,2) DEFAULT 0.00 CHECK (score BETWEEN 0.00 AND 100.00),
+    checkins_completed INTEGER DEFAULT 0,
+    checkins_expected INTEGER DEFAULT 0,
+    goals_achieved INTEGER DEFAULT 0,
+    goals_total INTEGER DEFAULT 0,
+    response_rate DECIMAL(5,4) DEFAULT 1.0000 CHECK (response_rate BETWEEN 0.0000 AND 1.0000),
+    streak_days INTEGER DEFAULT 0,
+    longest_streak INTEGER DEFAULT 0,
+    last_checkin_at TIMESTAMP,
+    calculated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Either user-specific or partnership-specific score
+    CHECK (
+        (user_id IS NOT NULL AND partnership_id IS NULL) OR
+        (user_id IS NOT NULL AND partnership_id IS NOT NULL)
+    )
+);
+
+-- ==============================================================================
+-- BUDDY INTERACTIONS TABLE
+-- Messages, nudges, celebrations between buddies
+-- ==============================================================================
+CREATE TABLE buddy_interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    partnership_id UUID NOT NULL REFERENCES buddy_partnerships(id) ON DELETE CASCADE,
+    sender_id VARCHAR(255) NOT NULL,
+    recipient_id VARCHAR(255),
+    type VARCHAR(30) NOT NULL CHECK (type IN ('MESSAGE', 'NUDGE', 'CELEBRATION', 'ENCOURAGEMENT', 'REMINDER', 'CHECK_IN_RESPONSE')),
+    content TEXT NOT NULL,
+    metadata_json JSONB DEFAULT '{}',
+    related_goal_id UUID REFERENCES shared_goals(id),
+    related_checkin_id UUID REFERENCES buddy_checkins(id),
+    read_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- PARTNERSHIP HEALTH TABLE
+-- Health metrics for partnerships
+-- ==============================================================================
+CREATE TABLE partnership_health (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    partnership_id UUID NOT NULL REFERENCES buddy_partnerships(id) ON DELETE CASCADE,
+    metric_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    interaction_frequency DECIMAL(5,2) DEFAULT 0.00, -- interactions per day
+    goal_progress DECIMAL(5,4) DEFAULT 0.0000 CHECK (goal_progress BETWEEN 0.0000 AND 1.0000),
+    checkin_consistency DECIMAL(5,4) DEFAULT 1.0000 CHECK (checkin_consistency BETWEEN 0.0000 AND 1.0000),
+    response_time_avg_hours DECIMAL(8,2), -- average response time in hours
+    overall_health DECIMAL(5,4) DEFAULT 1.0000 CHECK (overall_health BETWEEN 0.0000 AND 1.0000),
+    risk_indicators JSONB DEFAULT '[]', -- Array of risk indicators
+    last_interaction_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (partnership_id, metric_date)
+);
+
+-- ==============================================================================
+-- SUCCESS STORIES TABLE
+-- Featured success stories from partnerships
+-- ==============================================================================
+CREATE TABLE success_stories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    partnership_id UUID NOT NULL REFERENCES buddy_partnerships(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    story TEXT NOT NULL,
+    metrics_json JSONB DEFAULT '{}', -- Achievement metrics
+    submitted_by VARCHAR(255) NOT NULL,
+    approved BOOLEAN DEFAULT false,
+    approved_by VARCHAR(255),
+    approved_at TIMESTAMP,
+    featured BOOLEAN DEFAULT false,
+    featured_from DATE,
+    featured_until DATE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- MATCHING QUEUE TABLE
+-- Temporary table for users actively seeking matches
+-- ==============================================================================
+CREATE TABLE matching_queue (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR(255) NOT NULL UNIQUE,
+    search_criteria JSONB DEFAULT '{}',
+    preferences_snapshot JSONB NOT NULL, -- Snapshot of preferences at time of queuing
+    priority_score DECIMAL(5,4) DEFAULT 0.5000,
+    entered_queue_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_matched_attempt TIMESTAMP,
+    match_attempts INTEGER DEFAULT 0,
+    expires_at TIMESTAMP NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '7 days')
+);
+
+-- ==============================================================================
+-- COMMENTS ON TABLES
+-- ==============================================================================
+COMMENT ON TABLE buddy_preferences IS 'User preferences for buddy matching algorithm';
+COMMENT ON TABLE buddy_partnerships IS 'Active and historical buddy partnerships';
+COMMENT ON TABLE buddy_requests IS 'Partnership requests sent between users';
+COMMENT ON TABLE shared_goals IS 'Goals shared between buddy partners';
+COMMENT ON TABLE goal_milestones IS 'Milestones and checkpoints for shared goals';
+COMMENT ON TABLE buddy_checkins IS 'Daily and weekly check-ins between buddies';
+COMMENT ON TABLE accountability_scores IS 'Accountability and engagement metrics';
+COMMENT ON TABLE buddy_interactions IS 'Messages, nudges, and celebrations between buddies';
+COMMENT ON TABLE partnership_health IS 'Health monitoring metrics for partnerships';
+COMMENT ON TABLE success_stories IS 'Featured success stories from buddy partnerships';
+COMMENT ON TABLE matching_queue IS 'Temporary queue for users actively seeking buddy matches';
+
+-- ==============================================================================
+-- COMMENTS ON IMPORTANT COLUMNS
+-- ==============================================================================
+COMMENT ON COLUMN buddy_preferences.preferred_work_hours IS 'JSONB map of day-of-week to {startHour, endHour} objects';
+COMMENT ON COLUMN buddy_preferences.focus_areas IS 'Array of focus areas: CODING, STUDYING, WRITING, RESEARCH, etc.';
+COMMENT ON COLUMN buddy_preferences.timezone_flexibility IS 'Hours of timezone flexibility for matching';
+
+COMMENT ON COLUMN buddy_partnerships.compatibility_score IS 'Algorithm-calculated compatibility score (0.0000-1.0000)';
+COMMENT ON COLUMN buddy_partnerships.health_score IS 'Current partnership health score (0.0000-1.0000)';
+
+COMMENT ON COLUMN buddy_checkins.goals_progress IS 'JSONB map of goal_id to progress percentage';
+COMMENT ON COLUMN buddy_checkins.productivity_rating IS 'Self-reported productivity rating (1-10)';
+
+COMMENT ON COLUMN accountability_scores.response_rate IS 'Rate of responding to buddy interactions';
+COMMENT ON COLUMN accountability_scores.streak_days IS 'Current consecutive days with check-ins';
+
+COMMENT ON COLUMN partnership_health.risk_indicators IS 'Array of risk indicators: low_engagement, missed_checkins, etc.';
+COMMENT ON COLUMN partnership_health.overall_health IS 'Composite health score calculated from all metrics';

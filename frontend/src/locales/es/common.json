@@ -88,7 +88,7 @@
     "next_month": "Próximo Mes",
     "minute": "minuto",
     "minutes": "minutos",
-    "hour": "hora", 
+    "hour": "hora",
     "hours": "horas",
     "day": "día",
     "days": "días",
@@ -131,7 +131,7 @@
     "change": "Cambiar Idioma",
     "select": "Seleccionar Idioma",
     "english": "Inglés",
-    "spanish": "Español", 
+    "spanish": "Español",
     "french": "Francés",
     "auto_detect": "Detectar Automáticamente",
     "browser_default": "Predeterminado del Navegador"

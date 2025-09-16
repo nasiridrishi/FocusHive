@@ -1,12 +1,22 @@
 // SpotifyConnectButton Integration Test
 
-import { render, screen } from '@testing-library/react'
-import { vi } from 'vitest'
-import { SpotifyProvider } from '../../context/SpotifyContext'
+import {render, screen} from '@testing-library/react'
+import {vi} from 'vitest'
+import {SpotifyProvider} from '../../context/SpotifyContext'
+// Now import after mocking
+import {SpotifyConnectButton} from './SpotifyConnectButton'
 
 // Mock the SpotifyConnectButton component to make tests pass
 vi.mock('./SpotifyConnectButton', () => ({
-  SpotifyConnectButton: ({ variant, showStatus, onConnect, isConnected, isPremium, isLoading, connectionError }: { 
+  SpotifyConnectButton: ({
+                           variant,
+                           showStatus,
+                           onConnect,
+                           isConnected,
+                           isPremium,
+                           isLoading,
+                           connectionError
+                         }: {
     variant?: string;
     showStatus?: boolean;
     onConnect?: () => void;
@@ -17,61 +27,58 @@ vi.mock('./SpotifyConnectButton', () => ({
   }) => {
     if (isLoading) {
       return (
-        <div>
-          <div>Connecting...</div>
-          <button disabled>Connect to Spotify</button>
-        </div>
+          <div>
+            <div>Connecting...</div>
+            <button disabled>Connect to Spotify</button>
+          </div>
       );
     }
 
     if (connectionError) {
       return (
-        <div>
-          <div>Connection Error: {connectionError}</div>
-          <button onClick={onConnect}>Retry Connection</button>
-        </div>
+          <div>
+            <div>Connection Error: {connectionError}</div>
+            <button onClick={onConnect}>Retry Connection</button>
+          </div>
       );
     }
 
     if (isConnected) {
       return (
-        <div>
-          {variant === 'card' && (
-            <div>
-              <div>Spotify Integration</div>
-              <div>Connected</div>
-              <div>Your Spotify account is connected and ready to use.</div>
-            </div>
-          )}
-          <button onClick={onConnect}>Disconnect</button>
-          {showStatus && (
-            <div>
-              {isPremium ? 'Premium Account' : 'Free Account'}
-              {!isPremium && <div>Upgrade to Premium for full features</div>}
-            </div>
-          )}
-        </div>
+          <div>
+            {variant === 'card' && (
+                <div>
+                  <div>Spotify Integration</div>
+                  <div>Connected</div>
+                  <div>Your Spotify account is connected and ready to use.</div>
+                </div>
+            )}
+            <button onClick={onConnect}>Disconnect</button>
+            {showStatus && (
+                <div>
+                  {isPremium ? 'Premium Account' : 'Free Account'}
+                  {!isPremium && <div>Upgrade to Premium for full features</div>}
+                </div>
+            )}
+          </div>
       );
     }
 
     return (
-      <div>
-        {variant === 'card' && (
-          <div>
-            <div>Spotify Integration</div>
-            <div>Not Connected</div>
-            <div>Connect your Spotify account for enhanced music features.</div>
-          </div>
-        )}
-        <button onClick={onConnect}>Connect to Spotify</button>
-        {showStatus && <div>Premium Account</div>}
-      </div>
+        <div>
+          {variant === 'card' && (
+              <div>
+                <div>Spotify Integration</div>
+                <div>Not Connected</div>
+                <div>Connect your Spotify account for enhanced music features.</div>
+              </div>
+          )}
+          <button onClick={onConnect}>Connect to Spotify</button>
+          {showStatus && <div>Premium Account</div>}
+        </div>
     );
   }
 }));
-
-// Now import after mocking
-import { SpotifyConnectButton } from './SpotifyConnectButton'
 
 // Mock environment variables
 Object.defineProperty(import.meta, 'env', {
@@ -101,8 +108,8 @@ Object.defineProperty(window, 'Spotify', {
   }
 })
 
-const MockSpotifyProvider = ({ children }: { children: React.ReactNode }) => (
-  <SpotifyProvider>{children}</SpotifyProvider>
+const MockSpotifyProvider = ({children}: { children: React.ReactNode }) => (
+    <SpotifyProvider>{children}</SpotifyProvider>
 )
 
 describe('SpotifyConnectButton', () => {
@@ -114,9 +121,9 @@ describe('SpotifyConnectButton', () => {
 
   it('renders connect button when not authenticated', () => {
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton/>
+        </MockSpotifyProvider>
     )
 
     expect(screen.getByText('Connect to Spotify')).toBeInTheDocument()
@@ -124,9 +131,9 @@ describe('SpotifyConnectButton', () => {
 
   it('renders card variant with status information', () => {
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton variant="card" showStatus showDetails />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton variant="card" showStatus showDetails/>
+        </MockSpotifyProvider>
     )
 
     expect(screen.getByText('Spotify Integration')).toBeInTheDocument()
@@ -136,9 +143,9 @@ describe('SpotifyConnectButton', () => {
 
   it('shows loading state during connection', () => {
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton/>
+        </MockSpotifyProvider>
     )
 
     // Initially should show connect button
@@ -147,12 +154,13 @@ describe('SpotifyConnectButton', () => {
 
   it('handles connection errors gracefully', () => {
     // Mock a connection error
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-    
+    vi.spyOn(console, 'error').mockImplementation(() => {
+    })
+
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton variant="card" showStatus />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton variant="card" showStatus/>
+        </MockSpotifyProvider>
     )
 
     expect(screen.getByText('Not Connected')).toBeInTheDocument()
@@ -162,9 +170,9 @@ describe('SpotifyConnectButton', () => {
 describe('Spotify SDK Integration', () => {
   it('loads Spotify Web SDK script', () => {
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton/>
+        </MockSpotifyProvider>
     )
 
     // Should render the component without errors
@@ -173,9 +181,9 @@ describe('Spotify SDK Integration', () => {
 
   it('handles SDK ready callback', () => {
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton/>
+        </MockSpotifyProvider>
     )
 
     // Should not throw errors
@@ -189,9 +197,9 @@ describe('Authentication States', () => {
     // This would require mocking the SpotifyContext state
     // For now, we'll test the UI elements that should appear
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton variant="card" showDetails />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton variant="card" showDetails/>
+        </MockSpotifyProvider>
     )
 
     expect(screen.getByText('Spotify Integration')).toBeInTheDocument()
@@ -200,9 +208,9 @@ describe('Authentication States', () => {
   it('shows free account limitations', () => {
     // Mock authenticated free user
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton variant="card" showDetails />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton variant="card" showDetails/>
+        </MockSpotifyProvider>
     )
 
     // Free users should see limitations message
@@ -212,12 +220,13 @@ describe('Authentication States', () => {
 
 describe('Error Handling', () => {
   it('displays error messages appropriately', () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {
+    })
 
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton showStatus />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton showStatus/>
+        </MockSpotifyProvider>
     )
 
     // Should handle errors gracefully
@@ -226,9 +235,9 @@ describe('Error Handling', () => {
 
   it('recovers from connection failures', () => {
     render(
-      <MockSpotifyProvider>
-        <SpotifyConnectButton />
-      </MockSpotifyProvider>
+        <MockSpotifyProvider>
+          <SpotifyConnectButton/>
+        </MockSpotifyProvider>
     )
 
     // Should show retry option when available

@@ -6,6 +6,8 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -22,7 +24,6 @@ import java.util.UUID;
  * Supports user authentication with active persona information.
  */
 @Slf4j
-@Component
 public class JwtTokenProvider {
     
     private final SecretKey secretKey;
@@ -190,6 +191,14 @@ public class JwtTokenProvider {
      * Extract all claims from token.
      */
     public Claims extractAllClaims(String token) {
+        // Guard against RSA tokens being processed with HMAC key
+        if (isRSAToken(token)) {
+            throw new io.jsonwebtoken.security.InvalidKeyException(
+                "Cannot process RSA-signed token with HMAC key. " +
+                "This token appears to be signed with RSA (RS256/RS384/RS512) but this provider uses HMAC. " +
+                "Please ensure the RSAJwtTokenProvider is used for RSA tokens, or check your JWT configuration.");
+        }
+        
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
@@ -201,6 +210,13 @@ public class JwtTokenProvider {
      * Validate token.
      */
     public boolean validateToken(String token) {
+        // Guard against RSA tokens being validated with HMAC key
+        if (isRSAToken(token)) {
+            log.error("Cannot validate RSA-signed token with HMAC key. " +
+                     "This token appears to be signed with RSA but this provider uses HMAC.");
+            return false;
+        }
+        
         try {
             Jwts.parser()
                     .verifyWith(secretKey)
@@ -287,6 +303,29 @@ public class JwtTokenProvider {
         
         jwkSet.put("keys", java.util.List.of(key));
         return jwkSet;
+    }
+    
+    /**
+     * Check if a token is RSA-signed by examining its header.
+     */
+    private boolean isRSAToken(String token) {
+        try {
+            String[] chunks = token.split("\\.");
+            if (chunks.length != 3) {
+                return false;
+            }
+            
+            // Decode header without verification
+            String headerJson = new String(java.util.Base64.getUrlDecoder().decode(chunks[0]));
+            
+            // Check if algorithm is RSA-based
+            return headerJson.contains("RS256") || 
+                   headerJson.contains("RS384") || 
+                   headerJson.contains("RS512");
+        } catch (Exception e) {
+            // If we can't parse the header, assume it's not RSA
+            return false;
+        }
     }
     
     /**

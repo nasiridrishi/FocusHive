@@ -1,13 +1,13 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import type { IMessage } from '@stomp/stompjs';
-import webSocketService, { 
-  WebSocketMessage, 
-  PresenceUpdate, 
+import {useCallback, useEffect, useRef, useState} from 'react';
+import type {IMessage} from '@stomp/stompjs';
+import webSocketService, {
+  NotificationMessage,
   PresenceStatus,
-  NotificationMessage 
+  PresenceUpdate,
+  WebSocketMessage
 } from '../services/websocket/WebSocketService';
-import type { BuddyCheckin, BuddyGoal } from '@features/buddy/types';
-import type { ForumPost, ForumReply } from '@features/forum/types';
+import type {BuddyCheckin, BuddyGoal} from '@features/buddy/types';
+import type {ForumPost, ForumReply} from '@features/forum/types';
 
 interface UseWebSocketOptions {
   autoConnect?: boolean;
@@ -29,7 +29,25 @@ export interface WebSocketConnectionInfo {
   };
 }
 
-export function useWebSocket(options: UseWebSocketOptions = {}) {
+export function useWebSocket(options: UseWebSocketOptions = {}): {
+  isConnected: boolean;
+  connectionState: string;
+  connectionInfo: WebSocketConnectionInfo;
+  connect: () => void;
+  disconnect: () => void;
+  retryConnection: () => void;
+  reconnectWithNewToken: () => void;
+  sendMessage: (destination: string, body: unknown) => void;
+  subscribe: (destination: string, callback: (message: IMessage) => void) => string | null;
+  unsubscribe: (subscriptionId: string) => void;
+  presenceStatus: PresenceStatus;
+  updatePresence: (status: PresenceStatus, hiveId?: number, activity?: string) => void;
+  startFocusSession: (hiveId: number | null, minutes: number) => void;
+  notifications: NotificationMessage[];
+  clearNotification: (notificationId: string) => void;
+  clearAllNotifications: () => void;
+  service: typeof webSocketService;
+} {
   const {
     autoConnect = true,
     onConnect,
@@ -62,10 +80,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
 
     // Connection status handler
-    const handleConnectionChange = (connected: boolean) => {
+    const handleConnectionChange = (connected: boolean): void => {
       const state = webSocketService.getConnectionState();
       const reconnectionInfo = webSocketService.getReconnectionInfo();
-      
+
       setIsConnected(connected);
       setConnectionState(state);
       setConnectionInfo({
@@ -73,7 +91,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         connectionState: state,
         reconnectionInfo
       });
-      
+
       if (connected) {
         onConnect?.();
       } else {
@@ -170,35 +188,44 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     isConnected,
     connectionState,
     connectionInfo,
-    
+
     // Connection control
     connect,
     disconnect,
     retryConnection,
     reconnectWithNewToken,
-    
+
     // Messaging
     sendMessage,
     subscribe,
     unsubscribe,
-    
+
     // Presence
     presenceStatus,
     updatePresence,
     startFocusSession,
-    
+
     // Notifications
     notifications,
     clearNotification,
     clearAllNotifications,
-    
+
     // Direct service access for advanced usage
     service: webSocketService
   };
 }
 
 // Hook for buddy system WebSocket features
-export function useBuddyWebSocket(relationshipId?: number) {
+export function useBuddyWebSocket(relationshipId?: number): ReturnType<typeof useWebSocket> & {
+  buddyMessages: WebSocketMessage[];
+  buddyPresence: PresenceUpdate | null;
+  sendBuddyRequest: (toUserId: number, message?: string) => void;
+  acceptBuddyRequest: (relationshipId: number) => void;
+  sendCheckin: (relationshipId: number, checkin: BuddyCheckin) => void;
+  updateGoal: (goal: BuddyGoal) => void;
+  startSession: (sessionId: number) => void;
+  endSession: (sessionId: number) => void;
+} {
   const [buddyMessages, setBuddyMessages] = useState<WebSocketMessage[]>([]);
   const [buddyPresence, setBuddyPresence] = useState<PresenceUpdate | null>(null);
 
@@ -261,7 +288,17 @@ export function useBuddyWebSocket(relationshipId?: number) {
 }
 
 // Hook for forum WebSocket features
-export function useForumWebSocket(postId?: number) {
+export function useForumWebSocket(postId?: number): ReturnType<typeof useWebSocket> & {
+  forumMessages: WebSocketMessage[];
+  typingUsers: Map<number, string>;
+  createPost: (post: Partial<ForumPost>) => void;
+  createReply: (reply: Partial<ForumReply>) => void;
+  voteOnPost: (postId: number, voteType: number) => void;
+  voteOnReply: (replyId: number, voteType: number) => void;
+  acceptReply: (replyId: number) => void;
+  editPost: (postId: number, post: Partial<ForumPost>) => void;
+  setTyping: (location: string, isTyping: boolean) => void;
+} {
   const [forumMessages, setForumMessages] = useState<WebSocketMessage[]>([]);
   const [typingUsers, setTypingUsers] = useState<Map<number, string>>(new Map());
 
@@ -270,7 +307,7 @@ export function useForumWebSocket(postId?: number) {
       if (message.type.startsWith('FORUM_')) {
         setForumMessages(prev => [...prev, message]);
       }
-      
+
       if (message.type === 'USER_TYPING' || message.type === 'USER_STOPPED_TYPING') {
         const data = message.payload as { userId: number; username: string };
         setTypingUsers(prev => {
@@ -338,7 +375,12 @@ export function useForumWebSocket(postId?: number) {
 }
 
 // Hook for hive presence WebSocket features
-export function useHivePresence(hiveId?: number) {
+export function useHivePresence(hiveId?: number): ReturnType<typeof useWebSocket> & {
+  hivePresence: PresenceUpdate[];
+  onlineCount: number;
+  joinHive: (hiveId: number) => void;
+  leaveHive: () => void;
+} {
   const [hivePresence, setHivePresence] = useState<PresenceUpdate[]>([]);
   const [onlineCount, setOnlineCount] = useState(0);
 
@@ -360,11 +402,11 @@ export function useHivePresence(hiveId?: number) {
   useEffect(() => {
     if (hiveId && ws.isConnected) {
       const subId = ws.service.subscribeToHivePresence(hiveId);
-      
+
       // Get initial presence list
       ws.service.getHivePresence(hiveId);
       ws.service.getHiveOnlineCount(hiveId);
-      
+
       return () => {
         if (subId) ws.unsubscribe(subId);
       };

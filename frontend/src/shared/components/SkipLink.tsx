@@ -1,7 +1,7 @@
 import React from 'react';
-import { styled } from '@mui/material/styles';
+import {styled} from '@mui/material/styles';
 
-const StyledSkipLink = styled('a')(({ theme }) => ({
+const StyledSkipLink = styled('a')(({theme}) => ({
   position: 'absolute',
   top: '-40px',
   left: 0,
@@ -21,14 +21,14 @@ interface SkipLinkProps {
   children: React.ReactNode;
 }
 
-export const SkipLink: React.FC<SkipLinkProps> = ({ 
-  href = '#main-content', 
-  children = 'Skip to main content' 
-}) => {
+export const SkipLink: React.FC<SkipLinkProps> = ({
+                                                    href = '#main-content',
+                                                    children = 'Skip to main content'
+                                                  }) => {
   return (
-    <StyledSkipLink href={href} className="skip-link">
-      {children}
-    </StyledSkipLink>
+      <StyledSkipLink href={href} className="skip-link">
+        {children}
+      </StyledSkipLink>
   );
 };
 

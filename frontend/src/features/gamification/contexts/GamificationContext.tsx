@@ -1,16 +1,12 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
-import type { 
-  GamificationContextValue, 
-  GamificationStats, 
-  StreakType,
-} from '../types/gamification';
+import React, {createContext, useCallback, useContext, useEffect, useReducer, useRef} from 'react';
+import type {GamificationContextValue, GamificationStats, StreakType,} from '../types/gamification';
 
 // Mock API - In real app, this would be imported from an API service
 const mockApi = {
   getGamificationStats: async (): Promise<GamificationStats> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     return {
       points: {
         current: 1250,
@@ -58,7 +54,7 @@ const mockApi = {
       totalUsers: 1500,
     };
   },
-  
+
   addPoints: async (amount: number, source: string): Promise<GamificationStats> => {
     // TODO: Track points source for analytics
     void source; // Mark as intentionally used
@@ -74,35 +70,35 @@ const mockApi = {
       },
     };
   },
-  
+
   unlockAchievement: async (achievementId: string): Promise<GamificationStats> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     const currentStats = await mockApi.getGamificationStats();
     return {
       ...currentStats,
       achievements: currentStats.achievements.map(achievement =>
-        achievement.id === achievementId
-          ? { ...achievement, isUnlocked: true, unlockedAt: new Date() }
-          : achievement
+          achievement.id === achievementId
+              ? {...achievement, isUnlocked: true, unlockedAt: new Date()}
+              : achievement
       ),
     };
   },
-  
+
   updateStreak: async (streakType: StreakType): Promise<GamificationStats> => {
     await new Promise(resolve => setTimeout(resolve, 500));
     const currentStats = await mockApi.getGamificationStats();
     return {
       ...currentStats,
       streaks: currentStats.streaks.map(streak =>
-        streak.type === streakType
-          ? { 
-              ...streak, 
-              current: streak.current + 1,
-              best: Math.max(streak.best, streak.current + 1),
-              lastActivity: new Date(),
-              isActive: true,
-            }
-          : streak
+          streak.type === streakType
+              ? {
+                ...streak,
+                current: streak.current + 1,
+                best: Math.max(streak.best, streak.current + 1),
+                lastActivity: new Date(),
+                isActive: true,
+              }
+              : streak
       ),
     };
   },
@@ -110,12 +106,12 @@ const mockApi = {
 
 // Action types
 type GamificationAction =
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_STATS'; payload: GamificationStats }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'UPDATE_POINTS'; payload: { amount: number; source: string } }
-  | { type: 'UNLOCK_ACHIEVEMENT'; payload: string }
-  | { type: 'UPDATE_STREAK'; payload: StreakType };
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_STATS'; payload: GamificationStats }
+    | { type: 'SET_ERROR'; payload: string | null }
+    | { type: 'UPDATE_POINTS'; payload: { amount: number; source: string } }
+    | { type: 'UNLOCK_ACHIEVEMENT'; payload: string }
+    | { type: 'UPDATE_STREAK'; payload: StreakType };
 
 // State type
 interface GamificationState {
@@ -133,19 +129,19 @@ const initialState: GamificationState = {
 
 // Reducer
 const gamificationReducer = (
-  state: GamificationState,
-  action: GamificationAction
+    state: GamificationState,
+    action: GamificationAction
 ): GamificationState => {
   switch (action.type) {
     case 'SET_LOADING':
-      return { ...state, loading: action.payload };
-    
+      return {...state, loading: action.payload};
+
     case 'SET_STATS':
-      return { ...state, stats: action.payload, loading: false, error: null };
-    
+      return {...state, stats: action.payload, loading: false, error: null};
+
     case 'SET_ERROR':
-      return { ...state, error: action.payload, loading: false };
-    
+      return {...state, error: action.payload, loading: false};
+
     case 'UPDATE_POINTS':
       if (!state.stats) return state;
       return {
@@ -160,7 +156,7 @@ const gamificationReducer = (
           },
         },
       };
-    
+
     case 'UNLOCK_ACHIEVEMENT':
       if (!state.stats) return state;
       return {
@@ -168,13 +164,13 @@ const gamificationReducer = (
         stats: {
           ...state.stats,
           achievements: state.stats.achievements.map(achievement =>
-            achievement.id === action.payload
-              ? { ...achievement, isUnlocked: true, unlockedAt: new Date() }
-              : achievement
+              achievement.id === action.payload
+                  ? {...achievement, isUnlocked: true, unlockedAt: new Date()}
+                  : achievement
           ),
         },
       };
-    
+
     case 'UPDATE_STREAK':
       if (!state.stats) return state;
       return {
@@ -182,18 +178,18 @@ const gamificationReducer = (
         stats: {
           ...state.stats,
           streaks: state.stats.streaks.map(streak =>
-            streak.type === action.payload
-              ? { 
-                  ...streak, 
-                  current: streak.current + 1,
-                  best: Math.max(streak.best, streak.current + 1),
-                  lastActivity: new Date(),
-                }
-              : streak
+              streak.type === action.payload
+                  ? {
+                    ...streak,
+                    current: streak.current + 1,
+                    best: Math.max(streak.best, streak.current + 1),
+                    lastActivity: new Date(),
+                  }
+                  : streak
           ),
         },
       };
-    
+
     default:
       return state;
   }
@@ -204,10 +200,14 @@ const defaultContextValue: GamificationContextValue = {
   stats: null,
   loading: false,
   error: null,
-  addPoints: async () => {},
-  unlockAchievement: async () => {},
-  updateStreak: async () => {},
-  refreshStats: async () => {},
+  addPoints: async () => {
+  },
+  unlockAchievement: async () => {
+  },
+  updateStreak: async () => {
+  },
+  refreshStats: async () => {
+  },
 };
 
 // Create context
@@ -215,24 +215,24 @@ const GamificationContext = createContext<GamificationContextValue>(defaultConte
 
 
 // Provider component
-export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
-  children 
-}) => {
+export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
+                                                                                children
+                                                                              }) => {
   const [state, dispatch] = useReducer(gamificationReducer, initialState);
   const retryCountRef = useRef(0);
   const maxRetries = 3;
 
   // Load stats on mount
   const loadStats = useCallback(async () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({type: 'SET_LOADING', payload: true});
     try {
       const stats = await mockApi.getGamificationStats();
-      dispatch({ type: 'SET_STATS', payload: stats });
+      dispatch({type: 'SET_STATS', payload: stats});
       retryCountRef.current = 0; // Reset retry count on success
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load stats';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-      
+      dispatch({type: 'SET_ERROR', payload: errorMessage});
+
       // FIXED: Add exponential backoff and max retry limit
       if (retryCountRef.current < maxRetries) {
         const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), 10000); // Cap at 10s
@@ -256,10 +256,10 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       const updatedStats = await mockApi.addPoints(amount, source);
-      dispatch({ type: 'SET_STATS', payload: updatedStats });
+      dispatch({type: 'SET_STATS', payload: updatedStats});
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to add points';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      dispatch({type: 'SET_ERROR', payload: errorMessage});
       throw error;
     }
   }, [state.stats]);
@@ -274,10 +274,10 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       const updatedStats = await mockApi.unlockAchievement(achievementId);
-      dispatch({ type: 'SET_STATS', payload: updatedStats });
+      dispatch({type: 'SET_STATS', payload: updatedStats});
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to unlock achievement';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      dispatch({type: 'SET_ERROR', payload: errorMessage});
       throw error;
     }
   }, [state.stats]);
@@ -286,10 +286,10 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const updateStreak = useCallback(async (streakType: StreakType) => {
     try {
       const updatedStats = await mockApi.updateStreak(streakType);
-      dispatch({ type: 'SET_STATS', payload: updatedStats });
+      dispatch({type: 'SET_STATS', payload: updatedStats});
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Streak update failed';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      dispatch({type: 'SET_ERROR', payload: errorMessage});
       throw error;
     }
   }, []);
@@ -297,12 +297,12 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Refresh stats
   const refreshStats = useCallback(async () => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({type: 'SET_LOADING', payload: true});
       const stats = await mockApi.getGamificationStats();
-      dispatch({ type: 'SET_STATS', payload: stats });
+      dispatch({type: 'SET_STATS', payload: stats});
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Refresh failed';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      dispatch({type: 'SET_ERROR', payload: errorMessage});
       throw error;
     }
   }, []);
@@ -316,11 +316,14 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     let intervalId: NodeJS.Timeout | null = null;
 
-    const setupWebSocket = () => {
+    const setupWebSocket = (): void => {
       // Simulate periodic updates only if not in test environment
       intervalId = setInterval(() => {
         // Simple action dispatch - the reducer will handle the logic
-        dispatch({ type: 'UPDATE_POINTS', payload: { amount: Math.floor(Math.random() * 10), source: 'auto_update' } });
+        dispatch({
+          type: 'UPDATE_POINTS',
+          payload: {amount: Math.floor(Math.random() * 10), source: 'auto_update'}
+        });
       }, 30000); // Update every 30 seconds
     };
 
@@ -345,9 +348,9 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <GamificationContext.Provider value={contextValue}>
-      {children}
-    </GamificationContext.Provider>
+      <GamificationContext.Provider value={contextValue}>
+        {children}
+      </GamificationContext.Provider>
   );
 };
 
@@ -355,11 +358,11 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useGamification = (): GamificationContextValue => {
   const context = useContext(GamificationContext);
-  
+
   if (!context) {
     // Return default values when no provider is present
     return defaultContextValue;
   }
-  
+
   return context;
 };

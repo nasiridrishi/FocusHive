@@ -1,0 +1,133 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: notification-service-hpa
+  namespace: focushive-notification
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/component: autoscaler
+    app.kubernetes.io/part-of: focushive
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: notification-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  # CPU-based scaling
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Memory-based scaling
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metric: HTTP requests per second
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "50"
+  # Custom metric: Queue length (notification backlog)
+  - type: Object
+    object:
+      metric:
+        name: rabbitmq_queue_messages
+        selector:
+          matchLabels:
+            queue: notifications
+      target:
+        type: Value
+        value: "100"
+  behavior:
+    scaleDown:
+      # Conservative scale-down to avoid thrashing
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      # Aggressive scale-up for handling traffic spikes
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 4
+        periodSeconds: 60
+      selectPolicy: Max
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: notification-service-hpa-custom
+  namespace: focushive-notification
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/component: autoscaler-custom
+    app.kubernetes.io/part-of: focushive
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: notification-service
+  minReplicas: 2
+  maxReplicas: 15
+  metrics:
+  # Business metric: Active notifications count
+  - type: Object
+    object:
+      metric:
+        name: notifications_active_count
+      target:
+        type: Value
+        value: "500"
+  # Business metric: Email delivery rate
+  - type: Object
+    object:
+      metric:
+        name: emails_failed_rate
+      target:
+        type: Value
+        value: "0.05" # Scale up if failure rate > 5%
+  # Business metric: Processing time
+  - type: Object
+    object:
+      metric:
+        name: notifications_processing_time_p95
+      target:
+        type: Value
+        value: "2000" # Scale up if p95 > 2 seconds
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600 # 10 minutes
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 300
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 120 # 2 minutes
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 120
+      - type: Pods
+        value: 3
+        periodSeconds: 60
+      selectPolicy: Max

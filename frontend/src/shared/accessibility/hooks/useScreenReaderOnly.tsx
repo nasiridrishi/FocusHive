@@ -1,10 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { ScreenReaderOnly } from '../components/ScreenReaderOnly';
+import React, {useCallback, useState} from 'react';
+import {ScreenReaderOnly} from '../components/ScreenReaderOnly';
 
 /**
  * Hook for managing screen reader only content
  */
-export function useScreenReaderOnly(initialContent: string = '') {
+export function useScreenReaderOnly(initialContent: string = ''): void {
   const [content, setContent] = useState(initialContent);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -28,12 +28,12 @@ export function useScreenReaderOnly(initialContent: string = '') {
     isVisible,
     showTemporarily,
     Component: useCallback(
-      ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => (
-        <ScreenReaderOnly {...props}>
-          {children || content}
-        </ScreenReaderOnly>
-      ),
-      [content]
+        ({children, ...props}: { children?: React.ReactNode; [key: string]: unknown }) => (
+            <ScreenReaderOnly {...props}>
+              {children || content}
+            </ScreenReaderOnly>
+        ),
+        [content]
     )
   };
 }
@@ -42,5 +42,5 @@ export function useScreenReaderOnly(initialContent: string = '') {
  * Utility function to create screen reader only content
  */
 export const createScreenReaderContent = (content: string) => (
-  <ScreenReaderOnly>{content}</ScreenReaderOnly>
+    <ScreenReaderOnly>{content}</ScreenReaderOnly>
 );

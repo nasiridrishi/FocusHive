@@ -1,13 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useForumWebSocket } from './useWebSocket';
-import { useWebSocket } from './useWebSocket';
-import type { WebSocketMessage } from '../services/websocket/WebSocketService';
-import { PresenceStatus } from '../services/websocket/WebSocketService';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {act, renderHook, waitFor} from '@testing-library/react';
+import {useForumWebSocket, useWebSocket} from './useWebSocket';
+import type {WebSocketMessage} from '../services/websocket/WebSocketService';
+import {PresenceStatus} from '../services/websocket/WebSocketService';
 
 // Mock the base useWebSocket hook
 vi.mock('./useWebSocket', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal() as Record<string, unknown>;
   return {
     ...actual,
     useWebSocket: vi.fn()
@@ -83,32 +82,32 @@ describe('useForumWebSocket', () => {
     notifications: [],
     clearNotification: vi.fn(),
     clearAllNotifications: vi.fn(),
-    service: mockWebSocketService
+    service: mockWebSocketService as unknown as typeof import('../services/websocket/WebSocketService').default
   };
 
   let capturedMessageHandler: ((message: WebSocketMessage) => void) | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    mockUseWebSocket.mockImplementation((options) => {
+
+    mockUseWebSocket.mockImplementation((_options) => {
       // Capture the message handler
-      capturedMessageHandler = options?.onMessage;
-      
+      capturedMessageHandler = _options?.onMessage;
+
       return mockWebSocketReturn;
     });
   });
 
   it('should initialize with default state', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     expect(result.current.forumMessages).toEqual([]);
     expect(result.current.typingUsers).toEqual(new Map());
-    
+
     // Should have all base WebSocket properties
     expect(result.current.isConnected).toBe(false);
     expect(result.current.connectionState).toBe('DISCONNECTED');
-    
+
     // Should have forum-specific methods
     expect(typeof result.current.createPost).toBe('function');
     expect(typeof result.current.createReply).toBe('function');
@@ -120,14 +119,14 @@ describe('useForumWebSocket', () => {
   });
 
   it('should filter forum messages from general messages', async () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     // Simulate forum message
     const forumMessage: WebSocketMessage = {
       id: 'msg-1',
       type: 'FORUM_NEW_POST' as WebSocketMessage['type'],
       event: 'forum_new_post',
-      payload: { postId: 123, title: 'New Forum Post' },
+      payload: {postId: 123, title: 'New Forum Post'},
       timestamp: new Date().toISOString()
     };
 
@@ -145,7 +144,7 @@ describe('useForumWebSocket', () => {
       id: 'msg-2',
       type: 'NOTIFICATION' as WebSocketMessage['type'],
       event: 'notification',
-      payload: { message: 'General notification' },
+      payload: {message: 'General notification'},
       timestamp: new Date().toISOString()
     };
 
@@ -160,14 +159,14 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle typing status messages', async () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     // User starts typing
     const typingMessage: WebSocketMessage = {
       id: 'msg-1',
       type: 'USER_TYPING' as WebSocketMessage['type'],
       event: 'user_typing',
-      payload: { userId: 123, username: 'testuser' },
+      payload: {userId: 123, username: 'testuser'},
       timestamp: new Date().toISOString()
     };
 
@@ -185,7 +184,7 @@ describe('useForumWebSocket', () => {
       id: 'msg-2',
       type: 'USER_STOPPED_TYPING' as WebSocketMessage['type'],
       event: 'user_stopped_typing',
-      payload: { userId: 123, username: 'testuser' },
+      payload: {userId: 123, username: 'testuser'},
       timestamp: new Date().toISOString()
     };
 
@@ -199,12 +198,12 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle multiple users typing simultaneously', async () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     const users = [
-      { userId: 123, username: 'user1' },
-      { userId: 456, username: 'user2' },
-      { userId: 789, username: 'user3' }
+      {userId: 123, username: 'user1'},
+      {userId: 456, username: 'user2'},
+      {userId: 789, username: 'user3'}
     ];
 
     // All users start typing
@@ -234,7 +233,7 @@ describe('useForumWebSocket', () => {
       id: 'msg-stop-456',
       type: 'USER_STOPPED_TYPING' as WebSocketMessage['type'],
       event: 'user_stopped_typing',
-      payload: { userId: 456, username: 'user2' },
+      payload: {userId: 456, username: 'user2'},
       timestamp: new Date().toISOString()
     };
 
@@ -252,33 +251,33 @@ describe('useForumWebSocket', () => {
 
   it('should subscribe to forum post when connected with postId', async () => {
     const postId = 123;
-    
+
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => {
-      capturedMessageHandler = options?.onMessage;
-      
+    mockUseWebSocket.mockImplementation((_options) => {
+      capturedMessageHandler = _options?.onMessage;
+
       return {
         ...mockWebSocketReturn,
         isConnected: true
       };
     });
 
-    const { result } = renderHook(() => useForumWebSocket(postId));
+    const {result} = renderHook(() => useForumWebSocket(postId));
 
     await waitFor(() => {
       expect(mockWebSocketService.subscribeToForumPost).toHaveBeenCalledWith(postId);
     });
 
     // Verify unsubscribe on unmount
-    const { unmount } = renderHook(() => useForumWebSocket(postId));
+    const {unmount} = renderHook(() => useForumWebSocket(postId));
     unmount();
-    
+
     expect(result.current.unsubscribe).toHaveBeenCalledWith('forum-sub-id');
   });
 
   it('should not subscribe when not connected', () => {
     const postId = 123;
-    
+
     renderHook(() => useForumWebSocket(postId));
 
     expect(mockWebSocketService.subscribeToForumPost).not.toHaveBeenCalled();
@@ -286,7 +285,7 @@ describe('useForumWebSocket', () => {
 
   it('should not subscribe when no postId provided', async () => {
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
@@ -299,7 +298,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle forum post creation', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     const postData: Partial<ForumPost> = {
       title: 'New Forum Post',
@@ -316,7 +315,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle forum reply creation', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     const replyData: Partial<ForumReply> = {
       postId: 123,
@@ -332,7 +331,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle voting on posts and replies', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     // Test voting on post
     act(() => {
@@ -348,7 +347,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle accepting replies', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     const replyId = 789;
 
@@ -360,7 +359,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle post editing', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     const postId = 123;
     const postData: Partial<ForumPost> = {
@@ -377,7 +376,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle typing status management', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     const location = 'post-123';
 
@@ -395,28 +394,28 @@ describe('useForumWebSocket', () => {
   });
 
   it('should accumulate multiple forum messages', async () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     const messages = [
       {
         id: 'msg-1',
         type: 'FORUM_NEW_POST' as WebSocketMessage['type'],
         event: 'forum_new_post',
-        payload: { postId: 123, title: 'New Post' },
+        payload: {postId: 123, title: 'New Post'},
         timestamp: new Date().toISOString()
       },
       {
         id: 'msg-2',
         type: 'FORUM_NEW_REPLY' as WebSocketMessage['type'],
         event: 'forum_new_reply',
-        payload: { replyId: 456, postId: 123 },
+        payload: {replyId: 456, postId: 123},
         timestamp: new Date().toISOString()
       },
       {
         id: 'msg-3',
         type: 'FORUM_POST_VOTED' as WebSocketMessage['type'],
         event: 'forum_post_voted',
-        payload: { postId: 123, votes: 5 },
+        payload: {postId: 123, votes: 5},
         timestamp: new Date().toISOString()
       }
     ];
@@ -435,20 +434,20 @@ describe('useForumWebSocket', () => {
 
   it('should handle subscription errors gracefully', () => {
     const postId = 123;
-    
+
     // Mock service to return null (error case)
     mockWebSocketService.subscribeToForumPost.mockReturnValueOnce(null);
-    
+
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
 
-    const { unmount } = renderHook(() => useForumWebSocket(postId));
+    const {unmount} = renderHook(() => useForumWebSocket(postId));
 
     expect(mockWebSocketService.subscribeToForumPost).toHaveBeenCalledWith(postId);
-    
+
     // Should not attempt to unsubscribe with null subscription
     unmount();
     expect(mockWebSocketReturn.unsubscribe).not.toHaveBeenCalled();
@@ -456,14 +455,14 @@ describe('useForumWebSocket', () => {
 
   it('should resubscribe when postId changes', async () => {
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
 
-    const { rerender } = renderHook(
-      ({ postId }: { postId?: number }) => useForumWebSocket(postId),
-      { initialProps: { postId: 123 } }
+    const {rerender} = renderHook(
+        ({postId}: { postId?: number }) => useForumWebSocket(postId),
+        {initialProps: {postId: 123}}
     );
 
     await waitFor(() => {
@@ -471,7 +470,7 @@ describe('useForumWebSocket', () => {
     });
 
     // Change post ID
-    rerender({ postId: 456 });
+    rerender({postId: 456});
 
     await waitFor(() => {
       expect(mockWebSocketReturn.unsubscribe).toHaveBeenCalledWith('forum-sub-id');
@@ -483,12 +482,12 @@ describe('useForumWebSocket', () => {
     const postId = 123;
     let isConnected = false;
 
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected
     }));
 
-    const { rerender } = renderHook(() => useForumWebSocket(postId));
+    const {rerender} = renderHook(() => useForumWebSocket(postId));
 
     // Initially not connected - should not subscribe
     expect(mockWebSocketService.subscribeToForumPost).not.toHaveBeenCalled();
@@ -503,7 +502,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should preserve all base useWebSocket functionality', () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     // Check that all base properties are available
     expect(result.current.isConnected).toBe(mockWebSocketReturn.isConnected);
@@ -522,7 +521,7 @@ describe('useForumWebSocket', () => {
   });
 
   it('should handle mixed message types correctly', async () => {
-    const { result } = renderHook(() => useForumWebSocket());
+    const {result} = renderHook(() => useForumWebSocket());
 
     // Mix of forum and typing messages
     const messages = [
@@ -530,28 +529,28 @@ describe('useForumWebSocket', () => {
         id: 'msg-1',
         type: 'FORUM_NEW_POST' as WebSocketMessage['type'],
         event: 'forum_new_post',
-        payload: { postId: 123 },
+        payload: {postId: 123},
         timestamp: new Date().toISOString()
       },
       {
         id: 'msg-2',
         type: 'USER_TYPING' as WebSocketMessage['type'],
         event: 'user_typing',
-        payload: { userId: 456, username: 'typinguser' },
+        payload: {userId: 456, username: 'typinguser'},
         timestamp: new Date().toISOString()
       },
       {
         id: 'msg-3',
         type: 'NOTIFICATION' as WebSocketMessage['type'],
         event: 'notification',
-        payload: { message: 'general' },
+        payload: {message: 'general'},
         timestamp: new Date().toISOString()
       },
       {
         id: 'msg-4',
         type: 'USER_STOPPED_TYPING' as WebSocketMessage['type'],
         event: 'user_stopped_typing',
-        payload: { userId: 456, username: 'typinguser' },
+        payload: {userId: 456, username: 'typinguser'},
         timestamp: new Date().toISOString()
       }
     ];
@@ -566,7 +565,7 @@ describe('useForumWebSocket', () => {
       // Should have one forum message
       expect(result.current.forumMessages).toHaveLength(1);
       expect(result.current.forumMessages[0].type).toBe('FORUM_NEW_POST');
-      
+
       // Should have no typing users (started and stopped)
       expect(result.current.typingUsers.size).toBe(0);
     });

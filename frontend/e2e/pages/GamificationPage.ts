@@ -3,8 +3,8 @@
  * Provides methods to interact with gamification features in E2E tests
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from '../helpers/test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {TIMEOUTS} from '../helpers/test-data';
 
 export class GamificationPage {
   readonly page: Page;
@@ -197,14 +197,17 @@ export class GamificationPage {
    * Wait for page to load completely
    */
   async waitForPageLoad(): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
-    
+    await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
+
     try {
       await Promise.race([
-        this.dashboard.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-        this.errorAlert.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-        this.emptyStateMessage.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-        this.page.locator('main, .MuiContainer-root, body').waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM })
+        this.dashboard.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+        this.errorAlert.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+        this.emptyStateMessage.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+        this.page.locator('main, .MuiContainer-root, body').waitFor({
+          state: 'visible',
+          timeout: TIMEOUTS.MEDIUM
+        })
       ]);
     } catch {
       await this.page.waitForLoadState('domcontentloaded');
@@ -216,15 +219,15 @@ export class GamificationPage {
    */
   async waitForDataLoad(): Promise<void> {
     try {
-      await this.loadingSpinner.waitFor({ state: 'hidden', timeout: TIMEOUTS.NETWORK });
+      await this.loadingSpinner.waitFor({state: 'hidden', timeout: TIMEOUTS.NETWORK});
     } catch {
       // Spinner might not be visible
     }
 
     await Promise.race([
-      this.pointsDisplay.waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-      this.emptyStateMessage.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT }),
-      this.errorAlert.waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT })
+      this.pointsDisplay.waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+      this.emptyStateMessage.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT}),
+      this.errorAlert.waitFor({state: 'visible', timeout: TIMEOUTS.SHORT})
     ]);
   }
 
@@ -291,13 +294,13 @@ export class GamificationPage {
   /**
    * Add points by clicking button
    */
-  async addPoints(amount: number = 50): Promise<void> {
+  async addPoints(_amount: number = 50): Promise<void> {
     const initialPoints = await this.getCurrentPoints();
     await this.addPointsButton.click();
-    
+
     // Wait for points animation
     await this.page.waitForTimeout(1000);
-    
+
     // Verify points were added
     const newPoints = await this.getCurrentPoints();
     expect(newPoints).toBeGreaterThan(initialPoints);
@@ -327,7 +330,7 @@ export class GamificationPage {
   async viewAchievement(achievementId: string): Promise<void> {
     const achievement = this.page.locator(`[data-testid="achievement-${achievementId}"]`);
     await achievement.click();
-    await expect(this.achievementModal).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.achievementModal).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -339,15 +342,15 @@ export class GamificationPage {
     isActive: boolean;
   }> {
     const streakCounter = this.page.locator(`[data-testid="streak-counter-${streakType}"]`);
-    
+
     const currentElement = streakCounter.locator('[data-testid="current-streak"]');
     const bestElement = streakCounter.locator('[data-testid="best-streak"]');
     const isActive = await streakCounter.locator('.active, [data-active="true"]').isVisible();
-    
+
     const current = parseInt(await currentElement.textContent() || '0');
     const best = parseInt(await bestElement.textContent() || '0');
-    
-    return { current, best, isActive };
+
+    return {current, best, isActive};
   }
 
   /**
@@ -362,14 +365,14 @@ export class GamificationPage {
     const leaderboard = this.page.locator(`[data-testid="leaderboard-${leaderboardType}"]`);
     const entries = leaderboard.locator('[data-testid^="leaderboard-entry-"]');
     const count = await entries.count();
-    
+
     const results = [];
     for (let i = 0; i < count; i++) {
       const entry = entries.nth(i);
       const rank = parseInt(await entry.locator('[data-testid="entry-rank"]').textContent() || '0');
       const name = await entry.locator('[data-testid="entry-name"]').textContent() || '';
       const points = parseInt(await entry.locator('[data-testid="entry-points"]').textContent()?.replace(/[^\d]/g, '') || '0');
-      
+
       const changeElement = entry.locator('[data-testid="entry-change"]');
       let change: number | undefined;
       if (await changeElement.isVisible()) {
@@ -379,10 +382,10 @@ export class GamificationPage {
           change = changeValue;
         }
       }
-      
-      results.push({ rank, name, points, change });
+
+      results.push({rank, name, points, change});
     }
-    
+
     return results;
   }
 
@@ -392,9 +395,9 @@ export class GamificationPage {
   async participateInChallenge(challengeId: string): Promise<void> {
     const participateButton = this.page.locator(`[data-testid="participate-challenge-${challengeId}"]`);
     await participateButton.click();
-    
+
     // Wait for participation confirmation
-    await expect(this.challengeNotification).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.challengeNotification).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -408,13 +411,13 @@ export class GamificationPage {
   }> {
     const challenge = this.page.locator(`[data-testid="challenge-${challengeId}"]`);
     const progressElement = challenge.locator('[data-testid^="challenge-progress-"]');
-    
+
     const current = parseInt(await progressElement.locator('[data-testid="progress-current"]').textContent() || '0');
     const target = parseInt(await progressElement.locator('[data-testid="progress-target"]').textContent() || '0');
     const percentage = target > 0 ? (current / target) * 100 : 0;
     const isCompleted = percentage >= 100;
-    
-    return { current, target, percentage, isCompleted };
+
+    return {current, target, percentage, isCompleted};
   }
 
   /**
@@ -429,26 +432,26 @@ export class GamificationPage {
     deadline?: string;
   }): Promise<void> {
     await this.createGoalButton.click();
-    
+
     const modal = this.page.locator('[data-testid="create-goal-modal"]');
-    await expect(modal).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(modal).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     // Fill goal form
     await modal.locator('[data-testid="goal-title-input"]').fill(goalData.title);
     await modal.locator('[data-testid="goal-description-input"]').fill(goalData.description);
     await modal.locator('[data-testid="goal-category-select"]').selectOption(goalData.category);
     await modal.locator('[data-testid="goal-target-input"]').fill(goalData.target.toString());
     await modal.locator('[data-testid="goal-metric-select"]').selectOption(goalData.metric);
-    
+
     if (goalData.deadline) {
       await modal.locator('[data-testid="goal-deadline-input"]').fill(goalData.deadline);
     }
-    
+
     // Submit form
     await modal.locator('[data-testid="create-goal-submit"]').click();
-    
+
     // Wait for modal to close
-    await expect(modal).not.toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(modal).not.toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -457,8 +460,8 @@ export class GamificationPage {
   async viewFriendComparison(friendId: string): Promise<void> {
     const friend = this.page.locator(`[data-testid="friend-${friendId}"]`);
     await friend.click();
-    
-    await expect(this.friendComparisonModal).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+
+    await expect(this.friendComparisonModal).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -491,15 +494,15 @@ export class GamificationPage {
    * Verify responsive design on mobile
    */
   async verifyMobileLayout(): Promise<void> {
-    await this.page.setViewportSize({ width: 375, height: 667 });
+    await this.page.setViewportSize({width: 375, height: 667});
     await this.waitForDataLoad();
-    
+
     await expect(this.dashboard).toBeVisible();
-    
+
     // Verify elements stack properly on mobile
     const pointsDisplay = this.pointsDisplay;
     await expect(pointsDisplay).toBeVisible();
-    
+
     // Check if achievements grid adapts to mobile
     if (await this.achievementsGrid.isVisible()) {
       await expect(this.achievementsGrid).toHaveClass(/responsive/);
@@ -545,13 +548,13 @@ export class GamificationPage {
     domContentLoaded: number;
   }> {
     const startTime = Date.now();
-    
+
     await this.goto();
     await this.waitForDataLoad();
-    
+
     const endTime = Date.now();
     const loadTime = endTime - startTime;
-    
+
     const performanceMetrics = await this.page.evaluate(() => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       return {
@@ -559,7 +562,7 @@ export class GamificationPage {
         domContentLoaded: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
       };
     });
-    
+
     return {
       loadTime,
       firstContentfulPaint: performanceMetrics.firstContentfulPaint,
@@ -571,14 +574,14 @@ export class GamificationPage {
    * Verify real-time updates work
    */
   async verifyRealTimeUpdates(): Promise<void> {
-    const initialPoints = await this.getCurrentPoints();
-    
+    const _initialPoints = await this.getCurrentPoints();
+
     // Trigger refresh or real-time update
     await this.clickRefresh();
-    
+
     // Wait for potential updates
     await this.page.waitForTimeout(2000);
-    
+
     // Verify that data can be refreshed
     await expect(this.pointsDisplay).toBeVisible();
   }

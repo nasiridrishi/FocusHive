@@ -8,7 +8,7 @@ spring:
 
   security:
     jwt:
-      secret: ${JWT_SECRET}  # REQUIRED: Must be set in environment
+      secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}  # Default for development only
       expiration: ${JWT_EXPIRATION:86400000}
       refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   
@@ -16,7 +16,7 @@ spring:
     # Database configuration - use PostgreSQL in production
     url: ${DATABASE_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
     username: ${DATABASE_USERNAME:sa}
-    password: ${DATABASE_PASSWORD}  # REQUIRED: Must be set in environment (use 'password' for local H2 development only)
+    password: ${DATABASE_PASSWORD:password}  # Default 'password' for local H2 development only
     driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
     hikari:
       maximum-pool-size: 20
@@ -29,7 +29,7 @@ spring:
   
   jpa:
     hibernate:
-      ddl-auto: create  # Create schema automatically for demo
+      ddl-auto: create  # Create schema automatically for H2 development
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
@@ -46,15 +46,16 @@ spring:
     show-sql: ${SHOW_SQL:false}
   
   flyway:
-    enabled: false  # Disable Flyway for demo mode
+    enabled: false   # Temporarily disabled for H2 compatibility
     locations: classpath:db/migration
     baseline-on-migrate: true
-    validate-on-migrate: false
+    validate-on-migrate: true
+    mixed: true     # Allow mixed transactional and non-transactional statements
   
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD}  # REQUIRED: Must be set in environment
+    password: ${REDIS_PASSWORD:}  # Optional for local development
     timeout: 2000ms
     lettuce:
       pool:
@@ -116,7 +117,7 @@ app:
   version: ${APP_VERSION:1.0.0}
   features:
     forum:
-      enabled: false
+      enabled: true
     buddy:
       enabled: false
     analytics:
@@ -128,7 +129,7 @@ app:
     redis:
       enabled: true
     health:
-      enabled: false
+      enabled: true
 
 # Rate Limiting Configuration
 focushive:
@@ -162,6 +163,15 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+# External Services Configuration
+services:
+  notification:
+    url: ${NOTIFICATION_SERVICE_URL:http://localhost:8083}
+  identity:
+    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+  buddy:
+    url: ${BUDDY_SERVICE_URL:http://localhost:8087}
+
 logging:
   level:
     com.focushive: ${LOG_LEVEL:INFO}
@@ -186,6 +196,17 @@ management:
   endpoint:
     health:
       show-details: always
+      show-components: always
+      group:
+        liveness:
+          include: db,redis
+          show-details: when-authorized
+        readiness:
+          include: db,redis,hiveService,presenceService,webSocket
+          show-details: when-authorized
+        startup:
+          include: db,migration,hiveService
+          show-details: when-authorized
   metrics:
     export:
       prometheus:
@@ -236,7 +257,27 @@ resilience4j:
           - org.springframework.web.client.HttpClientErrorException$Unauthorized
           - org.springframework.web.client.HttpClientErrorException$Forbidden
           - org.springframework.web.client.HttpClientErrorException$NotFound
-  
+      buddy-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        slowCallRateThreshold: 80
+        slowCallDurationThreshold: 3s
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+          - feign.RetryableException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException$BadRequest
+          - org.springframework.web.client.HttpClientErrorException$Unauthorized
+          - org.springframework.web.client.HttpClientErrorException$Forbidden
+          - org.springframework.web.client.HttpClientErrorException$NotFound
+
   retry:
     instances:
       identity-service:
@@ -254,13 +295,31 @@ resilience4j:
           - org.springframework.web.client.HttpClientErrorException$Unauthorized
           - org.springframework.web.client.HttpClientErrorException$Forbidden
           - org.springframework.web.client.HttpClientErrorException$NotFound
-  
+      buddy-service:
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+          - feign.RetryableException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException$BadRequest
+          - org.springframework.web.client.HttpClientErrorException$Unauthorized
+          - org.springframework.web.client.HttpClientErrorException$Forbidden
+          - org.springframework.web.client.HttpClientErrorException$NotFound
+
   timelimiter:
     instances:
       identity-service:
         timeoutDuration: 10s
         cancelRunningFuture: true
-  
+      buddy-service:
+        timeoutDuration: 10s
+        cancelRunningFuture: true
+
   ratelimiter:
     instances:
       identity-service:
@@ -268,9 +327,17 @@ resilience4j:
         limitRefreshPeriod: 1s
         limitForPeriod: 100
         timeoutDuration: 0s
-  
+      buddy-service:
+        registerHealthIndicator: true
+        limitRefreshPeriod: 1s
+        limitForPeriod: 100
+        timeoutDuration: 0s
+
   bulkhead:
     instances:
       identity-service:
+        maxConcurrentCalls: 50
+        maxWaitDuration: 1s
+      buddy-service:
         maxConcurrentCalls: 50
         maxWaitDuration: 1s

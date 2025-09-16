@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
-import { WebSocketMessage, UseMusicWebSocketOptions } from '../types'
+import {useCallback, useEffect, useRef, useState} from 'react'
+import {io, Socket} from 'socket.io-client'
+import {UseMusicWebSocketOptions, WebSocketMessage} from '../types'
 
 interface WebSocketState {
   isConnected: boolean
@@ -26,7 +26,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
   const socketRef = useRef<Socket | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const messageQueueRef = useRef<{ type: string; data: unknown }[]>([])
-  const { hiveId, onMessage, onConnect, onDisconnect } = options
+  const {hiveId, onMessage, onConnect, onDisconnect} = options
 
   // Connect to WebSocket
   const connect = useCallback(() => {
@@ -34,13 +34,13 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
       return
     }
 
-    setState(prev => ({ ...prev, isConnecting: true, error: null }))
+    setState(prev => ({...prev, isConnecting: true, error: null}))
 
     try {
       socketRef.current = io('ws://localhost:8084', {
         path: '/ws/music',
         transports: ['websocket'],
-        query: hiveId ? { hiveId } : {},
+        query: hiveId ? {hiveId} : {},
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
@@ -52,27 +52,27 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
 
       // Connection events
       socket.on('connect', () => {
-        setState(prev => ({ 
-          ...prev, 
-          isConnected: true, 
-          isConnecting: false, 
+        setState(prev => ({
+          ...prev,
+          isConnected: true,
+          isConnecting: false,
           error: null,
           reconnectAttempts: 0
         }))
-        
+
         // Send queued messages
         messageQueueRef.current.forEach(message => {
           socket.emit(message.type, message.data)
         })
         messageQueueRef.current = []
-        
+
         onConnect?.()
       })
 
       socket.on('disconnect', (reason) => {
-        setState(prev => ({ 
-          ...prev, 
-          isConnected: false, 
+        setState(prev => ({
+          ...prev,
+          isConnected: false,
           isConnecting: false,
           error: `Disconnected: ${reason}`
         }))
@@ -80,9 +80,9 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
       })
 
       socket.on('connect_error', (error) => {
-        setState(prev => ({ 
-          ...prev, 
-          isConnected: false, 
+        setState(prev => ({
+          ...prev,
+          isConnected: false,
           isConnecting: false,
           error: `Connection error: ${error.message}`,
           reconnectAttempts: prev.reconnectAttempts + 1
@@ -90,9 +90,9 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
       })
 
       socket.on('reconnect', () => {
-        setState(prev => ({ 
-          ...prev, 
-          isConnected: true, 
+        setState(prev => ({
+          ...prev,
+          isConnected: true,
           isConnecting: false,
           error: null,
           reconnectAttempts: 0
@@ -100,7 +100,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
       })
 
       socket.on('reconnect_error', (error) => {
-        setState(prev => ({ 
+        setState(prev => ({
           ...prev,
           error: `Reconnection failed: ${error.message}`,
           reconnectAttempts: prev.reconnectAttempts + 1
@@ -108,7 +108,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
       })
 
       socket.on('reconnect_failed', () => {
-        setState(prev => ({ 
+        setState(prev => ({
           ...prev,
           error: 'Failed to reconnect after maximum attempts',
           isConnecting: false
@@ -123,7 +123,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
           timestamp: new Date().toISOString(),
           userId: data.userId || 'unknown'
         }
-        setState(prev => ({ ...prev, lastMessage: message }))
+        setState(prev => ({...prev, lastMessage: message}))
         onMessage?.(message)
       })
 
@@ -134,7 +134,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
           timestamp: new Date().toISOString(),
           userId: data.userId || 'unknown'
         }
-        setState(prev => ({ ...prev, lastMessage: message }))
+        setState(prev => ({...prev, lastMessage: message}))
         onMessage?.(message)
       })
 
@@ -145,7 +145,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
           timestamp: new Date().toISOString(),
           userId: 'system'
         }
-        setState(prev => ({ ...prev, lastMessage: message }))
+        setState(prev => ({...prev, lastMessage: message}))
         onMessage?.(message)
       })
 
@@ -156,7 +156,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
           timestamp: new Date().toISOString(),
           userId: data.userId || 'system'
         }
-        setState(prev => ({ ...prev, lastMessage: message }))
+        setState(prev => ({...prev, lastMessage: message}))
         onMessage?.(message)
       })
 
@@ -167,7 +167,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
           timestamp: new Date().toISOString(),
           userId: data.userId || 'unknown'
         }
-        setState(prev => ({ ...prev, lastMessage: message }))
+        setState(prev => ({...prev, lastMessage: message}))
         onMessage?.(message)
       })
 
@@ -178,13 +178,13 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
           timestamp: new Date().toISOString(),
           userId: data.userId || 'unknown'
         }
-        setState(prev => ({ ...prev, lastMessage: message }))
+        setState(prev => ({...prev, lastMessage: message}))
         onMessage?.(message)
       })
 
     } catch (error) {
-      setState(prev => ({ 
-        ...prev, 
+      setState(prev => ({
+        ...prev,
         isConnecting: false,
         error: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       }))
@@ -197,15 +197,15 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
       socketRef.current.disconnect()
       socketRef.current = null
     }
-    
+
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current)
       reconnectTimeoutRef.current = null
     }
 
-    setState(prev => ({ 
-      ...prev, 
-      isConnected: false, 
+    setState(prev => ({
+      ...prev,
+      isConnected: false,
       isConnecting: false,
       error: null
     }))
@@ -217,28 +217,28 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
       socketRef.current.emit(type, data)
     } else {
       // Queue message for when connection is restored
-      messageQueueRef.current.push({ type, data })
+      messageQueueRef.current.push({type, data})
     }
   }, [])
 
   // Join a hive
   const joinHive = useCallback((newHiveId: string) => {
-    sendMessage('join_hive', { hiveId: newHiveId })
+    sendMessage('join_hive', {hiveId: newHiveId})
   }, [sendMessage])
 
   // Leave a hive
   const leaveHive = useCallback((hiveIdToLeave: string) => {
-    sendMessage('leave_hive', { hiveId: hiveIdToLeave })
+    sendMessage('leave_hive', {hiveId: hiveIdToLeave})
   }, [sendMessage])
 
   // Add track to queue
   const addTrackToQueue = useCallback((trackId: string, position?: number) => {
-    sendMessage('add_to_queue', { trackId, position })
+    sendMessage('add_to_queue', {trackId, position})
   }, [sendMessage])
 
   // Vote on track
   const voteOnTrack = useCallback((queueId: string, vote: 'up' | 'down') => {
-    sendMessage('vote_track', { queueId, vote })
+    sendMessage('vote_track', {queueId, vote})
   }, [sendMessage])
 
   // Update playback state
@@ -253,7 +253,7 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
     }
 
     disconnect()
-    
+
     // Add a small delay before reconnecting
     reconnectTimeoutRef.current = setTimeout(() => {
       connect()
@@ -303,26 +303,26 @@ export const useMusicWebSocket = (options: UseMusicWebSocketOptions = {}) => {
     error: state.error,
     lastMessage: state.lastMessage,
     reconnectAttempts: state.reconnectAttempts,
-    
+
     // Connection controls
     connect,
     disconnect,
     reconnect,
-    
+
     // Message handling
     sendMessage,
-    
+
     // Music-specific actions
     joinHive,
     leaveHive,
     addTrackToQueue,
     voteOnTrack,
     updatePlaybackState,
-    
+
     // Utilities
     checkConnection,
     getConnectionInfo,
-    
+
     // Computed values
     canReconnect: !state.isConnecting && !state.isConnected && state.reconnectAttempts < 5,
     isHealthy: state.isConnected && !state.error,

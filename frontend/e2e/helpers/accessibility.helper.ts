@@ -4,7 +4,7 @@
  * Supports WCAG 2.1 AA compliance validation
  */
 
-import { Page, Locator, expect } from '@playwright/test';
+import {Locator, Page} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 interface AxeConfiguration {
@@ -57,14 +57,14 @@ export class AccessibilityHelper {
       window.axe?.configure({
         rules: {
           // Enable all WCAG 2.1 AA rules
-          'color-contrast': { enabled: true },
-          'color-contrast-enhanced': { enabled: true },
-          'focus-order-semantics': { enabled: true },
-          'hidden-content': { enabled: false }, // We want to test hidden content in some cases
-          'landmark-one-main': { enabled: true },
-          'page-has-heading-one': { enabled: true },
-          'region': { enabled: true },
-          'skip-link': { enabled: true }
+          'color-contrast': {enabled: true},
+          'color-contrast-enhanced': {enabled: true},
+          'focus-order-semantics': {enabled: true},
+          'hidden-content': {enabled: false}, // We want to test hidden content in some cases
+          'landmark-one-main': {enabled: true},
+          'page-has-heading-one': {enabled: true},
+          'region': {enabled: true},
+          'skip-link': {enabled: true}
         },
         tags: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice']
       });
@@ -96,9 +96,9 @@ export class AccessibilityHelper {
       }>;
     }>;
   }> {
-    const results = await new AxeBuilder({ page: this.page })
-      .withTags(this.axeConfig.tags)
-      .analyze();
+    const results = await new AxeBuilder({page: this.page})
+    .withTags(this.axeConfig.tags)
+    .analyze();
 
     return {
       violations: results.violations,
@@ -127,10 +127,10 @@ export class AccessibilityHelper {
       throw new Error('Element not found for accessibility scan');
     }
 
-    const results = await new AxeBuilder({ page: this.page })
-      .include(elementHandle)
-      .withTags(this.axeConfig.tags)
-      .analyze();
+    const results = await new AxeBuilder({page: this.page})
+    .include(elementHandle)
+    .withTags(this.axeConfig.tags)
+    .analyze();
 
     return {
       violations: results.violations,
@@ -209,15 +209,15 @@ export class AccessibilityHelper {
     const background = this.parseColor(colors.backgroundColor);
 
     // If background is transparent, find the actual background
-    const actualBackground = background.a === 0 ? 
-      await this.getActualBackgroundColor(element) : background;
+    const actualBackground = background.a === 0 ?
+        await this.getActualBackgroundColor(element) : background;
 
     const ratio = this.calculateContrastRatio(foreground, actualBackground);
-    
+
     // WCAG AA requirements: 4.5:1 for normal text, 3:1 for large text
     const fontSize = parseFloat(colors.fontSize);
     const isLargeText = fontSize >= 18 || (fontSize >= 14 && await this.isBoldText(element));
-    
+
     const meetsAA = isLargeText ? ratio >= 3 : ratio >= 4.5;
     const meetsAAA = isLargeText ? ratio >= 4.5 : ratio >= 7;
 
@@ -246,20 +246,20 @@ export class AccessibilityHelper {
 
     for (const [level, headingElements] of Object.entries(headings)) {
       const levelNumber = parseInt(level.substring(1));
-      
+
       for (const heading of headingElements) {
         const text = await heading.textContent();
-        allHeadings.push({ level: levelNumber, element: heading, text: text || '' });
+        allHeadings.push({level: levelNumber, element: heading, text: text || ''});
       }
     }
 
     // Sort by DOM order
     const sortedHeadings = await Promise.all(
-      allHeadings.map(async (heading, index) => ({
-        ...heading,
-        domOrder: await this.getDomOrder(heading.element),
-        originalIndex: index
-      }))
+        allHeadings.map(async (heading, index) => ({
+          ...heading,
+          domOrder: await this.getDomOrder(heading.element),
+          originalIndex: index
+        }))
     );
 
     sortedHeadings.sort((a, b) => a.domOrder - b.domOrder);
@@ -290,7 +290,7 @@ export class AccessibilityHelper {
     for (const [landmarkType, landmarkElements] of Object.entries(landmarks)) {
       for (const landmark of landmarkElements) {
         const hasLabel = await this.hasAccessibleName(landmark);
-        
+
         // Multiple landmarks of the same type must have distinct labels
         if (landmarkElements.length > 1 && !hasLabel) {
           console.warn(`Multiple ${landmarkType} landmarks found but some lack accessible names`);
@@ -320,11 +320,11 @@ export class AccessibilityHelper {
       const ariaLabelledBy = el.getAttribute('aria-labelledby');
       if (ariaLabelledBy) {
         const referencedElements = ariaLabelledBy
-          .split(' ')
-          .map(id => document.getElementById(id))
-          .filter(Boolean);
-        
-        return referencedElements.map(ref => ref!.textContent).join(' ').trim();
+        .split(' ')
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+
+        return referencedElements.map(ref => ref?.textContent).join(' ').trim();
       }
 
       // For form controls, check labels
@@ -441,26 +441,26 @@ export class AccessibilityHelper {
     navigationErrors: string[];
   }> {
     const errors: string[] = [];
-    
+
     const focusableElements = await container.locator(
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     ).all();
 
     let canNavigate = true;
 
     if (focusableElements.length === 0) {
-      return { canNavigate: true, focusableElements: 0, navigationErrors: [] };
+      return {canNavigate: true, focusableElements: 0, navigationErrors: []};
     }
 
     // Test Tab navigation
     await focusableElements[0].focus();
-    
+
     for (let i = 0; i < Math.min(focusableElements.length - 1, 10); i++) {
       await this.page.keyboard.press('Tab');
-      
+
       const currentFocus = this.page.locator(':focus');
       const isVisible = await currentFocus.isVisible();
-      
+
       if (!isVisible) {
         errors.push(`Focus not visible after Tab navigation at step ${i + 1}`);
         canNavigate = false;
@@ -470,10 +470,10 @@ export class AccessibilityHelper {
     // Test Shift+Tab navigation
     for (let i = 0; i < Math.min(focusableElements.length - 1, 5); i++) {
       await this.page.keyboard.press('Shift+Tab');
-      
+
       const currentFocus = this.page.locator(':focus');
       const isVisible = await currentFocus.isVisible();
-      
+
       if (!isVisible) {
         errors.push(`Focus not visible after Shift+Tab navigation at step ${i + 1}`);
         canNavigate = false;
@@ -506,12 +506,12 @@ export class AccessibilityHelper {
     recommendations: string[];
   }> {
     const results = await this.runFullAccessibilityScan();
-    
+
     const criticalViolations = results.violations.filter(v => v.impact === 'critical').length;
     const totalViolations = results.violations.length;
-    
-    const complianceScore = totalViolations === 0 ? 100 : 
-      Math.max(0, Math.round(((results.passes - totalViolations) / results.passes) * 100));
+
+    const complianceScore = totalViolations === 0 ? 100 :
+        Math.max(0, Math.round(((results.passes - totalViolations) / results.passes) * 100));
 
     const violationSummary = results.violations.map(violation => ({
       rule: violation.id,
@@ -563,17 +563,17 @@ export class AccessibilityHelper {
 
     // Handle named colors (simplified)
     const namedColors: Record<string, ColorInfo> = {
-      'white': { r: 255, g: 255, b: 255, a: 1 },
-      'black': { r: 0, g: 0, b: 0, a: 1 },
-      'transparent': { r: 0, g: 0, b: 0, a: 0 }
+      'white': {r: 255, g: 255, b: 255, a: 1},
+      'black': {r: 0, g: 0, b: 0, a: 1},
+      'transparent': {r: 0, g: 0, b: 0, a: 0}
     };
 
-    return namedColors[colorString.toLowerCase()] || { r: 0, g: 0, b: 0, a: 1 };
+    return namedColors[colorString.toLowerCase()] || {r: 0, g: 0, b: 0, a: 1};
   }
 
   private calculateContrastRatio(foreground: ColorInfo, background: ColorInfo): number {
     const getLuminance = (color: ColorInfo): number => {
-      const { r, g, b } = color;
+      const {r, g, b} = color;
       const [rs, gs, bs] = [r, g, b].map(c => {
         c = c / 255;
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
@@ -591,11 +591,11 @@ export class AccessibilityHelper {
     // Traverse up the DOM to find the first non-transparent background
     return element.evaluate((el) => {
       let currentElement = el as HTMLElement;
-      
+
       while (currentElement && currentElement !== document.body) {
         const computed = window.getComputedStyle(currentElement);
         const bgColor = computed.backgroundColor;
-        
+
         if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
           const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
           if (rgbMatch) {
@@ -607,12 +607,12 @@ export class AccessibilityHelper {
             };
           }
         }
-        
-        currentElement = currentElement.parentElement!;
+
+        currentElement = currentElement.parentElement || currentElement;
       }
-      
+
       // Default to white background
-      return { r: 255, g: 255, b: 255, a: 1 };
+      return {r: 255, g: 255, b: 255, a: 1};
     });
   }
 
@@ -627,14 +627,14 @@ export class AccessibilityHelper {
   private async getDomOrder(element: Locator): Promise<number> {
     return element.evaluate((el) => {
       const walker = document.createTreeWalker(
-        document.body,
-        NodeFilter.SHOW_ELEMENT,
-        null
+          document.body,
+          NodeFilter.SHOW_ELEMENT,
+          null
       );
 
       let order = 0;
       let currentNode = walker.nextNode();
-      
+
       while (currentNode) {
         if (currentNode === el) {
           return order;
@@ -642,12 +642,16 @@ export class AccessibilityHelper {
         order++;
         currentNode = walker.nextNode();
       }
-      
+
       return order;
     });
   }
 
-  private generateRecommendations(violations: Array<{ id: string; description: string; impact: string }>): string[] {
+  private generateRecommendations(violations: Array<{
+    id: string;
+    description: string;
+    impact: string
+  }>): string[] {
     const recommendations: string[] = [];
     const violationTypes = new Set(violations.map(v => v.id));
 

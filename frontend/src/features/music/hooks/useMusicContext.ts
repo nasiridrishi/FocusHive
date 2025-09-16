@@ -1,12 +1,12 @@
 /**
  * Music Context Hooks
- * 
+ *
  * Custom hooks for accessing music context
  */
 
-import { useContext } from 'react';
+import {useContext} from 'react';
 import MusicContext from '../context/MusicContext';
-import type { MusicContextType } from '../types';
+import type {MusicContextType} from '../types';
 
 /**
  * Hook to use music context

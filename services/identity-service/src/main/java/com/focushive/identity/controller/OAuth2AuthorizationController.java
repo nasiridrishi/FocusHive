@@ -93,7 +93,7 @@ public class OAuth2AuthorizationController {
             @ApiResponse(responseCode = "400", description = "Invalid request or grant"),
             @ApiResponse(responseCode = "401", description = "Invalid client credentials")
     })
-    @PostMapping(value = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(value = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OAuth2TokenResponse> token(
             @Parameter(description = "Grant type") @RequestParam(value = "grant_type", required = false) String grantType,
             @Parameter(description = "Authorization code (for authorization_code grant)") @RequestParam(value = "code", required = false) String code,
@@ -106,27 +106,37 @@ public class OAuth2AuthorizationController {
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             HttpServletRequest request) {
 
-        // Validate required parameters
-        if (grantType == null || grantType.trim().isEmpty()) {
+        try {
+            // Validate required parameters
+            if (grantType == null || grantType.trim().isEmpty()) {
+                log.warn("OAuth2 token request missing grant_type");
+                return ResponseEntity.badRequest().build();
+            }
+
+            log.info("OAuth2 token request for grant type: {}", grantType);
+
+            OAuth2TokenRequest tokenRequest = OAuth2TokenRequest.builder()
+                    .grantType(grantType.trim())
+                    .code(code)
+                    .redirectUri(redirectUri)
+                    .codeVerifier(codeVerifier)
+                    .refreshToken(refreshToken)
+                    .scope(scope)
+                    .clientId(clientId)
+                    .clientSecret(clientSecret)
+                    .authorizationHeader(authorizationHeader)
+                    .build();
+
+            OAuth2TokenResponse tokenResponse = oauth2AuthorizationService.token(tokenRequest, request);
+            log.info("OAuth2 token response generated successfully");
+            return ResponseEntity.ok(tokenResponse);
+        } catch (IllegalArgumentException e) {
+            log.error("OAuth2 token request validation error: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("OAuth2 token request processing error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        log.info("OAuth2 token request for grant type: {}", grantType);
-
-        OAuth2TokenRequest tokenRequest = OAuth2TokenRequest.builder()
-                .grantType(grantType.trim())
-                .code(code)
-                .redirectUri(redirectUri)
-                .codeVerifier(codeVerifier)
-                .refreshToken(refreshToken)
-                .scope(scope)
-                .clientId(clientId)
-                .clientSecret(clientSecret)
-                .authorizationHeader(authorizationHeader)
-                .build();
-
-        OAuth2TokenResponse tokenResponse = oauth2AuthorizationService.token(tokenRequest, request);
-        return ResponseEntity.ok(tokenResponse);
     }
 
     @Operation(
@@ -137,7 +147,7 @@ public class OAuth2AuthorizationController {
             @ApiResponse(responseCode = "200", description = "Token information returned"),
             @ApiResponse(responseCode = "401", description = "Invalid client credentials")
     })
-    @PostMapping(value = "/introspect", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(value = "/introspect", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OAuth2IntrospectionResponse> introspect(
             @Parameter(description = "Token to introspect") @RequestParam(value = "token", required = false) String token,
             @Parameter(description = "Token type hint") @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint,
@@ -207,7 +217,7 @@ public class OAuth2AuthorizationController {
             @ApiResponse(responseCode = "200", description = "User information returned"),
             @ApiResponse(responseCode = "401", description = "Invalid or expired access token")
     })
-    @GetMapping("/userinfo")
+    @GetMapping(value = "/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
     @SecurityRequirement(name = "OAuth2")
     public ResponseEntity<OAuth2UserInfoResponse> userInfo(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
@@ -225,7 +235,7 @@ public class OAuth2AuthorizationController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Authorization server metadata")
     })
-    @GetMapping("/.well-known/oauth-authorization-server")
+    @GetMapping(value = "/.well-known/oauth-authorization-server", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OAuth2ServerMetadata> serverMetadata(HttpServletRequest request) {
         log.debug("OAuth2 server metadata request");
         
@@ -240,7 +250,7 @@ public class OAuth2AuthorizationController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "JWK Set returned")
     })
-    @GetMapping("/jwks")
+    @GetMapping(value = "/jwks", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> jwkSet() {
         log.debug("JWK Set request");
         
@@ -256,7 +266,7 @@ public class OAuth2AuthorizationController {
             @ApiResponse(responseCode = "201", description = "Client registered successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid client metadata")
     })
-    @PostMapping("/register")
+    @PostMapping(value = "/client-registration", produces = MediaType.APPLICATION_JSON_VALUE)
     @SecurityRequirement(name = "JWT")
     public ResponseEntity<OAuth2ClientResponse> registerClient(
             @Valid @RequestBody OAuth2ClientRegistrationRequest request,
@@ -276,7 +286,7 @@ public class OAuth2AuthorizationController {
             @ApiResponse(responseCode = "200", description = "Client list retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Not authenticated")
     })
-    @GetMapping("/clients")
+    @GetMapping(value = "/clients", produces = MediaType.APPLICATION_JSON_VALUE)
     @SecurityRequirement(name = "JWT")
     public ResponseEntity<OAuth2ClientListResponse> getClients(Authentication authentication) {
         log.debug("OAuth2 client list request");
@@ -294,7 +304,7 @@ public class OAuth2AuthorizationController {
             @ApiResponse(responseCode = "404", description = "Client not found"),
             @ApiResponse(responseCode = "403", description = "Not authorized to modify client")
     })
-    @PutMapping("/clients/{clientId}")
+    @PutMapping(value = "/clients/{clientId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @SecurityRequirement(name = "JWT")
     public ResponseEntity<OAuth2ClientResponse> updateClient(
             @PathVariable String clientId,

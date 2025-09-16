@@ -1,7 +1,7 @@
-import type { PresenceStatus } from '../../shared/types/presence';
-import type { HiveSettings } from '../../shared/types/hive';
-import type { User as BaseUser } from '../../shared/types/auth';
-import type { UserPresence, Hive, User } from './types';
+import type {PresenceStatus} from '../../shared/types/presence';
+import type {HiveSettings} from '../../shared/types/hive';
+import type {User as BaseUser} from '../../shared/types/auth';
+import type {Hive, User, UserPresence} from './types';
 
 // DTO interfaces matching what the backend returns
 export interface PresenceDTO {
@@ -46,7 +46,7 @@ function formatDate(dateString: string): string {
     if (isNaN(date.getTime())) {
       return 'Unknown';
     }
-    
+
     // Format the date to match the expected test format: "Jan 1, 2024 at 12:00 PM"
     // Using UTC to ensure consistent results regardless of timezone
     const formatted = date.toLocaleString('en-US', {
@@ -58,7 +58,7 @@ function formatDate(dateString: string): string {
       hour12: true,
       timeZone: 'UTC'
     });
-    
+
     // Replace to get the right format: "Jan 1, 2024 at 12:00 PM"
     return formatted.replace(/, (\d{4}),/, ', $1 at');
   } catch {
@@ -81,7 +81,7 @@ function getStatusDisplayText(status: PresenceStatus): string {
     away: 'Away',
     offline: 'Offline'
   };
-  
+
   return statusMap[status] || 'Offline';
 }
 
@@ -90,7 +90,7 @@ function truncateText(text: string, maxLength: number = 117): string {
   if (text.length <= maxLength) {
     return text;
   }
-  
+
   // Truncate to exactly 120 characters including the ellipsis
   return text.substring(0, 117) + '...';
 }
@@ -100,25 +100,25 @@ function generateInitials(name: string): string {
   if (!name || name.trim() === '') {
     return '??';
   }
-  
+
   // For display names like "John Michael Doe", we want JMD (up to 3 initials)
   // For usernames like "john_doe_123", we want JD (filtering out numbers)
   const words = name
-    .replace(/_/g, ' ')
-    .split(/\s+/)
-    .filter(word => word.length > 0 && isNaN(parseInt(word))); // Filter out numeric words
-  
+  .replace(/_/g, ' ')
+  .split(/\s+/)
+  .filter(word => word.length > 0 && isNaN(parseInt(word))); // Filter out numeric words
+
   if (words.length === 0) {
     return '??';
   }
-  
+
   // Take up to 3 initials for display names, or 2 for usernames
   const maxInitials = words.length >= 3 ? 3 : 2;
-  
+
   return words
-    .map(word => word.charAt(0).toUpperCase())
-    .slice(0, maxInitials)
-    .join('');
+  .map(word => word.charAt(0).toUpperCase())
+  .slice(0, maxInitials)
+  .join('');
 }
 
 // Helper function to validate required fields
@@ -126,7 +126,7 @@ function validateRequiredFields(dto: unknown, requiredFields: string[], dtoName:
   if (dto === null || dto === undefined) {
     throw new Error(`${dtoName} cannot be null or undefined`);
   }
-  
+
   for (const field of requiredFields) {
     if (dto[field] === undefined || dto[field] === null) {
       throw new Error(`${dtoName} missing required field: ${field}`);
@@ -137,9 +137,9 @@ function validateRequiredFields(dto: unknown, requiredFields: string[], dtoName:
 export function transformPresenceDTO(dto: PresenceDTO, currentUserId: string): UserPresence {
   // Validate input
   validateRequiredFields(dto, ['userId', 'status', 'lastSeen'], 'PresenceDTO');
-  
+
   const status = validatePresenceStatus(dto.status);
-  
+
   // Create a minimal User object for the presence
   const user: BaseUser = {
     id: dto.userId,
@@ -152,17 +152,17 @@ export function transformPresenceDTO(dto: PresenceDTO, currentUserId: string): U
     createdAt: '',
     updatedAt: ''
   };
-  
+
   // Compute derived properties
   const isCurrentUser = dto.userId === currentUserId;
   const isFocusing = status === 'focusing' || dto.inFocusSession;
   const isOnline = status === 'online' || status === 'focusing' || status === 'break';
   const isActive = isOnline;
-  
+
   const lastSeenFormatted = formatDate(dto.lastSeen);
   const statusDisplayText = getStatusDisplayText(status);
   const activityDisplayText = dto.activity || '';
-  
+
   return {
     userId: dto.userId,
     user,
@@ -186,7 +186,7 @@ export function transformPresenceDTO(dto: PresenceDTO, currentUserId: string): U
 export function transformHiveDTO(dto: HiveDTO, currentUserId: string): Hive {
   // Validate input
   validateRequiredFields(dto, ['id', 'name', 'description', 'ownerId', 'ownerUsername', 'maxMembers', 'currentMembers', 'isPublic', 'isActive', 'type', 'createdAt', 'updatedAt'], 'HiveDTO');
-  
+
   // Create owner User object (minimal structure for test compatibility)
   const owner: BaseUser = {
     id: dto.ownerId,
@@ -199,7 +199,7 @@ export function transformHiveDTO(dto: HiveDTO, currentUserId: string): Hive {
     createdAt: '',
     updatedAt: ''
   };
-  
+
   // Create default settings
   const settings: HiveSettings = {
     allowChat: true,
@@ -209,7 +209,7 @@ export function transformHiveDTO(dto: HiveDTO, currentUserId: string): Hive {
     defaultSessionLength: 25,
     maxSessionLength: 120
   };
-  
+
   // Compute derived properties
   const isOwner = dto.ownerId === currentUserId;
   const isMember = isOwner; // For now, we'll assume owner is member (tests expect this logic)
@@ -219,7 +219,7 @@ export function transformHiveDTO(dto: HiveDTO, currentUserId: string): Hive {
   const membershipStatus = isOwner ? 'owner' as const : 'not_member' as const;
   const displayName = dto.name;
   const shortDescription = dto.description ? truncateText(dto.description, 117) : '';
-  
+
   return {
     id: dto.id,
     name: dto.name,
@@ -249,21 +249,21 @@ export function transformHiveDTO(dto: HiveDTO, currentUserId: string): Hive {
 export function transformUserDTO(dto: UserDTO): User {
   // Validate input
   validateRequiredFields(dto, ['id', 'username', 'email'], 'UserDTO');
-  
+
   // Generate display name or fallback to username
   const displayName = dto.displayName || dto.username || '';
   const displayNameOrUsername = displayName || (dto.username || 'Unknown User');
-  
+
   // Generate initials
   const nameForInitials = displayName || dto.username || '';
   const initials = generateInitials(nameForInitials);
-  
+
   // Format last seen
   const lastSeenFormatted = dto.lastSeen ? formatDate(dto.lastSeen) : 'Unknown';
-  
+
   // Generate profile URL
   const profileUrl = `/profile/${dto.username || dto.id}`;
-  
+
   return {
     id: dto.id,
     username: dto.username,

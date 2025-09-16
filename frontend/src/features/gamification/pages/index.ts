@@ -1,1 +1,1 @@
-export { default as GamificationDemo } from './GamificationDemo';
+export {default as GamificationDemo} from './GamificationDemo';

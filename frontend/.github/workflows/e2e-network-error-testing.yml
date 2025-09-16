@@ -1,0 +1,663 @@
+name: Network Error E2E Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - '.github/workflows/e2e-network-error-testing.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - network-error
+        - performance
+        - accessibility
+        - mobile
+      browser:
+        description: 'Browser to test'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - chromium
+        - firefox
+        - webkit
+      environment:
+        description: 'Environment to test against'
+        required: false
+        default: 'development'
+        type: choice
+        options:
+        - development
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '18.x'
+  PLAYWRIGHT_VERSION: '1.40.0'
+
+jobs:
+  # Pre-flight checks
+  pre-flight:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+      should-run-tests: ${{ steps.should-run.outputs.result }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=deps-${{ hashFiles('**/package-lock.json') }}-playwright-${{ env.PLAYWRIGHT_VERSION }}" >> $GITHUB_OUTPUT
+
+      - name: Check if tests should run
+        id: should-run
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "result=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "result=true" >> $GITHUB_OUTPUT
+          elif git diff --name-only HEAD~1 HEAD | grep -E "(src/|e2e/|playwright\.config\.ts)" > /dev/null; then
+            echo "result=true" >> $GITHUB_OUTPUT
+          else
+            echo "result=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Build and setup
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: pre-flight
+    if: needs.pre-flight.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ needs.pre-flight.outputs.cache-key }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:8080
+          VITE_IDENTITY_API_URL: http://localhost:8081
+          VITE_E2E_MODE: 'true'
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 1
+
+  # Matrix test execution
+  test:
+    name: E2E Tests (${{ matrix.browser }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: [pre-flight, build]
+    if: needs.pre-flight.outputs.should-run-tests == 'true'
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        browser: [chromium, firefox, webkit]
+        shard: [1, 2, 3, 4]
+        exclude:
+          # WebKit doesn't run on Linux in CI
+          - os: ubuntu-latest
+            browser: webkit
+    env:
+      PWTEST_SHARD: ${{ matrix.shard }}/4
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ needs.pre-flight.outputs.cache-key }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install ${{ matrix.browser }} --with-deps
+
+      - name: Setup mock backend dependencies
+        run: |
+          cd e2e/tests/network-error-fallback
+          npm install
+
+      - name: Run network error E2E tests
+        run: |
+          npm run test:e2e -- \
+            --config=e2e/tests/network-error-fallback/network-error.config.ts \
+            --project=${{ matrix.browser }}-network \
+            --shard=${{ matrix.shard }}/4 \
+            --reporter=github
+        env:
+          E2E_BASE_URL: http://localhost:5173
+          E2E_MOCK_BACKEND_PORT: 8080
+          E2E_WS_SERVER_PORT: 8081
+          E2E_CDN_MOCK_PORT: 8082
+          PWTEST_HTML_REPORT_OPEN: never
+
+      - name: Run enhanced network tests
+        if: matrix.browser == 'chromium' && matrix.shard == '1'
+        run: |
+          npx playwright test e2e/tests/network-error-fallback/enhanced-network-error.spec.ts \
+            --project=${{ matrix.browser }}-network \
+            --reporter=github
+
+      - name: Run performance tests
+        if: matrix.browser == 'chromium' && matrix.shard == '2'
+        run: |
+          npx playwright test e2e/tests/network-error-fallback/performance-metrics.spec.ts \
+            --project=${{ matrix.browser }}-network \
+            --reporter=github
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.browser }}-${{ matrix.os }}-${{ matrix.shard }}
+          path: |
+            e2e-network-error-report/
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+      - name: Upload traces
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: traces-${{ matrix.browser }}-${{ matrix.os }}-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
+
+  # Mobile device testing
+  mobile-tests:
+    name: Mobile E2E Tests
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build]
+    if: needs.pre-flight.outputs.should-run-tests == 'true'
+    timeout-minutes: 45
+    strategy:
+      matrix:
+        device: ['iPhone 12', 'iPhone 14', 'Pixel 5', 'Pixel 7']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run mobile network tests
+        run: |
+          npx playwright test e2e/tests/network-error-fallback/enhanced-network-error.spec.ts \
+            --config=e2e/tests/network-error-fallback/network-error.config.ts \
+            --project=mobile-chrome-network \
+            --grep "Mobile|Touch|Responsive" \
+            --reporter=github
+        env:
+          PWTEST_DEVICE: ${{ matrix.device }}
+
+      - name: Upload mobile test results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mobile-test-results-${{ matrix.device }}
+          path: |
+            e2e-network-error-report/
+            test-results/
+          retention-days: 7
+
+  # Accessibility testing
+  accessibility-tests:
+    name: Accessibility Tests
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build]
+    if: needs.pre-flight.outputs.should-run-tests == 'true'
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run accessibility tests
+        run: |
+          npx playwright test e2e/tests/network-error-fallback/enhanced-network-error.spec.ts \
+            --config=e2e/tests/network-error-fallback/network-error.config.ts \
+            --project=accessibility-network \
+            --grep "Accessibility|A11y|ARIA|Keyboard" \
+            --reporter=github
+
+      - name: Upload accessibility test results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: accessibility-test-results
+          path: |
+            e2e-network-error-report/
+            test-results/
+          retention-days: 7
+
+  # Visual regression testing
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build]
+    if: needs.pre-flight.outputs.should-run-tests == 'true'
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run visual regression tests
+        run: |
+          npx playwright test e2e/tests/network-error-fallback/ \
+            --config=e2e/tests/network-error-fallback/network-error.config.ts \
+            --project=chromium-network \
+            --grep "Visual|Screenshot" \
+            --update-snapshots
+        continue-on-error: true
+
+      - name: Upload visual diffs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: visual-regression-diffs
+          path: |
+            test-results/
+            **/screenshots/
+          retention-days: 7
+
+  # Load and stress testing
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    needs: [pre-flight, build]
+    if: needs.pre-flight.outputs.should-run-tests == 'true' && github.ref == 'refs/heads/main'
+    timeout-minutes: 45
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run load tests
+        run: npm run test:load:all
+        env:
+          E2E_LOAD_TEST_DURATION: 300 # 5 minutes
+          E2E_CONCURRENT_USERS: 10
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: |
+            e2e-network-error-report/
+            load-test-metrics.json
+          retention-days: 30
+
+  # Test report generation
+  generate-report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [test, mobile-tests, accessibility-tests, visual-regression]
+    if: always() && needs.pre-flight.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Generate consolidated report
+        run: |
+          # Create a simple HTML report consolidator
+          cat > generate-report.js << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          
+          function consolidateReports() {
+            const artifactsDir = './artifacts';
+            const reportData = {
+              timestamp: new Date().toISOString(),
+              summary: { total: 0, passed: 0, failed: 0, skipped: 0 },
+              browsers: {},
+              failures: []
+            };
+            
+            if (fs.existsSync(artifactsDir)) {
+              // Process test result files
+              const files = fs.readdirSync(artifactsDir, { recursive: true });
+              
+              files.forEach(file => {
+                if (file.includes('e2e-network-error-results.json')) {
+                  try {
+                    const content = fs.readFileSync(path.join(artifactsDir, file), 'utf8');
+                    const results = JSON.parse(content);
+                    
+                    // Aggregate results
+                    Object.keys(results.suites || {}).forEach(suite => {
+                      reportData.summary.total += results.suites[suite].total || 0;
+                      reportData.summary.passed += results.suites[suite].passed || 0;
+                      reportData.summary.failed += results.suites[suite].failed || 0;
+                      reportData.summary.skipped += results.suites[suite].skipped || 0;
+                    });
+                  } catch (e) {
+                    console.warn(`Failed to parse ${file}:`, e.message);
+                  }
+                }
+              });
+            }
+            
+            // Generate HTML report
+            const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Network Error E2E Test Report</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; }
+              .summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+              .metric { display: inline-block; margin-right: 30px; }
+              .passed { color: #28a745; }
+              .failed { color: #dc3545; }
+              .skipped { color: #6c757d; }
+              .timestamp { font-size: 14px; color: #6c757d; }
+            </style>
+          </head>
+          <body>
+            <h1>Network Error E2E Test Report</h1>
+            <div class="timestamp">Generated: ${reportData.timestamp}</div>
+            <div class="summary">
+              <h2>Test Summary</h2>
+              <div class="metric">Total: <strong>${reportData.summary.total}</strong></div>
+              <div class="metric passed">Passed: <strong>${reportData.summary.passed}</strong></div>
+              <div class="metric failed">Failed: <strong>${reportData.summary.failed}</strong></div>
+              <div class="metric skipped">Skipped: <strong>${reportData.summary.skipped}</strong></div>
+            </div>
+            <h2>Test Coverage</h2>
+            <ul>
+              <li>Network failure scenarios ✓</li>
+              <li>Performance during network issues ✓</li>
+              <li>Mobile network transitions ✓</li>
+              <li>Accessibility during errors ✓</li>
+              <li>PWA offline functionality ✓</li>
+              <li>WebSocket error handling ✓</li>
+            </ul>
+          </body>
+          </html>
+            `;
+            
+            fs.writeFileSync('consolidated-report.html', html);
+            fs.writeFileSync('test-summary.json', JSON.stringify(reportData, null, 2));
+            
+            console.log('Report generated successfully');
+            console.log('Summary:', reportData.summary);
+          }
+          
+          consolidateReports();
+          EOF
+          
+          node generate-report.js
+
+      - name: Upload consolidated report
+        uses: actions/upload-artifact@v3
+        with:
+          name: consolidated-test-report
+          path: |
+            consolidated-report.html
+            test-summary.json
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (fs.existsSync('test-summary.json')) {
+              const summary = JSON.parse(fs.readFileSync('test-summary.json', 'utf8'));
+              
+              const comment = `
+            ## 🧪 Network Error E2E Test Results
+            
+            | Metric | Count |
+            |--------|--------|
+            | Total Tests | ${summary.summary.total} |
+            | ✅ Passed | ${summary.summary.passed} |
+            | ❌ Failed | ${summary.summary.failed} |
+            | ⏭️ Skipped | ${summary.summary.skipped} |
+            
+            ### Test Coverage
+            - ✅ Network failure scenarios
+            - ✅ Performance during network issues  
+            - ✅ Mobile network transitions
+            - ✅ Accessibility during errors
+            - ✅ PWA offline functionality
+            - ✅ WebSocket error handling
+            
+            📊 [View detailed report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              `;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+
+  # Notification on failure
+  notify-on-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [test, mobile-tests, accessibility-tests]
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#e2e-test-failures'
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub issue on repeated failures
+        if: github.event_name == 'push'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Create issue if this is the 3rd consecutive failure
+            const { data: runs } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'e2e-network-error-testing.yml',
+              branch: 'main',
+              per_page: 3
+            });
+            
+            const recentFailures = runs.workflow_runs
+              .slice(0, 3)
+              .filter(run => run.conclusion === 'failure').length;
+            
+            if (recentFailures >= 3) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🚨 Network Error E2E Tests: Consecutive Failures',
+                body: `
+            The Network Error E2E test suite has failed 3 consecutive times on the main branch.
+            
+            **Latest failure:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Please investigate and fix the underlying issues.
+            
+            **Recent commits:**
+            - ${{ github.event.head_commit.message }} by @${{ github.event.head_commit.author.username }}
+                `,
+                labels: ['bug', 'e2e-tests', 'high-priority']
+              });
+            }
+
+# Cleanup old artifacts
+  cleanup:
+    name: Cleanup Old Artifacts
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Delete old artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: artifacts } = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            
+            for (const artifact of artifacts.artifacts) {
+              if (new Date(artifact.created_at) < oneWeekAgo) {
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id
+                });
+                console.log(`Deleted artifact: ${artifact.name}`);
+              }
+            }

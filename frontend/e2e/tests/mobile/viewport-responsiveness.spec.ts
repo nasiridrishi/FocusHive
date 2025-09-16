@@ -3,11 +3,16 @@
  * Tests responsive behavior across all viewport sizes and orientations
  */
 
-import { test, expect, devices, Page, BrowserContext } from '@playwright/test';
-import { MOBILE_DEVICES, VIEWPORT_BREAKPOINTS, MobileDeviceConfig, ViewportBreakpoint } from './mobile.config';
-import { MobileHelper } from '../../helpers/mobile.helper';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { TEST_URLS } from '../../helpers/test-data';
+import {expect, Page, test} from '@playwright/test';
+import {
+  MOBILE_DEVICES,
+  MobileDeviceConfig,
+  VIEWPORT_BREAKPOINTS,
+  ViewportBreakpoint
+} from './mobile.config';
+import {MobileHelper} from '../../helpers/mobile.helper';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {TEST_URLS} from '../../helpers/test-data';
 
 interface ViewportTestResult {
   viewport: { width: number; height: number };
@@ -37,12 +42,12 @@ interface ResponsiveTest {
 
 test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   let authHelper: AuthHelper;
-  let mobileHelper: MobileHelper;
+  let _mobileHelper: MobileHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
-    mobileHelper = new MobileHelper(page);
-    
+    _mobileHelper = new MobileHelper(page);
+
     // Authenticate user for protected pages
     await authHelper.loginWithTestUser();
   });
@@ -50,8 +55,8 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   /**
    * Test all major viewport breakpoints
    */
-  Object.entries(VIEWPORT_BREAKPOINTS).forEach(([key, breakpoint]) => {
-    test(`should render correctly at ${breakpoint.name} breakpoint (${breakpoint.width}px)`, async ({ page }) => {
+  Object.entries(VIEWPORT_BREAKPOINTS).forEach(([_key, breakpoint]) => {
+    test(`should render correctly at ${breakpoint.name} breakpoint (${breakpoint.width}px)`, async ({page}) => {
       // Set viewport size
       await page.setViewportSize({
         width: breakpoint.width,
@@ -60,10 +65,10 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
 
       // Test all critical pages
       const testPages = [
-        { name: 'Home', url: TEST_URLS.HOME },
-        { name: 'Dashboard', url: TEST_URLS.DASHBOARD },
-        { name: 'Hive List', url: TEST_URLS.HIVE_LIST },
-        { name: 'Profile', url: TEST_URLS.PROFILE }
+        {name: 'Home', url: TEST_URLS.HOME},
+        {name: 'Dashboard', url: TEST_URLS.DASHBOARD},
+        {name: 'Hive List', url: TEST_URLS.HIVE_LIST},
+        {name: 'Profile', url: TEST_URLS.PROFILE}
       ];
 
       for (const testPage of testPages) {
@@ -72,19 +77,19 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
           await page.waitForLoadState('networkidle');
 
           const result = await validateViewportResponsiveness(page, breakpoint);
-          
-          expect(result.passed, 
-            `${testPage.name} failed at ${breakpoint.width}px: ${result.issues.join(', ')}`
+
+          expect(result.passed,
+              `${testPage.name} failed at ${breakpoint.width}px: ${result.issues.join(', ')}`
           ).toBeTruthy();
 
           // Verify no horizontal scroll
-          expect(result.metrics.horizontalScroll, 
-            `Horizontal scroll detected at ${breakpoint.width}px`
+          expect(result.metrics.horizontalScroll,
+              `Horizontal scroll detected at ${breakpoint.width}px`
           ).toBeFalsy();
 
           // Verify content is accessible
-          expect(result.metrics.navigationAccessible, 
-            `Navigation not accessible at ${breakpoint.width}px`
+          expect(result.metrics.navigationAccessible,
+              `Navigation not accessible at ${breakpoint.width}px`
           ).toBeTruthy();
         });
       }
@@ -94,8 +99,8 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   /**
    * Test specific device configurations
    */
-  Object.entries(MOBILE_DEVICES).forEach(([key, device]) => {
-    test(`should render correctly on ${device.name}`, async ({ browser }) => {
+  Object.entries(MOBILE_DEVICES).forEach(([_key, device]) => {
+    test(`should render correctly on ${device.name}`, async ({browser}) => {
       const context = await browser.newContext({
         viewport: device.viewport,
         userAgent: device.userAgent,
@@ -105,8 +110,8 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
       });
 
       const page = await context.newPage();
-      const helper = new MobileHelper(page);
-      
+      const _helper = new MobileHelper(page);
+
       // Test authentication flow on device
       await page.goto(TEST_URLS.LOGIN);
       await authHelper.loginWithTestUser();
@@ -116,9 +121,9 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
       await page.waitForLoadState('networkidle');
 
       const result = await validateDeviceSpecificFeatures(page, device);
-      
-      expect(result.passed, 
-        `${device.name} failed: ${result.issues.join(', ')}`
+
+      expect(result.passed,
+          `${device.name} failed: ${result.issues.join(', ')}`
       ).toBeTruthy();
 
       // Device-specific validations
@@ -137,21 +142,21 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   /**
    * Test orientation changes
    */
-  test('should handle orientation changes gracefully', async ({ browser }) => {
+  test('should handle orientation changes gracefully', async ({browser}) => {
     const devices = ['iPhone 14', 'Pixel 7', 'iPad Air'];
-    
+
     for (const deviceName of devices) {
       await test.step(`Testing orientation changes on ${deviceName}`, async () => {
         const context = await browser.newContext({
           ...devices[deviceName as keyof typeof devices]
         });
-        
+
         const page = await context.newPage();
         await authHelper.loginWithTestUser();
         await page.goto(TEST_URLS.DASHBOARD);
 
         // Test portrait orientation
-        await page.setViewportSize({ width: 390, height: 844 });
+        await page.setViewportSize({width: 390, height: 844});
         let result = await validateViewportResponsiveness(page, {
           name: 'Portrait',
           width: 390,
@@ -161,9 +166,9 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
         expect(result.passed).toBeTruthy();
 
         // Test landscape orientation
-        await page.setViewportSize({ width: 844, height: 390 });
+        await page.setViewportSize({width: 844, height: 390});
         result = await validateViewportResponsiveness(page, {
-          name: 'Landscape', 
+          name: 'Landscape',
           width: 844,
           description: 'Landscape mode',
           testScenarios: []
@@ -173,10 +178,10 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
         // Verify layout adapted correctly
         const navigationVisible = await page.isVisible('[data-testid="mobile-navigation"]');
         const sidebarVisible = await page.isVisible('[data-testid="sidebar"]');
-        
+
         // In landscape, we might show sidebar instead of bottom navigation
-        expect(navigationVisible || sidebarVisible, 
-          'Navigation not accessible in landscape mode'
+        expect(navigationVisible || sidebarVisible,
+            'Navigation not accessible in landscape mode'
         ).toBeTruthy();
 
         await context.close();
@@ -187,23 +192,23 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   /**
    * Test dynamic viewport changes (browser resize)
    */
-  test('should respond to dynamic viewport changes', async ({ page }) => {
+  test('should respond to dynamic viewport changes', async ({page}) => {
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.DASHBOARD);
 
     // Test progression from mobile to tablet to desktop
     const viewportProgression = [
-      { width: 320, height: 568, name: 'Mobile XS' },
-      { width: 390, height: 844, name: 'Mobile Standard' },
-      { width: 768, height: 1024, name: 'Tablet' },
-      { width: 1024, height: 768, name: 'Tablet Landscape' },
-      { width: 1440, height: 900, name: 'Desktop' }
+      {width: 320, height: 568, name: 'Mobile XS'},
+      {width: 390, height: 844, name: 'Mobile Standard'},
+      {width: 768, height: 1024, name: 'Tablet'},
+      {width: 1024, height: 768, name: 'Tablet Landscape'},
+      {width: 1440, height: 900, name: 'Desktop'}
     ];
 
     for (const viewport of viewportProgression) {
       await test.step(`Resizing to ${viewport.name} (${viewport.width}x${viewport.height})`, async () => {
-        await page.setViewportSize({ width: viewport.width, height: viewport.height });
-        
+        await page.setViewportSize({width: viewport.width, height: viewport.height});
+
         // Wait for CSS transitions and layout shifts
         await page.waitForTimeout(500);
         await page.waitForLoadState('networkidle');
@@ -216,8 +221,8 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
           testScenarios: ['layout_adaptation', 'content_reflow']
         });
 
-        expect(result.passed, 
-          `Viewport change to ${viewport.name} failed: ${result.issues.join(', ')}`
+        expect(result.passed,
+            `Viewport change to ${viewport.name} failed: ${result.issues.join(', ')}`
         ).toBeTruthy();
 
         // Check for layout shifts during resize
@@ -230,7 +235,7 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   /**
    * Test content adaptation patterns
    */
-  test('should adapt content correctly across breakpoints', async ({ page }) => {
+  test('should adapt content correctly across breakpoints', async ({page}) => {
     await authHelper.loginWithTestUser();
     await page.goto(TEST_URLS.HIVE_LIST);
 
@@ -240,7 +245,7 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
         selector: '[data-testid="main-navigation"]',
         expectedBehavior: {
           mobile: 'hidden_with_hamburger',
-          tablet: 'collapsed_drawer', 
+          tablet: 'collapsed_drawer',
           desktop: 'full_sidebar'
         },
         validator: async (page, viewport) => {
@@ -266,9 +271,9 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
           const computedStyle = await gridContainer.evaluate((el) => {
             return window.getComputedStyle(el).gridTemplateColumns;
           });
-          
+
           const columnCount = computedStyle.split(' ').length;
-          
+
           if (viewport.width < 768) return columnCount === 1;
           if (viewport.width < 1024) return columnCount === 2;
           return columnCount >= 3;
@@ -285,12 +290,12 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
         validator: async (page, viewport) => {
           const actionButtons = page.locator('[data-testid="action-buttons"]');
           const isVisible = await actionButtons.isVisible();
-          
+
           if (!isVisible) return false;
 
           const position = await actionButtons.evaluate((el) => {
             const rect = el.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
+            const _windowHeight = window.innerHeight;
             return {
               bottom: rect.bottom,
               isFixed: window.getComputedStyle(el).position === 'fixed'
@@ -301,7 +306,7 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
           if (viewport.width < 768) {
             return position.isFixed || position.bottom > viewport.width * 0.8;
           }
-          
+
           return true; // Tablet/desktop: more flexible positioning
         }
       }
@@ -311,19 +316,19 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
     for (const contentTest of contentTests) {
       await test.step(`Testing ${contentTest.name} responsiveness`, async () => {
         const breakpoints = [
-          { width: 360, category: 'mobile' },
-          { width: 768, category: 'tablet' },
-          { width: 1024, category: 'desktop' }
+          {width: 360, category: 'mobile'},
+          {width: 768, category: 'tablet'},
+          {width: 1024, category: 'desktop'}
         ];
 
         for (const breakpoint of breakpoints) {
-          await page.setViewportSize({ width: breakpoint.width, height: 800 });
+          await page.setViewportSize({width: breakpoint.width, height: 800});
           await page.waitForTimeout(300); // Allow CSS transitions
-          
-          const isValid = await contentTest.validator(page, { width: breakpoint.width, height: 800 });
-          
-          expect(isValid, 
-            `${contentTest.name} failed validation at ${breakpoint.width}px (${breakpoint.category})`
+
+          const isValid = await contentTest.validator(page, {width: breakpoint.width, height: 800});
+
+          expect(isValid,
+              `${contentTest.name} failed validation at ${breakpoint.width}px (${breakpoint.category})`
           ).toBeTruthy();
         }
       });
@@ -333,11 +338,11 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   /**
    * Test viewport meta tag and scaling
    */
-  test('should have correct viewport meta configuration', async ({ page }) => {
+  test('should have correct viewport meta configuration', async ({page}) => {
     await page.goto(TEST_URLS.HOME);
-    
+
     const viewportMeta = await page.locator('meta[name="viewport"]').getAttribute('content');
-    
+
     expect(viewportMeta).toContain('width=device-width');
     expect(viewportMeta).toContain('initial-scale=1');
     expect(viewportMeta).not.toContain('maximum-scale=1'); // Allow zoom for accessibility
@@ -347,21 +352,21 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
   /**
    * Test CSS media queries activation
    */
-  test('should activate correct media queries at breakpoints', async ({ page }) => {
+  test('should activate correct media queries at breakpoints', async ({page}) => {
     await page.goto(TEST_URLS.HOME);
 
     const mediaQueryTests = [
-      { query: '(max-width: 767px)', width: 320, shouldMatch: true },
-      { query: '(max-width: 767px)', width: 768, shouldMatch: false },
-      { query: '(min-width: 768px)', width: 768, shouldMatch: true },
-      { query: '(min-width: 768px)', width: 767, shouldMatch: false },
-      { query: '(min-width: 1024px)', width: 1024, shouldMatch: true },
-      { query: '(min-width: 1024px)', width: 1023, shouldMatch: false }
+      {query: '(max-width: 767px)', width: 320, shouldMatch: true},
+      {query: '(max-width: 767px)', width: 768, shouldMatch: false},
+      {query: '(min-width: 768px)', width: 768, shouldMatch: true},
+      {query: '(min-width: 768px)', width: 767, shouldMatch: false},
+      {query: '(min-width: 1024px)', width: 1024, shouldMatch: true},
+      {query: '(min-width: 1024px)', width: 1023, shouldMatch: false}
     ];
 
     for (const test of mediaQueryTests) {
-      await page.setViewportSize({ width: test.width, height: 800 });
-      
+      await page.setViewportSize({width: test.width, height: 800});
+
       const matches = await page.evaluate((query) => {
         return window.matchMedia(query).matches;
       }, test.query);
@@ -375,19 +380,19 @@ test.describe('Viewport Responsiveness - Breakpoint Testing', () => {
  * Helper function to validate viewport responsiveness
  */
 async function validateViewportResponsiveness(
-  page: Page, 
-  breakpoint: ViewportBreakpoint
+    page: Page,
+    _breakpoint: ViewportBreakpoint
 ): Promise<ViewportTestResult> {
   const viewport = await page.viewportSize();
   if (!viewport) throw new Error('No viewport size available');
 
   const issues: string[] = [];
-  
+
   // Check for horizontal scroll
   const horizontalScroll = await page.evaluate(() => {
     return document.documentElement.scrollWidth > window.innerWidth;
   });
-  
+
   if (horizontalScroll) {
     issues.push('Horizontal scroll detected');
   }
@@ -447,8 +452,8 @@ async function validateViewportResponsiveness(
  * Validate device-specific features
  */
 async function validateDeviceSpecificFeatures(
-  page: Page, 
-  device: MobileDeviceConfig
+    page: Page,
+    device: MobileDeviceConfig
 ): Promise<ViewportTestResult> {
   const viewport = device.viewport;
   const issues: string[] = [];
@@ -516,18 +521,18 @@ async function validateDeviceSpecificFeatures(
  * Validate safe area handling for iOS devices
  */
 async function validateSafeAreaHandling(
-  page: Page, 
-  safeArea: { top: number; right: number; bottom: number; left: number }
+    page: Page,
+    _safeArea: { top: number; right: number; bottom: number; left: number }
 ): Promise<void> {
   const safeAreaSupport = await page.evaluate(() => {
     const testElement = document.createElement('div');
     testElement.style.paddingTop = 'env(safe-area-inset-top)';
     document.body.appendChild(testElement);
-    
+
     const computedStyle = window.getComputedStyle(testElement);
     const hasSafeAreaSupport = computedStyle.paddingTop.includes('env(safe-area-inset-top)') ||
-                               computedStyle.paddingTop !== '0px';
-    
+        computedStyle.paddingTop !== '0px';
+
     document.body.removeChild(testElement);
     return hasSafeAreaSupport;
   });
@@ -548,7 +553,7 @@ async function validateFoldableFeatures(page: Page, device: MobileDeviceConfig):
   });
 
   console.log(`Screen spanning API support: ${screenSpanning}`);
-  
+
   // Test CSS environment variables for foldables
   const foldableCSS = await page.evaluate(() => {
     return CSS.supports('left', 'env(fold-left)') && CSS.supports('width', 'env(fold-width)');
@@ -564,18 +569,18 @@ async function validateTouchTargets(page: Page): Promise<string[]> {
   const issues = await page.evaluate(() => {
     const issues: string[] = [];
     const interactiveElements = document.querySelectorAll('button, a, input, textarea, select, [role="button"], [tabindex="0"]');
-    
+
     interactiveElements.forEach((element, index) => {
       const rect = element.getBoundingClientRect();
       const minSize = 44; // iOS minimum
-      
+
       if (rect.width < minSize || rect.height < minSize) {
         const tagName = element.tagName.toLowerCase();
         const id = element.id || `element-${index}`;
         issues.push(`Touch target ${tagName}#${id} too small: ${Math.round(rect.width)}x${Math.round(rect.height)}px`);
       }
     });
-    
+
     return issues;
   });
 
@@ -589,7 +594,7 @@ async function getMinimumTouchTargetSize(page: Page): Promise<number> {
   return await page.evaluate(() => {
     const interactiveElements = document.querySelectorAll('button, a, input, textarea, select, [role="button"], [tabindex="0"]');
     let minSize = Infinity;
-    
+
     interactiveElements.forEach(element => {
       const rect = element.getBoundingClientRect();
       const size = Math.min(rect.width, rect.height);
@@ -597,7 +602,7 @@ async function getMinimumTouchTargetSize(page: Page): Promise<number> {
         minSize = Math.min(minSize, size);
       }
     });
-    
+
     return minSize === Infinity ? 0 : minSize;
   });
 }
@@ -609,23 +614,23 @@ async function validateTextReadability(page: Page): Promise<{ passed: boolean; i
   const textIssues = await page.evaluate(() => {
     const issues: string[] = [];
     const textElements = document.querySelectorAll('p, span, div, h1, h2, h3, h4, h5, h6, li, td, th');
-    
+
     textElements.forEach((element, index) => {
       const computedStyle = window.getComputedStyle(element);
       const fontSize = parseFloat(computedStyle.fontSize);
       const lineHeight = computedStyle.lineHeight;
-      
+
       // Minimum font size for mobile readability
       if (fontSize < 14) {
         issues.push(`Text too small at element ${index}: ${fontSize}px`);
       }
-      
+
       // Check line height for readability
       if (lineHeight !== 'normal' && parseFloat(lineHeight) / fontSize < 1.2) {
         issues.push(`Line height too small at element ${index}`);
       }
     });
-    
+
     return issues;
   });
 
@@ -642,23 +647,23 @@ async function validateImageScaling(page: Page): Promise<{ passed: boolean; issu
   const imageIssues = await page.evaluate(() => {
     const issues: string[] = [];
     const images = document.querySelectorAll('img');
-    
+
     images.forEach((img, index) => {
       const rect = img.getBoundingClientRect();
       const naturalWidth = img.naturalWidth;
-      const naturalHeight = img.naturalHeight;
-      
+      const _naturalHeight = img.naturalHeight;
+
       // Check if image overflows container
       if (rect.width > window.innerWidth) {
         issues.push(`Image ${index} overflows viewport: ${rect.width}px wide`);
       }
-      
+
       // Check if image is being scaled down excessively
       if (naturalWidth > 0 && rect.width / naturalWidth < 0.3) {
         issues.push(`Image ${index} scaled down excessively`);
       }
     });
-    
+
     return issues;
   });
 
@@ -671,7 +676,10 @@ async function validateImageScaling(page: Page): Promise<{ passed: boolean; issu
 /**
  * Validate navigation accessibility
  */
-async function validateNavigationAccessibility(page: Page, viewport: { width: number; height: number }): Promise<boolean> {
+async function validateNavigationAccessibility(page: Page, _viewport: {
+  width: number;
+  height: number
+}): Promise<boolean> {
   // Check if navigation is accessible via menu toggle, sidebar, or bottom navigation
   const navigationElements = [
     '[data-testid="mobile-menu-toggle"]',
@@ -714,7 +722,7 @@ async function measureCumulativeLayoutShift(page: Page): Promise<number> {
   return await page.evaluate(() => {
     return new Promise<number>((resolve) => {
       let clsValue = 0;
-      let clsEntries: LayoutShiftEntry[] = [];
+      const clsEntries: LayoutShiftEntry[] = [];
 
       const observer = new PerformanceObserver((entryList) => {
         for (const entry of entryList.getEntries()) {
@@ -726,7 +734,7 @@ async function measureCumulativeLayoutShift(page: Page): Promise<number> {
         }
       });
 
-      observer.observe({ entryTypes: ['layout-shift'] });
+      observer.observe({entryTypes: ['layout-shift']});
 
       // Measure for 2 seconds
       setTimeout(() => {

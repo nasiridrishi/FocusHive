@@ -1,13 +1,13 @@
 /**
  * Accessibility Testing Configuration
- * 
+ *
  * Centralized configuration for accessibility testing including:
  * - WCAG 2.1 AA compliance rules
  * - Screen reader testing settings
  * - Performance thresholds
  * - Browser-specific settings
  * - Test environment configuration
- * 
+ *
  * UOL-44.19: Comprehensive Accessibility E2E Tests
  */
 
@@ -130,7 +130,7 @@ export const DEFAULT_ACCESSIBILITY_CONFIG: AccessibilityConfig = {
         'color-contrast',
         'color-contrast-enhanced',
         'use-landmarks',
-        
+
         // Operable
         'keyboard',
         'focus-order-semantics',
@@ -141,14 +141,14 @@ export const DEFAULT_ACCESSIBILITY_CONFIG: AccessibilityConfig = {
         'link-name',
         'link-in-text-block',
         'focus-order-semantics',
-        
+
         // Understandable
         'valid-lang',
         'label',
         'form-field-multiple-labels',
         'label-title-only',
         'label-content-name-mismatch',
-        
+
         // Robust
         'duplicate-id',
         'duplicate-id-active',
@@ -368,17 +368,17 @@ export function getAccessibilityConfig(environment?: string): AccessibilityConfi
     case 'development':
     case 'dev':
       return DEV_ACCESSIBILITY_CONFIG;
-    
+
     case 'ci':
     case 'continuous-integration':
       return CI_ACCESSIBILITY_CONFIG;
-    
+
     case 'mobile':
       return MOBILE_ACCESSIBILITY_CONFIG;
-    
+
     case 'high-contrast':
       return HIGH_CONTRAST_CONFIG;
-    
+
     case 'production':
     case 'prod':
     default:

@@ -1,34 +1,22 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Card,
-  Typography,
-  Chip,
-  LinearProgress,
-  useTheme,
-  alpha,
-} from '@mui/material';
-import { motion } from 'framer-motion';
-import {
-  Star,
-  Lock,
-  KeyboardArrowRight,
-} from '@mui/icons-material';
-import type { AchievementBadgeProps } from '../types/gamification';
+import React, {useState} from 'react';
+import {alpha, Box, Card, Chip, LinearProgress, Typography, useTheme,} from '@mui/material';
+import {motion} from 'framer-motion';
+import {KeyboardArrowRight, Lock, Star,} from '@mui/icons-material';
+import type {AchievementBadgeProps} from '../types/gamification';
 import {
   formatPoints,
-  getRarityColor,
-  getCategoryIcon,
   getAchievementProgress,
+  getCategoryIcon,
+  getRarityColor,
   isAchievementUnlocked,
 } from '../utils/gamificationUtils';
 
 const AchievementBadge: React.FC<AchievementBadgeProps> = ({
-  achievement,
-  size = 'medium',
-  showProgress = true,
-  onClick,
-}) => {
+                                                             achievement,
+                                                             size = 'medium',
+                                                             showProgress = true,
+                                                             onClick,
+                                                           }) => {
   const theme = useTheme();
   const [imageError, setImageError] = useState(false);
   const isUnlocked = isAchievementUnlocked(achievement);
@@ -36,12 +24,12 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
   const rarityColor = getRarityColor(achievement.rarity);
   const CategoryIconComponent = getCategoryIcon(achievement.category);
   const isClickable = Boolean(onClick);
-  
-  // Check if recently unlocked (within last 24 hours)
-  const isRecentlyUnlocked = isUnlocked && achievement.unlockedAt && 
-    (Date.now() - achievement.unlockedAt.getTime()) < 24 * 60 * 60 * 1000;
 
-  const getSizeStyles = () => {
+  // Check if recently unlocked (within last 24 hours)
+  const isRecentlyUnlocked = isUnlocked && achievement.unlockedAt &&
+      (Date.now() - achievement.unlockedAt.getTime()) < 24 * 60 * 60 * 1000;
+
+  const getSizeStyles = (): {width: number; height: number; iconSize: number; titleVariant: 'h6' | 'body1' | 'body2'; descVariant: 'body2' | 'caption'} => {
     switch (size) {
       case 'small':
         return {
@@ -73,42 +61,42 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
   const sizeStyles = getSizeStyles();
 
   const cardVariants = {
-    initial: { scale: 0.9, opacity: 0, rotateY: -180 },
-    animate: { 
-      scale: 1, 
-      opacity: 1, 
+    initial: {scale: 0.9, opacity: 0, rotateY: -180},
+    animate: {
+      scale: 1,
+      opacity: 1,
       rotateY: 0,
     },
     hover: {
       scale: isClickable ? 1.05 : 1,
       y: isClickable ? -4 : 0,
     },
-    tap: { scale: 0.98 }
+    tap: {scale: 0.98}
   };
 
   const cardTransition = {
     duration: 0.6,
     ease: 'easeOut' as const,
-    rotateY: { duration: 0.8 }
+    rotateY: {duration: 0.8}
   };
 
 
   const iconVariants = {
-    locked: { 
-      scale: 0.8, 
+    locked: {
+      scale: 0.8,
       opacity: 0.5,
       filter: 'grayscale(100%)'
     },
-    unlocked: { 
-      scale: 1, 
+    unlocked: {
+      scale: 1,
       opacity: 1,
       filter: 'grayscale(0%)',
-      transition: { duration: 0.3 }
+      transition: {duration: 0.3}
     },
     recentlyUnlocked: {
       scale: [1, 1.2, 1],
       rotate: [0, 360],
-      transition: { 
+      transition: {
         duration: 1,
         repeat: Infinity,
         repeatDelay: 3
@@ -116,29 +104,29 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (): void => {
     if (onClick) {
       onClick();
     }
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
+  const handleKeyDown = (event: React.KeyboardEvent): void => {
     if (event.key === 'Enter' && onClick) {
       onClick();
     }
   };
 
   return (
-    <Card
-      component={motion.div}
-      variants={cardVariants}
-      initial="initial"
-      animate="animate"
-      transition={cardTransition}
-      whileHover="hover"
-      whileTap={isClickable ? "tap" : undefined}
-      data-testid="achievement-badge"
-      className={`
+      <Card
+          component={motion.div}
+          variants={cardVariants}
+          initial="initial"
+          animate="animate"
+          transition={cardTransition}
+          whileHover="hover"
+          whileTap={isClickable ? "tap" : undefined}
+          data-testid="achievement-badge"
+          className={`
         ${isUnlocked ? 'unlocked' : 'locked'}
         ${`size-${size}`}
         ${`rarity-${achievement.rarity}`}
@@ -146,270 +134,270 @@ const AchievementBadge: React.FC<AchievementBadgeProps> = ({
         ${isRecentlyUnlocked ? 'recently-unlocked' : ''}
         ${isClickable ? 'hover-effect' : ''}
       `}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      tabIndex={isClickable ? 0 : -1}
-      role={isClickable ? 'button' : undefined}
-      aria-label={`Achievement: ${achievement.title}`}
-      sx={{
-        width: sizeStyles.width,
-        height: sizeStyles.height,
-        cursor: isClickable ? 'pointer' : 'default',
-        position: 'relative',
-        background: isUnlocked 
-          ? `linear-gradient(135deg, ${alpha(rarityColor, 0.1)}, ${alpha(rarityColor, 0.2)})`
-          : `linear-gradient(135deg, ${alpha(theme.palette.grey[500], 0.1)}, ${alpha(theme.palette.grey[600], 0.2)})`,
-        border: `2px solid ${isUnlocked ? rarityColor : theme.palette.grey[400]}`,
-        borderRadius: 3,
-        padding: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        opacity: isUnlocked ? 1 : 0.7,
-        overflow: 'hidden',
-        
-        // Rarity-specific styling
-        '&.rarity-legendary': {
-          boxShadow: `0 0 20px ${alpha(rarityColor, 0.5)}`,
-          '&.legendary-glow::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: `linear-gradient(45deg, transparent 30%, ${alpha(rarityColor, 0.1)} 50%, transparent 70%)`,
-            animation: 'shimmer 3s infinite',
-          },
-        },
-        
-        '&.recently-unlocked': {
-          '&::after': {
-            content: '"✨"',
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            fontSize: '1.2em',
-            animation: 'sparkle 2s infinite',
-          },
-        },
-        
-        '@keyframes shimmer': {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(100%)' },
-        },
-        
-        '@keyframes sparkle': {
-          '0%, 100%': { opacity: 1, transform: 'scale(1)' },
-          '50%': { opacity: 0.5, transform: 'scale(1.2)' },
-        },
-      }}
-    >
-      {/* Rarity Indicator */}
-      <Box sx={{ position: 'absolute', top: 8, left: 8 }}>
-        <Chip
-          label={achievement.rarity.toUpperCase()}
-          size="small"
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          tabIndex={isClickable ? 0 : -1}
+          role={isClickable ? 'button' : undefined}
+          aria-label={`Achievement: ${achievement.title}`}
           sx={{
-            backgroundColor: rarityColor,
-            color: 'white',
-            fontSize: '0.7rem',
-            height: 20,
-            fontWeight: 'bold',
-          }}
-        />
-      </Box>
-
-      {/* Lock Status */}
-      {!isUnlocked && (
-        <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-          <Lock 
-            sx={{ 
-              color: theme.palette.grey[500],
-              fontSize: '1rem',
-            }} 
-          />
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              position: 'absolute',
-              top: 20,
-              right: -8,
-              color: theme.palette.grey[500],
-              fontSize: '0.6rem',
-            }}
-          >
-            LOCKED
-          </Typography>
-        </Box>
-      )}
-
-      {/* Achievement Icon */}
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          mb: 1,
-        }}
-      >
-        <Box
-          component={motion.div}
-          variants={iconVariants}
-          animate={isRecentlyUnlocked ? 'recentlyUnlocked' : (isUnlocked ? 'unlocked' : 'locked')}
-          sx={{
-            width: sizeStyles.iconSize,
-            height: sizeStyles.iconSize,
-            borderRadius: '50%',
-            background: isUnlocked 
-              ? `linear-gradient(135deg, ${rarityColor}, ${alpha(rarityColor, 0.7)})`
-              : theme.palette.grey[400],
+            width: sizeStyles.width,
+            height: sizeStyles.height,
+            cursor: isClickable ? 'pointer' : 'default',
+            position: 'relative',
+            background: isUnlocked
+                ? `linear-gradient(135deg, ${alpha(rarityColor, 0.1)}, ${alpha(rarityColor, 0.2)})`
+                : `linear-gradient(135deg, ${alpha(theme.palette.grey[500], 0.1)}, ${alpha(theme.palette.grey[600], 0.2)})`,
+            border: `2px solid ${isUnlocked ? rarityColor : theme.palette.grey[400]}`,
+            borderRadius: 3,
+            padding: 2,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: sizeStyles.iconSize * 0.6,
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            opacity: isUnlocked ? 1 : 0.7,
+            overflow: 'hidden',
+
+            // Rarity-specific styling
+            '&.rarity-legendary': {
+              boxShadow: `0 0 20px ${alpha(rarityColor, 0.5)}`,
+              '&.legendary-glow::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: `linear-gradient(45deg, transparent 30%, ${alpha(rarityColor, 0.1)} 50%, transparent 70%)`,
+                animation: 'shimmer 3s infinite',
+              },
+            },
+
+            '&.recently-unlocked': {
+              '&::after': {
+                content: '"✨"',
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                fontSize: '1.2em',
+                animation: 'sparkle 2s infinite',
+              },
+            },
+
+            '@keyframes shimmer': {
+              '0%': {transform: 'translateX(-100%)'},
+              '100%': {transform: 'translateX(100%)'},
+            },
+
+            '@keyframes sparkle': {
+              '0%, 100%': {opacity: 1, transform: 'scale(1)'},
+              '50%': {opacity: 0.5, transform: 'scale(1.2)'},
+            },
           }}
-        >
-          {imageError ? (
-            <CategoryIconComponent 
-              sx={{ 
-                fontSize: sizeStyles.iconSize * 0.4,
-                filter: isUnlocked ? 'none' : 'grayscale(100%)',
-                opacity: isUnlocked ? 1 : 0.5,
-              }} 
-            />
-          ) : (
-            <img
-              src={`/icons/achievements/${achievement.icon}.svg`}
-              alt={achievement.title}
-              data-icon={achievement.icon}
-              style={{ 
-                width: '70%', 
-                height: '70%',
-                filter: isUnlocked ? 'none' : 'grayscale(100%)',
+      >
+        {/* Rarity Indicator */}
+        <Box sx={{position: 'absolute', top: 8, left: 8}}>
+          <Chip
+              label={achievement.rarity.toUpperCase()}
+              size="small"
+              sx={{
+                backgroundColor: rarityColor,
+                color: 'white',
+                fontSize: '0.7rem',
+                height: 20,
+                fontWeight: 'bold',
               }}
-              onError={() => setImageError(true)}
-            />
+          />
+        </Box>
+
+        {/* Lock Status */}
+        {!isUnlocked && (
+            <Box sx={{position: 'absolute', top: 8, right: 8}}>
+              <Lock
+                  sx={{
+                    color: theme.palette.grey[500],
+                    fontSize: '1rem',
+                  }}
+              />
+              <Typography
+                  variant="caption"
+                  sx={{
+                    position: 'absolute',
+                    top: 20,
+                    right: -8,
+                    color: theme.palette.grey[500],
+                    fontSize: '0.6rem',
+                  }}
+              >
+                LOCKED
+              </Typography>
+            </Box>
+        )}
+
+        {/* Achievement Icon */}
+        <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mb: 1,
+            }}
+        >
+          <Box
+              component={motion.div}
+              variants={iconVariants}
+              animate={isRecentlyUnlocked ? 'recentlyUnlocked' : (isUnlocked ? 'unlocked' : 'locked')}
+              sx={{
+                width: sizeStyles.iconSize,
+                height: sizeStyles.iconSize,
+                borderRadius: '50%',
+                background: isUnlocked
+                    ? `linear-gradient(135deg, ${rarityColor}, ${alpha(rarityColor, 0.7)})`
+                    : theme.palette.grey[400],
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: sizeStyles.iconSize * 0.6,
+              }}
+          >
+            {imageError ? (
+                <CategoryIconComponent
+                    sx={{
+                      fontSize: sizeStyles.iconSize * 0.4,
+                      filter: isUnlocked ? 'none' : 'grayscale(100%)',
+                      opacity: isUnlocked ? 1 : 0.5,
+                    }}
+                />
+            ) : (
+                <img
+                    src={`/icons/achievements/${achievement.icon}.svg`}
+                    alt={achievement.title}
+                    data-icon={achievement.icon}
+                    style={{
+                      width: '70%',
+                      height: '70%',
+                      filter: isUnlocked ? 'none' : 'grayscale(100%)',
+                    }}
+                    onError={() => setImageError(true)}
+                />
+            )}
+          </Box>
+
+          {/* Category Badge */}
+          <Chip
+              label={achievement.category.toUpperCase()}
+              size="small"
+              className={`category-${achievement.category}`}
+              sx={{
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                color: theme.palette.primary.main,
+                fontSize: '0.6rem',
+                height: 18,
+              }}
+          />
+        </Box>
+
+        {/* Title and Description */}
+        <Box sx={{flex: 1, mb: 1}}>
+          <Typography
+              variant={sizeStyles.titleVariant}
+              sx={{
+                fontWeight: 'bold',
+                color: isUnlocked ? theme.palette.text.primary : theme.palette.text.secondary,
+                mb: 0.5,
+                lineHeight: 1.2,
+              }}
+          >
+            {achievement.title}
+          </Typography>
+
+          {achievement.description && (
+              <Typography
+                  variant={sizeStyles.descVariant}
+                  sx={{
+                    color: theme.palette.text.secondary,
+                    opacity: isUnlocked ? 1 : 0.7,
+                    lineHeight: 1.3,
+                    display: '-webkit-box',
+                    WebkitLineClamp: size === 'small' ? 2 : 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+              >
+                {achievement.description}
+              </Typography>
           )}
         </Box>
 
-        {/* Category Badge */}
-        <Chip
-          label={achievement.category.toUpperCase()}
-          size="small"
-          className={`category-${achievement.category}`}
-          sx={{
-            backgroundColor: alpha(theme.palette.primary.main, 0.1),
-            color: theme.palette.primary.main,
-            fontSize: '0.6rem',
-            height: 18,
-          }}
-        />
-      </Box>
-
-      {/* Title and Description */}
-      <Box sx={{ flex: 1, mb: 1 }}>
-        <Typography
-          variant={sizeStyles.titleVariant}
-          sx={{
-            fontWeight: 'bold',
-            color: isUnlocked ? theme.palette.text.primary : theme.palette.text.secondary,
-            mb: 0.5,
-            lineHeight: 1.2,
-          }}
-        >
-          {achievement.title}
-        </Typography>
-        
-        {achievement.description && (
-          <Typography
-            variant={sizeStyles.descVariant}
-            sx={{
-              color: theme.palette.text.secondary,
-              opacity: isUnlocked ? 1 : 0.7,
-              lineHeight: 1.3,
-              display: '-webkit-box',
-              WebkitLineClamp: size === 'small' ? 2 : 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {achievement.description}
-          </Typography>
+        {/* Progress Bar */}
+        {showProgress && achievement.progress !== undefined && achievement.maxProgress && !isUnlocked && (
+            <Box sx={{mb: 1}}>
+              <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 0.5}}>
+                <Typography variant="caption" color="text.secondary">
+                  Progress
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {achievement.progress}/{achievement.maxProgress}
+                </Typography>
+              </Box>
+              <LinearProgress
+                  variant="determinate"
+                  value={progress}
+                  role="progressbar"
+                  aria-valuenow={Math.min(achievement.progress || 0, achievement.maxProgress || 100)}
+                  aria-valuemax={achievement.maxProgress}
+                  sx={{
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: alpha(theme.palette.grey[500], 0.2),
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: rarityColor,
+                      borderRadius: 3,
+                    },
+                  }}
+              />
+            </Box>
         )}
-      </Box>
 
-      {/* Progress Bar */}
-      {showProgress && achievement.progress !== undefined && achievement.maxProgress && !isUnlocked && (
-        <Box sx={{ mb: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography variant="caption" color="text.secondary">
-              Progress
+        {/* Points and Unlock Date */}
+        <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5}}>
+            <Star sx={{color: theme.palette.warning.main, fontSize: '1rem'}}/>
+            <Typography
+                variant="caption"
+                sx={{fontWeight: 'bold'}}
+                aria-label={`${achievement.points} points`}
+            >
+              {formatPoints(achievement.points)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {achievement.progress}/{achievement.maxProgress}
+              points
             </Typography>
           </Box>
-          <LinearProgress
-            variant="determinate"
-            value={progress}
-            role="progressbar"
-            aria-valuenow={Math.min(achievement.progress || 0, achievement.maxProgress || 100)}
-            aria-valuemax={achievement.maxProgress}
-            sx={{
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: alpha(theme.palette.grey[500], 0.2),
-              '& .MuiLinearProgress-bar': {
-                backgroundColor: rarityColor,
-                borderRadius: 3,
-              },
-            }}
-          />
-        </Box>
-      )}
 
-      {/* Points and Unlock Date */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Star sx={{ color: theme.palette.warning.main, fontSize: '1rem' }} />
-          <Typography 
-            variant="caption" 
-            sx={{ fontWeight: 'bold' }}
-            aria-label={`${achievement.points} points`}
-          >
-            {formatPoints(achievement.points)}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            points
-          </Typography>
+          {isUnlocked && achievement.unlockedAt && (
+              <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{fontSize: '0.7rem'}}
+              >
+                Unlocked {achievement.unlockedAt.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+              </Typography>
+          )}
+
+          {isClickable && (
+              <KeyboardArrowRight
+                  sx={{
+                    color: theme.palette.text.secondary,
+                    fontSize: '1.2rem',
+                  }}
+              />
+          )}
         </Box>
-        
-        {isUnlocked && achievement.unlockedAt && (
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            sx={{ fontSize: '0.7rem' }}
-          >
-            Unlocked {achievement.unlockedAt.toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric',
-              year: 'numeric'
-            })}
-          </Typography>
-        )}
-        
-        {isClickable && (
-          <KeyboardArrowRight 
-            sx={{ 
-              color: theme.palette.text.secondary,
-              fontSize: '1.2rem',
-            }} 
-          />
-        )}
-      </Box>
-    </Card>
+      </Card>
   );
 };
 

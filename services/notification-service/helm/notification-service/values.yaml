@@ -1,0 +1,345 @@
+# Default values for notification-service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global configuration
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Application configuration
+app:
+  name: notification-service
+  version: "1.0.0"
+
+# Image configuration
+image:
+  registry: docker.io
+  repository: focushive/notification-service
+  tag: "latest"
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# Deployment configuration
+replicaCount: 3
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8083
+  annotations: {}
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit-client-ip: "100"
+    nginx.ingress.kubernetes.io/rate-limit-rps: "10"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: api.focushive.app
+      paths:
+        - path: /notifications
+          pathType: Prefix
+        - path: /api/notifications
+          pathType: Prefix
+        - path: /api/preferences
+          pathType: Prefix
+        - path: /api/templates
+          pathType: Prefix
+        - path: /api/admin
+          pathType: Prefix
+    - host: notification-api.focushive.app
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: notification-service-tls
+      hosts:
+        - api.focushive.app
+        - notification-api.focushive.app
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1.5Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+
+# Health checks configuration
+healthChecks:
+  liveness:
+    enabled: true
+    path: /actuator/health/liveness
+    initialDelaySeconds: 120
+    periodSeconds: 20
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readiness:
+    enabled: true
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  startup:
+    enabled: true
+    path: /actuator/health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+
+# Security configuration
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Pod security policy
+podSecurityPolicy:
+  enabled: true
+
+# Network policy
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+    from:
+      - namespaceSelector:
+          matchLabels:
+            name: nginx-ingress
+      - namespaceSelector:
+          matchLabels:
+            name: monitoring
+  egress:
+    enabled: true
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod annotations and labels
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8083"
+  prometheus.io/path: "/actuator/prometheus"
+
+podLabels: {}
+
+# Node selector, tolerations, and affinity
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - notification-service
+          topologyKey: kubernetes.io/hostname
+
+# Configuration
+config:
+  # Spring profiles
+  profiles: "prod,k8s"
+  
+  # Database configuration
+  database:
+    host: "postgres-postgresql"  # Will be templated based on dependencies
+    port: 5432
+    name: "focushive_notifications"
+    username: "focushive_user"
+    # Password will be set via secret
+
+  # Redis configuration
+  redis:
+    host: "notification-service-redis-master"  # Will be templated based on dependencies
+    port: 6379
+    # Password will be set via secret
+
+  # RabbitMQ configuration
+  rabbitmq:
+    host: "notification-service-rabbitmq"  # Will be templated based on dependencies
+    port: 5672
+    username: "focushive_user"
+    # Password will be set via secret
+
+  # JWT configuration
+  jwt:
+    issuerUri: "https://identity.focushive.app"
+    jwkSetUri: "https://identity.focushive.app/.well-known/jwks.json"
+
+  # Email configuration
+  email:
+    from: "no-reply@focushive.app"
+    # AWS SES credentials will be set via secret
+
+  # Monitoring configuration
+  monitoring:
+    zipkinUrl: "http://zipkin-service:9411/api/v2/spans"
+    prometheusEnabled: true
+    logLevel: "INFO"
+
+  # CORS configuration
+  cors:
+    allowedOrigins: "https://app.focushive.com,https://admin.focushive.com"
+
+# Secrets configuration
+secrets:
+  create: true
+  # These will be populated by external secret management or CI/CD
+  database:
+    password: ""  # Set via external secret or CI/CD
+  redis:
+    password: ""  # Set via external secret or CI/CD
+  rabbitmq:
+    password: ""  # Set via external secret or CI/CD
+  aws:
+    sesUsername: ""  # Set via external secret or CI/CD
+    sesPassword: ""  # Set via external secret or CI/CD
+
+# Volume configuration
+volumes:
+  logs:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 30s
+    path: /actuator/prometheus
+    labels:
+      app: notification-service
+  
+  prometheus:
+    enabled: false  # Use external Prometheus
+  
+  grafana:
+    enabled: false  # Use external Grafana
+    dashboards:
+      enabled: true
+
+# Dependencies configuration
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "postgres"
+    username: "focushive_user"
+    password: "focushive_password"  # Change in production
+    database: "focushive_notifications"
+  architecture: standalone
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 1000m
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "redis_password"  # Change in production
+  architecture: standalone
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+
+rabbitmq:
+  enabled: true
+  auth:
+    username: "focushive_user"
+    password: "rabbitmq_password"  # Change in production
+    erlangCookie: "secretcookie"  # Change in production
+  persistence:
+    enabled: true
+    size: 8Gi
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true

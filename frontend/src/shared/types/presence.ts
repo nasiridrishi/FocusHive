@@ -1,5 +1,5 @@
 // Presence and real-time related types
-import { User } from './auth'
+import {User} from './auth'
 
 export type PresenceStatus = 'online' | 'focusing' | 'break' | 'away' | 'offline'
 

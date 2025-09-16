@@ -1,22 +1,22 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
-import { useServiceWorkerRegistration } from '../hooks/useServiceWorkerRegistration';
-import { usePWAInstall } from '../hooks/usePWAInstall';
-import type { ServiceWorkerRegistrationState } from '../hooks/useServiceWorkerRegistration';
-import type { PWAInstallState } from '../../../types/pwa';
+import React, {createContext, ReactNode, useContext, useMemo} from 'react';
+import type {ServiceWorkerRegistrationState} from '../hooks/useServiceWorkerRegistration';
+import {useServiceWorkerRegistration} from '../hooks/useServiceWorkerRegistration';
+import {usePWAInstall} from '../hooks/usePWAInstall';
+import type {PWAInstallState} from '../../../types/pwa';
 
 export interface PWAContextValue {
   // Service Worker state
   serviceWorker: ServiceWorkerRegistrationState & {
     updateServiceWorker: (reloadPage?: boolean) => Promise<void>;
   };
-  
+
   // Install state
   install: PWAInstallState & {
     isInstalling: boolean;
     promptInstall: () => Promise<void>;
     cancelInstall: () => void;
   };
-  
+
   // Combined state helpers
   isReady: boolean;
   hasUpdates: boolean;
@@ -46,10 +46,10 @@ export interface PWAProviderProps {
 
 /**
  * PWA Provider Component
- * 
+ *
  * Provides PWA functionality throughout the application via React Context.
  * Manages service worker registration, installation prompts, and update notifications.
- * 
+ *
  * Features:
  * - Centralized PWA state management
  * - Automatic service worker registration
@@ -58,10 +58,10 @@ export interface PWAProviderProps {
  * - Progressive enhancement (graceful degradation)
  */
 export const PWAProvider: React.FC<PWAProviderProps> = ({
-  children,
-  serviceWorkerOptions = { immediate: true },
-  enableInstallPrompts = true,
-}) => {
+                                                          children,
+                                                          serviceWorkerOptions = {immediate: true},
+                                                          enableInstallPrompts = true,
+                                                        }) => {
   // Memoize serviceWorkerOptions to prevent unnecessary re-renders
   const memoizedServiceWorkerOptions = useMemo(() => serviceWorkerOptions, [
     serviceWorkerOptions,
@@ -74,7 +74,7 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({
   const contextValue: PWAContextValue = useMemo(() => ({
     serviceWorker: serviceWorkerState,
     install: installState,
-    
+
     // Combined state helpers
     isReady: serviceWorkerState.isRegistered || serviceWorkerState.offlineReady,
     hasUpdates: serviceWorkerState.needsRefresh,
@@ -82,9 +82,9 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({
   }), [serviceWorkerState, installState, enableInstallPrompts]);
 
   return (
-    <PWAContext.Provider value={contextValue}>
-      {children}
-    </PWAContext.Provider>
+      <PWAContext.Provider value={contextValue}>
+        {children}
+      </PWAContext.Provider>
   );
 };
 
@@ -95,11 +95,11 @@ export const PWAProvider: React.FC<PWAProviderProps> = ({
 // eslint-disable-next-line react-refresh/only-export-components
 export const usePWA = (): PWAContextValue => {
   const context = useContext(PWAContext);
-  
+
   if (context === undefined) {
     throw new Error('usePWA must be used within a PWAProvider');
   }
-  
+
   return context;
 };
 
@@ -108,11 +108,11 @@ export const usePWA = (): PWAContextValue => {
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export const withPWA = <P extends object>(
-  Component: React.ComponentType<P>
+    Component: React.ComponentType<P>
 ): React.FC<P> => {
   return (props: P) => (
-    <PWAProvider>
-      <Component {...props} />
-    </PWAProvider>
+      <PWAProvider>
+        <Component {...props} />
+      </PWAProvider>
   );
 };

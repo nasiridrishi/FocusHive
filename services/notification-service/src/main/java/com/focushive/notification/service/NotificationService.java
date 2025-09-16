@@ -97,4 +97,28 @@ public interface NotificationService {
      * @return number of notifications deleted
      */
     int cleanupOldNotifications(String userId, int daysToKeep);
+
+    /**
+     * Bulk mark notifications as read.
+     *
+     * @param notificationIds list of notification IDs to mark as read
+     * @return number of notifications successfully marked as read
+     */
+    int bulkMarkAsRead(java.util.List<Long> notificationIds);
+
+    /**
+     * Bulk delete notifications.
+     *
+     * @param notificationIds list of notification IDs to delete
+     * @return number of notifications successfully deleted
+     */
+    int bulkDelete(java.util.List<Long> notificationIds);
+
+    /**
+     * Get notification statistics for a user.
+     *
+     * @param userId the user ID
+     * @return notification statistics
+     */
+    NotificationStatistics getStatistics(String userId);
 }

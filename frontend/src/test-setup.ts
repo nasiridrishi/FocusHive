@@ -1,15 +1,34 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { vi, beforeEach, afterEach, beforeAll, afterAll, describe, it, expect } from 'vitest';
-import { server } from './test-utils/msw-server';
-import { toHaveNoViolations } from 'jest-axe';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {server} from './test-utils/msw-server';
+import {toHaveNoViolations} from 'jest-axe';
+
+// Load test environment variables
+// Set default test environment variables
+process.env.VITE_API_BASE_URL = process.env.VITE_API_BASE_URL || 'http://localhost:8080';
+process.env.VITE_WEBSOCKET_URL = process.env.VITE_WEBSOCKET_URL || 'ws://localhost:8080/ws';
+process.env.VITE_IDENTITY_SERVICE_URL = process.env.VITE_IDENTITY_SERVICE_URL || 'http://localhost:8081';
+process.env.VITE_BUDDY_SERVICE_URL = process.env.VITE_BUDDY_SERVICE_URL || 'http://localhost:8087';
+process.env.VITE_APP_NAME = process.env.VITE_APP_NAME || 'FocusHive';
+process.env.VITE_APP_VERSION = process.env.VITE_APP_VERSION || '0.0.1';
+process.env.VITE_APP_ENVIRONMENT = process.env.VITE_APP_ENVIRONMENT || 'test';
+process.env.VITE_FEATURE_NOTIFICATIONS = process.env.VITE_FEATURE_NOTIFICATIONS || 'true';
+process.env.VITE_FEATURE_ANALYTICS = process.env.VITE_FEATURE_ANALYTICS || 'true';
+process.env.VITE_FEATURE_CHAT = process.env.VITE_FEATURE_CHAT || 'true';
+process.env.VITE_FEATURE_FORUM = process.env.VITE_FEATURE_FORUM || 'true';
+process.env.VITE_FEATURE_BUDDY = process.env.VITE_FEATURE_BUDDY || 'true';
+process.env.VITE_FEATURE_GAMIFICATION = process.env.VITE_FEATURE_GAMIFICATION || 'true';
+process.env.VITE_FEATURE_MUSIC = process.env.VITE_FEATURE_MUSIC || 'false';
+process.env.VITE_DEBUG_MODE = process.env.VITE_DEBUG_MODE || 'false';
+process.env.VITE_LOG_LEVEL = process.env.VITE_LOG_LEVEL || 'info';
 
 // Extend expect with accessibility matchers
 expect.extend(toHaveNoViolations);
 
 // Start MSW server before all tests
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'error' });
+  server.listen({onUnhandledRequest: 'error'});
 });
 
 // Reset handlers after each test
@@ -50,7 +69,7 @@ vi.mock('axios', () => {
 
 // Make test globals available
 (globalThis as Record<string, unknown>).beforeEach = beforeEach;
-(globalThis as Record<string, unknown>).afterEach = afterEach; 
+(globalThis as Record<string, unknown>).afterEach = afterEach;
 (globalThis as Record<string, unknown>).describe = describe;
 (globalThis as Record<string, unknown>).it = it;
 (globalThis as Record<string, unknown>).expect = expect;
@@ -58,34 +77,42 @@ vi.mock('axios', () => {
 
 // Mock MUI X Charts
 vi.mock('@mui/x-charts', () => ({
-  LineChart: vi.fn(({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
+  LineChart: vi.fn(({children, ...props}: React.PropsWithChildren<Record<string, unknown>>) => {
     return React.createElement('div', {
       'data-testid': 'line-chart',
       'data-props': JSON.stringify(props)
     }, children);
   }),
-  BarChart: vi.fn(({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
+  BarChart: vi.fn(({children, ...props}: React.PropsWithChildren<Record<string, unknown>>) => {
     return React.createElement('div', {
-      'data-testid': 'bar-chart', 
+      'data-testid': 'bar-chart',
       'data-props': JSON.stringify(props)
     }, children);
   }),
-  ResponsiveChartContainer: vi.fn(({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
+  ResponsiveChartContainer: vi.fn(({
+                                     children,
+                                     ...props
+                                   }: React.PropsWithChildren<Record<string, unknown>>) => {
     return React.createElement('div', {
       'data-testid': 'chart-container',
       'data-props': JSON.stringify(props)
     }, children);
   }),
-  ChartsTooltip: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-tooltip' })),
-  ChartsAxisHighlight: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-axis-highlight' })),
-  ChartsXAxis: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-x-axis' })),
-  ChartsYAxis: vi.fn(() => React.createElement('div', { 'data-testid': 'chart-y-axis' }))
+  ChartsTooltip: vi.fn(() => React.createElement('div', {'data-testid': 'chart-tooltip'})),
+  ChartsAxisHighlight: vi.fn(() => React.createElement('div', {'data-testid': 'chart-axis-highlight'})),
+  ChartsXAxis: vi.fn(() => React.createElement('div', {'data-testid': 'chart-x-axis'})),
+  ChartsYAxis: vi.fn(() => React.createElement('div', {'data-testid': 'chart-y-axis'}))
 }));
 
 // Mock MUI X Date Pickers
 vi.mock('@mui/x-date-pickers', () => ({
-  LocalizationProvider: vi.fn(({ children }: React.PropsWithChildren) => React.createElement('div', {}, children)),
-  DatePicker: vi.fn(({ label, onChange, value, slotProps }: { label?: string; onChange?: (date: Date | null) => void; value?: Date | null; slotProps?: Record<string, unknown> }) => {
+  LocalizationProvider: vi.fn(({children}: React.PropsWithChildren) => React.createElement('div', {}, children)),
+  DatePicker: vi.fn(({label, onChange, value, slotProps}: {
+    label?: string;
+    onChange?: (date: Date | null) => void;
+    value?: Date | null;
+    slotProps?: Record<string, unknown>
+  }) => {
     return React.createElement('input', {
       'aria-label': label,
       type: 'date',
@@ -98,7 +125,12 @@ vi.mock('@mui/x-date-pickers', () => ({
 
 // Mock MUI x-date-pickers specific modules to prevent import errors
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({
-  DatePicker: vi.fn(({ label, onChange, value, slotProps }: { label?: string; onChange?: (date: Date | null) => void; value?: Date | null; slotProps?: Record<string, unknown> }) => {
+  DatePicker: vi.fn(({label, onChange, value, slotProps}: {
+    label?: string;
+    onChange?: (date: Date | null) => void;
+    value?: Date | null;
+    slotProps?: Record<string, unknown>
+  }) => {
     return React.createElement('input', {
       'aria-label': label,
       type: 'date',
@@ -111,44 +143,76 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
 
 // Mock date-fns adapter
 vi.mock('@mui/x-date-pickers/AdapterDateFns', () => ({
-  AdapterDateFns: class MockAdapterDateFns {}
+  AdapterDateFns: class MockAdapterDateFns {
+  }
 }));
 
 // Mock framer-motion to prevent DOM prop warnings
-const createMotionComponent = (tag: string) => 
-  React.forwardRef<HTMLElement, React.PropsWithChildren<Record<string, unknown>>>(({ children, ...props }, ref) => {
-    // Filter out framer-motion specific props
-    const { 
-      animate, initial, exit, variants, transition, 
-      whileHover, whileTap, whileFocus, whileInView,
-      drag, dragConstraints, dragElastic, dragMomentum, 
-      dragTransition, dragControls,
-      layout, layoutId, layoutDependency, layoutScroll, layoutRoot,
-      onAnimationStart, onAnimationComplete, onUpdate, 
-      onDragStart, onDragEnd, onDrag,
-      onDirectionLock, onViewportEnter, onViewportLeave, 
-      onHoverStart, onHoverEnd,
-      onTap, onTapStart, onTapCancel, onFocus, onBlur, 
-      onDragTransitionEnd,
-      style, transformTemplate, transformValues, ...filteredProps 
-    } = props;
-    
-    // Silence unused variable warnings by acknowledging them
-    void animate; void initial; void exit; void variants; void transition;
-    void whileHover; void whileTap; void whileFocus; void whileInView;
-    void drag; void dragConstraints; void dragElastic; void dragMomentum;
-    void dragTransition; void dragControls;
-    void layout; void layoutId; void layoutDependency; void layoutScroll; void layoutRoot;
-    void onAnimationStart; void onAnimationComplete; void onUpdate;
-    void onDragStart; void onDragEnd; void onDrag;
-    void onDirectionLock; void onViewportEnter; void onViewportLeave;
-    void onHoverStart; void onHoverEnd;
-    void onTap; void onTapStart; void onTapCancel; void onFocus; void onBlur;
-    void onDragTransitionEnd;
-    void style; void transformTemplate; void transformValues;
-    
-    return React.createElement(tag, { ...filteredProps, ref }, children as React.ReactNode);
-  });
+const createMotionComponent = (tag: string) =>
+    React.forwardRef<HTMLElement, React.PropsWithChildren<Record<string, unknown>>>(({ 
+        children,
+        ...props
+    }, ref) => {
+      // Filter out framer-motion specific props
+      const {
+        animate, initial, exit, variants, transition,
+        whileHover, whileTap, whileFocus, whileInView,
+        drag, dragConstraints, dragElastic, dragMomentum,
+        dragTransition, dragControls,
+        layout, layoutId, layoutDependency, layoutScroll, layoutRoot,
+        onAnimationStart, onAnimationComplete, onUpdate,
+        onDragStart, onDragEnd, onDrag,
+        onDirectionLock, onViewportEnter, onViewportLeave,
+        onHoverStart, onHoverEnd,
+        onTap, onTapStart, onTapCancel, onFocus, onBlur,
+        onDragTransitionEnd,
+        style, transformTemplate, transformValues, ...filteredProps
+      } = props;
+
+      // Silence unused variable warnings by acknowledging them
+      void animate;
+      void initial;
+      void exit;
+      void variants;
+      void transition;
+      void whileHover;
+      void whileTap;
+      void whileFocus;
+      void whileInView;
+      void drag;
+      void dragConstraints;
+      void dragElastic;
+      void dragMomentum;
+      void dragTransition;
+      void dragControls;
+      void layout;
+      void layoutId;
+      void layoutDependency;
+      void layoutScroll;
+      void layoutRoot;
+      void onAnimationStart;
+      void onAnimationComplete;
+      void onUpdate;
+      void onDragStart;
+      void onDragEnd;
+      void onDrag;
+      void onDirectionLock;
+      void onViewportEnter;
+      void onViewportLeave;
+      void onHoverStart;
+      void onHoverEnd;
+      void onTap;
+      void onTapStart;
+      void onTapCancel;
+      void onFocus;
+      void onBlur;
+      void onDragTransitionEnd;
+      void style;
+      void transformTemplate;
+      void transformValues;
+
+      return React.createElement(tag, {...filteredProps, ref}, children as React.ReactNode);
+    });
 
 vi.mock('framer-motion', () => ({
   motion: {
@@ -171,11 +235,15 @@ vi.mock('framer-motion', () => ({
     h5: createMotionComponent('h5'),
     h6: createMotionComponent('h6'),
   },
-  AnimatePresence: ({ children }: React.PropsWithChildren) => children,
+  AnimatePresence: ({children}: React.PropsWithChildren) => children,
   useAnimation: () => ({}),
-  useMotionValue: (value: unknown) => ({ get: () => value, set: () => {} }),
+  useMotionValue: (value: unknown) => ({
+    get: () => value, set: () => {
+    }
+  }),
   useTransform: (value: unknown, input: unknown, output: unknown) => {
-    void input; void output; // Acknowledge unused parameters
+    void input;
+    void output; // Acknowledge unused parameters
     return value;
   },
   useSpring: (value: unknown) => value,
@@ -220,6 +288,68 @@ vi.mock('@mui/material/node/styles', async () => {
   return actual;
 });
 
+// Mock Sentry error reporting
+vi.mock('@sentry/react', () => {
+  const mockSentry = {
+    captureException: vi.fn(),
+    captureMessage: vi.fn(),
+    captureEvent: vi.fn(),
+    configureScope: vi.fn((callback) => callback({
+      setTag: vi.fn(),
+      setTags: vi.fn(),
+      setExtra: vi.fn(),
+      setExtras: vi.fn(),
+      setUser: vi.fn(),
+      setFingerprint: vi.fn(),
+      setLevel: vi.fn(),
+      clearBreadcrumbs: vi.fn(),
+    })),
+    withScope: vi.fn((callback) => callback({
+      setTag: vi.fn(),
+      setTags: vi.fn(),
+      setExtra: vi.fn(),
+      setExtras: vi.fn(),
+      setUser: vi.fn(),
+      setFingerprint: vi.fn(),
+      setLevel: vi.fn(),
+      clearBreadcrumbs: vi.fn(),
+    })),
+    setTag: vi.fn(),
+    setTags: vi.fn(),
+    setExtra: vi.fn(),
+    setExtras: vi.fn(),
+    setUser: vi.fn(),
+    init: vi.fn(),
+    flush: vi.fn(() => Promise.resolve(true)),
+    close: vi.fn(() => Promise.resolve(true)),
+    lastEventId: vi.fn(() => ''),
+    ErrorBoundary: ({ children }: { children: React.ReactNode }) => children,
+    Profiler: ({ children }: { children: React.ReactNode }) => children,
+    withProfiler: (Component: React.ComponentType) => Component,
+  };
+  return {
+    default: mockSentry,
+    ...mockSentry,
+  };
+});
+
+// Mock error reporting service to prevent test noise
+vi.mock('./services/monitoring/errorReporting.ts', () => ({
+  reportError: vi.fn(),
+  reportException: vi.fn(),
+  logError: vi.fn(),
+  logWarning: vi.fn(),
+  logInfo: vi.fn(),
+  initializeErrorReporting: vi.fn(),
+  setupErrorBoundary: vi.fn(),
+  captureError: vi.fn(),
+  captureMessage: vi.fn(),
+  addBreadcrumb: vi.fn(),
+  setUser: vi.fn(),
+  setTag: vi.fn(),
+  setContext: vi.fn(),
+}));
+
 // Global test utilities
 globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
@@ -248,7 +378,7 @@ Object.defineProperty(window, 'matchMedia', {
 HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
   fillRect: vi.fn(),
   clearRect: vi.fn(),
-  getImageData: vi.fn(() => ({ data: new Array(4) })),
+  getImageData: vi.fn(() => ({data: new Array(4)})),
   putImageData: vi.fn(),
   createImageData: vi.fn(() => []),
   setTransform: vi.fn(),
@@ -266,7 +396,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
   rotate: vi.fn(),
   arc: vi.fn(),
   fill: vi.fn(),
-  measureText: vi.fn(() => ({ width: 0 })),
+  measureText: vi.fn(() => ({width: 0})),
   transform: vi.fn(),
   rect: vi.fn(),
   clip: vi.fn(),

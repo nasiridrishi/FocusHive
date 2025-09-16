@@ -1,0 +1,188 @@
+# Production Profile Configuration
+spring:
+  datasource:
+    # Production database configuration
+    # These values should be overridden by environment variables or secrets manager
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/buddy_prod_db}
+    username: ${DB_USERNAME:buddy_prod}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+
+    # HikariCP Connection Pool Configuration
+    hikari:
+      maximum-pool-size: ${DB_MAX_POOL_SIZE:20}
+      minimum-idle: ${DB_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}
+      pool-name: BuddyServiceHikariPool
+      connection-test-query: SELECT 1
+      leak-detection-threshold: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never use create/update in production
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+        jdbc:
+          batch_size: 20
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+
+  # Redis Configuration for Production
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hour
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: "buddy-service:"
+    cache-names:
+      - userPreferences
+      - partnerships
+      - activeGoals
+      - compatibility
+      - matchingQueue
+      - goalAnalytics
+      - userAchievements
+      - templates
+
+  # Flyway Migration
+  flyway:
+    enabled: true
+    baseline-on-migrate: false  # Should be false in production
+    validate-on-migrate: true
+    locations: classpath:db/migration
+
+  # Security Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8081}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8081/.well-known/jwks.json}
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8087}
+  compression:
+    enabled: true
+    min-response-size: 1024
+  forward-headers-strategy: framework  # For proper X-Forwarded-* header handling
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    diskspace:
+      threshold: 1073741824  # 1GB
+
+# Production-Grade Logging Configuration
+logging:
+  level:
+    root: WARN
+    com.focushive.buddy: INFO
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    org.springframework.boot: WARN
+    org.springframework.data: WARN
+    org.hibernate: ERROR
+    org.hibernate.SQL: ERROR
+    org.hibernate.type: ERROR
+    org.springframework.orm.jpa: WARN
+    org.springframework.transaction: WARN
+    org.flywaydb: WARN
+    io.lettuce: WARN
+    redis.clients.jedis: WARN
+    org.apache.tomcat: WARN
+    org.apache.catalina: WARN
+    com.zaxxer.hikari: WARN
+    reactor.netty: WARN
+    io.netty: WARN
+
+  # Structured JSON logging for production
+  config: classpath:logback-spring.xml
+
+# Application-specific Production Settings
+buddy:
+  service:
+    max-partners: 5
+    matching-interval: 300000  # 5 minutes
+    cleanup-interval: 3600000  # 1 hour
+
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://app.focushive.com}
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
+  security:
+    rate-limit:
+      enabled: true
+      requests-per-minute: ${RATE_LIMIT_PER_MINUTE:60}
+
+# Circuit Breaker Configuration (Resilience4j)
+resilience4j:
+  circuitbreaker:
+    instances:
+      external-api:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+
+  retry:
+    instances:
+      external-api:
+        maxAttempts: 3
+        waitDuration: 1s
+        retryExceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+  ratelimiter:
+    instances:
+      api:
+        limitForPeriod: ${RATE_LIMIT_PER_MINUTE:60}
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0s

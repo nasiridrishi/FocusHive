@@ -1,0 +1,90 @@
+# Pre-commit hooks for security and code quality
+# Install: pip install pre-commit
+# Setup: pre-commit install
+
+repos:
+  # Security: Detect secrets
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: .*\.lock|package-lock\.json
+
+  # Security: Gitleaks
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+
+  # Code Quality: Trailing whitespace
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-json
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+
+  # Java: Google Java Format
+  - repo: https://github.com/google/google-java-format
+    rev: v1.19.1
+    hooks:
+      - id: google-java-format
+        args: ['--replace']
+
+  # YAML: Prettier
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types_or: [yaml, json]
+
+  # Security: Safety check for Python dependencies
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.3
+    hooks:
+      - id: python-safety-dependencies-check
+
+  # Docker: Hadolint
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+
+  # Commit message: Conventional Commits
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.0.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+  # Custom: Run Gradle security checks
+  - repo: local
+    hooks:
+      - id: gradle-dependency-check
+        name: OWASP Dependency Check
+        entry: ./gradlew dependencyCheckAnalyze
+        language: system
+        pass_filenames: false
+        types: [java]
+        stages: [push]
+
+      - id: gradle-test
+        name: Run Unit Tests
+        entry: ./gradlew test
+        language: system
+        pass_filenames: false
+        types: [java]
+
+      - id: check-sensitive-files
+        name: Check for sensitive files
+        entry: bash -c 'find . -type f \( -name "*.pem" -o -name "*.key" -o -name "*.p12" -o -name "*.pfx" \) -not -path "./.git/*" | grep -q . && echo "Sensitive files found!" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false

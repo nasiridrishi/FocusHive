@@ -1,0 +1,168 @@
+{
+  "analysis_timestamp": "2025-09-19T21:55:07",
+  "total_batches": 3,
+  "total_tests": 6,
+  "total_passed": 0,
+  "total_failed": 6,
+  "total_errors": 0,
+  "total_skipped": 0,
+  "batch_results": [
+    {
+      "batch_name": "unit-fast-1",
+      "total_tests": 2,
+      "passed_tests": 0,
+      "failed_tests": 2,
+      "error_tests": 0,
+      "skipped_tests": 0,
+      "total_duration_seconds": 0.002,
+      "test_results": [
+        {
+          "test_name": "initializationError",
+          "class_name": "com.focushive.identity.network.NetworkFailureTestSuite",
+          "full_name": "com.focushive.identity.network.NetworkFailureTestSuite.initializationError",
+          "status": "failed",
+          "duration_seconds": 0.001,
+          "failure_message": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException",
+          "failure_stacktrace": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\n\tat java.base@21.0.8/java.util.Iterator.forEachRemaining(Iterator.java:133)\n\tat java.base@21.0.8/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\n",
+          "suite_name": "\ud83c\udf10 Network Failure Resilience Test Suite"
+        },
+        {
+          "test_name": "initializationError",
+          "class_name": "com.focushive.identity.resilience.ResilienceTestSuite",
+          "full_name": "com.focushive.identity.resilience.ResilienceTestSuite.initializationError",
+          "status": "failed",
+          "duration_seconds": 0.001,
+          "failure_message": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException",
+          "failure_stacktrace": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\n\tat java.base@21.0.8/java.util.Iterator.forEachRemaining(Iterator.java:133)\n\tat java.base@21.0.8/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\n",
+          "suite_name": "Identity Service Resilience Test Suite (RES-001 to RES-005)"
+        }
+      ],
+      "failure_summary": [
+        {
+          "test_name": "com.focushive.identity.network.NetworkFailureTestSuite.initializationError",
+          "root_cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException"
+        },
+        {
+          "test_name": "com.focushive.identity.resilience.ResilienceTestSuite.initializationError",
+          "root_cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException"
+        }
+      ],
+      "error_patterns": {
+        "org.junit.platform.suite.engine.NoTestsDiscoveredException": 2
+      }
+    },
+    {
+      "batch_name": "unit-fast-2",
+      "total_tests": 2,
+      "passed_tests": 0,
+      "failed_tests": 2,
+      "error_tests": 0,
+      "skipped_tests": 0,
+      "total_duration_seconds": 0.001,
+      "test_results": [
+        {
+          "test_name": "initializationError",
+          "class_name": "com.focushive.identity.network.NetworkFailureTestSuite",
+          "full_name": "com.focushive.identity.network.NetworkFailureTestSuite.initializationError",
+          "status": "failed",
+          "duration_seconds": 0.001,
+          "failure_message": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException",
+          "failure_stacktrace": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\n\tat java.base@21.0.8/java.util.Iterator.forEachRemaining(Iterator.java:133)\n\tat java.base@21.0.8/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\n",
+          "suite_name": "\ud83c\udf10 Network Failure Resilience Test Suite"
+        },
+        {
+          "test_name": "initializationError",
+          "class_name": "com.focushive.identity.resilience.ResilienceTestSuite",
+          "full_name": "com.focushive.identity.resilience.ResilienceTestSuite.initializationError",
+          "status": "failed",
+          "duration_seconds": 0.0,
+          "failure_message": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException",
+          "failure_stacktrace": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\n\tat java.base@21.0.8/java.util.Iterator.forEachRemaining(Iterator.java:133)\n\tat java.base@21.0.8/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\n",
+          "suite_name": "Identity Service Resilience Test Suite (RES-001 to RES-005)"
+        }
+      ],
+      "failure_summary": [
+        {
+          "test_name": "com.focushive.identity.network.NetworkFailureTestSuite.initializationError",
+          "root_cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException"
+        },
+        {
+          "test_name": "com.focushive.identity.resilience.ResilienceTestSuite.initializationError",
+          "root_cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException"
+        }
+      ],
+      "error_patterns": {
+        "org.junit.platform.suite.engine.NoTestsDiscoveredException": 2
+      }
+    },
+    {
+      "batch_name": "unit-medium",
+      "total_tests": 2,
+      "passed_tests": 0,
+      "failed_tests": 2,
+      "error_tests": 0,
+      "skipped_tests": 0,
+      "total_duration_seconds": 0.002,
+      "test_results": [
+        {
+          "test_name": "initializationError",
+          "class_name": "com.focushive.identity.network.NetworkFailureTestSuite",
+          "full_name": "com.focushive.identity.network.NetworkFailureTestSuite.initializationError",
+          "status": "failed",
+          "duration_seconds": 0.002,
+          "failure_message": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException",
+          "failure_stacktrace": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\n\tat java.base@21.0.8/java.util.Iterator.forEachRemaining(Iterator.java:133)\n\tat java.base@21.0.8/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\n",
+          "suite_name": "\ud83c\udf10 Network Failure Resilience Test Suite"
+        },
+        {
+          "test_name": "initializationError",
+          "class_name": "com.focushive.identity.resilience.ResilienceTestSuite",
+          "full_name": "com.focushive.identity.resilience.ResilienceTestSuite.initializationError",
+          "status": "failed",
+          "duration_seconds": 0.0,
+          "failure_message": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException",
+          "failure_stacktrace": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)\n\tat java.base@21.0.8/java.util.Iterator.forEachRemaining(Iterator.java:133)\n\tat java.base@21.0.8/java.util.Spliterators$IteratorSpliterator.forEachRemaining(Spliterators.java:1939)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)\n\tat java.base@21.0.8/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)\n\tat java.base@21.0.8/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base@21.0.8/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)\n",
+          "suite_name": "Identity Service Resilience Test Suite (RES-001 to RES-005)"
+        }
+      ],
+      "failure_summary": [
+        {
+          "test_name": "com.focushive.identity.network.NetworkFailureTestSuite.initializationError",
+          "root_cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.NetworkFailureTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException"
+        },
+        {
+          "test_name": "com.focushive.identity.resilience.ResilienceTestSuite.initializationError",
+          "root_cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience.ResilienceTestSuite] did not discover any tests",
+          "failure_type": "org.junit.platform.suite.engine.NoTestsDiscoveredException"
+        }
+      ],
+      "error_patterns": {
+        "org.junit.platform.suite.engine.NoTestsDiscoveredException": 2
+      }
+    }
+  ],
+  "overall_error_patterns": {
+    "org.junit.platform.suite.engine.NoTestsDiscoveredException": 6
+  },
+  "top_failure_causes": [
+    {
+      "cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.network.Ne",
+      "count": 3
+    },
+    {
+      "cause": "org.junit.platform.suite.engine.NoTestsDiscoveredException: Suite [com.focushive.identity.resilience",
+      "count": 3
+    }
+  ]
+}

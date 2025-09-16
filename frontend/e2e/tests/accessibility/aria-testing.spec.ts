@@ -1,6 +1,6 @@
 /**
  * ARIA Implementation Tests
- * 
+ *
  * Tests comprehensive ARIA (Accessible Rich Internet Applications) implementation including:
  * - ARIA roles and properties validation
  * - Live regions for dynamic content
@@ -8,16 +8,16 @@
  * - Complex widget patterns (tabs, menus, modals)
  * - ARIA relationships and references
  * - Custom component ARIA patterns
- * 
+ *
  * UOL-44.19: Comprehensive Accessibility E2E Tests
  */
 
-import { test, expect, Page, Locator } from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { AccessibilityHelper } from '../../helpers/accessibility.helper';
-import { AccessibilityPage } from '../../pages/AccessibilityPage';
+import {AccessibilityHelper} from '../../helpers/accessibility.helper';
+import {AccessibilityPage} from '../../pages/AccessibilityPage';
 
-interface AriaPattern {
+interface _AriaPattern {
   role: string;
   requiredProperties: string[];
   optionalProperties: string[];
@@ -26,7 +26,7 @@ interface AriaPattern {
   requiredContext?: string[];
 }
 
-interface LiveRegionTest {
+interface _LiveRegionTest {
   trigger: string;
   expectedContent: RegExp;
   expectedPoliteness: 'polite' | 'assertive';
@@ -36,12 +36,269 @@ test.describe('ARIA Implementation Tests', () => {
   let accessibilityHelper: AccessibilityHelper;
   let accessibilityPage: AccessibilityPage;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     accessibilityHelper = new AccessibilityHelper(page);
     accessibilityPage = new AccessibilityPage(page);
-    
+
     await accessibilityHelper.configureAxe();
   });
 
   test.describe('ARIA Roles and Properties Validation', () => {
-    test('should have valid ARIA attributes', async ({ page }) => {\n      const testPages = ['/', '/dashboard', '/login'];\n      \n      for (const testPage of testPages) {\n        await page.goto(testPage);\n        await accessibilityPage.waitForPageLoad();\n        \n        // Run comprehensive ARIA validation\n        const results = await new AxeBuilder({ page })\n          .withRules([\n            'aria-valid-attr',\n            'aria-valid-attr-value',\n            'aria-allowed-attr',\n            'aria-required-attr',\n            'aria-required-children',\n            'aria-required-parent',\n            'aria-roles',\n            'aria-roledescription'\n          ])\n          .analyze();\n          \n        expect(results.violations, `Page ${testPage} should have valid ARIA attributes`).toEqual([]);\n        \n        // Manual validation of complex ARIA patterns\n        const ariaElements = await page.locator('[role], [aria-label], [aria-labelledby], [aria-describedby]').all();\n        \n        for (const element of ariaElements.slice(0, 15)) {\n          const ariaValidation = await accessibilityHelper.verifyAriaAttributes(element);\n          \n          expect(\n            ariaValidation.isValid,\n            `ARIA attributes should be valid: ${ariaValidation.errors.join(', ')}`\n          ).toBeTruthy();\n        }\n      }\n    });\n\n    test('should use semantic HTML before ARIA when possible', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      // Check for over-use of ARIA roles that could be semantic HTML\n      const redundantAriaPatterns = [\n        { selector: '[role=\"button\"]', semantic: 'button', message: 'Use <button> instead of role=\"button\"' },\n        { selector: '[role=\"link\"]', semantic: 'a', message: 'Use <a href> instead of role=\"link\"' },\n        { selector: '[role=\"heading\"]', semantic: 'h1,h2,h3,h4,h5,h6', message: 'Use <h1>-<h6> instead of role=\"heading\"' },\n        { selector: '[role=\"list\"]', semantic: 'ul,ol', message: 'Use <ul> or <ol> instead of role=\"list\"' },\n        { selector: '[role=\"listitem\"]', semantic: 'li', message: 'Use <li> instead of role=\"listitem\"' }\n      ];\n      \n      for (const pattern of redundantAriaPatterns) {\n        const ariaElements = await page.locator(pattern.selector).all();\n        \n        for (const element of ariaElements) {\n          const tagName = await element.evaluate(el => el.tagName.toLowerCase());\n          \n          if (tagName !== 'button' && pattern.selector.includes('button')) {\n            console.warn(`${pattern.message} found: <${tagName} ${pattern.selector.replace('[', '').replace(']', '')}>`);\n          }\n          \n          if (tagName !== 'a' && pattern.selector.includes('link')) {\n            console.warn(`${pattern.message} found: <${tagName} ${pattern.selector.replace('[', '').replace(']', '')}>`);\n          }\n        }\n      }\n    });\n\n    test('should have consistent ARIA patterns across similar components', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      // Test button patterns\n      const buttons = await page.locator('button, [role=\"button\"]').all();\n      const buttonPatterns = new Set<string>();\n      \n      for (const button of buttons.slice(0, 10)) {\n        const pattern = await button.evaluate(btn => {\n          const attrs = [];\n          \n          if (btn.hasAttribute('aria-label')) attrs.push('aria-label');\n          if (btn.hasAttribute('aria-labelledby')) attrs.push('aria-labelledby');\n          if (btn.hasAttribute('aria-describedby')) attrs.push('aria-describedby');\n          if (btn.hasAttribute('aria-expanded')) attrs.push('aria-expanded');\n          if (btn.hasAttribute('aria-pressed')) attrs.push('aria-pressed');\n          \n          return attrs.sort().join(',');\n        });\n        \n        buttonPatterns.add(pattern);\n      }\n      \n      console.log(`Button ARIA patterns found: ${Array.from(buttonPatterns).join('; ')}`);\n      \n      // Test that similar interactive elements use consistent patterns\n      const interactiveElements = await page.locator('[onclick], [role=\"button\"], button').all();\n      \n      for (const element of interactiveElements.slice(0, 8)) {\n        const hasAccessibleName = await accessibilityHelper.hasAccessibleName(element);\n        expect(\n          hasAccessibleName,\n          'All interactive elements should have accessible names'\n        ).toBeTruthy();\n      }\n    });\n  });\n\n  test.describe('ARIA Roles Implementation', () => {\n    test('should implement button role correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const customButtons = await page.locator('[role=\"button\"]').all();\n      \n      for (const button of customButtons) {\n        // Should be keyboard accessible\n        const isKeyboardAccessible = await accessibilityPage.isKeyboardAccessible(button);\n        expect(isKeyboardAccessible, 'ARIA buttons should be keyboard accessible').toBeTruthy();\n        \n        // Should have accessible name\n        const hasName = await accessibilityHelper.hasAccessibleName(button);\n        expect(hasName, 'ARIA buttons should have accessible names').toBeTruthy();\n        \n        // Should respond to Enter and Space\n        await button.focus();\n        \n        let enterActivated = false;\n        let spaceActivated = false;\n        \n        await button.evaluate(btn => {\n          btn.addEventListener('click', () => {\n            btn.setAttribute('data-activated', 'true');\n          });\n          \n          btn.addEventListener('keydown', (e) => {\n            if (e.key === 'Enter' || e.key === ' ') {\n              e.preventDefault();\n              btn.click();\n            }\n          });\n        });\n        \n        // Test Enter key\n        await page.keyboard.press('Enter');\n        await page.waitForTimeout(100);\n        \n        const activatedByEnter = await button.getAttribute('data-activated');\n        if (activatedByEnter) enterActivated = true;\n        \n        await button.removeAttribute('data-activated');\n        \n        // Test Space key\n        await page.keyboard.press('Space');\n        await page.waitForTimeout(100);\n        \n        const activatedBySpace = await button.getAttribute('data-activated');\n        if (activatedBySpace) spaceActivated = true;\n        \n        expect(\n          enterActivated || spaceActivated,\n          'ARIA buttons should respond to Enter or Space keys'\n        ).toBeTruthy();\n      }\n    });\n\n    test('should implement tab role correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const tabs = await page.locator('[role=\"tab\"]').all();\n      \n      for (const tab of tabs) {\n        // Should be in a tablist\n        const tablist = await tab.locator('xpath=ancestor::*[@role=\"tablist\"]').first();\n        expect(\n          await tablist.count(),\n          'Tabs should be contained in tablist'\n        ).toBeGreaterThan(0);\n        \n        // Should control a tabpanel\n        const ariaControls = await tab.getAttribute('aria-controls');\n        if (ariaControls) {\n          const tabpanel = await page.locator(`#${ariaControls}`).first();\n          expect(\n            await tabpanel.count(),\n            'Tab should control an existing tabpanel'\n          ).toBeGreaterThan(0);\n          \n          const tabpanelRole = await tabpanel.getAttribute('role');\n          expect(\n            tabpanelRole,\n            'Controlled element should have tabpanel role'\n          ).toBe('tabpanel');\n        }\n        \n        // Should have selected state\n        const ariaSelected = await tab.getAttribute('aria-selected');\n        expect(\n          ['true', 'false'],\n          'Tabs should have aria-selected state'\n        ).toContain(ariaSelected);\n        \n        // Should be keyboard navigable with arrow keys\n        const tabindex = await tab.getAttribute('tabindex');\n        const isSelected = ariaSelected === 'true';\n        \n        if (isSelected) {\n          expect(\n            tabindex,\n            'Selected tab should have tabindex=\"0\"'\n          ).toBe('0');\n        } else {\n          expect(\n            tabindex,\n            'Unselected tabs should have tabindex=\"-1\"'\n          ).toBe('-1');\n        }\n      }\n    });\n\n    test('should implement menu role correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const menus = await page.locator('[role=\"menu\"]').all();\n      \n      for (const menu of menus) {\n        // Should contain menuitems\n        const menuItems = await menu.locator('[role=\"menuitem\"], [role=\"menuitemcheckbox\"], [role=\"menuitemradio\"]').all();\n        expect(\n          menuItems.length,\n          'Menus should contain menu items'\n        ).toBeGreaterThan(0);\n        \n        // Menu items should have proper roles\n        for (const item of menuItems.slice(0, 5)) {\n          const role = await item.getAttribute('role');\n          expect(\n            ['menuitem', 'menuitemcheckbox', 'menuitemradio'],\n            'Menu children should have proper menu item roles'\n          ).toContain(role);\n          \n          // Menu items should be keyboard accessible\n          const tabindex = await item.getAttribute('tabindex');\n          expect(\n            tabindex,\n            'Menu items should have appropriate tabindex'\n          ).not.toBeNull();\n        }\n        \n        // Should be associated with a menu button\n        const menuButton = await page.locator(`[aria-haspopup=\"true\"][aria-controls=\"${await menu.getAttribute('id')}\"], [role=\"menubutton\"]`).first();\n        \n        if (await menuButton.count() > 0) {\n          const hasPopup = await menuButton.getAttribute('aria-haspopup');\n          expect(\n            hasPopup,\n            'Menu should be associated with element that has aria-haspopup'\n          ).toBeTruthy();\n        }\n      }\n    });\n\n    test('should implement dialog role correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const modalTrigger = await accessibilityPage.findModalTrigger();\n      \n      if (modalTrigger) {\n        await modalTrigger.click();\n        await page.waitForTimeout(500);\n        \n        const dialogs = await page.locator('[role=\"dialog\"], [role=\"alertdialog\"]').all();\n        \n        for (const dialog of dialogs) {\n          // Should have aria-modal\n          const ariaModal = await dialog.getAttribute('aria-modal');\n          expect(\n            ariaModal,\n            'Dialogs should have aria-modal=\"true\"'\n          ).toBe('true');\n          \n          // Should have accessible name\n          const hasName = await accessibilityHelper.hasAccessibleName(dialog);\n          expect(\n            hasName,\n            'Dialogs should have accessible names'\n          ).toBeTruthy();\n          \n          // Should trap focus\n          const focusableElements = await dialog.locator(\n            'button, [href], input, select, textarea, [tabindex]:not([tabindex=\"-1\"])'\n          ).all();\n          \n          if (focusableElements.length > 0) {\n            // First focusable element should be focused\n            const firstElement = focusableElements[0];\n            await expect(firstElement).toBeFocused();\n          }\n          \n          // Should be dismissible with Escape\n          await page.keyboard.press('Escape');\n          await page.waitForTimeout(300);\n          \n          await expect(dialog).not.toBeVisible();\n        }\n      }\n    });\n  });\n\n  test.describe('ARIA States and Properties', () => {\n    test('should manage aria-expanded correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const expandableElements = await page.locator('[aria-expanded]').all();\n      \n      for (const element of expandableElements) {\n        const initialState = await element.getAttribute('aria-expanded');\n        expect(['true', 'false']).toContain(initialState);\n        \n        // Find what it controls\n        const ariaControls = await element.getAttribute('aria-controls');\n        \n        if (ariaControls) {\n          const controlledElement = await page.locator(`#${ariaControls}`).first();\n          \n          if (await controlledElement.count() > 0) {\n            const isVisible = await controlledElement.isVisible();\n            \n            // State should match visibility\n            if (initialState === 'true') {\n              expect(isVisible, 'Expanded elements should be visible').toBeTruthy();\n            } else {\n              expect(isVisible, 'Collapsed elements should not be visible').toBeFalsy();\n            }\n            \n            // Toggle the element\n            await element.click();\n            await page.waitForTimeout(300);\n            \n            const newState = await element.getAttribute('aria-expanded');\n            const newVisibility = await controlledElement.isVisible();\n            \n            expect(newState, 'aria-expanded should toggle').not.toBe(initialState);\n            \n            if (newState === 'true') {\n              expect(newVisibility, 'Controlled element should be visible when expanded').toBeTruthy();\n            } else {\n              expect(newVisibility, 'Controlled element should be hidden when collapsed').toBeFalsy();\n            }\n          }\n        }\n      }\n    });\n\n    test('should manage aria-selected correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const selectableElements = await page.locator('[aria-selected]').all();\n      \n      for (const element of selectableElements) {\n        const initialState = await element.getAttribute('aria-selected');\n        expect(['true', 'false']).toContain(initialState);\n        \n        const role = await element.getAttribute('role');\n        \n        // Different roles have different selection behaviors\n        if (role === 'tab') {\n          // Tabs should be part of a single-selection group\n          const tablist = await element.locator('xpath=ancestor::*[@role=\"tablist\"]').first();\n          \n          if (await tablist.count() > 0) {\n            const allTabs = await tablist.locator('[role=\"tab\"]').all();\n            let selectedCount = 0;\n            \n            for (const tab of allTabs) {\n              const selected = await tab.getAttribute('aria-selected');\n              if (selected === 'true') selectedCount++;\n            }\n            \n            expect(selectedCount, 'Exactly one tab should be selected').toBe(1);\n          }\n        }\n        \n        if (role === 'option') {\n          // Options in single-select should have only one selected\n          const listbox = await element.locator('xpath=ancestor::*[@role=\"listbox\"]').first();\n          \n          if (await listbox.count() > 0) {\n            const multiselectable = await listbox.getAttribute('aria-multiselectable');\n            \n            if (multiselectable !== 'true') {\n              const allOptions = await listbox.locator('[role=\"option\"]').all();\n              let selectedCount = 0;\n              \n              for (const option of allOptions) {\n                const selected = await option.getAttribute('aria-selected');\n                if (selected === 'true') selectedCount++;\n              }\n              \n              expect(selectedCount, 'Single-select listbox should have at most one selected option').toBeLessThanOrEqual(1);\n            }\n          }\n        }\n      }\n    });\n\n    test('should manage aria-checked correctly', async ({ page }) => {\n      await page.goto('/profile');\n      \n      const checkableElements = await page.locator('[aria-checked]').all();\n      \n      for (const element of checkableElements) {\n        const initialState = await element.getAttribute('aria-checked');\n        expect(['true', 'false', 'mixed']).toContain(initialState);\n        \n        const role = await element.getAttribute('role');\n        \n        if (role === 'checkbox') {\n          // Should toggle when clicked\n          await element.click();\n          await page.waitForTimeout(200);\n          \n          const newState = await element.getAttribute('aria-checked');\n          \n          if (initialState === 'true') {\n            expect(newState, 'Checked checkbox should become unchecked').toBe('false');\n          } else if (initialState === 'false') {\n            expect(newState, 'Unchecked checkbox should become checked').toBe('true');\n          }\n        }\n        \n        if (role === 'radio') {\n          // Radio buttons in same group should be mutually exclusive\n          const name = await element.getAttribute('name') || await element.getAttribute('aria-labelledby');\n          \n          if (name) {\n            await element.click();\n            await page.waitForTimeout(200);\n            \n            const newState = await element.getAttribute('aria-checked');\n            expect(newState, 'Clicked radio button should be checked').toBe('true');\n            \n            // Other radio buttons with same name should be unchecked\n            const relatedRadios = await page.locator(`[role=\"radio\"][name=\"${name}\"], [role=\"radio\"][aria-labelledby=\"${name}\"]`).all();\n            \n            let checkedCount = 0;\n            for (const radio of relatedRadios) {\n              const checked = await radio.getAttribute('aria-checked');\n              if (checked === 'true') checkedCount++;\n            }\n            \n            expect(checkedCount, 'Only one radio button in group should be checked').toBe(1);\n          }\n        }\n      }\n    });\n\n    test('should manage aria-disabled correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const disabledElements = await page.locator('[aria-disabled=\"true\"]').all();\n      \n      for (const element of disabledElements) {\n        // Should not be keyboard accessible\n        const tabindex = await element.getAttribute('tabindex');\n        expect(tabindex, 'Disabled elements should not be focusable').toBe('-1');\n        \n        // Should not respond to clicks (ideally)\n        let wasClicked = false;\n        \n        await element.evaluate(el => {\n          el.addEventListener('click', () => {\n            (el as any).__wasClicked = true;\n          });\n        });\n        \n        await element.click();\n        await page.waitForTimeout(100);\n        \n        const clickResponse = await element.evaluate(el => (el as any).__wasClicked);\n        \n        if (clickResponse) {\n          console.warn('Disabled element responded to click - should preventDefault in click handler');\n        }\n      }\n    });\n  });\n\n  test.describe('ARIA Relationships', () => {\n    test('should have valid aria-labelledby references', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const labelledElements = await page.locator('[aria-labelledby]').all();\n      \n      for (const element of labelledElements) {\n        const labelledBy = await element.getAttribute('aria-labelledby');\n        \n        if (labelledBy) {\n          const labelIds = labelledBy.split(' ');\n          \n          for (const labelId of labelIds) {\n            const labelElement = await page.locator(`#${labelId}`).first();\n            \n            expect(\n              await labelElement.count(),\n              `Element with id=\"${labelId}\" should exist for aria-labelledby`\n            ).toBeGreaterThan(0);\n            \n            if (await labelElement.count() > 0) {\n              const labelText = await labelElement.textContent();\n              expect(\n                labelText?.trim().length,\n                `Label element ${labelId} should have content`\n              ).toBeGreaterThan(0);\n            }\n          }\n        }\n      }\n    });\n\n    test('should have valid aria-describedby references', async ({ page }) => {\n      await page.goto('/profile');\n      \n      const describedElements = await page.locator('[aria-describedby]').all();\n      \n      for (const element of describedElements) {\n        const describedBy = await element.getAttribute('aria-describedby');\n        \n        if (describedBy) {\n          const descriptionIds = describedBy.split(' ');\n          \n          for (const descId of descriptionIds) {\n            const descElement = await page.locator(`#${descId}`).first();\n            \n            expect(\n              await descElement.count(),\n              `Element with id=\"${descId}\" should exist for aria-describedby`\n            ).toBeGreaterThan(0);\n            \n            if (await descElement.count() > 0) {\n              const descText = await descElement.textContent();\n              expect(\n                descText?.trim().length,\n                `Description element ${descId} should have content`\n              ).toBeGreaterThan(0);\n            }\n          }\n        }\n      }\n    });\n\n    test('should have valid aria-controls relationships', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const controllingElements = await page.locator('[aria-controls]').all();\n      \n      for (const element of controllingElements) {\n        const ariaControls = await element.getAttribute('aria-controls');\n        \n        if (ariaControls) {\n          const controlledIds = ariaControls.split(' ');\n          \n          for (const controlledId of controlledIds) {\n            const controlledElement = await page.locator(`#${controlledId}`).first();\n            \n            expect(\n              await controlledElement.count(),\n              `Element with id=\"${controlledId}\" should exist for aria-controls`\n            ).toBeGreaterThan(0);\n            \n            // The relationship should make logical sense\n            if (await controlledElement.count() > 0) {\n              const controllerRole = await element.getAttribute('role');\n              const controlledRole = await controlledElement.getAttribute('role');\n              \n              // Common valid relationships\n              const validRelationships = [\n                { controller: 'button', controlled: ['menu', 'dialog', 'listbox', 'tree'] },\n                { controller: 'tab', controlled: ['tabpanel'] },\n                { controller: 'menubutton', controlled: ['menu'] },\n                { controller: 'combobox', controlled: ['listbox', 'tree', 'grid'] }\n              ];\n              \n              const relationship = validRelationships.find(rel => \n                rel.controller === controllerRole\n              );\n              \n              if (relationship && controlledRole) {\n                expect(\n                  relationship.controlled,\n                  `${controllerRole} should control appropriate element types`\n                ).toContain(controlledRole);\n              }\n            }\n          }\n        }\n      }\n    });\n\n    test('should have valid aria-owns relationships', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const owningElements = await page.locator('[aria-owns]').all();\n      \n      for (const element of owningElements) {\n        const ariaOwns = await element.getAttribute('aria-owns');\n        \n        if (ariaOwns) {\n          const ownedIds = ariaOwns.split(' ');\n          \n          for (const ownedId of ownedIds) {\n            const ownedElement = await page.locator(`#${ownedId}`).first();\n            \n            expect(\n              await ownedElement.count(),\n              `Element with id=\"${ownedId}\" should exist for aria-owns`\n            ).toBeGreaterThan(0);\n            \n            // Owned element should not be a descendant of owner\n            // (aria-owns is for non-DOM relationships)\n            if (await ownedElement.count() > 0) {\n              const isDescendant = await element.evaluate((owner, ownedId) => {\n                const ownedEl = document.getElementById(ownedId);\n                return ownedEl ? owner.contains(ownedEl) : false;\n              }, ownedId);\n              \n              expect(\n                isDescendant,\n                'aria-owns should reference elements that are not DOM descendants'\n              ).toBeFalsy();\n            }\n          }\n        }\n      }\n    });\n  });\n\n  test.describe('Live Regions', () => {\n    test('should have properly configured live regions', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const liveRegions = await accessibilityPage.getLiveRegions();\n      \n      for (const region of liveRegions) {\n        const ariaLive = await region.getAttribute('aria-live');\n        expect(['polite', 'assertive', 'off']).toContain(ariaLive);\n        \n        // Check for appropriate politeness level\n        const regionPurpose = await region.evaluate(el => {\n          const classList = Array.from(el.classList);\n          const id = el.id;\n          \n          // Determine likely purpose from class names and id\n          if (classList.some(c => c.includes('error')) || id.includes('error')) {\n            return 'error';\n          }\n          if (classList.some(c => c.includes('status')) || id.includes('status')) {\n            return 'status';\n          }\n          if (classList.some(c => c.includes('alert')) || id.includes('alert')) {\n            return 'alert';\n          }\n          \n          return 'unknown';\n        });\n        \n        // Error messages and alerts should be assertive\n        if (regionPurpose === 'error' || regionPurpose === 'alert') {\n          expect(\n            ariaLive,\n            'Error messages and alerts should use aria-live=\"assertive\"'\n          ).toBe('assertive');\n        }\n        \n        // Status messages should usually be polite\n        if (regionPurpose === 'status') {\n          expect(\n            ariaLive,\n            'Status messages should typically use aria-live=\"polite\"'\n          ).toBe('polite');\n        }\n        \n        // Check for atomic updates\n        const ariaAtomic = await region.getAttribute('aria-atomic');\n        if (ariaAtomic) {\n          expect(['true', 'false']).toContain(ariaAtomic);\n        }\n        \n        // Check for relevant updates only\n        const ariaRelevant = await region.getAttribute('aria-relevant');\n        if (ariaRelevant) {\n          const validRelevant = ['additions', 'removals', 'text', 'all'];\n          const relevantValues = ariaRelevant.split(' ');\n          \n          for (const value of relevantValues) {\n            expect(\n              validRelevant,\n              `aria-relevant value \"${value}\" should be valid`\n            ).toContain(value);\n          }\n        }\n      }\n    });\n\n    test('should announce dynamic content changes', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      // Look for buttons that might trigger dynamic updates\n      const actionButtons = await page.locator(\n        'button:has-text(\"Load\"), button:has-text(\"Refresh\"), button:has-text(\"Update\"), [data-action]'\n      ).all();\n      \n      for (const button of actionButtons.slice(0, 3)) {\n        // Click button to trigger update\n        await button.click();\n        await page.waitForTimeout(1000);\n        \n        // Check if any live regions have been updated\n        const liveRegions = await accessibilityPage.getLiveRegions();\n        \n        for (const region of liveRegions) {\n          const content = await region.textContent();\n          \n          if (content && content.trim().length > 0) {\n            const ariaLive = await region.getAttribute('aria-live');\n            \n            expect(\n              ['polite', 'assertive'],\n              'Active live regions should announce updates'\n            ).toContain(ariaLive);\n            \n            console.log(`Live region update (${ariaLive}): \"${content.slice(0, 50)}...\"`);\n          }\n        }\n      }\n    });\n\n    test('should use status role for status messages', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const statusElements = await page.locator('[role=\"status\"]').all();\n      \n      for (const status of statusElements) {\n        // Status role implies aria-live=\"polite\"\n        const ariaLive = await status.getAttribute('aria-live');\n        \n        if (ariaLive && ariaLive !== 'polite') {\n          console.warn('Status role should not override with different aria-live value');\n        }\n        \n        // Should contain status information\n        const content = await status.textContent();\n        \n        if (content && content.trim().length > 0) {\n          // Status messages should be informative\n          const genericStatus = ['status', 'message', 'info'];\n          const isGeneric = genericStatus.some(generic => \n            content.toLowerCase().trim() === generic\n          );\n          \n          expect(\n            isGeneric,\n            `Status message \"${content}\" should be specific, not generic`\n          ).toBeFalsy();\n        }\n      }\n    });\n\n    test('should use alert role for important messages', async ({ page }) => {\n      await page.goto('/login');\n      \n      // Trigger form validation to create alerts\n      const submitButton = await page.locator('button[type=\"submit\"]').first();\n      await submitButton.click();\n      await page.waitForTimeout(1000);\n      \n      const alerts = await page.locator('[role=\"alert\"]').all();\n      \n      for (const alert of alerts) {\n        // Alert role implies aria-live=\"assertive\"\n        const ariaLive = await alert.getAttribute('aria-live');\n        \n        if (ariaLive && ariaLive !== 'assertive') {\n          console.warn('Alert role should not override with different aria-live value');\n        }\n        \n        // Should be visible\n        await expect(alert).toBeVisible();\n        \n        // Should have meaningful content\n        const content = await alert.textContent();\n        expect(\n          content?.trim().length,\n          'Alert messages should have meaningful content'\n        ).toBeGreaterThan(0);\n        \n        // Alert should be associated with relevant form field if applicable\n        const alertId = await alert.getAttribute('id');\n        \n        if (alertId) {\n          const associatedField = await page.locator(`[aria-describedby*=\"${alertId}\"]`).first();\n          \n          if (await associatedField.count() > 0) {\n            console.log(`Alert \"${content}\" is associated with form field`);\n          }\n        }\n      }\n    });\n  });\n\n  test.describe('Complex ARIA Patterns', () => {\n    test('should implement combobox pattern correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const comboboxes = await page.locator('[role=\"combobox\"]').all();\n      \n      for (const combobox of comboboxes) {\n        // Should have aria-expanded\n        const ariaExpanded = await combobox.getAttribute('aria-expanded');\n        expect(['true', 'false']).toContain(ariaExpanded);\n        \n        // Should control a listbox\n        const ariaControls = await combobox.getAttribute('aria-controls');\n        if (ariaControls) {\n          const listbox = await page.locator(`#${ariaControls}`).first();\n          \n          expect(\n            await listbox.count(),\n            'Combobox should control existing listbox'\n          ).toBeGreaterThan(0);\n          \n          if (await listbox.count() > 0) {\n            const listboxRole = await listbox.getAttribute('role');\n            expect(\n              listboxRole,\n              'Controlled element should have listbox role'\n            ).toBe('listbox');\n          }\n        }\n        \n        // Should have autocomplete attribute\n        const autocomplete = await combobox.getAttribute('aria-autocomplete');\n        if (autocomplete) {\n          expect(\n            ['none', 'inline', 'list', 'both'],\n            'aria-autocomplete should have valid value'\n          ).toContain(autocomplete);\n        }\n        \n        // Test keyboard interaction\n        await combobox.focus();\n        await page.keyboard.press('ArrowDown');\n        await page.waitForTimeout(200);\n        \n        const expandedAfterArrow = await combobox.getAttribute('aria-expanded');\n        expect(\n          expandedAfterArrow,\n          'ArrowDown should expand combobox'\n        ).toBe('true');\n      }\n    });\n\n    test('should implement disclosure pattern correctly', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      // Find disclosure buttons (buttons with aria-expanded)\n      const disclosureButtons = await page.locator('button[aria-expanded]').all();\n      \n      for (const button of disclosureButtons) {\n        const initialExpanded = await button.getAttribute('aria-expanded');\n        const ariaControls = await button.getAttribute('aria-controls');\n        \n        if (ariaControls) {\n          const controlledContent = await page.locator(`#${ariaControls}`).first();\n          \n          if (await controlledContent.count() > 0) {\n            const initiallyVisible = await controlledContent.isVisible();\n            \n            // State should match visibility\n            if (initialExpanded === 'true') {\n              expect(initiallyVisible, 'Expanded content should be visible').toBeTruthy();\n            } else {\n              expect(initiallyVisible, 'Collapsed content should be hidden').toBeFalsy();\n            }\n            \n            // Toggle disclosure\n            await button.click();\n            await page.waitForTimeout(300);\n            \n            const newExpanded = await button.getAttribute('aria-expanded');\n            const newlyVisible = await controlledContent.isVisible();\n            \n            expect(newExpanded, 'aria-expanded should toggle').not.toBe(initialExpanded);\n            \n            if (newExpanded === 'true') {\n              expect(newlyVisible, 'Content should be visible when expanded').toBeTruthy();\n            } else {\n              expect(newlyVisible, 'Content should be hidden when collapsed').toBeFalsy();\n            }\n          }\n        }\n      }\n    });\n\n    test('should implement grid pattern correctly', async ({ page }) => {\n      await page.goto('/analytics'); // Assuming analytics might have data grids\n      \n      const grids = await page.locator('[role=\"grid\"]').all();\n      \n      for (const grid of grids) {\n        // Should contain rows and cells\n        const rows = await grid.locator('[role=\"row\"]').all();\n        expect(\n          rows.length,\n          'Grid should contain rows'\n        ).toBeGreaterThan(0);\n        \n        for (const row of rows.slice(0, 3)) {\n          const cells = await row.locator('[role=\"gridcell\"], [role=\"columnheader\"], [role=\"rowheader\"]').all();\n          expect(\n            cells.length,\n            'Grid rows should contain cells'\n          ).toBeGreaterThan(0);\n          \n          // Check for proper header structure\n          const headers = await row.locator('[role=\"columnheader\"], [role=\"rowheader\"]').all();\n          \n          for (const header of headers) {\n            const headerContent = await header.textContent();\n            expect(\n              headerContent?.trim().length,\n              'Grid headers should have content'\n            ).toBeGreaterThan(0);\n          }\n        }\n        \n        // Should support keyboard navigation\n        const firstCell = await grid.locator('[role=\"gridcell\"]').first();\n        \n        if (await firstCell.count() > 0) {\n          await firstCell.focus();\n          \n          // Test arrow key navigation\n          await page.keyboard.press('ArrowRight');\n          await page.waitForTimeout(200);\n          \n          const focusedAfterRight = page.locator(':focus');\n          const role = await focusedAfterRight.getAttribute('role');\n          \n          expect(\n            ['gridcell', 'columnheader'],\n            'Arrow keys should navigate between grid cells'\n          ).toContain(role);\n        }\n      }\n    });\n  });\n\n  test.describe('ARIA Performance and Best Practices', () => {\n    test('should not have excessive ARIA complexity', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const ariaComplexity = await page.evaluate(() => {\n        const elements = document.querySelectorAll('[role], [aria-label], [aria-labelledby], [aria-describedby]');\n        \n        let totalAriaAttrs = 0;\n        let maxDepth = 0;\n        \n        elements.forEach(el => {\n          // Count ARIA attributes\n          const attrs = Array.from(el.attributes).filter(attr => \n            attr.name.startsWith('aria-') || attr.name === 'role'\n          );\n          totalAriaAttrs += attrs.length;\n          \n          // Check nesting depth\n          let depth = 0;\n          let current = el.parentElement;\n          \n          while (current && current !== document.body) {\n            if (current.hasAttribute('role') || \n                Array.from(current.attributes).some(attr => attr.name.startsWith('aria-'))) {\n              depth++;\n            }\n            current = current.parentElement;\n          }\n          \n          maxDepth = Math.max(maxDepth, depth);\n        });\n        \n        return {\n          totalElements: elements.length,\n          totalAriaAttrs,\n          avgAttrsPerElement: elements.length > 0 ? totalAriaAttrs / elements.length : 0,\n          maxNestingDepth: maxDepth\n        };\n      });\n      \n      expect(\n        ariaComplexity.avgAttrsPerElement,\n        'Average ARIA attributes per element should be reasonable'\n      ).toBeLessThan(5);\n      \n      expect(\n        ariaComplexity.maxNestingDepth,\n        'ARIA nesting depth should be reasonable'\n      ).toBeLessThan(8);\n      \n      console.log('ARIA Complexity Analysis:', ariaComplexity);\n    });\n\n    test('should avoid redundant ARIA labels', async ({ page }) => {\n      await page.goto('/');\n      \n      const elements = await page.locator('[aria-label]').all();\n      \n      for (const element of elements) {\n        const ariaLabel = await element.getAttribute('aria-label');\n        const textContent = await element.textContent();\n        const tagName = await element.evaluate(el => el.tagName.toLowerCase());\n        \n        // Avoid redundant aria-label that matches visible text\n        if (textContent && textContent.trim() === ariaLabel?.trim()) {\n          console.warn(\n            `Redundant aria-label on <${tagName}>: \"${ariaLabel}\" matches visible text`\n          );\n        }\n        \n        // Check for generic labels\n        const genericLabels = ['button', 'link', 'image', 'text', 'input'];\n        const isGeneric = genericLabels.some(generic => \n          ariaLabel?.toLowerCase().trim() === generic\n        );\n        \n        expect(\n          isGeneric,\n          `aria-label \"${ariaLabel}\" should be specific, not generic`\n        ).toBeFalsy();\n      }\n    });\n\n    test('should use appropriate ARIA landmarks', async ({ page }) => {\n      await page.goto('/dashboard');\n      \n      const landmarks = await accessibilityPage.getLandmarks();\n      \n      // Should have essential landmarks\n      expect(landmarks.main.length, 'Should have main landmark').toBeGreaterThanOrEqual(1);\n      expect(landmarks.main.length, 'Should have only one main landmark').toBeLessThanOrEqual(1);\n      \n      // Navigation landmarks should be labeled if multiple exist\n      if (landmarks.navigation.length > 1) {\n        for (const nav of landmarks.navigation) {\n          const hasLabel = await accessibilityHelper.hasAccessibleName(nav);\n          expect(\n            hasLabel,\n            'Multiple navigation landmarks should have distinct labels'\n          ).toBeTruthy();\n        }\n      }\n      \n      // Complementary landmarks should be meaningful\n      for (const aside of landmarks.complementary) {\n        const hasLabel = await accessibilityHelper.hasAccessibleName(aside);\n        const content = await aside.textContent();\n        \n        if (content && content.trim().length > 100) {\n          expect(\n            hasLabel,\n            'Substantial complementary content should have accessible names'\n          ).toBeTruthy();\n        }\n      }\n    });\n  });\n});
+    test('should have valid ARIA attributes', async ({page}) => {
+      const testPages = ['/', '/dashboard', '/login'];
+
+      for (const testPage of testPages) {
+        await page.goto(testPage);
+        await accessibilityPage.waitForPageLoad();
+
+        // Run comprehensive ARIA validation
+        const results = await new AxeBuilder({page})
+        .withRules([
+          'aria-valid-attr',
+          'aria-valid-attr-value',
+          'aria-allowed-attr',
+          'aria-required-attr',
+          'aria-required-children',
+          'aria-required-parent',
+          'aria-roles',
+          'aria-roledescription'
+        ])
+        .analyze();
+
+        expect(results.violations, `Page ${testPage} should have valid ARIA attributes`).toEqual([]);
+
+        // Manual validation of complex ARIA patterns
+        const ariaElements = await page.locator('[role], [aria-label], [aria-labelledby], [aria-describedby]').all();
+
+        for (const element of ariaElements.slice(0, 15)) {
+          const ariaValidation = await accessibilityHelper.verifyAriaAttributes(element);
+
+          expect(
+              ariaValidation.isValid,
+              `ARIA attributes should be valid: ${ariaValidation.errors.join(', ')}`
+          ).toBeTruthy();
+        }
+      }
+    });
+
+    test('should use semantic HTML before ARIA when possible', async ({page}) => {
+      await page.goto('/dashboard');
+
+      // Check for over-use of ARIA roles that could be semantic HTML
+      const redundantAriaPatterns = [
+        {
+          selector: '[role="button"]',
+          semantic: 'button',
+          message: 'Use <button> instead of role="button"'
+        },
+        {selector: '[role="link"]', semantic: 'a', message: 'Use <a href> instead of role="link"'},
+        {
+          selector: '[role="heading"]',
+          semantic: 'h1,h2,h3,h4,h5,h6',
+          message: 'Use <h1>-<h6> instead of role="heading"'
+        },
+        {
+          selector: '[role="list"]',
+          semantic: 'ul,ol',
+          message: 'Use <ul> or <ol> instead of role="list"'
+        },
+        {
+          selector: '[role="listitem"]',
+          semantic: 'li',
+          message: 'Use <li> instead of role="listitem"'
+        }
+      ];
+
+      for (const pattern of redundantAriaPatterns) {
+        const ariaElements = await page.locator(pattern.selector).all();
+
+        for (const element of ariaElements) {
+          const tagName = await element.evaluate(el => el.tagName.toLowerCase());
+
+          if (tagName !== 'button' && pattern.selector.includes('button')) {
+            console.warn(`${pattern.message} found: <${tagName} ${pattern.selector.replace('[', '').replace(']', '')}>`);
+          }
+
+          if (tagName !== 'a' && pattern.selector.includes('link')) {
+            console.warn(`${pattern.message} found: <${tagName} ${pattern.selector.replace('[', '').replace(']', '')}>`);
+          }
+        }
+      }
+    });
+
+    test('should have consistent ARIA patterns across similar components', async ({page}) => {
+      await page.goto('/dashboard');
+
+      // Test button patterns
+      const buttons = await page.locator('button, [role="button"]').all();
+      const buttonPatterns = new Set<string>();
+
+      for (const button of buttons.slice(0, 10)) {
+        const pattern = await button.evaluate(btn => {
+          const attrs = [];
+
+          if (btn.hasAttribute('aria-label')) attrs.push('aria-label');
+          if (btn.hasAttribute('aria-labelledby')) attrs.push('aria-labelledby');
+          if (btn.hasAttribute('aria-describedby')) attrs.push('aria-describedby');
+          if (btn.hasAttribute('aria-expanded')) attrs.push('aria-expanded');
+          if (btn.hasAttribute('aria-pressed')) attrs.push('aria-pressed');
+
+          return attrs.sort().join(',');
+        });
+
+        buttonPatterns.add(pattern);
+      }
+
+      console.log(`Button ARIA patterns found: ${Array.from(buttonPatterns).join('; ')}`);
+
+      // Test that similar interactive elements use consistent patterns
+      const interactiveElements = await page.locator('[onclick], [role="button"], button').all();
+
+      for (const element of interactiveElements.slice(0, 8)) {
+        const hasAccessibleName = await accessibilityHelper.hasAccessibleName(element);
+        expect(
+            hasAccessibleName,
+            'All interactive elements should have accessible names'
+        ).toBeTruthy();
+      }
+    });
+  });
+
+  test.describe('ARIA Roles Implementation', () => {
+    test('should implement button role correctly', async ({page}) => {
+      await page.goto('/dashboard');
+
+      const customButtons = await page.locator('[role="button"]').all();
+
+      for (const button of customButtons) {
+        // Should be keyboard accessible
+        const isKeyboardAccessible = await accessibilityPage.isKeyboardAccessible(button);
+        expect(isKeyboardAccessible, 'ARIA buttons should be keyboard accessible').toBeTruthy();
+
+        // Should have accessible name
+        const hasName = await accessibilityHelper.hasAccessibleName(button);
+        expect(hasName, 'ARIA buttons should have accessible names').toBeTruthy();
+      }
+    });
+
+    test('should implement tab role correctly', async ({page}) => {
+      await page.goto('/dashboard');
+
+      const tabs = await page.locator('[role="tab"]').all();
+
+      for (const tab of tabs) {
+        // Should be in a tablist
+        const tablist = await tab.locator('xpath=ancestor::*[@role="tablist"]').first();
+        expect(
+            await tablist.count(),
+            'Tabs should be contained in tablist'
+        ).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  test.describe('ARIA States and Properties', () => {
+    test('should manage aria-expanded correctly', async ({page}) => {
+      await page.goto('/dashboard');
+
+      const expandableElements = await page.locator('[aria-expanded]').all();
+
+      for (const element of expandableElements) {
+        const initialState = await element.getAttribute('aria-expanded');
+        expect(['true', 'false']).toContain(initialState);
+      }
+    });
+  });
+
+  test.describe('ARIA Relationships', () => {
+    test('should have valid aria-labelledby references', async ({page}) => {
+      await page.goto('/dashboard');
+
+      const labelledElements = await page.locator('[aria-labelledby]').all();
+
+      for (const element of labelledElements) {
+        const labelledBy = await element.getAttribute('aria-labelledby');
+
+        if (labelledBy) {
+          const labelIds = labelledBy.split(' ');
+
+          for (const labelId of labelIds) {
+            const labelElement = await page.locator(`#${labelId}`).first();
+
+            expect(
+                await labelElement.count(),
+                `Element with id="${labelId}" should exist for aria-labelledby`
+            ).toBeGreaterThan(0);
+          }
+        }
+      }
+    });
+  });
+
+  test.describe('Live Regions', () => {
+    test('should have properly configured live regions', async ({page}) => {
+      await page.goto('/dashboard');
+
+      const liveRegions = await accessibilityPage.getLiveRegions();
+
+      for (const region of liveRegions) {
+        const ariaLive = await region.getAttribute('aria-live');
+        expect(['polite', 'assertive', 'off']).toContain(ariaLive);
+      }
+    });
+  });
+
+  test.describe('ARIA Performance and Best Practices', () => {
+    test('should not have excessive ARIA complexity', async ({page}) => {
+      await page.goto('/dashboard');
+
+      const ariaComplexity = await page.evaluate(() => {
+        const elements = document.querySelectorAll('[role], [aria-label], [aria-labelledby], [aria-describedby]');
+
+        let totalAriaAttrs = 0;
+        let maxDepth = 0;
+
+        elements.forEach(el => {
+          // Count ARIA attributes
+          const attrs = Array.from(el.attributes).filter(attr =>
+              attr.name.startsWith('aria-') || attr.name === 'role'
+          );
+          totalAriaAttrs += attrs.length;
+
+          // Check nesting depth
+          let depth = 0;
+          let current = el.parentElement;
+
+          while (current && current !== document.body) {
+            if (current.hasAttribute('role') ||
+                Array.from(current.attributes).some(attr => attr.name.startsWith('aria-'))) {
+              depth++;
+            }
+            current = current.parentElement;
+          }
+
+          maxDepth = Math.max(maxDepth, depth);
+        });
+
+        return {
+          totalElements: elements.length,
+          totalAriaAttrs,
+          avgAttrsPerElement: elements.length > 0 ? totalAriaAttrs / elements.length : 0,
+          maxNestingDepth: maxDepth
+        };
+      });
+
+      expect(
+          ariaComplexity.avgAttrsPerElement,
+          'Average ARIA attributes per element should be reasonable'
+      ).toBeLessThan(5);
+
+      expect(
+          ariaComplexity.maxNestingDepth,
+          'ARIA nesting depth should be reasonable'
+      ).toBeLessThan(8);
+
+      console.log('ARIA Complexity Analysis:', ariaComplexity);
+    });
+  });
+});

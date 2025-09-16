@@ -4,224 +4,224 @@
   "testDate": "2025-09-08",
   "testDuration": "1.1 minutes",
   "
-": {
-    "totalTests": 203,
-    "passed": 193,
-    "failed": 0,
-    "skipped": 10,
-    "successRate": "95.1%"
-  },
-  "complianceScore": {
-    "overall": "78%",
-    "levelA": "85%",
-    "levelAA": "75%",
-    "successCriteriaPassed": "29/36"
-  },
-  "violations": {
-    "critical": 1,
-    "serious": 4,
-    "moderate": 2,
-    "minor": 3,
-    "total": 10
-  },
-  "criticalIssues": [
-    {
-      "rule": "button-name",
-      "impact": "critical",
-      "page": "Dashboard",
-      "wcagCriterion": "4.1.2",
-      "description": "Buttons without discernible text",
-      "count": 1
-    }
-  ],
-  "seriousIssues": [
-    {
-      "rule": "color-contrast",
-      "impact": "serious",
-      "pages": ["Login", "Register", "Dashboard"],
-      "wcagCriterion": "1.4.3",
-      "description": "Color contrast below WCAG AA requirements",
-      "count": 7
-    },
-    {
-      "rule": "aria-input-field-name",
-      "impact": "serious",
-      "page": "Dashboard",
-      "wcagCriterion": "4.1.2",
-      "description": "ARIA input fields lack accessible names",
-      "count": 2
-    },
-    {
-      "rule": "aria-progressbar-name",
-      "impact": "serious",
-      "page": "Dashboard", 
-      "wcagCriterion": "1.1.1",
-      "description": "Progress bars lack accessible names",
-      "count": 1
-    },
-    {
-      "rule": "list",
-      "impact": "serious",
-      "page": "Profile",
-      "wcagCriterion": "1.3.1",
-      "description": "Improper list structure markup",
-      "count": 1
-    }
-  ],
-  "testCategories": {
-    "keyboardNavigation": {
-      "status": "PASSED",
-      "tests": "5/5",
-      "issues": 0
-    },
-    "screenReaderCompatibility": {
-      "status": "MOSTLY_PASSED",
-      "tests": "4/5",
-      "issues": 1
-    },
-    "colorAndContrast": {
-      "status": "CRITICAL_ISSUES",
-      "tests": "2/4",
-      "issues": 2
-    },
-    "formAccessibility": {
-      "status": "PASSED",
-      "tests": "4/4",
-      "issues": 0
-    },
-    "interactiveElements": {
-      "status": "MOSTLY_PASSED", 
-      "tests": "4/5",
-      "issues": 1
-    },
-    "mediaAccessibility": {
-      "status": "PASSED",
-      "tests": "2/2",
-      "issues": 0
-    },
-    "contentStructure": {
-      "status": "ISSUES_IDENTIFIED",
-      "tests": "3/5",
-      "issues": 2
-    },
-    "motionAndAnimation": {
-      "status": "PASSED",
-      "tests": "2/2", 
-      "issues": 0
-    },
-    "responsiveAccessibility": {
-      "status": "PASSED",
-      "tests": "3/3",
-      "issues": 0
-    },
-    "assistiveTechnologySupport": {
-      "status": "PASSED",
-      "tests": "3/3",
-      "issues": 0
-    }
-  },
-  "wcagSuccessCriteria": {
-    "levelA": {
-      "1.1.1": "MOSTLY_COMPLIANT",
-      "1.3.1": "ISSUES_FOUND", 
-      "1.3.2": "COMPLIANT",
-      "1.3.3": "COMPLIANT",
-      "1.4.1": "COMPLIANT",
-      "1.4.2": "COMPLIANT",
-      "2.1.1": "COMPLIANT",
-      "2.1.2": "COMPLIANT",
-      "2.1.4": "COMPLIANT",
-      "2.2.1": "COMPLIANT",
-      "2.2.2": "COMPLIANT",
-      "2.4.1": "COMPLIANT",
-      "2.4.2": "COMPLIANT",
-      "2.4.3": "COMPLIANT",
-      "3.1.1": "COMPLIANT",
-      "3.2.1": "COMPLIANT",
-      "3.2.2": "COMPLIANT",
-      "3.3.1": "COMPLIANT",
-      "3.3.2": "COMPLIANT",
-      "4.1.1": "MINOR_ISSUES",
-      "4.1.2": "CRITICAL_ISSUES"
-    },
-    "levelAA": {
-      "1.4.3": "CRITICAL_VIOLATIONS",
-      "1.4.4": "COMPLIANT",
-      "1.4.5": "COMPLIANT",
-      "1.4.10": "COMPLIANT",
-      "1.4.11": "COMPLIANT", 
-      "1.4.12": "COMPLIANT",
-      "1.4.13": "COMPLIANT",
-      "2.4.5": "COMPLIANT",
-      "2.4.6": "COMPLIANT",
-      "2.4.7": "COMPLIANT",
-      "3.1.2": "COMPLIANT",
-      "3.2.3": "COMPLIANT",
-      "3.2.4": "COMPLIANT",
-      "3.3.3": "COMPLIANT",
-      "3.3.4": "COMPLIANT"
-    }
-  },
-  "remediationPriority": [
-    {
-      "priority": 1,
-      "issue": "Button naming violations",
-      "timeline": "1-2 days",
-      "effort": "Low"
-    },
-    {
-      "priority": 2,
-      "issue": "Color contrast violations", 
-      "timeline": "3-5 days",
-      "effort": "Medium"
-    },
-    {
-      "priority": 2,
-      "issue": "ARIA input/progress naming",
-      "timeline": "2-3 days",
-      "effort": "Low-Medium"
-    },
-    {
-      "priority": 2,
-      "issue": "List structure markup",
-      "timeline": "1-2 days",
-      "effort": "Low"
-    },
-    {
-      "priority": 3,
-      "issue": "Heading hierarchy",
-      "timeline": "3-4 days", 
-      "effort": "Medium"
-    },
-    {
-      "priority": 3,
-      "issue": "Landmark navigation",
-      "timeline": "2-3 days",
-      "effort": "Medium"
-    }
-  ],
-  "testEnvironment": {
-    "frontend_url": "http://localhost:5173/",
-    "testing_framework": "Playwright",
-    "accessibility_engine": "axe-core v4.10",
-    "browsers": ["Chromium", "Firefox", "WebKit", "Mobile Chrome", "Mobile Safari"],
-    "viewport_sizes": ["Desktop", "Mobile 375x667", "Zoom 200%", "Narrow 320px"]
-  },
-  "recommendations": {
-    "immediate": [
-      "Add aria-label attributes to all buttons without text",
-      "Fix color contrast ratios on critical pages",
-      "Implement proper ARIA naming for input fields"
-    ],
-    "shortTerm": [
-      "Correct list markup structure",
-      "Improve heading hierarchy across pages", 
-      "Add missing landmark labels"
-    ],
-    "longTerm": [
-      "Implement automated accessibility testing in CI/CD",
-      "Conduct regular manual screen reader testing",
-      "Establish accessibility design system guidelines"
-    ]
-  }
+  ": {
+  "totalTests": 203,
+  "passed": 193,
+  "failed": 0,
+  "skipped": 10,
+  "successRate": "95.1%"
+},
+"complianceScore": {
+"overall": "78%",
+"levelA": "85%",
+"levelAA": "75%",
+"successCriteriaPassed": "29/36"
+},
+"violations": {
+"critical": 1,
+"serious": 4,
+"moderate": 2,
+"minor": 3,
+"total": 10
+},
+"criticalIssues": [
+{
+"rule": "button-name",
+"impact": "critical",
+"page": "Dashboard",
+"wcagCriterion": "4.1.2",
+"description": "Buttons without discernible text",
+"count": 1
+}
+],
+"seriousIssues": [
+{
+"rule": "color-contrast",
+"impact": "serious",
+"pages": ["Login", "Register", "Dashboard"],
+"wcagCriterion": "1.4.3",
+"description": "Color contrast below WCAG AA requirements",
+"count": 7
+},
+{
+"rule": "aria-input-field-name",
+"impact": "serious",
+"page": "Dashboard",
+"wcagCriterion": "4.1.2",
+"description": "ARIA input fields lack accessible names",
+"count": 2
+},
+{
+"rule": "aria-progressbar-name",
+"impact": "serious",
+"page": "Dashboard",
+"wcagCriterion": "1.1.1",
+"description": "Progress bars lack accessible names",
+"count": 1
+},
+{
+"rule": "list",
+"impact": "serious",
+"page": "Profile",
+"wcagCriterion": "1.3.1",
+"description": "Improper list structure markup",
+"count": 1
+}
+],
+"testCategories": {
+"keyboardNavigation": {
+"status": "PASSED",
+"tests": "5/5",
+"issues": 0
+},
+"screenReaderCompatibility": {
+"status": "MOSTLY_PASSED",
+"tests": "4/5",
+"issues": 1
+},
+"colorAndContrast": {
+"status": "CRITICAL_ISSUES",
+"tests": "2/4",
+"issues": 2
+},
+"formAccessibility": {
+"status": "PASSED",
+"tests": "4/4",
+"issues": 0
+},
+"interactiveElements": {
+"status": "MOSTLY_PASSED",
+"tests": "4/5",
+"issues": 1
+},
+"mediaAccessibility": {
+"status": "PASSED",
+"tests": "2/2",
+"issues": 0
+},
+"contentStructure": {
+"status": "ISSUES_IDENTIFIED",
+"tests": "3/5",
+"issues": 2
+},
+"motionAndAnimation": {
+"status": "PASSED",
+"tests": "2/2",
+"issues": 0
+},
+"responsiveAccessibility": {
+"status": "PASSED",
+"tests": "3/3",
+"issues": 0
+},
+"assistiveTechnologySupport": {
+"status": "PASSED",
+"tests": "3/3",
+"issues": 0
+}
+},
+"wcagSuccessCriteria": {
+"levelA": {
+"1.1.1": "MOSTLY_COMPLIANT",
+"1.3.1": "ISSUES_FOUND",
+"1.3.2": "COMPLIANT",
+"1.3.3": "COMPLIANT",
+"1.4.1": "COMPLIANT",
+"1.4.2": "COMPLIANT",
+"2.1.1": "COMPLIANT",
+"2.1.2": "COMPLIANT",
+"2.1.4": "COMPLIANT",
+"2.2.1": "COMPLIANT",
+"2.2.2": "COMPLIANT",
+"2.4.1": "COMPLIANT",
+"2.4.2": "COMPLIANT",
+"2.4.3": "COMPLIANT",
+"3.1.1": "COMPLIANT",
+"3.2.1": "COMPLIANT",
+"3.2.2": "COMPLIANT",
+"3.3.1": "COMPLIANT",
+"3.3.2": "COMPLIANT",
+"4.1.1": "MINOR_ISSUES",
+"4.1.2": "CRITICAL_ISSUES"
+},
+"levelAA": {
+"1.4.3": "CRITICAL_VIOLATIONS",
+"1.4.4": "COMPLIANT",
+"1.4.5": "COMPLIANT",
+"1.4.10": "COMPLIANT",
+"1.4.11": "COMPLIANT",
+"1.4.12": "COMPLIANT",
+"1.4.13": "COMPLIANT",
+"2.4.5": "COMPLIANT",
+"2.4.6": "COMPLIANT",
+"2.4.7": "COMPLIANT",
+"3.1.2": "COMPLIANT",
+"3.2.3": "COMPLIANT",
+"3.2.4": "COMPLIANT",
+"3.3.3": "COMPLIANT",
+"3.3.4": "COMPLIANT"
+}
+},
+"remediationPriority": [
+{
+"priority": 1,
+"issue": "Button naming violations",
+"timeline": "1-2 days",
+"effort": "Low"
+},
+{
+"priority": 2,
+"issue": "Color contrast violations",
+"timeline": "3-5 days",
+"effort": "Medium"
+},
+{
+"priority": 2,
+"issue": "ARIA input/progress naming",
+"timeline": "2-3 days",
+"effort": "Low-Medium"
+},
+{
+"priority": 2,
+"issue": "List structure markup",
+"timeline": "1-2 days",
+"effort": "Low"
+},
+{
+"priority": 3,
+"issue": "Heading hierarchy",
+"timeline": "3-4 days",
+"effort": "Medium"
+},
+{
+"priority": 3,
+"issue": "Landmark navigation",
+"timeline": "2-3 days",
+"effort": "Medium"
+}
+],
+"testEnvironment": {
+"frontend_url": "http://localhost:5173/",
+"testing_framework": "Playwright",
+"accessibility_engine": "axe-core v4.10",
+"browsers": ["Chromium", "Firefox", "WebKit", "Mobile Chrome", "Mobile Safari"],
+"viewport_sizes": ["Desktop", "Mobile 375x667", "Zoom 200%", "Narrow 320px"]
+},
+"recommendations": {
+"immediate": [
+"Add aria-label attributes to all buttons without text",
+"Fix color contrast ratios on critical pages",
+"Implement proper ARIA naming for input fields"
+],
+"shortTerm": [
+"Correct list markup structure",
+"Improve heading hierarchy across pages",
+"Add missing landmark labels"
+],
+"longTerm": [
+"Implement automated accessibility testing in CI/CD",
+"Conduct regular manual screen reader testing",
+"Establish accessibility design system guidelines"
+]
+}
 }

@@ -1,0 +1,126 @@
+# Test Profile Configuration
+# This profile is optimized for testing without external dependencies
+
+spring:
+  # Datasource Configuration - H2 In-Memory Database
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5
+
+  # JPA Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: false
+
+  # Flyway Configuration - Disabled for tests
+  flyway:
+    enabled: false
+
+  # Cache Configuration - Simple in-memory cache for tests
+  cache:
+    type: simple
+
+  # Redis Configuration - Disabled for tests
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+  # WebSocket Configuration
+  websocket:
+    enabled: false
+
+# Management Endpoints Configuration
+management:
+  endpoint:
+    health:
+      # Disable group membership validation to avoid missing health contributors
+      validate-group-membership: false
+      show-details: always
+      group:
+        liveness:
+          include: ping
+        readiness:
+          include: ping
+        startup:
+          include: ping
+  health:
+    defaults:
+      enabled: false
+    ping:
+      enabled: true
+
+# Application Features - Disable external dependencies for tests
+app:
+  features:
+    redis:
+      enabled: false
+    authentication:
+      enabled: false
+    health:
+      enabled: false
+    analytics:
+      enabled: false
+    forum:
+      enabled: false
+    buddy:
+      enabled: false
+
+# JWT Configuration for tests
+app.jwt:
+  secret: test-secret-key-for-jwt-token-generation-minimum-256-bits-long-key
+  expiration: 86400000  # 1 day
+  refresh-expiration: 604800000  # 7 days
+
+# Identity Service Configuration - Mock for tests
+identity:
+  service:
+    url: http://localhost:8081
+    timeout:
+      connect: 5000
+      read: 10000
+
+# Security Configuration for tests
+security:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+
+# Logging Configuration
+logging:
+  level:
+    com.focushive: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate: WARN
+    org.hibernate.SQL: WARN
+
+# Server Configuration
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Tracing Configuration - Disabled for tests
+spring.sleuth:
+  enabled: false
+
+spring.zipkin:
+  enabled: false
+
+# Actuator Configuration
+management.endpoints.web.exposure.include: health,info,metrics

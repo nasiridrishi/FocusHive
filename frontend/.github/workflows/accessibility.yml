@@ -28,8 +28,8 @@ jobs:
 
     strategy:
       matrix:
-        browser: [chromium, firefox, webkit]
-        accessibility-config: [default, high-contrast, mobile]
+        browser: [ chromium, firefox, webkit ]
+        accessibility-config: [ default, high-contrast, mobile ]
 
     steps:
       - name: Checkout code
@@ -227,7 +227,7 @@ jobs:
 
   generate-accessibility-report:
     runs-on: ubuntu-latest
-    needs: [accessibility-tests, lighthouse-accessibility, pa11y-tests]
+    needs: [ accessibility-tests, lighthouse-accessibility, pa11y-tests ]
     if: always()
 
     steps:
@@ -349,7 +349,7 @@ jobs:
 
   accessibility-gate:
     runs-on: ubuntu-latest
-    needs: [accessibility-tests, lighthouse-accessibility, pa11y-tests]
+    needs: [ accessibility-tests, lighthouse-accessibility, pa11y-tests ]
     if: always()
 
     steps:

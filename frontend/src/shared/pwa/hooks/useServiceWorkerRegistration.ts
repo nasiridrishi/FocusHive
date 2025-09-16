@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { registerSW } from 'virtual:pwa-register';
-import type { RegisterSWOptions } from 'virtual:pwa-register';
+import {useCallback, useEffect, useMemo, useState} from 'react';
+import type {RegisterSWOptions} from 'virtual:pwa-register';
+import {registerSW} from 'virtual:pwa-register';
 
 export interface ServiceWorkerRegistrationState {
   isRegistered: boolean;
@@ -25,7 +25,7 @@ export interface UseServiceWorkerRegistrationReturn extends ServiceWorkerRegistr
  * Provides state management for service worker lifecycle and update handling
  */
 export const useServiceWorkerRegistration = (
-  options: UseServiceWorkerRegistrationOptions = {}
+    options: UseServiceWorkerRegistrationOptions = {}
 ): UseServiceWorkerRegistrationReturn => {
   const [state, setState] = useState<ServiceWorkerRegistrationState>({
     isRegistered: false,
@@ -43,7 +43,7 @@ export const useServiceWorkerRegistration = (
       try {
         await updateSW(reloadPage);
       } catch (error) {
-        setState(prev => ({ ...prev, error: error as Error }));
+        setState(prev => ({...prev, error: error as Error}));
       }
     }
   }, [updateSW]);
@@ -94,7 +94,7 @@ export const useServiceWorkerRegistration = (
       isRegistering: false,
       error: error instanceof Error ? error : new Error(String(error)),
     }));
-    options.onRegisterError?.(error);
+    options.onRegisterError?.(error instanceof Error ? error : new Error(String(error)));
   }, [options]);
 
   // Memoize the register options to prevent infinite re-renders
@@ -117,14 +117,14 @@ export const useServiceWorkerRegistration = (
   useEffect(() => {
     // Skip registration if service worker is not supported
     if (!('serviceWorker' in navigator)) {
-      setState(prev => ({ 
-        ...prev, 
-        error: new Error('Service Worker not supported') 
+      setState(prev => ({
+        ...prev,
+        error: new Error('Service Worker not supported')
       }));
       return;
     }
 
-    setState(prev => ({ ...prev, isRegistering: true }));
+    setState(prev => ({...prev, isRegistering: true}));
 
     try {
       const updateSWFunction = registerSW(registerOptions);

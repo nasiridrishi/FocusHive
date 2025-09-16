@@ -20,7 +20,7 @@ import java.util.Optional;
  * Provides comprehensive CRUD operations and custom queries for notifications.
  */
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, String> {
+public interface NotificationRepository extends JpaRepository<Notification, String>, NotificationRepositoryCustom {
 
     /**
      * Find all notifications for a user.
@@ -49,6 +49,15 @@ public interface NotificationRepository extends JpaRepository<Notification, Stri
     @Query("SELECT n FROM Notification n WHERE n.userId = :userId AND n.isRead = false " +
            "ORDER BY n.priority DESC, n.createdAt DESC")
     Page<Notification> findUnreadByUserId(@Param("userId") String userId, Pageable pageable);
+    
+    /**
+     * Find unread notifications for a user, ordered by creation date descending.
+     *
+     * @param userId the user ID
+     * @param pageable pagination information
+     * @return page of unread notifications
+     */
+    Page<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(String userId, Pageable pageable);
 
     /**
      * Find notifications by type for a user, ordered by creation date descending.
@@ -78,6 +87,14 @@ public interface NotificationRepository extends JpaRepository<Notification, Stri
      * @return count of unread notifications
      */
     long countByUserIdAndIsReadFalse(String userId);
+    
+    /**
+     * Find all unread notifications for a user (for marking as read).
+     *
+     * @param userId the user ID
+     * @return list of unread notifications
+     */
+    List<Notification> findByUserIdAndIsReadFalse(String userId);
 
     /**
      * Count unread notifications by priority for a user.
@@ -164,6 +181,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Stri
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.isRead = true AND n.readAt < :cutoffDate")
     int deleteOldReadNotifications(@Param("userId") String userId, @Param("cutoffDate") LocalDateTime cutoffDate);
+    
+    /**
+     * Find old read notifications for cleanup (soft delete).
+     *
+     * @param userId the user ID
+     * @param cutoffDate date before which to find read notifications
+     * @return list of old read notifications
+     */
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId AND n.isRead = true AND n.createdAt < :cutoffDate AND n.deletedAt IS NULL")
+    List<Notification> findByUserIdAndIsReadTrueAndCreatedAtBefore(@Param("userId") String userId, @Param("cutoffDate") LocalDateTime cutoffDate);
 
     /**
      * Find recent notifications for a user.
@@ -257,4 +284,117 @@ public interface NotificationRepository extends JpaRepository<Notification, Stri
            "SUM(CASE WHEN n.deliveredAt IS NULL AND n.failedAt IS NULL THEN 1 ELSE 0 END) " +
            "FROM Notification n")
     Object[] getDeliveryStatistics();
+    
+    /**
+     * Find unread notifications for digest processing.
+     *
+     * @param userId the user ID
+     * @param cutoffTime notifications created after this time
+     * @return list of unread notifications not yet processed in digest
+     */
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId " +
+           "AND n.isRead = false AND n.createdAt > :cutoffTime " +
+           "AND n.digestProcessedAt IS NULL " +
+           "ORDER BY n.createdAt DESC")
+    List<Notification> findByUserIdAndIsReadFalseAndCreatedAtAfterAndDigestProcessedAtIsNullOrderByCreatedAtDesc(
+            @Param("userId") String userId, 
+            @Param("cutoffTime") LocalDateTime cutoffTime);
+
+    // ==================== CLEANUP OPERATIONS ====================
+    
+    /**
+     * Find old notifications eligible for cleanup (archival).
+     *
+     * @param cutoffDate date before which notifications are considered old
+     * @param pageable pagination information
+     * @return page of old notifications
+     */
+    @Query("SELECT n FROM Notification n WHERE n.createdAt < :cutoffDate " +
+           "AND n.deletedAt IS NULL ORDER BY n.createdAt ASC")
+    Page<Notification> findOldNotificationsForCleanup(@Param("cutoffDate") LocalDateTime cutoffDate, Pageable pageable);
+    
+    /**
+     * Find old notifications for a specific user eligible for cleanup.
+     *
+     * @param userId the user ID
+     * @param cutoffDate date before which notifications are considered old
+     * @param pageable pagination information
+     * @return page of old user notifications
+     */
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId " +
+           "AND n.createdAt < :cutoffDate AND n.deletedAt IS NULL " +
+           "ORDER BY n.createdAt ASC")
+    Page<Notification> findOldNotificationsByUserForCleanup(@Param("userId") String userId, 
+                                                           @Param("cutoffDate") LocalDateTime cutoffDate, 
+                                                           Pageable pageable);
+    
+    /**
+     * Count notifications older than specified date.
+     *
+     * @param cutoffDate cutoff date
+     * @return count of old notifications
+     */
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.createdAt < :cutoffDate AND n.deletedAt IS NULL")
+    long countNotificationsOlderThan(@Param("cutoffDate") LocalDateTime cutoffDate);
+    
+    /**
+     * Count archived notifications.
+     *
+     * @return count of archived notifications
+     */
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.deletedAt IS NOT NULL AND n.archivedAt IS NOT NULL")
+    long countArchivedNotifications();
+    
+    /**
+     * Count deleted notifications.
+     *
+     * @return count of deleted notifications
+     */
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.deletedAt IS NOT NULL")
+    long countDeletedNotifications();
+    
+    /**
+     * Find archived notifications for export.
+     *
+     * @param pageable pagination information
+     * @return page of archived notifications
+     */
+    @Query("SELECT n FROM Notification n WHERE n.deletedAt IS NOT NULL " +
+           "AND n.archivedAt IS NOT NULL ORDER BY n.archivedAt DESC")
+    Page<Notification> findArchivedNotifications(Pageable pageable);
+
+    /**
+     * Count notifications by user ID.
+     *
+     * @param userId the user ID
+     * @return count of notifications
+     */
+    long countByUserId(String userId);
+
+    /**
+     * Count notifications by user ID and read status.
+     *
+     * @param userId the user ID
+     * @param isRead read status
+     * @return count of notifications
+     */
+    long countByUserIdAndIsRead(String userId, boolean isRead);
+
+    /**
+     * Count notifications by user ID and type.
+     *
+     * @param userId the user ID
+     * @param type notification type
+     * @return count of notifications
+     */
+    long countByUserIdAndType(String userId, NotificationType type);
+
+    /**
+     * Count notifications by user ID created after a specific date.
+     *
+     * @param userId the user ID
+     * @param createdAt date threshold
+     * @return count of notifications
+     */
+    long countByUserIdAndCreatedAtAfter(String userId, java.time.LocalDateTime createdAt);
 }

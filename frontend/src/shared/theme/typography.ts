@@ -1,12 +1,12 @@
 /**
  * Advanced Responsive Typography System
- * 
+ *
  * Implements fluid typography with responsive scaling
  * Based on Material Design 3 typography scale with custom enhancements
  */
 
-import { TypographyVariants } from '@mui/material/styles'
-import { breakpointValues, mediaQueries } from './breakpoints'
+import {TypographyVariants} from '@mui/material/styles'
+import {breakpointValues, mediaQueries} from './breakpoints'
 
 // Font families
 export const fontFamilies = {
@@ -147,7 +147,7 @@ export const fluidTypographyScale = {
 // Create Material-UI typography configuration
 export const createResponsiveTypography = (): Partial<TypographyVariants> => ({
   fontFamily: fontFamilies.primary,
-  
+
   // Override default Material-UI variants with our fluid typography
   h1: {
     ...fluidTypographyScale.displayLarge,
@@ -224,28 +224,28 @@ export const responsiveTypography = {
     const yAxisIntersection = -minVw * slope + minSize
     return `clamp(${minSize}px, ${yAxisIntersection.toFixed(2)}px + ${(slope * 100).toFixed(2)}vw, ${maxSize}px)`
   },
-  
+
   // Create responsive line height
   fluidLineHeight: (minLh: number, maxLh: number, minVw = 320, maxVw = 1440) => {
     const slope = (maxLh - minLh) / (maxVw - minVw)
     const yAxisIntersection = -minVw * slope + minLh
     return `clamp(${minLh}px, ${yAxisIntersection.toFixed(2)}px + ${(slope * 100).toFixed(2)}vw, ${maxLh}px)`
   },
-  
+
   // Get typography for specific breakpoint
   forBreakpoint: (variant: keyof typeof fluidTypographyScale, breakpoint: keyof typeof breakpointValues) => {
     const baseStyle = fluidTypographyScale[variant]
-    
+
     // Apply specific adjustments per breakpoint
     const adjustments = {
-      mobile: { scale: 0.9 },
-      tablet: { scale: 1.0 },
-      desktop: { scale: 1.1 },
-      desktopLg: { scale: 1.2 },
+      mobile: {scale: 0.9},
+      tablet: {scale: 1.0},
+      desktop: {scale: 1.1},
+      desktopLg: {scale: 1.2},
     }
-    
-    const adjustment = adjustments[breakpoint as keyof typeof adjustments] || { scale: 1.0 }
-    
+
+    const adjustment = adjustments[breakpoint as keyof typeof adjustments] || {scale: 1.0}
+
     return {
       ...baseStyle,
       transform: `scale(${adjustment.scale})`,

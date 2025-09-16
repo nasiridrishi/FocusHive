@@ -1,0 +1,134 @@
+spring:
+  application:
+    name: identity-service-test
+
+  # Use H2 for simple, fast tests
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # JPA Config for tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+
+  # Disable Flyway for tests
+  flyway:
+    enabled: false
+
+  # Simple cache for tests
+  cache:
+    type: simple
+
+  # Test security
+  security:
+    user:
+      name: test
+      password: test123
+    oauth2:
+      authorizationserver:
+        issuer: http://localhost:8081/oauth2
+
+  # Disable Redis for tests
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+
+  # Disable Redis and Flyway auto-configuration for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+
+# Test JWT configuration with RSA
+jwt:
+  secret: testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposesTestOnly
+  access-token-expiration-ms: 3600000
+  refresh-token-expiration-ms: 86400000
+  remember-me-expiration-ms: 7776000000
+  issuer: http://localhost:8081/identity
+  use-rsa: false  # Disable RSA for tests to avoid key generation issues
+  service:
+    expiration: 300000
+
+# Disable rate limiting for tests
+focushive:
+  rate-limiting:
+    enabled: false
+
+# Test logging
+logging:
+  level:
+    com.focushive.identity: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+
+# Random port for tests
+server:
+  port: 0
+
+# Test notification service integration
+app:
+  base-url: http://localhost:8081
+  admin:
+    username: testadmin
+    password: testpass123
+    email: admin@test.com
+    first-name: Test
+    last-name: Admin
+    auto-create: false  # Disable auto-creation for tests
+  encryption:
+    master-key: testMasterKey12345678901234567890123456789012
+    salt: testSalt1234567890123456789012345678901234567890
+
+# Test environment variable values - Provide all required placeholders
+auth:
+  issuer: http://localhost:8081/auth
+
+security:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:3001
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+
+notification:
+  service:
+    url: http://localhost:8083
+    auth:
+      enabled: false
+    api-key: test-api-key
+
+# Provide values for environment variable placeholders
+DB_HOST: localhost
+DB_PORT: 5432
+DB_NAME: testdb
+DB_USER: test
+DB_PASSWORD: test
+REDIS_HOST: localhost
+REDIS_PORT: 6379
+REDIS_PASSWORD: ""
+ADMIN_USERNAME: testadmin
+ADMIN_PASSWORD: testpass123
+ADMIN_EMAIL: admin@test.com
+ADMIN_FIRST_NAME: Test
+ADMIN_LAST_NAME: Admin
+ADMIN_AUTO_CREATE: "false"
+JWT_SECRET: testSecretKeyThatIsAtLeast512BitsLongForHS512SecurityPurposesTestOnly
+JWT_ISSUER: http://localhost:8081/identity
+AUTH_ISSUER: http://localhost:8081/auth
+OAUTH2_ISSUER: http://localhost:8081/oauth2
+CORS_ORIGINS: http://localhost:3000,http://localhost:3001
+ENCRYPTION_MASTER_KEY: testMasterKey12345678901234567890123456789012
+ENCRYPTION_SALT: testSalt1234567890123456789012345678901234567890
+NOTIFICATION_SERVICE_API_KEY: test-api-key

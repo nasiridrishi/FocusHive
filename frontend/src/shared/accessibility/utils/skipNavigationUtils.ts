@@ -27,7 +27,7 @@ export function focusElement(selector: string): void {
   if (element) {
     element.tabIndex = -1;
     element.focus();
-    element.scrollIntoView({ behavior: 'smooth' });
+    element.scrollIntoView({behavior: 'smooth'});
   }
 }
 
@@ -37,9 +37,9 @@ export function announceToScreenReader(message: string): void {
   announcement.setAttribute('aria-live', 'polite');
   announcement.className = 'sr-only';
   announcement.textContent = message;
-  
+
   document.body.appendChild(announcement);
-  
+
   setTimeout(() => {
     document.body.removeChild(announcement);
   }, 1000);

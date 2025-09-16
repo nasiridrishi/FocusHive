@@ -1,17 +1,17 @@
 /**
  * Keyboard Navigation Hook
- * 
+ *
  * Provides keyboard navigation functionality for lists, menus,
  * tabs, and other navigable components.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { getFocusableElements } from '../utils/focusManagement';
-import { KEYBOARD } from '../constants/wcag';
-import type { 
-  KeyboardNavigationConfig, 
-  UseKeyboardNavigationReturn,
-  NavigationDirection 
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {getFocusableElements} from '../utils/focusManagement';
+import {KEYBOARD} from '../constants/wcag';
+import type {
+  KeyboardNavigationConfig,
+  NavigationDirection,
+  UseKeyboardNavigationReturn
 } from '../types/accessibility';
 
 export interface UseKeyboardNavigationOptions extends KeyboardNavigationConfig {
@@ -26,7 +26,7 @@ export interface UseKeyboardNavigationOptions extends KeyboardNavigationConfig {
  * Hook for keyboard navigation in lists and menus
  */
 export function useKeyboardNavigation(
-  options: UseKeyboardNavigationOptions = {}
+    options: UseKeyboardNavigationOptions = {}
 ): UseKeyboardNavigationReturn {
   const {
     orientation = 'vertical',
@@ -59,14 +59,14 @@ export function useKeyboardNavigation(
 
     if (itemSelector) {
       elementsRef.current = Array.from(
-        container.querySelectorAll<HTMLElement>(itemSelector)
+          container.querySelectorAll<HTMLElement>(itemSelector)
       ).filter(el => {
         // Filter out disabled or hidden elements
-        return !el.hasAttribute('disabled') && 
-               !el.hasAttribute('aria-disabled') &&
-               !el.hidden &&
-               el.offsetWidth > 0 && 
-               el.offsetHeight > 0;
+        return !el.hasAttribute('disabled') &&
+            !el.hasAttribute('aria-disabled') &&
+            !el.hidden &&
+            el.offsetWidth > 0 &&
+            el.offsetHeight > 0;
       });
     } else {
       elementsRef.current = getFocusableElements(container);
@@ -76,14 +76,14 @@ export function useKeyboardNavigation(
   // Focus element at given index
   const focusElement = useCallback((index: number) => {
     updateElements();
-    
+
     if (index < 0 || index >= elementsRef.current.length) return;
-    
+
     const element = elementsRef.current[index];
     if (element) {
       isNavigatingRef.current = true;
       element.focus();
-      
+
       // Update roving tabindex if enabled
       if (roving) {
         elementsRef.current.forEach((el, i) => {
@@ -106,11 +106,11 @@ export function useKeyboardNavigation(
   const focusNext = useCallback(() => {
     updateElements();
     let nextIndex = currentIndex + 1;
-    
+
     if (nextIndex >= elementsRef.current.length) {
       nextIndex = wrap || loop ? 0 : elementsRef.current.length - 1;
     }
-    
+
     setCurrentIndex(nextIndex);
     focusElement(nextIndex);
   }, [currentIndex, wrap, loop, focusElement, updateElements]);
@@ -119,11 +119,11 @@ export function useKeyboardNavigation(
   const focusPrevious = useCallback(() => {
     updateElements();
     let prevIndex = currentIndex - 1;
-    
+
     if (prevIndex < 0) {
       prevIndex = wrap || loop ? elementsRef.current.length - 1 : 0;
     }
-    
+
     setCurrentIndex(prevIndex);
     focusElement(prevIndex);
   }, [currentIndex, wrap, loop, focusElement, updateElements]);
@@ -178,7 +178,7 @@ export function useKeyboardNavigation(
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (!enabled) return;
 
-    const { key, ctrlKey, shiftKey, altKey, metaKey } = event;
+    const {key, ctrlKey, shiftKey, altKey, metaKey} = event;
     let handled = false;
 
     // Don't handle if modifier keys are pressed (except shift for selection)
@@ -241,7 +241,7 @@ export function useKeyboardNavigation(
           setTimeout(() => {
             updateElements();
             const focusedIndex = elementsRef.current.findIndex(
-              el => el === document.activeElement
+                el => el === document.activeElement
             );
             if (focusedIndex !== -1) {
               setCurrentIndex(focusedIndex);
@@ -264,10 +264,10 @@ export function useKeyboardNavigation(
     updateElements();
     const focusedElement = event.target as HTMLElement;
     const focusedIndex = elementsRef.current.indexOf(focusedElement);
-    
+
     if (focusedIndex !== -1) {
       setCurrentIndex(focusedIndex);
-      
+
       // Update roving tabindex
       if (roving) {
         elementsRef.current.forEach((el, i) => {
@@ -282,7 +282,7 @@ export function useKeyboardNavigation(
     if (!roving || !enabled) return;
 
     updateElements();
-    
+
     elementsRef.current.forEach((el, i) => {
       el.setAttribute('tabindex', i === currentIndex ? '0' : '-1');
     });
@@ -339,8 +339,8 @@ export function useKeyboardNavigation(
  * Hook for tab-like navigation
  */
 export function useTabNavigation(
-  containerRef?: React.RefObject<HTMLElement>,
-  enabled: boolean = true
+    containerRef?: React.RefObject<HTMLElement>,
+    enabled: boolean = true
 ) {
   return useKeyboardNavigation({
     containerRef,
@@ -356,8 +356,8 @@ export function useTabNavigation(
  * Hook for menu navigation
  */
 export function useMenuNavigation(
-  containerRef?: React.RefObject<HTMLElement>,
-  enabled: boolean = true
+    containerRef?: React.RefObject<HTMLElement>,
+    enabled: boolean = true
 ) {
   return useKeyboardNavigation({
     containerRef,
@@ -374,8 +374,8 @@ export function useMenuNavigation(
  * Hook for grid navigation
  */
 export function useGridNavigation(
-  containerRef?: React.RefObject<HTMLElement>,
-  enabled: boolean = true
+    containerRef?: React.RefObject<HTMLElement>,
+    enabled: boolean = true
 ) {
   return useKeyboardNavigation({
     containerRef,
@@ -392,8 +392,8 @@ export function useGridNavigation(
  * Hook for listbox navigation
  */
 export function useListboxNavigation(
-  containerRef?: React.RefObject<HTMLElement>,
-  enabled: boolean = true
+    containerRef?: React.RefObject<HTMLElement>,
+    enabled: boolean = true
 ) {
   return useKeyboardNavigation({
     containerRef,

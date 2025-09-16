@@ -3,8 +3,8 @@
  * Provides methods to interact with security features and test security vulnerabilities
  */
 
-import { Page, Locator, expect } from '@playwright/test';
-import { TIMEOUTS } from '../helpers/test-data';
+import {expect, Locator, Page} from '@playwright/test';
+import {TIMEOUTS} from '../helpers/test-data';
 
 export class SecurityPage {
   readonly page: Page;
@@ -109,7 +109,7 @@ export class SecurityPage {
   async gotoLogin(): Promise<void> {
     await this.page.goto('/login');
     await this.waitForPageLoad();
-    await expect(this.loginForm).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.loginForm).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -118,7 +118,7 @@ export class SecurityPage {
   async gotoRegister(): Promise<void> {
     await this.page.goto('/register');
     await this.waitForPageLoad();
-    await expect(this.registerForm).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.registerForm).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -181,13 +181,13 @@ export class SecurityPage {
    * Wait for page to load completely
    */
   async waitForPageLoad(): Promise<void> {
-    await this.page.waitForLoadState('networkidle', { timeout: TIMEOUTS.NETWORK });
-    
+    await this.page.waitForLoadState('networkidle', {timeout: TIMEOUTS.NETWORK});
+
     // Wait for main content to be visible
     try {
       await Promise.race([
-        this.page.locator('main').waitFor({ state: 'visible', timeout: TIMEOUTS.MEDIUM }),
-        this.page.locator('body').waitFor({ state: 'visible', timeout: TIMEOUTS.SHORT })
+        this.page.locator('main').waitFor({state: 'visible', timeout: TIMEOUTS.MEDIUM}),
+        this.page.locator('body').waitFor({state: 'visible', timeout: TIMEOUTS.SHORT})
       ]);
     } catch {
       // If specific elements aren't found, just ensure DOM is loaded
@@ -199,8 +199,8 @@ export class SecurityPage {
    * Verify account lockout behavior
    */
   async verifyAccountLockout(): Promise<void> {
-    await expect(this.accountLockedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.accountLockedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     // Verify login form is disabled or shows lockout message
     const loginButton = this.loginForm.locator('button[type="submit"]');
     if (await loginButton.isVisible()) {
@@ -214,8 +214,8 @@ export class SecurityPage {
   async verifyTokenExpiredBehavior(): Promise<void> {
     // Should either show expired token message or redirect to login
     await Promise.race([
-      expect(this.tokenExpiredMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.page).toHaveURL(/\/login/, { timeout: TIMEOUTS.MEDIUM })
+      expect(this.tokenExpiredMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.page).toHaveURL(/\/login/, {timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -224,9 +224,9 @@ export class SecurityPage {
    */
   async verifySessionSecurityMeasures(): Promise<void> {
     // Should maintain session integrity or show security warnings
-    const hasValidSession = await this.protectedContent.isVisible({ timeout: TIMEOUTS.SHORT });
-    const hasSecurityWarning = await this.securityWarningMessage.isVisible({ timeout: TIMEOUTS.SHORT });
-    
+    const hasValidSession = await this.protectedContent.isVisible({timeout: TIMEOUTS.SHORT});
+    const hasSecurityWarning = await this.securityWarningMessage.isVisible({timeout: TIMEOUTS.SHORT});
+
     // Either should have valid session OR security warning (not neither)
     expect(hasValidSession || hasSecurityWarning).toBe(true);
   }
@@ -237,11 +237,11 @@ export class SecurityPage {
   async verifySecurePasswordReset(): Promise<void> {
     // Check for secure reset flow elements
     await expect(this.passwordResetForm).toBeVisible();
-    
+
     // Verify security questions or additional verification
-    const hasSecurityQuestions = await this.securityQuestions.isVisible({ timeout: TIMEOUTS.SHORT });
-    const hasCaptcha = await this.captchaElement.isVisible({ timeout: TIMEOUTS.SHORT });
-    
+    const hasSecurityQuestions = await this.securityQuestions.isVisible({timeout: TIMEOUTS.SHORT});
+    const hasCaptcha = await this.captchaElement.isVisible({timeout: TIMEOUTS.SHORT});
+
     // Should have additional security measures
     expect(hasSecurityQuestions || hasCaptcha).toBe(true);
   }
@@ -251,8 +251,8 @@ export class SecurityPage {
    */
   async verifyAccessDenied(): Promise<void> {
     await Promise.race([
-      expect(this.accessDeniedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.page).toHaveURL(/\/403|\/unauthorized|\/login/, { timeout: TIMEOUTS.MEDIUM })
+      expect(this.accessDeniedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.page).toHaveURL(/\/403|\/unauthorized|\/login/, {timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -260,7 +260,7 @@ export class SecurityPage {
    * Verify admin access
    */
   async verifyAdminAccess(): Promise<void> {
-    await expect(this.adminPanel).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.adminPanel).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -268,8 +268,8 @@ export class SecurityPage {
    */
   async verifyResourceAccessDenied(): Promise<void> {
     await Promise.race([
-      expect(this.accessDeniedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.page).toHaveURL(/\/403|\/unauthorized/, { timeout: TIMEOUTS.MEDIUM })
+      expect(this.accessDeniedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.page).toHaveURL(/\/403|\/unauthorized/, {timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -277,14 +277,14 @@ export class SecurityPage {
    * Verify resource access allowed
    */
   async verifyResourceAccess(): Promise<void> {
-    await expect(this.userResourcePanel).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.userResourcePanel).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
    * Verify privilege escalation blocked
    */
   async verifyPrivilegeEscalationBlocked(): Promise<void> {
-    await expect(this.accessDeniedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.accessDeniedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -293,11 +293,11 @@ export class SecurityPage {
   async verifyXSSPrevention(): Promise<void> {
     // Check that XSS payload is escaped/sanitized
     const content = await this.xssTestContainer.textContent();
-    
+
     // Should not contain executable script tags
     expect(content).not.toContain('<script>');
     expect(content).not.toContain('javascript:');
-    
+
     // Check for escaped content
     expect(content).toMatch(/&lt;script&gt;|&amp;lt;script&amp;gt;/);
   }
@@ -307,9 +307,9 @@ export class SecurityPage {
    */
   async verifyReflectedXSSPrevention(): Promise<void> {
     // URL should not reflect unescaped XSS payload
-    const currentUrl = this.page.url();
+    const _currentUrl = this.page.url();
     const content = await this.page.content();
-    
+
     // Should not contain unescaped XSS in response
     expect(content).not.toMatch(/<script[^>]*>[^<]*alert\([^)]*\)/);
   }
@@ -320,14 +320,14 @@ export class SecurityPage {
   async verifyDOMXSSPrevention(): Promise<void> {
     // Check that DOM manipulation doesn't execute XSS
     const alerts = [];
-    
+
     this.page.on('dialog', dialog => {
       alerts.push(dialog.message());
       dialog.dismiss();
     });
-    
+
     await this.page.waitForTimeout(2000); // Wait for potential XSS execution
-    
+
     // Should not trigger XSS alerts
     expect(alerts.length).toBe(0);
   }
@@ -338,7 +338,7 @@ export class SecurityPage {
   async verifySQLInjectionPrevention(): Promise<void> {
     // Should not expose database errors or structure
     const content = await this.page.content();
-    
+
     const sqlErrorPatterns = [
       /sql.*error/i,
       /mysql.*error/i,
@@ -347,7 +347,7 @@ export class SecurityPage {
       /database.*error/i,
       /syntax.*error.*near/i
     ];
-    
+
     for (const pattern of sqlErrorPatterns) {
       expect(content).not.toMatch(pattern);
     }
@@ -359,7 +359,7 @@ export class SecurityPage {
   async verifyBlindSQLInjectionPrevention(): Promise<void> {
     // Response time should not indicate SQL injection success
     const responseTime = await this.page.evaluate(() => performance.now());
-    
+
     // Should respond in reasonable time (no intentional delays)
     expect(responseTime).toBeLessThan(TIMEOUTS.MEDIUM);
   }
@@ -369,7 +369,7 @@ export class SecurityPage {
    */
   async verifyCommandInjectionPrevention(): Promise<void> {
     const content = await this.page.content();
-    
+
     // Should not expose system command output
     const commandOutputPatterns = [
       /uid=.*gid=/,
@@ -378,7 +378,7 @@ export class SecurityPage {
       /windows.*version/i,
       /microsoft.*windows/i
     ];
-    
+
     for (const pattern of commandOutputPatterns) {
       expect(content).not.toMatch(pattern);
     }
@@ -389,7 +389,7 @@ export class SecurityPage {
    */
   async verifyPathTraversalPrevention(): Promise<void> {
     const content = await this.page.content();
-    
+
     // Should not expose system files
     const systemFilePatterns = [
       /root:.*:\/root:/,  // /etc/passwd
@@ -397,7 +397,7 @@ export class SecurityPage {
       /system32/i,
       /boot.*ini/i
     ];
-    
+
     for (const pattern of systemFilePatterns) {
       expect(content).not.toMatch(pattern);
     }
@@ -407,8 +407,8 @@ export class SecurityPage {
    * Verify malicious file upload blocked
    */
   async verifyMaliciousFileBlocked(): Promise<void> {
-    await expect(this.validationErrors).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.validationErrors).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     const errorText = await this.validationErrors.textContent();
     expect(errorText).toMatch(/invalid.*file|file.*type.*not.*allowed|malicious.*file/i);
   }
@@ -417,8 +417,8 @@ export class SecurityPage {
    * Verify file type enforcement
    */
   async verifyFileTypeEnforcement(): Promise<void> {
-    await expect(this.validationErrors).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.validationErrors).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     const errorText = await this.validationErrors.textContent();
     expect(errorText).toMatch(/file.*type|extension.*not.*allowed/i);
   }
@@ -427,8 +427,8 @@ export class SecurityPage {
    * Verify file size limits
    */
   async verifyFileSizeLimits(): Promise<void> {
-    await expect(this.validationErrors).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.validationErrors).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     const errorText = await this.validationErrors.textContent();
     expect(errorText).toMatch(/file.*too.*large|size.*limit.*exceeded/i);
   }
@@ -438,9 +438,9 @@ export class SecurityPage {
    */
   async verifySessionTimeout(): Promise<void> {
     await Promise.race([
-      expect(this.sessionTimeoutWarning).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.tokenExpiredMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.page).toHaveURL(/\/login/, { timeout: TIMEOUTS.MEDIUM })
+      expect(this.sessionTimeoutWarning).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.tokenExpiredMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.page).toHaveURL(/\/login/, {timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -449,9 +449,9 @@ export class SecurityPage {
    */
   async verifyTokenInvalidated(): Promise<void> {
     await Promise.race([
-      expect(this.tokenExpiredMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.accessDeniedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.page).toHaveURL(/\/login/, { timeout: TIMEOUTS.MEDIUM })
+      expect(this.tokenExpiredMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.accessDeniedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.page).toHaveURL(/\/login/, {timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -459,8 +459,8 @@ export class SecurityPage {
    * Verify password rejected
    */
   async verifyPasswordRejected(): Promise<void> {
-    await expect(this.validationErrors).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.validationErrors).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     const errorText = await this.validationErrors.textContent();
     expect(errorText).toMatch(/password.*weak|password.*requirements|password.*strength/i);
   }
@@ -470,9 +470,9 @@ export class SecurityPage {
    */
   async verifyPasswordAccepted(): Promise<void> {
     // Should not show validation errors
-    const hasErrors = await this.validationErrors.isVisible({ timeout: TIMEOUTS.SHORT });
+    const hasErrors = await this.validationErrors.isVisible({timeout: TIMEOUTS.SHORT});
     expect(hasErrors).toBe(false);
-    
+
     // Password strength indicator should show strong
     if (await this.passwordStrengthIndicator.isVisible()) {
       const strengthText = await this.passwordStrengthIndicator.textContent();
@@ -484,8 +484,8 @@ export class SecurityPage {
    * Verify password history enforced
    */
   async verifyPasswordHistoryEnforced(): Promise<void> {
-    await expect(this.validationErrors).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.validationErrors).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     const errorText = await this.validationErrors.textContent();
     expect(errorText).toMatch(/password.*previously.*used|password.*history|cannot.*reuse/i);
   }
@@ -495,9 +495,9 @@ export class SecurityPage {
    */
   async verifyBruteForceProtection(): Promise<void> {
     await Promise.race([
-      expect(this.accountLockedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.rateLimitMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.captchaElement).toBeVisible({ timeout: TIMEOUTS.MEDIUM })
+      expect(this.accountLockedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.rateLimitMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.captchaElement).toBeVisible({timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -505,15 +505,15 @@ export class SecurityPage {
    * Verify CSRF protection
    */
   async verifyCSRFProtection(): Promise<void> {
-    await expect(this.csrfErrorMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.csrfErrorMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
    * Verify CSRF token validation
    */
   async verifyCSRFTokenValidation(): Promise<void> {
-    await expect(this.csrfErrorMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.csrfErrorMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     const errorText = await this.csrfErrorMessage.textContent();
     expect(errorText).toMatch(/csrf.*token|invalid.*token|cross.*site/i);
   }
@@ -523,7 +523,7 @@ export class SecurityPage {
    */
   async verifySameOriginPolicy(): Promise<void> {
     // Cross-origin requests should be blocked
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect([403, 400, 401]).toContain(response.status());
   }
 
@@ -532,7 +532,7 @@ export class SecurityPage {
    */
   async verifyCORSEnforcement(): Promise<void> {
     // CORS bypass should be blocked
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect(response.status()).not.toBe(200);
   }
 
@@ -540,10 +540,10 @@ export class SecurityPage {
    * Verify rate limit response
    */
   async verifyRateLimitResponse(): Promise<void> {
-    await expect(this.rateLimitMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
-    
+    await expect(this.rateLimitMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
+
     // Check for 429 status in network response
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect(response.status()).toBe(429);
   }
 
@@ -551,7 +551,7 @@ export class SecurityPage {
    * Verify API key validation
    */
   async verifyAPIKeyValidation(): Promise<void> {
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect([401, 403]).toContain(response.status());
   }
 
@@ -559,7 +559,7 @@ export class SecurityPage {
    * Verify API key integrity
    */
   async verifyAPIKeyIntegrity(): Promise<void> {
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect(response.status()).toBe(403);
   }
 
@@ -567,7 +567,7 @@ export class SecurityPage {
    * Verify request size limits
    */
   async verifyRequestSizeLimits(): Promise<void> {
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect([413, 400]).toContain(response.status());
   }
 
@@ -575,7 +575,7 @@ export class SecurityPage {
    * Verify payload protection
    */
   async verifyPayloadProtection(): Promise<void> {
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect([413, 400, 429]).toContain(response.status());
   }
 
@@ -583,7 +583,7 @@ export class SecurityPage {
    * Verify header validation
    */
   async verifyHeaderValidation(): Promise<void> {
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect([400, 403]).toContain(response.status());
   }
 
@@ -591,7 +591,7 @@ export class SecurityPage {
    * Verify header sanitization
    */
   async verifyHeaderSanitization(): Promise<void> {
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect(response.status()).not.toBe(500); // Should handle malformed headers gracefully
   }
 
@@ -600,7 +600,7 @@ export class SecurityPage {
    */
   async verifySensitiveDataProtection(): Promise<void> {
     const content = await this.page.content();
-    
+
     // Should not expose sensitive patterns
     const sensitivePatterns = [
       /password.*:.*\w+/i,
@@ -608,7 +608,7 @@ export class SecurityPage {
       /secret.*:.*\w+/i,
       /key.*:.*[a-zA-Z0-9]{10,}/
     ];
-    
+
     for (const pattern of sensitivePatterns) {
       expect(content).not.toMatch(pattern);
     }
@@ -619,14 +619,14 @@ export class SecurityPage {
    */
   async verifyPIICompliance(): Promise<void> {
     const content = await this.page.content();
-    
+
     // Should not expose full SSN, credit card numbers, etc.
     const piiPatterns = [
       /\d{3}-\d{2}-\d{4}/, // SSN
       /\d{4}[\s-]\d{4}[\s-]\d{4}[\s-]\d{4}/, // Credit card
       /\d{3}[\s-]\d{3}[\s-]\d{4}/ // Phone number
     ];
-    
+
     for (const pattern of piiPatterns) {
       expect(content).not.toMatch(pattern);
     }
@@ -637,9 +637,9 @@ export class SecurityPage {
    */
   async verifySecureTransmission(): Promise<void> {
     expect(this.page.url()).toMatch(/^https:/);
-    
+
     // Verify secure headers are present
-    const response = await this.page.waitForResponse(/\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/\//, {timeout: TIMEOUTS.MEDIUM});
     const headers = response.headers();
     expect(headers['strict-transport-security']).toBeTruthy();
   }
@@ -650,9 +650,9 @@ export class SecurityPage {
   async verifyProtocolSecurity(): Promise<void> {
     // Should not allow protocol downgrade
     expect(this.page.url()).toMatch(/^https:/);
-    
+
     // Connection should remain secure
-    await expect(this.secureConnectionIndicator).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+    await expect(this.secureConnectionIndicator).toBeVisible({timeout: TIMEOUTS.MEDIUM});
   }
 
   /**
@@ -660,9 +660,9 @@ export class SecurityPage {
    */
   async verifyDataEncryption(): Promise<void> {
     // Data responses should not contain plaintext sensitive information
-    const response = await this.page.waitForResponse(/api\/.*data/, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\/.*data/, {timeout: TIMEOUTS.MEDIUM});
     const responseBody = await response.text();
-    
+
     // Should not contain obvious plaintext passwords or tokens
     expect(responseBody).not.toMatch(/password.*:.*[^*]/i);
   }
@@ -676,21 +676,21 @@ export class SecurityPage {
       return new Promise(resolve => {
         const originalLog = console.error;
         let cspViolationDetected = false;
-        
+
         console.error = (...args) => {
           if (args.some(arg => String(arg).includes('Content Security Policy'))) {
             cspViolationDetected = true;
           }
           originalLog.apply(console, args);
         };
-        
+
         setTimeout(() => {
           console.error = originalLog;
           resolve(cspViolationDetected);
         }, 1000);
       });
     });
-    
+
     expect(violationOccurred).toBe(true);
   }
 
@@ -698,9 +698,9 @@ export class SecurityPage {
    * Verify clickjacking protection
    */
   async verifyClickjackingProtection(): Promise<void> {
-    const response = await this.page.waitForResponse(/\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/\//, {timeout: TIMEOUTS.MEDIUM});
     const headers = response.headers();
-    
+
     const frameOptions = headers['x-frame-options'];
     expect(frameOptions).toMatch(/DENY|SAMEORIGIN/i);
   }
@@ -709,9 +709,9 @@ export class SecurityPage {
    * Verify MIME sniffing protection
    */
   async verifyMIMESniffingProtection(): Promise<void> {
-    const response = await this.page.waitForResponse(/\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/\//, {timeout: TIMEOUTS.MEDIUM});
     const headers = response.headers();
-    
+
     expect(headers['x-content-type-options']).toBe('nosniff');
   }
 
@@ -720,9 +720,9 @@ export class SecurityPage {
    */
   async verifyHTTPSEnforcement(): Promise<void> {
     expect(this.page.url()).toMatch(/^https:/);
-    
+
     // Should redirect HTTP to HTTPS
-    const response = await this.page.waitForResponse(/\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/\//, {timeout: TIMEOUTS.MEDIUM});
     expect(response.status()).not.toBe(301); // Should already be HTTPS
   }
 
@@ -735,8 +735,8 @@ export class SecurityPage {
   async verifyAuthenticationIntegrity(): Promise<void> {
     // Authentication bypass should not succeed
     await Promise.race([
-      expect(this.page).toHaveURL(/\/login/, { timeout: TIMEOUTS.MEDIUM }),
-      expect(this.accessDeniedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM })
+      expect(this.page).toHaveURL(/\/login/, {timeout: TIMEOUTS.MEDIUM}),
+      expect(this.accessDeniedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -745,9 +745,9 @@ export class SecurityPage {
    */
   async verifySessionManagementSecurity(): Promise<void> {
     // Weak session management should be detected and blocked
-    const hasValidSession = await this.protectedContent.isVisible({ timeout: TIMEOUTS.SHORT });
+    const hasValidSession = await this.protectedContent.isVisible({timeout: TIMEOUTS.SHORT});
     if (!hasValidSession) {
-      await expect(this.tokenExpiredMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM });
+      await expect(this.tokenExpiredMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM});
     }
   }
 
@@ -756,10 +756,10 @@ export class SecurityPage {
    */
   async verifySecurityUnderLoad(): Promise<void> {
     // Security measures should remain effective under high load
-    await expect(this.protectedContent).toBeVisible({ timeout: TIMEOUTS.LONG });
-    
+    await expect(this.protectedContent).toBeVisible({timeout: TIMEOUTS.LONG});
+
     // Rate limiting should still function
-    const response = await this.page.waitForResponse(/api\//, { timeout: TIMEOUTS.MEDIUM });
+    const response = await this.page.waitForResponse(/api\//, {timeout: TIMEOUTS.MEDIUM});
     expect([200, 429]).toContain(response.status());
   }
 
@@ -769,14 +769,14 @@ export class SecurityPage {
   async verifySecurityErrorHandling(): Promise<void> {
     // Errors should not expose sensitive information
     const content = await this.page.content();
-    
+
     const sensitiveErrorPatterns = [
       /stack.*trace/i,
       /internal.*server.*error.*at.*line/i,
       /database.*connection.*failed.*host/i,
       /file.*not.*found.*\/var\/www/i
     ];
-    
+
     for (const pattern of sensitiveErrorPatterns) {
       expect(content).not.toMatch(pattern);
     }
@@ -799,9 +799,9 @@ export class SecurityPage {
   async verifyAdvancedThreatProtection(): Promise<void> {
     // Advanced attacks should be detected and blocked
     await Promise.race([
-      expect(this.securityWarningMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.accessDeniedMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM }),
-      expect(this.rateLimitMessage).toBeVisible({ timeout: TIMEOUTS.MEDIUM })
+      expect(this.securityWarningMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.accessDeniedMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM}),
+      expect(this.rateLimitMessage).toBeVisible({timeout: TIMEOUTS.MEDIUM})
     ]);
   }
 
@@ -811,11 +811,11 @@ export class SecurityPage {
   async verifyBehavioralProtection(): Promise<void> {
     // Suspicious behavior should trigger additional security measures
     const hasAdditionalSecurity = await Promise.race([
-      this.captchaElement.isVisible({ timeout: TIMEOUTS.SHORT }),
-      this.mfaRequired.isVisible({ timeout: TIMEOUTS.SHORT }),
-      this.securityWarningMessage.isVisible({ timeout: TIMEOUTS.SHORT })
+      this.captchaElement.isVisible({timeout: TIMEOUTS.SHORT}),
+      this.mfaRequired.isVisible({timeout: TIMEOUTS.SHORT}),
+      this.securityWarningMessage.isVisible({timeout: TIMEOUTS.SHORT})
     ]);
-    
+
     expect(hasAdditionalSecurity).toBe(true);
   }
 }

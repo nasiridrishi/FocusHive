@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
-import { Track, WebSocketMessage, UserJoinedPayload, TrackVotedPayload } from '../types'
-import { useMusic } from '../context'
-import { useMusicWebSocket } from './useMusicWebSocket'
+import {useCallback, useEffect, useState} from 'react'
+import {Track, TrackVotedPayload, UserJoinedPayload, WebSocketMessage} from '../types'
+import {useMusic} from '../context'
+import {useMusicWebSocket} from './useMusicWebSocket'
 
 interface CollaborativeState {
   activeUsers: Array<{
@@ -39,8 +39,8 @@ interface CollaborativeOptions {
  */
 export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
   const musicContext = useMusic()
-  const { state, addToQueue, removeFromQueue, reorderQueue } = musicContext
-  const { queue, currentTrack } = state
+  const {state, addToQueue, removeFromQueue, reorderQueue} = musicContext
+  const {queue, currentTrack} = state
   const [collaborativeState, setCollaborativeState] = useState<CollaborativeState>({
     activeUsers: [],
     currentDJ: null,
@@ -53,7 +53,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     votingEnabled: options.enableVoting ?? true,
     skipThreshold: options.skipThreshold ?? 3,
   })
-  
+
   const [skipVotes, setSkipVotes] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -66,11 +66,11 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
   } = options
 
   // WebSocket connection for real-time updates
-  const { 
-    isConnected, 
+  const {
+    isConnected,
     sendMessage,
     joinHive,
-    leaveHive 
+    leaveHive
   } = useMusicWebSocket({
     hiveId,
     onMessage: (message: WebSocketMessage<unknown>) => {
@@ -88,14 +88,14 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
           }))
           break
         }
-          
+
         case 'user_left':
           setCollaborativeState(prev => ({
             ...prev,
             activeUsers: prev.activeUsers.filter(u => u.id !== message.userId)
           }))
           break
-          
+
         case 'track_voted': {
           const payload = message.payload as TrackVotedPayload
           // Handle vote updates
@@ -104,7 +104,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
           }
           break
         }
-          
+
         default:
           break
       }
@@ -116,7 +116,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     if (isConnected && hiveId) {
       joinHive(hiveId)
     }
-    
+
     return () => {
       if (hiveId) {
         leaveHive(hiveId)
@@ -127,7 +127,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
   // Check if user can perform action
   const canPerformAction = useCallback((action: 'add' | 'vote' | 'skip' | 'reorder') => {
     const permissions = collaborativeState.permissions
-    
+
     switch (action) {
       case 'add':
         return permissions.canAddTracks && queue.length < maxQueueSize
@@ -152,16 +152,16 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await addToQueue(track, position)
-      
+
       // Notify other users
       sendMessage('track_added', {
         track,
         position,
         hiveId,
       })
-      
+
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add track'
@@ -182,17 +182,17 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       // TODO: Implement voteOnTrack functionality
-      console.warn('voteOnTrack not yet implemented', { queueId, vote })
-      
+      // console.warn('voteOnTrack not yet implemented', {queueId, vote})
+
       // Notify other users
       sendMessage('track_voted', {
         queueId,
         vote,
         hiveId,
       })
-      
+
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to vote'
@@ -213,12 +213,12 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       // Add skip vote
       sendMessage('skip_vote', {
         hiveId,
       })
-      
+
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to request skip'
@@ -239,16 +239,16 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await reorderQueue(fromIndex, toIndex)
-      
+
       // Notify other users
       sendMessage('queue_reordered', {
         fromIndex,
         toIndex,
         hiveId,
       })
-      
+
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reorder queue'
@@ -264,15 +264,15 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await removeFromQueue(queueId)
-      
+
       // Notify other users
       sendMessage('track_removed', {
         queueId,
         hiveId,
       })
-      
+
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to remove track'
@@ -290,11 +290,11 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       sendMessage('become_dj', {
         hiveId,
       })
-      
+
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to become DJ'
@@ -310,11 +310,11 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       sendMessage('step_down_dj', {
         hiveId,
       })
-      
+
       return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to step down as DJ'
@@ -347,7 +347,7 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
   useEffect(() => {
     if (skipVotes.size >= collaborativeState.skipThreshold) {
       // Auto-skip track
-      sendMessage('auto_skip', { hiveId })
+      sendMessage('auto_skip', {hiveId})
       setSkipVotes(new Set()) // Reset skip votes
     }
   }, [skipVotes.size, collaborativeState.skipThreshold, sendMessage, hiveId])
@@ -355,10 +355,10 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
   // Get queue statistics
   const getQueueStats = useCallback(() => {
     const totalDuration = queue.reduce((sum, item) => sum + item.duration, 0)
-    const averageVotes = queue.length > 0 
-      ? queue.reduce((sum, item) => sum + (item.votes || 0), 0) / queue.length 
-      : 0
-    
+    const averageVotes = queue.length > 0
+        ? queue.reduce((sum, item) => sum + (item.votes || 0), 0) / queue.length
+        : 0
+
     const contributorCounts = queue.reduce((counts, item) => {
       if (item.addedBy) {
         counts[item.addedBy.id] = (counts[item.addedBy.id] || 0) + 1
@@ -371,13 +371,13 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
       totalDuration,
       averageVotes,
       topContributors: Object.entries(contributorCounts)
-        .sort(([,a], [,b]) => (b as number) - (a as number))
-        .slice(0, 3)
-        .map(([userId, count]) => ({
-          userId,
-          count,
-          user: collaborativeState.activeUsers.find(u => u.id === userId)
-        }))
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .slice(0, 3)
+      .map(([userId, count]) => ({
+        userId,
+        count,
+        user: collaborativeState.activeUsers.find(u => u.id === userId)
+      }))
     }
   }, [queue, collaborativeState.activeUsers])
 
@@ -388,23 +388,23 @@ export const useCollaborativePlaylist = (options: CollaborativeOptions) => {
     isLoading,
     error,
     isConnected,
-    
+
     // Actions
     addTrackToQueue,
     voteOnQueueTrack,
     requestSkip,
     reorderQueueItems,
     removeTrackFromQueue,
-    
+
     // DJ mode
     becomeDJ,
     stepDownDJ,
-    
+
     // Utilities
     canPerformAction,
     getVotingSummary,
     getQueueStats,
-    
+
     // Computed values
     queueIsFull: queue.length >= maxQueueSize,
     canAddTracks: canPerformAction('add'),

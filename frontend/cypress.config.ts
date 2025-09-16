@@ -1,4 +1,4 @@
-import { defineConfig } from 'cypress'
+import {defineConfig} from 'cypress'
 
 export default defineConfig({
   e2e: {
@@ -14,7 +14,7 @@ export default defineConfig({
     requestTimeout: 15000,
     responseTimeout: 15000,
     pageLoadTimeout: 30000,
-    setupNodeEvents(on, config) {
+    setupNodeEvents(_on, _config) {
       // implement node event listeners here
     },
     env: {
@@ -43,7 +43,7 @@ export default defineConfig({
 
   watchForFileChanges: true,
   chromeWebSecurity: false,
-  
+
   // Screenshots and videos
   screenshotsFolder: 'cypress/screenshots',
   videosFolder: 'cypress/videos',

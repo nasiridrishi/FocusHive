@@ -88,7 +88,7 @@
     "next_month": "Next Month",
     "minute": "minute",
     "minutes": "minutes",
-    "hour": "hour", 
+    "hour": "hour",
     "hours": "hours",
     "day": "day",
     "days": "days",
@@ -149,7 +149,7 @@
     "change": "Change Language",
     "select": "Select Language",
     "english": "English",
-    "spanish": "Spanish", 
+    "spanish": "Spanish",
     "french": "French",
     "auto_detect": "Auto-detect",
     "browser_default": "Browser Default"
@@ -180,7 +180,7 @@
   "units": {
     "bytes": "bytes",
     "kb": "KB",
-    "mb": "MB", 
+    "mb": "MB",
     "gb": "GB",
     "tb": "TB",
     "percent": "%",

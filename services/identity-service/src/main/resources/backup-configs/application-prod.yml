@@ -1,0 +1,611 @@
+# ===============================================================================
+# ENTERPRISE PRODUCTION CONFIGURATION - IDENTITY SERVICE
+# ===============================================================================
+# This configuration provides enterprise-grade security, performance, and 
+# production readiness for the FocusHive Identity Service
+# ===============================================================================
+
+spring:
+  application:
+    name: identity-service
+  profiles:
+    active: prod
+    include:
+      - security
+      - monitoring
+
+  # ============================================================================
+  # DATABASE CONFIGURATION - Enterprise Grade with SSL and Connection Pooling
+  # ============================================================================
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?sslmode=require&sslcert=/etc/ssl/client-cert.pem&sslkey=/etc/ssl/client-key.pem&sslrootcert=/etc/ssl/ca-cert.pem&ApplicationName=identity-service
+    username: ${DB_USER}  # REQUIRED: Remove default values in production
+    password: ${DB_PASSWORD}  # REQUIRED: Remove default values in production
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:25}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:20000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:300000}
+      max-lifetime: ${DB_MAX_LIFETIME:1200000}  # 20 minutes
+      leak-detection-threshold: 60000  # 1 minute leak detection
+      connection-test-query: SELECT 1
+      pool-name: IdentityServiceCP
+      auto-commit: false
+      # Security settings
+      isolate-internal-queries: true
+      allow-pool-suspension: false
+      # Performance settings
+      cache-prep-stmts: true
+      prep-stmt-cache-size: 300
+      prep-stmt-cache-sql-limit: 2048
+      use-server-prep-stmts: true
+      # Connection validation
+      validation-timeout: 5000
+      connection-init-sql: SELECT 1
+
+  # ============================================================================
+  # JPA PRODUCTION CONFIGURATION - Performance Optimized
+  # ============================================================================
+  jpa:
+    hibernate:
+      ddl-auto: validate  # CRITICAL: Never use create/update in production
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        use_sql_comments: false
+        show_sql: false
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 16
+        enable_lazy_load_no_trans: false
+        query:
+          in_clause_parameter_padding: true
+          plan_cache_max_size: 2048
+        # Production performance optimizations
+        connection:
+          provider_disables_autocommit: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region_prefix: identity
+        generate_statistics: false
+        id:
+          new_generator_mappings: true
+    show-sql: false
+
+  # ============================================================================
+  # FLYWAY CONFIGURATION - Production Database Migration
+  # ============================================================================
+  flyway:
+    enabled: true
+    baseline-on-migrate: false  # Should be false in production
+    locations: classpath:db/migration
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}?sslmode=require
+    user: ${DB_USER}
+    password: ${DB_PASSWORD}
+    validate-on-migrate: true
+    clean-disabled: true  # CRITICAL: Prevent accidental data loss
+    baseline-version: 1.0.0
+    sql-migration-suffixes: .sql
+    table: flyway_schema_history
+    out-of-order: false
+    placeholders:
+      environment: production
+
+  # ============================================================================
+  # REDIS CONFIGURATION - High Availability with Clustering
+  # ============================================================================
+  redis:
+    cluster:
+      nodes: ${REDIS_CLUSTER_NODES}  # REQUIRED: e.g., host1:6379,host2:6379,host3:6379
+      max-redirects: 3
+    password: ${REDIS_PASSWORD}  # REQUIRED: Must be set
+    timeout: ${REDIS_TIMEOUT:2000ms}
+    ssl: ${REDIS_SSL_ENABLED:false}
+    lettuce:
+      pool:
+        max-active: ${REDIS_POOL_MAX_ACTIVE:20}
+        max-idle: ${REDIS_POOL_MAX_IDLE:10}
+        min-idle: ${REDIS_POOL_MIN_IDLE:5}
+        max-wait: ${REDIS_POOL_MAX_WAIT:2000ms}
+      shutdown-timeout: ${REDIS_SHUTDOWN_TIMEOUT:100ms}
+      cluster:
+        refresh:
+          adaptive: true
+          period: ${REDIS_TOPOLOGY_REFRESH_PERIOD:30s}
+
+  # ============================================================================
+  # CACHING CONFIGURATION - Production Optimized
+  # ============================================================================
+  cache:
+    type: redis
+    redis:
+      time-to-live: ${CACHE_TTL:1800000}  # 30 minutes in production
+      cache-null-values: false
+      key-prefix: "identity:cache:"
+      use-key-prefix: true
+
+  # ============================================================================
+  # OAUTH2 SECURITY CONFIGURATION
+  # ============================================================================
+  security:
+    oauth2:
+      authorizationserver:
+        issuer: ${ISSUER_URI}  # REQUIRED: Must be HTTPS in production
+
+# ============================================================================
+# SERVER CONFIGURATION - Production Optimized
+# ============================================================================
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 1024
+  http2:
+    enabled: true
+  # Production SSL Configuration (when using embedded Tomcat)
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+    key-store: ${SSL_KEY_STORE}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-store-type: PKCS12
+    key-alias: identity-service
+    ciphers: ${SSL_CIPHERS:TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_AES_128_GCM_SHA256,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-AES128-GCM-SHA256}
+    protocol: TLS
+    enabled-protocols: ${SSL_PROTOCOLS:TLSv1.3,TLSv1.2}
+  # Tomcat Production Configuration
+  tomcat:
+    max-threads: ${TOMCAT_MAX_THREADS:200}
+    min-spare-threads: ${TOMCAT_MIN_SPARE_THREADS:10}
+    max-connections: ${TOMCAT_MAX_CONNECTIONS:8192}
+    accept-count: ${TOMCAT_ACCEPT_COUNT:100}
+    connection-timeout: ${TOMCAT_CONNECTION_TIMEOUT:20000}
+    keep-alive-timeout: ${TOMCAT_KEEP_ALIVE_TIMEOUT:20000}
+    max-keep-alive-requests: ${TOMCAT_MAX_KEEP_ALIVE_REQUESTS:100}
+    threads:
+      max: ${TOMCAT_MAX_THREADS:200}
+      min-spare: ${TOMCAT_MIN_SPARE_THREADS:10}
+
+# ============================================================================
+# JWT CONFIGURATION - RSA Keys for Production Security
+# ============================================================================
+jwt:
+  # RSA key configuration for production
+  access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}  # 15 minutes
+  refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}  # 7 days  
+  remember-me-expiration-ms: ${JWT_REMEMBER_ME_EXPIRATION:2592000000}  # 30 days
+  issuer: ${JWT_ISSUER}  # REQUIRED: e.g., https://identity.focushive.com
+  # RSA Keys (use files in production, not inline)
+  private-key-location: ${JWT_PRIVATE_KEY_LOCATION:file:/etc/ssl/private/jwt-private-key.pem}
+  public-key-location: ${JWT_PUBLIC_KEY_LOCATION:file:/etc/ssl/certs/jwt-public-key.pem}
+
+# ============================================================================
+# SECURITY CONFIGURATION - Enterprise Grade
+# ============================================================================
+security:
+  # Advanced JWT Configuration
+  jwt:
+    key-store: ${JWT_KEY_STORE:file:/etc/ssl/identity-keystore.p12}
+    key-store-password: ${JWT_KEY_STORE_PASSWORD}
+    key-alias: ${JWT_KEY_ALIAS:jwt-signing-key}
+    private-key-passphrase: ${JWT_PRIVATE_KEY_PASSWORD}
+  
+  # Production CORS Configuration - Strict Security
+  cors:
+    allowed-origins: ${CORS_ORIGINS}  # REQUIRED: Specific domains only, comma-separated
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: 
+      - Content-Type
+      - Authorization
+      - X-Requested-With
+      - Accept
+      - Origin
+      - Access-Control-Request-Method
+      - Access-Control-Request-Headers
+      - X-CSRF-Token
+    expose-headers:
+      - X-Total-Count
+      - X-Page-Count
+      - Link
+    allow-credentials: true
+    max-age: 3600
+  
+  # Rate Limiting Configuration - DDoS Protection
+  rate-limit:
+    # Authentication endpoints - strict limits
+    auth:
+      requests-per-minute: ${AUTH_RATE_LIMIT_RPM:10}
+      requests-per-hour: ${AUTH_RATE_LIMIT_RPH:50}
+      burst-capacity: ${AUTH_RATE_LIMIT_BURST:5}
+    # General API endpoints
+    api:
+      requests-per-minute: ${API_RATE_LIMIT_RPM:100}
+      requests-per-second: ${API_RATE_LIMIT_RPS:10}
+    # OAuth2 endpoints
+    oauth2:
+      requests-per-minute: ${OAUTH2_RATE_LIMIT_RPM:20}
+      burst-capacity: ${OAUTH2_RATE_LIMIT_BURST:10}
+
+  # Brute Force Protection
+  brute-force:
+    max-attempts: ${BRUTE_FORCE_MAX_ATTEMPTS:5}
+    lockout-duration: ${BRUTE_FORCE_LOCKOUT_DURATION:PT15M}  # 15 minutes
+    cleanup-interval: ${BRUTE_FORCE_CLEANUP_INTERVAL:PT1H}   # 1 hour
+
+  # Security Audit Configuration
+  audit:
+    enabled: true
+    events:
+      - AUTHENTICATION_SUCCESS
+      - AUTHENTICATION_FAILURE
+      - AUTHORIZATION_FAILURE
+      - TOKEN_ISSUED
+      - TOKEN_REVOKED
+      - PASSWORD_CHANGED
+      - ACCOUNT_LOCKED
+      - ACCOUNT_UNLOCKED
+      - SUSPICIOUS_ACTIVITY
+    storage:
+      type: database
+      retention-days: ${AUDIT_RETENTION_DAYS:90}
+
+# ============================================================================
+# OAUTH2 CONFIGURATION - Production Clients
+# ============================================================================
+oauth2:
+  authorization:
+    consent-required: true
+    device-code-time-to-live: PT5M
+    access-token-time-to-live: ${OAUTH2_ACCESS_TOKEN_TTL:PT15M}  # 15 minutes
+    refresh-token-time-to-live: ${OAUTH2_REFRESH_TOKEN_TTL:P7D}  # 7 days
+    authorization-code-time-to-live: PT2M  # 2 minutes for security
+    device-verification-uri: ${OAUTH2_DEVICE_VERIFICATION_URI}/oauth2/device/verify
+  
+  # Production OAuth2 Clients (loaded from environment)
+  clients:
+    focushive-frontend:
+      client-id: ${FOCUSHIVE_FRONTEND_CLIENT_ID}
+      client-secret: ${FOCUSHIVE_FRONTEND_CLIENT_SECRET}
+      redirect-uris: ${FOCUSHIVE_FRONTEND_REDIRECT_URIS}  # Must be HTTPS
+      scopes:
+        - openid
+        - profile
+        - email
+        - personas.read
+        - personas.write
+    focushive-backend:
+      client-id: ${FOCUSHIVE_BACKEND_CLIENT_ID}
+      client-secret: ${FOCUSHIVE_BACKEND_CLIENT_SECRET}
+      redirect-uris: ${FOCUSHIVE_BACKEND_REDIRECT_URIS}
+      scopes:
+        - openid
+        - profile
+        - email
+        - personas
+        - identity.read
+        - identity.write
+        - admin
+
+# ============================================================================
+# APPLICATION CONFIGURATION
+# ============================================================================
+app:
+  base-url: ${APP_BASE_URL}  # REQUIRED: Must be HTTPS
+  name: FocusHive Identity Service
+  version: ${APP_VERSION:@project.version@}
+  environment: production
+  
+  # Email Configuration (Production SMTP)
+  email:
+    from: ${EMAIL_FROM}  # REQUIRED
+    smtp:
+      host: ${SMTP_HOST}
+      port: ${SMTP_PORT:587}
+      username: ${SMTP_USERNAME}
+      password: ${SMTP_PASSWORD}
+      auth: true
+      starttls: true
+      ssl:
+        enable: false
+      connection-timeout: 5000
+      timeout: 5000
+
+  # Feature Flags for Production
+  features:
+    registration-enabled: ${REGISTRATION_ENABLED:true}
+    password-reset-enabled: ${PASSWORD_RESET_ENABLED:true}
+    remember-me-enabled: ${REMEMBER_ME_ENABLED:true}
+    multi-persona-enabled: ${MULTI_PERSONA_ENABLED:true}
+    device-code-flow-enabled: ${DEVICE_CODE_FLOW_ENABLED:true}
+
+# ============================================================================
+# SECURITY HEADERS CONFIGURATION - Production Grade
+# ============================================================================
+focushive:
+  security:
+    headers:
+      enabled: true
+      mode: PRODUCTION
+      
+      # HTTP Strict Transport Security - Strict Production Settings
+      hsts:
+        enabled: true
+        max-age: 63072000  # 2 years for production
+        include-subdomains: true
+        preload: true
+      
+      # Content Security Policy - Strict Production Policy
+      csp:
+        enabled: true
+        report-only: false
+        report-uri: ${CSP_REPORT_URI:}  # Optional CSP violation reporting
+        custom-directives:
+          - "upgrade-insecure-requests"
+          - "block-all-mixed-content"
+      
+      # Frame Options - Prevent all framing
+      frame-options:
+        enabled: true
+        policy: DENY
+      
+      # Permissions Policy - Strict Production Restrictions
+      permissions-policy:
+        enabled: true
+        disabled-features:
+          - camera
+          - microphone
+          - geolocation
+          - interest-cohort
+          - payment
+          - usb
+          - serial
+          - bluetooth
+          - magnetometer
+          - gyroscope
+          - accelerometer
+          - ambient-light-sensor
+          - screen-wake-lock
+        custom-directives:
+          - "autoplay=(self)"
+          - "fullscreen=(self)"
+          - "picture-in-picture=(self)"
+          - "web-share=(self)"
+      
+      # Additional Security Headers - Production Hardening
+      additional-headers:
+        x-content-type-options: true
+        x-xss-protection: true
+        x-permitted-cross-domain-policies: true
+        referrer-policy: "strict-origin-when-cross-origin"
+        cross-origin-embedder-policy: false  # Can break functionality - enable with care
+        cross-origin-opener-policy: true     # Enable for production security
+        cross-origin-resource-policy: false  # Can break resource loading - enable with care
+
+# ============================================================================
+# ACTUATOR CONFIGURATION - Production Monitoring
+# ============================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,readiness,liveness
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized  # Hide details from unauthorized users
+      show-components: when-authorized
+      roles: ADMIN
+      cache:
+        time-to-live: 10s
+    info:
+      show-details: when-authorized
+    metrics:
+      enabled: true
+      cache:
+        time-to-live: 5s
+    prometheus:
+      enabled: true
+  
+  # Production Health Checks
+  health:
+    defaults:
+      enabled: false  # Disable all by default
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: ${HEALTH_DISK_THRESHOLD:10GB}
+    mail:
+      enabled: ${HEALTH_MAIL_ENABLED:true}
+    # Custom health indicators
+    circuit-breakers:
+      enabled: true
+    rate-limiter:
+      enabled: true
+
+  # Production Metrics Configuration
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        descriptions: true
+        step: PT1M
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+      percentiles:
+        "[http.server.requests]": 0.5, 0.95, 0.99
+      sla:
+        "[http.server.requests]": 10ms, 50ms, 100ms, 200ms, 500ms
+    tags:
+      application: ${spring.application.name}
+      environment: production
+      instance: ${INSTANCE_ID:${random.uuid}}
+
+  # Production Tracing Configuration
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}  # 10% sampling in production
+    baggage:
+      remote-fields: user-id, session-id, correlation-id
+    zipkin:
+      endpoint: ${ZIPKIN_ENDPOINT:http://zipkin:9411/api/v2/spans}
+
+# ============================================================================
+# LOGGING CONFIGURATION - Production Security & Performance
+# ============================================================================
+logging:
+  level:
+    root: WARN
+    com.focushive.identity: INFO
+    org.springframework.security: WARN
+    org.springframework.security.oauth2: WARN
+    org.springframework.web.filter.CommonsRequestLoggingFilter: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.postgresql: ERROR
+    org.springframework.data.redis: ERROR
+    # Security logging - important for audit
+    SECURITY_EVENTS: INFO
+    AUDIT_EVENTS: INFO
+  
+  # Structured Logging for Production
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId:-}] [%X{userId:-}] [%X{sessionId:-}] %logger{36} - %msg%n"
+  
+  # Log File Configuration
+  file:
+    name: ${LOG_FILE:/var/log/identity-service/application.log}
+    max-size: ${LOG_FILE_MAX_SIZE:100MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:30}
+    total-size-cap: ${LOG_FILE_TOTAL_SIZE_CAP:1GB}
+
+# ============================================================================
+# RESILIENCE4J - Circuit Breaker & Rate Limiting
+# ============================================================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      database:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        event-consumer-buffer-size: 10
+      redis:
+        sliding-window-size: 10
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 2
+      email:
+        sliding-window-size: 5
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+  
+  # Retry Configuration
+  retry:
+    instances:
+      database:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.dao.DataAccessResourceFailureException
+          - java.sql.SQLException
+      redis:
+        max-attempts: 3
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 1.5
+
+  # Rate Limiter Configuration for DDoS Protection
+  ratelimiter:
+    instances:
+      auth-api:
+        limit-for-period: ${AUTH_RATE_LIMIT_REQUESTS:10}
+        limit-refresh-period: ${AUTH_RATE_LIMIT_PERIOD:PT1M}
+        timeout-duration: ${AUTH_RATE_LIMIT_TIMEOUT:PT5S}
+      general-api:
+        limit-for-period: ${API_RATE_LIMIT_REQUESTS:100}
+        limit-refresh-period: ${API_RATE_LIMIT_PERIOD:PT1M}
+        timeout-duration: ${API_RATE_LIMIT_TIMEOUT:PT5S}
+
+# ============================================================================
+# SPRINGDOC (OpenAPI) - Production Configuration
+# ============================================================================
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: ${API_DOCS_ENABLED:false}  # Disable in production for security
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${SWAGGER_UI_ENABLED:false}  # Disable in production for security
+
+# ============================================================================
+# ENVIRONMENT-SPECIFIC OVERRIDES
+# ============================================================================
+
+---
+# High Load Production Configuration
+spring:
+  config:
+    activate:
+      on-profile: prod-high-load
+  redis:
+    lettuce:
+      pool:
+        max-active: 50
+        max-idle: 20
+        min-idle: 10
+  datasource:
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 15
+
+# Increased capacity for high-load scenarios  
+server:
+  tomcat:
+    max-threads: 400
+    min-spare-threads: 50
+    max-connections: 16384
+
+resilience4j:
+  ratelimiter:
+    instances:
+      general-api:
+        limit-for-period: 200
+      auth-api:
+        limit-for-period: 20
+
+---
+# Development Override (for testing production config locally)
+spring:
+  config:
+    activate:
+      on-profile: prod-dev-override
+
+# Allow local development with production profile
+security:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:5173
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

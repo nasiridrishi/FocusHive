@@ -1,16 +1,17 @@
 /**
  * Test Fixtures for Identity Service E2E Tests
- * 
+ *
  * Provides test data, mock personas, and OAuth2 clients for comprehensive testing
  * Supports data generation, cleanup, and state management across test runs
- * 
+ *
  * @fileoverview Identity service test fixtures and data factories
  * @version 1.0.0
  */
 
-import { faker } from '@faker-js/faker';
-import type { Page, APIRequestContext } from '@playwright/test';
-import { IDENTITY_API, TEST_USERS, PERSONA_TEMPLATES, OAUTH2_TEST_CLIENTS } from '../tests/identity/identity.config';
+import {faker} from '@faker-js/faker';
+import type {APIRequestContext, Page} from '@playwright/test';
+import {IDENTITY_API, OAUTH2_TEST_CLIENTS, TEST_USERS} from '../tests/identity/identity.config';
+
 
 /**
  * User account data structure
@@ -53,7 +54,13 @@ export interface TestPersona {
 /**
  * Persona types matching backend enum
  */
-export type PersonaType = 'PROFESSIONAL' | 'PERSONAL' | 'ACADEMIC' | 'SOCIAL' | 'GAMING' | 'CREATIVE';
+export type PersonaType =
+    'PROFESSIONAL'
+    | 'PERSONAL'
+    | 'ACADEMIC'
+    | 'SOCIAL'
+    | 'GAMING'
+    | 'CREATIVE';
 
 /**
  * Privacy settings structure
@@ -130,17 +137,17 @@ export interface LoginResponse {
  * Factory class for generating test data
  */
 export class IdentityTestDataFactory {
-  
+
   /**
    * Generate a test user with random data
    */
   static createUser(overrides: Partial<TestUser> = {}): TestUser {
     const firstName = faker.person.firstName();
     const lastName = faker.person.lastName();
-    
+
     return {
-      email: overrides.email || faker.internet.email({ firstName, lastName }).toLowerCase(),
-      password: overrides.password || 'TestPassword123!',
+      email: overrides.email || faker.internet.email({firstName, lastName}).toLowerCase(),
+      password: overrides.password || 'TestPassword123',
       displayName: overrides.displayName || `${firstName} ${lastName}`,
       firstName,
       lastName,
@@ -155,7 +162,7 @@ export class IdentityTestDataFactory {
    */
   static createPersona(type: PersonaType = 'PERSONAL', overrides: Partial<TestPersona> = {}): TestPersona {
     const name = overrides.name || faker.word.adjective();
-    
+
     return {
       name,
       type,
@@ -204,7 +211,7 @@ export class IdentityTestDataFactory {
    */
   static createOAuth2Client(overrides: Partial<TestOAuth2Client> = {}): TestOAuth2Client {
     const name = overrides.name || faker.company.name();
-    
+
     return {
       clientId: overrides.clientId || `test-${faker.string.alphanumeric(8)}`,
       clientSecret: overrides.clientSecret || faker.string.alphanumeric(32),
@@ -227,25 +234,25 @@ export class IdentityTestDataFactory {
    */
   static createMultiPersonaUser(): TestUser & { personas: TestPersona[] } {
     const user = this.createUser(TEST_USERS.MULTI_PERSONA_USER);
-    
+
     const personas = [
-      this.createPersona('PROFESSIONAL', { 
-        name: 'Work', 
-        isDefault: true, 
+      this.createPersona('PROFESSIONAL', {
+        name: 'Work',
+        isDefault: true,
         isActive: true,
-        privacySettings: this.createPrivacySettings({ profileVisibility: 'PUBLIC' })
+        privacySettings: this.createPrivacySettings({profileVisibility: 'PUBLIC'})
       }),
-      this.createPersona('PERSONAL', { 
+      this.createPersona('PERSONAL', {
         name: 'Personal',
-        privacySettings: this.createPrivacySettings({ profileVisibility: 'FRIENDS' })
+        privacySettings: this.createPrivacySettings({profileVisibility: 'FRIENDS'})
       }),
-      this.createPersona('ACADEMIC', { 
+      this.createPersona('ACADEMIC', {
         name: 'Study',
-        privacySettings: this.createPrivacySettings({ shareActivityData: true })
+        privacySettings: this.createPrivacySettings({shareActivityData: true})
       })
     ];
 
-    return { ...user, personas };
+    return {...user, personas};
   }
 
   /**
@@ -253,38 +260,38 @@ export class IdentityTestDataFactory {
    */
   static createEnterpriseUser(): TestUser & { personas: TestPersona[] } {
     const user = this.createUser(TEST_USERS.ENTERPRISE_USER);
-    
+
     const personas = [
-      this.createPersona('PROFESSIONAL', { 
+      this.createPersona('PROFESSIONAL', {
         name: 'Work',
         isDefault: true,
-        privacySettings: this.createPrivacySettings({ 
+        privacySettings: this.createPrivacySettings({
           profileVisibility: 'PUBLIC',
           twoFactorEnabled: true,
           sessionTimeout: 1800
         })
       }),
-      this.createPersona('PERSONAL', { 
+      this.createPersona('PERSONAL', {
         name: 'Personal',
-        privacySettings: this.createPrivacySettings({ profileVisibility: 'PRIVATE' })
+        privacySettings: this.createPrivacySettings({profileVisibility: 'PRIVATE'})
       }),
-      this.createPersona('PROFESSIONAL', { 
+      this.createPersona('PROFESSIONAL', {
         name: 'Admin',
-        privacySettings: this.createPrivacySettings({ 
+        privacySettings: this.createPrivacySettings({
           profileVisibility: 'FRIENDS',
           twoFactorEnabled: true
         })
       }),
-      this.createPersona('SOCIAL', { 
+      this.createPersona('SOCIAL', {
         name: 'Guest',
-        privacySettings: this.createPrivacySettings({ 
+        privacySettings: this.createPrivacySettings({
           profileVisibility: 'PUBLIC',
           shareActivityData: false
         })
       })
     ];
 
-    return { ...user, personas };
+    return {...user, personas};
   }
 }
 
@@ -307,7 +314,7 @@ export class IdentityTestDataManager {
    */
   async createUser(userData?: Partial<TestUser>): Promise<TestUser> {
     const user = IdentityTestDataFactory.createUser(userData);
-    
+
     // Register user via API
     const response = await this.apiContext.post(`${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.REGISTER}`, {
       data: {
@@ -355,7 +362,7 @@ export class IdentityTestDataManager {
       }
 
       const result = await response.json();
-      createdPersonas.push({ ...personaData, id: result.id, userId });
+      createdPersonas.push({...personaData, id: result.id, userId});
     }
 
     return createdPersonas;
@@ -386,7 +393,7 @@ export class IdentityTestDataManager {
    */
   async loginUser(email: string, password: string): Promise<LoginResponse> {
     const response = await this.apiContext.post(`${IDENTITY_API.BASE_URL}${IDENTITY_API.ENDPOINTS.LOGIN}`, {
-      data: { email, password }
+      data: {email, password}
     });
 
     if (!response.ok()) {
@@ -409,18 +416,18 @@ export class IdentityTestDataManager {
     const multiPersonaUserData = IdentityTestDataFactory.createMultiPersonaUser();
     const multiPersonaUser = await this.createUser(multiPersonaUserData);
     multiPersonaUser.personas = await this.createPersonas(
-      multiPersonaUser.id!,
-      multiPersonaUserData.personas,
-      multiPersonaUser.accessToken!
+        multiPersonaUser.id || '',
+        multiPersonaUserData.personas,
+        multiPersonaUser.accessToken || ''
     );
 
     // Create enterprise user  
     const enterpriseUserData = IdentityTestDataFactory.createEnterpriseUser();
     const enterpriseUser = await this.createUser(enterpriseUserData);
     enterpriseUser.personas = await this.createPersonas(
-      enterpriseUser.id!,
-      enterpriseUserData.personas,
-      enterpriseUser.accessToken!
+        enterpriseUser.id || '',
+        enterpriseUserData.personas,
+        enterpriseUser.accessToken || ''
     );
 
     // Create privacy-focused user
@@ -428,11 +435,11 @@ export class IdentityTestDataManager {
 
     // Create OAuth developer user
     const oauthDevUser = await this.createUser(TEST_USERS.OAUTH_DEV_USER);
-    
+
     // Create test OAuth2 clients for the developer
     await this.createOAuth2Client(
-      IdentityTestDataFactory.createOAuth2Client(OAUTH2_TEST_CLIENTS.WEB_APP),
-      oauthDevUser.accessToken!
+        IdentityTestDataFactory.createOAuth2Client(OAUTH2_TEST_CLIENTS.WEB_APP),
+        oauthDevUser.accessToken || ''
     );
 
     return {
@@ -484,8 +491,8 @@ export const TEST_SCENARIOS = {
   PERSONA_SWITCHING: {
     description: 'User switches between work and personal personas',
     personas: [
-      IdentityTestDataFactory.createPersona('PROFESSIONAL', { name: 'Work', isActive: true }),
-      IdentityTestDataFactory.createPersona('PERSONAL', { name: 'Personal' })
+      IdentityTestDataFactory.createPersona('PROFESSIONAL', {name: 'Work', isActive: true}),
+      IdentityTestDataFactory.createPersona('PERSONAL', {name: 'Personal'})
     ]
   },
 
@@ -494,11 +501,11 @@ export const TEST_SCENARIOS = {
     personas: [
       IdentityTestDataFactory.createPersona('PROFESSIONAL', {
         name: 'Public Work',
-        privacySettings: IdentityTestDataFactory.createPrivacySettings({ profileVisibility: 'PUBLIC' })
+        privacySettings: IdentityTestDataFactory.createPrivacySettings({profileVisibility: 'PUBLIC'})
       }),
       IdentityTestDataFactory.createPersona('PERSONAL', {
         name: 'Private Personal',
-        privacySettings: IdentityTestDataFactory.createPrivacySettings({ profileVisibility: 'PRIVATE' })
+        privacySettings: IdentityTestDataFactory.createPrivacySettings({profileVisibility: 'PRIVATE'})
       })
     ]
   },
@@ -521,9 +528,9 @@ export const TEST_SCENARIOS = {
     description: 'Multiple persona sessions active simultaneously',
     sessionCount: 3,
     personas: [
-      IdentityTestDataFactory.createPersona('PROFESSIONAL', { name: 'Work' }),
-      IdentityTestDataFactory.createPersona('PERSONAL', { name: 'Personal' }),
-      IdentityTestDataFactory.createPersona('ACADEMIC', { name: 'Study' })
+      IdentityTestDataFactory.createPersona('PROFESSIONAL', {name: 'Work'}),
+      IdentityTestDataFactory.createPersona('PERSONAL', {name: 'Personal'}),
+      IdentityTestDataFactory.createPersona('ACADEMIC', {name: 'Study'})
     ]
   }
 } as const;

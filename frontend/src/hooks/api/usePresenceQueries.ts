@@ -1,6 +1,6 @@
 /**
  * Presence Query Hooks
- * 
+ *
  * Provides React Query hooks for real-time presence operations with:
  * - Real-time polling and updates
  * - Optimized caching for live data
@@ -8,20 +8,17 @@
  * - Background sync
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { presenceApiService, FocusSession as ApiFocusSession, PresenceUpdate as _ApiPresenceUpdate } from '@services/api/presenceApi';
-import { queryKeys, STALE_TIMES, CACHE_TIMES } from '@lib/queryClient';
-import { transformPresenceDTO, transformHiveDTO as _transformHiveDTO, type PresenceDTO, type HiveDTO as _HiveDTO } from './transformers';
-import { useAuth } from './useAuthQueries';
-import type { 
-  UserPresence,
-  PresenceStatus as _PresenceStatus
-} from './types';
-import type { 
-  FocusSession,
-  PresenceUpdate,
-  HivePresenceInfo as _HivePresenceInfo,
-} from '@shared/types/presence';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {
+  FocusSession as ApiFocusSession,
+  presenceApiService,
+  PresenceUpdate as _ApiPresenceUpdate
+} from '@services/api/presenceApi';
+import {CACHE_TIMES, queryKeys, STALE_TIMES} from '@lib/queryClient';
+import {type PresenceDTO, transformPresenceDTO} from './transformers';
+import {useAuth} from './useAuthQueries';
+import type {UserPresence, UpdatePresenceMutation, QueryResult} from './types';
+import type {FocusSession, PresenceUpdate,} from '@shared/types/presence';
 
 // ============================================================================
 // QUERY HOOKS
@@ -30,8 +27,8 @@ import type {
 /**
  * Get current user's presence status
  */
-export const useMyPresence = () => {
-  const { user } = useAuth();
+export const useMyPresence = (): QueryResult<UserPresence> => {
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
@@ -65,8 +62,8 @@ export const useMyPresence = () => {
 /**
  * Get specific user's presence
  */
-export const useUserPresence = (userId: string, enabled = true) => {
-  const { user } = useAuth();
+export const useUserPresence = (userId: string, enabled = true): QueryResult<UserPresence> => {
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
@@ -92,8 +89,8 @@ export const useUserPresence = (userId: string, enabled = true) => {
 /**
  * Get presence for all users in a hive
  */
-export const useHivePresence = (hiveId: string, enabled = true) => {
-  const { user } = useAuth();
+export const useHivePresence = (hiveId: string, enabled = true): QueryResult<UserPresence[]> => {
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
@@ -101,10 +98,12 @@ export const useHivePresence = (hiveId: string, enabled = true) => {
     queryFn: async () => {
       const response = await presenceApiService.getHivePresence(parseInt(hiveId, 10));
       // Transform the response which contains an array of presence DTOs
-      const transformedPresences = (response as { presences?: unknown[] }).presences?.map((dto: unknown) => 
-        transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId)
+      const transformedPresences = (response as {
+        presences?: unknown[]
+      }).presences?.map((dto: unknown) =>
+          transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId)
       ) || [];
-      return { presences: transformedPresences };
+      return {presences: transformedPresences};
     },
     enabled: enabled && !!hiveId,
     staleTime: STALE_TIMES.REALTIME,
@@ -136,7 +135,7 @@ export const useHivePresence = (hiveId: string, enabled = true) => {
  * Get multiple hive presence data (batch)
  */
 export const useBatchHivePresence = (hiveIds: string[], enabled = true) => {
-  const { user } = useAuth();
+  const {user} = useAuth();
   const currentUserId = user?.id || '';
 
   return useQuery({
@@ -146,8 +145,8 @@ export const useBatchHivePresence = (hiveIds: string[], enabled = true) => {
       // Transform the batch response - assuming it's an array of hive presence objects
       return (response as unknown[]).map((hivePresence: unknown) => ({
         ...(hivePresence as object),
-        presences: (hivePresence as { presences?: unknown[] }).presences?.map((dto: unknown) => 
-          transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId)
+        presences: (hivePresence as { presences?: unknown[] }).presences?.map((dto: unknown) =>
+            transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId)
         ) || []
       }));
     },
@@ -167,8 +166,8 @@ export const useBatchHivePresence = (hiveIds: string[], enabled = true) => {
 /**
  * Get current user's focus sessions
  */
-export const useMyFocusSessions = (filters?: { 
-  limit?: number; 
+export const useMyFocusSessions = (filters?: {
+  limit?: number;
   status?: 'active' | 'completed' | 'all';
   hiveId?: string;
 }) => {
@@ -211,11 +210,11 @@ export const useHiveFocusSessions = (hiveId: string, enabled = true) => {
     select: (data) => {
       // Group sessions by active status and sort by start time
       return {
-        active: data.filter(s => s.isActive).sort((a, b) => 
-          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        active: data.filter(s => s.isActive).sort((a, b) =>
+            new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
         ),
-        completed: data.filter(s => !s.isActive).sort((a, b) => 
-          new Date(b.endTime || b.startTime).getTime() - new Date(a.endTime || a.startTime).getTime()
+        completed: data.filter(s => !s.isActive).sort((a, b) =>
+            new Date(b.endTime || b.startTime).getTime() - new Date(a.endTime || a.startTime).getTime()
         ),
         all: data,
       };
@@ -259,17 +258,21 @@ export const usePresenceStats = (period: 'daily' | 'weekly' | 'monthly' = 'weekl
 /**
  * Update user presence status
  */
-export const useUpdatePresence = () => {
+export const useUpdatePresence = (): UpdatePresenceMutation => {
   const queryClient = useQueryClient();
+  const {user} = useAuth();
+  const currentUserId = user?.id || '';
 
   return useMutation({
-    mutationFn: (presenceData: PresenceUpdate) => 
-      presenceApiService.updateMyPresence(presenceData as unknown as _ApiPresenceUpdate),
+    mutationFn: async (presenceData: PresenceUpdate) => {
+      const dto = await presenceApiService.updateMyPresence(presenceData as unknown as _ApiPresenceUpdate);
+      return transformPresenceDTO(dto as unknown as PresenceDTO, currentUserId);
+    },
     mutationKey: ['presence', 'update'],
 
     onMutate: async (presenceData) => {
       // Cancel any outgoing refetches for my presence
-      await queryClient.cancelQueries({ queryKey: [...queryKeys.presence.all, 'me'] });
+      await queryClient.cancelQueries({queryKey: [...queryKeys.presence.all, 'me']});
 
       // Snapshot previous value
       const previousPresence = queryClient.getQueryData<UserPresence>([...queryKeys.presence.all, 'me']);
@@ -284,15 +287,15 @@ export const useUpdatePresence = () => {
         queryClient.setQueryData([...queryKeys.presence.all, 'me'], optimisticPresence);
       }
 
-      return { previousPresence };
+      return {previousPresence};
     },
 
     onSuccess: (updatedPresence) => {
       // Update with server response
       queryClient.setQueryData([...queryKeys.presence.all, 'me'], updatedPresence);
-      
+
       // Invalidate related presence data
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: queryKeys.presence.all,
         exact: false,
       });
@@ -300,7 +303,7 @@ export const useUpdatePresence = () => {
 
     onError: (error, presenceData, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic update
       if (context?.previousPresence) {
         queryClient.setQueryData([...queryKeys.presence.all, 'me'], context.previousPresence);
@@ -321,9 +324,9 @@ export const useStartFocusSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (sessionData: { 
-      hiveId?: string; 
-      duration?: number; 
+    mutationFn: (sessionData: {
+      hiveId?: string;
+      duration?: number;
       activity?: string;
       isPublic?: boolean;
     }) => {
@@ -335,7 +338,7 @@ export const useStartFocusSession = () => {
         task: sessionData.activity,
         endTime: undefined,
         actualDuration: undefined,
-        metadata: { isPublic: sessionData.isPublic }
+        metadata: {isPublic: sessionData.isPublic}
       };
       return presenceApiService.startFocusSession(focusSessionData);
     },
@@ -343,8 +346,8 @@ export const useStartFocusSession = () => {
 
     onMutate: async (sessionData) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.presence.sessions() });
-      
+      await queryClient.cancelQueries({queryKey: queryKeys.presence.sessions()});
+
       // Create optimistic session
       const optimisticSession: unknown = {
         id: 'temp-' + Date.now(),
@@ -357,57 +360,57 @@ export const useStartFocusSession = () => {
 
       // Add to sessions list
       queryClient.setQueryData(
-        queryKeys.presence.sessions(),
-        (old: FocusSession[] | undefined) => {
-          return old ? [optimisticSession, ...old] : [optimisticSession];
-        }
+          queryKeys.presence.sessions(),
+          (old: FocusSession[] | undefined) => {
+            return old ? [optimisticSession, ...old] : [optimisticSession];
+          }
       );
 
-      return { optimisticSession };
+      return {optimisticSession};
     },
 
     onSuccess: (newSession, sessionData) => {
       // Replace optimistic session with real one
       queryClient.setQueryData(
-        queryKeys.presence.sessions(),
-        (old: FocusSession[] | undefined) => {
-          if (!old) return [newSession];
-          return [newSession, ...old.filter(s => !s.id.toString().startsWith('temp-'))];
-        }
+          queryKeys.presence.sessions(),
+          (old: FocusSession[] | undefined) => {
+            if (!old) return [newSession];
+            return [newSession, ...old.filter(s => !s.id.toString().startsWith('temp-'))];
+          }
       );
 
       // If session is in a hive, update hive sessions
       if (sessionData.hiveId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.presence.sessions(sessionData.hiveId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.presence.sessions(sessionData.hiveId)
         });
       }
 
       // Update presence status to show as focusing
-      queryClient.invalidateQueries({ 
-        queryKey: [...queryKeys.presence.all, 'me'] 
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.presence.all, 'me']
       });
     },
 
     onError: (_error, _sessionData, _context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Remove optimistic update
       queryClient.setQueryData(
-        queryKeys.presence.sessions(),
-        (old: FocusSession[] | undefined) => {
-          if (!old) return old;
-          return old.filter(s => !s.id.toString().startsWith('temp-'));
-        }
+          queryKeys.presence.sessions(),
+          (old: FocusSession[] | undefined) => {
+            if (!old) return old;
+            return old.filter(s => !s.id.toString().startsWith('temp-'));
+          }
       );
     },
 
     onSettled: (data, error, sessionData) => {
       // Always refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.presence.sessions() });
+      queryClient.invalidateQueries({queryKey: queryKeys.presence.sessions()});
       if (sessionData.hiveId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.presence.sessions(sessionData.hiveId) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.presence.sessions(sessionData.hiveId)
         });
       }
     },
@@ -431,52 +434,52 @@ export const useEndFocusSession = () => {
 
     onMutate: async (sessionId) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.presence.sessions() });
+      await queryClient.cancelQueries({queryKey: queryKeys.presence.sessions()});
 
       // Snapshot previous value
       const previousSessions = queryClient.getQueryData<FocusSession[]>(queryKeys.presence.sessions());
 
       // Optimistically update session status
       if (previousSessions) {
-        const updatedSessions = previousSessions.map(session => 
-          session.id.toString() === sessionId 
-            ? { ...session, endTime: new Date() }
-            : session
+        const updatedSessions = previousSessions.map(session =>
+            session.id.toString() === sessionId
+                ? {...session, endTime: new Date()}
+                : session
         );
         queryClient.setQueryData(queryKeys.presence.sessions(), updatedSessions);
       }
 
-      return { previousSessions, sessionId };
+      return {previousSessions, sessionId};
     },
 
     onSuccess: (completedSession) => {
       // Update with server response
       queryClient.setQueryData(
-        queryKeys.presence.sessions(),
-        (old: FocusSession[] | undefined) => {
-          if (!old) return [completedSession];
-          return old.map(session => 
-            session.id.toString() === completedSession.id.toString() ? completedSession : session
-          );
-        }
+          queryKeys.presence.sessions(),
+          (old: FocusSession[] | undefined) => {
+            if (!old) return [completedSession];
+            return old.map(session =>
+                session.id.toString() === completedSession.id.toString() ? completedSession : session
+            );
+          }
       );
 
       // Update presence status
-      queryClient.invalidateQueries({ 
-        queryKey: [...queryKeys.presence.all, 'me'] 
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.presence.all, 'me']
       });
 
       // If session was in a hive, update hive sessions
       if (completedSession.hiveId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.presence.sessions(completedSession.hiveId.toString()) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.presence.sessions(completedSession.hiveId.toString())
         });
       }
     },
 
     onError: (error, sessionId, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic update
       if (context?.previousSessions) {
         queryClient.setQueryData(queryKeys.presence.sessions(), context.previousSessions);
@@ -497,9 +500,9 @@ export const useUpdateFocusSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ sessionId: _sessionId, updates: _updates }: { 
-      sessionId: string; 
-      updates: { activity?: string; isPublic?: boolean } 
+    mutationFn: ({sessionId: _sessionId, updates: _updates}: {
+      sessionId: string;
+      updates: { activity?: string; isPublic?: boolean }
     }) => {
       // Since updateFocusSession doesn't exist, we'll end and start a new session
       // This is a temporary solution - should implement proper update method
@@ -507,47 +510,47 @@ export const useUpdateFocusSession = () => {
     },
     mutationKey: ['presence', 'updateSession'],
 
-    onMutate: async ({ sessionId, updates }) => {
+    onMutate: async ({sessionId, updates}) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.presence.sessions() });
+      await queryClient.cancelQueries({queryKey: queryKeys.presence.sessions()});
 
       // Snapshot previous value
       const previousSessions = queryClient.getQueryData<FocusSession[]>(queryKeys.presence.sessions());
 
       // Optimistically update session
       if (previousSessions) {
-        const updatedSessions = previousSessions.map(session => 
-          session.id === sessionId ? { ...session, ...updates } : session
+        const updatedSessions = previousSessions.map(session =>
+            session.id === sessionId ? {...session, ...updates} : session
         );
         queryClient.setQueryData(queryKeys.presence.sessions(), updatedSessions);
       }
 
-      return { previousSessions, sessionId };
+      return {previousSessions, sessionId};
     },
 
     onSuccess: (updatedSession: FocusSession) => {
       // Update with server response
       queryClient.setQueryData(
-        queryKeys.presence.sessions(),
-        (old: FocusSession[] | undefined) => {
-          if (!old) return [updatedSession];
-          return old.map(session => 
-            session.id === updatedSession.id ? updatedSession : session
-          );
-        }
+          queryKeys.presence.sessions(),
+          (old: FocusSession[] | undefined) => {
+            if (!old) return [updatedSession];
+            return old.map(session =>
+                session.id === updatedSession.id ? updatedSession : session
+            );
+          }
       );
 
       // Update hive sessions if applicable
       if (updatedSession.hiveId) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.presence.sessions(updatedSession.hiveId.toString()) 
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.presence.sessions(updatedSession.hiveId.toString())
         });
       }
     },
 
-    onError: (error, { sessionId: _sessionId }, context) => {
+    onError: (error, {sessionId: _sessionId}, context) => {
       // Error handled by error boundary and toast notifications
-      
+
       // Rollback optimistic update
       if (context?.previousSessions) {
         queryClient.setQueryData(queryKeys.presence.sessions(), context.previousSessions);
@@ -570,28 +573,28 @@ export const useUpdateFocusSession = () => {
  */
 export const useMyCompletePresence = () => {
   const presenceQuery = useMyPresence();
-  const sessionsQuery = useMyFocusSessions({ limit: 10, status: 'all' });
+  const sessionsQuery = useMyFocusSessions({limit: 10, status: 'all'});
 
   return {
     // Data
     presence: presenceQuery.data,
     sessions: sessionsQuery.data || [],
-    
+
     // Computed values
     isOnline: presenceQuery.data?.status === 'online' || false,
     currentActivity: presenceQuery.data?.currentActivity,
     activeSession: sessionsQuery.data?.find(s => s.isActive),
-    
+
     // Loading states
     isLoading: presenceQuery.isLoading || sessionsQuery.isLoading,
     isPresenceLoading: presenceQuery.isLoading,
     isSessionsLoading: sessionsQuery.isLoading,
-    
+
     // Error states
     error: presenceQuery.error || sessionsQuery.error,
     presenceError: presenceQuery.error,
     sessionsError: sessionsQuery.error,
-    
+
     // Utilities
     refetchPresence: presenceQuery.refetch,
     refetchSessions: sessionsQuery.refetch,
@@ -615,17 +618,17 @@ export const useFocusSessionManagement = () => {
     startSession: startMutation.mutate,
     endSession: endMutation.mutate,
     updateSession: updateMutation.mutate,
-    
+
     // Loading states
     isStarting: startMutation.isPending,
     isEnding: endMutation.isPending,
     isUpdating: updateMutation.isPending,
-    
+
     // Error states
     startError: startMutation.error,
     endError: endMutation.error,
     updateError: updateMutation.error,
-    
+
     // Success states
     isStartSuccess: startMutation.isSuccess,
     isEndSuccess: endMutation.isSuccess,
@@ -645,18 +648,18 @@ export const useRealTimeHivePresence = (hiveId: string, enabled = true) => {
     presence: presenceQuery.data || [],
     sessions: sessionsQuery.data?.all || [],
     activeSessions: sessionsQuery.data?.active || [],
-    
+
     // Computed values
     onlineCount: presenceQuery.data?.filter(p => p.status === 'online').length || 0,
     focusingCount: sessionsQuery.data?.active.length || 0,
     totalMembers: presenceQuery.data?.length || 0,
-    
+
     // Loading states
     isLoading: presenceQuery.isLoading || sessionsQuery.isLoading,
-    
+
     // Error states
     error: presenceQuery.error || sessionsQuery.error,
-    
+
     // Utilities
     refetch: () => {
       presenceQuery.refetch();

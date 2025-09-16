@@ -3,22 +3,21 @@
  * Comprehensive password reset testing including email verification, token validation, and security
  */
 
-import { test, expect } from '@playwright/test';
-import { EnhancedAuthHelper } from '../../helpers/auth-helpers';
-import { 
-  AUTH_TEST_USERS, 
-  PASSWORD_RESET_SCENARIOS,
+import {expect, test} from '@playwright/test';
+import {EnhancedAuthHelper} from '../../helpers/auth-helpers';
+import {
+  AUTH_PERFORMANCE_THRESHOLDS,
+  AUTH_TEST_USERS,
   EMAIL_VERIFICATION,
-  generateUniqueAuthUser,
   MAILHOG_CONFIG,
   MOBILE_VIEWPORTS,
-  AUTH_PERFORMANCE_THRESHOLDS
+  PASSWORD_RESET_SCENARIOS
 } from '../../helpers/auth-fixtures';
 
 test.describe('Password Reset Flow', () => {
   let authHelper: EnhancedAuthHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new EnhancedAuthHelper(page);
     await authHelper.clearStorage();
     await authHelper.clearAllEmails();
@@ -55,12 +54,12 @@ test.describe('Password Reset Flow', () => {
       await authHelper.verifyErrorMessage('Please enter a valid email address');
     });
 
-    test('should send password reset email for valid email', async ({ page }) => {
+    test('should send password reset email for valid email', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
       } catch {
-        test.skip('MailHog not available for email testing');
+        test.skip(true, 'MailHog not available for email testing');
       }
 
       // Set up API monitoring
@@ -98,8 +97,8 @@ test.describe('Password Reset Flow', () => {
       await authHelper.requestPasswordReset('not@an@email');
 
       // Should handle gracefully without revealing email validation details
-      const hasError = await authHelper.page.locator('[role="alert"], .error').isVisible({ timeout: 2000 }).catch(() => false);
-      const hasSuccess = await authHelper.page.locator('.success').isVisible({ timeout: 2000 }).catch(() => false);
+      const hasError = await authHelper.page.locator('[role="alert"], .error').isVisible({timeout: 2000}).catch(() => false);
+      const hasSuccess = await authHelper.page.locator('.success').isVisible({timeout: 2000}).catch(() => false);
 
       expect(hasError || hasSuccess).toBeTruthy();
     });
@@ -118,7 +117,7 @@ test.describe('Password Reset Flow', () => {
 
       // Should show rate limit message
       const rateLimitMessage = authHelper.page.locator(':text("too many requests"), :text("rate limit"), :text("wait")');
-      const hasRateLimit = await rateLimitMessage.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasRateLimit = await rateLimitMessage.isVisible({timeout: 2000}).catch(() => false);
 
       if (hasRateLimit) {
         console.log('✅ Rate limiting is implemented for password reset');
@@ -129,7 +128,7 @@ test.describe('Password Reset Flow', () => {
   });
 
   test.describe('Password Reset Token Validation', () => {
-    test('should accept valid reset token', async ({ page }) => {
+    test('should accept valid reset token', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
@@ -137,9 +136,9 @@ test.describe('Password Reset Flow', () => {
         test.skip('MailHog not available for email testing');
       }
 
-      const { resetToken } = await authHelper.completePasswordReset(
-        AUTH_TEST_USERS.VALID_USER.email,
-        PASSWORD_RESET_SCENARIOS.VALID_EMAIL.newPassword
+      const {resetToken: _resetToken} = await authHelper.completePasswordReset(
+          AUTH_TEST_USERS.VALID_USER.email,
+          PASSWORD_RESET_SCENARIOS.VALID_EMAIL.newPassword
       );
 
       // Verify we reached the reset password form
@@ -148,9 +147,9 @@ test.describe('Password Reset Flow', () => {
     });
 
     test('should reject invalid reset token', async () => {
-      const invalidToken = EMAIL_VERIFICATION.INVALID_TOKEN;
+      const _invalidToken = EMAIL_VERIFICATION.INVALID_TOKEN;
 
-      await authHelper.page.goto(`/reset-password?token=${invalidToken}`);
+      await authHelper.page.goto(`/reset-password?token=${_invalidToken}`);
       await authHelper.page.waitForLoadState('networkidle');
 
       // Should show error message
@@ -158,11 +157,11 @@ test.describe('Password Reset Flow', () => {
 
       // Should not show password form
       const passwordForm = authHelper.page.locator('input[name="password"]');
-      const hasPasswordForm = await passwordForm.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasPasswordForm = await passwordForm.isVisible({timeout: 2000}).catch(() => false);
       expect(hasPasswordForm).toBeFalsy();
     });
 
-    test('should reject expired reset token', async ({ page }) => {
+    test('should reject expired reset token', async ({page}) => {
       // Mock expired token response
       await page.route('**/api/v1/auth/validate-reset-token**', route => {
         route.fulfill({
@@ -201,20 +200,20 @@ test.describe('Password Reset Flow', () => {
       // Should redirect to forgot password or show error
       const currentUrl = authHelper.page.url();
       const onForgotPassword = currentUrl.includes('/forgot-password');
-      const hasError = await authHelper.page.locator('[role="alert"], .error').isVisible({ timeout: 2000 }).catch(() => false);
+      const hasError = await authHelper.page.locator('[role="alert"], .error').isVisible({timeout: 2000}).catch(() => false);
 
       expect(onForgotPassword || hasError).toBeTruthy();
     });
   });
 
   test.describe('New Password Form', () => {
-    test('should validate new password requirements', async ({ page }) => {
+    test('should validate new password requirements', async ({page}) => {
       // Mock valid token
       await page.route('**/api/v1/auth/validate-reset-token**', route => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ valid: true }),
+          body: JSON.stringify({valid: true}),
         });
       });
 
@@ -230,13 +229,13 @@ test.describe('Password Reset Flow', () => {
       await authHelper.verifyErrorMessage('Password must be at least 8 characters');
     });
 
-    test('should validate password confirmation match', async ({ page }) => {
+    test('should validate password confirmation match', async ({page}) => {
       // Mock valid token
       await page.route('**/api/v1/auth/validate-reset-token**', route => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ valid: true }),
+          body: JSON.stringify({valid: true}),
         });
       });
 
@@ -252,13 +251,13 @@ test.describe('Password Reset Flow', () => {
       await authHelper.verifyErrorMessage('Passwords do not match');
     });
 
-    test('should require password complexity', async ({ page }) => {
+    test('should require password complexity', async ({page}) => {
       // Mock valid token
       await page.route('**/api/v1/auth/validate-reset-token**', route => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ valid: true }),
+          body: JSON.stringify({valid: true}),
         });
       });
 
@@ -279,20 +278,20 @@ test.describe('Password Reset Flow', () => {
         await authHelper.page.locator('button[type="submit"]').click();
 
         await authHelper.verifyErrorMessage('Password must contain uppercase, lowercase, number and special character');
-        
+
         // Clear fields for next test
         await authHelper.page.locator('input[name="password"]').fill('');
         await authHelper.page.locator('input[name="confirmPassword"]').fill('');
       }
     });
 
-    test('should show password strength indicator', async ({ page }) => {
+    test('should show password strength indicator', async ({page}) => {
       // Mock valid token
       await page.route('**/api/v1/auth/validate-reset-token**', route => {
         route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ valid: true }),
+          body: JSON.stringify({valid: true}),
         });
       });
 
@@ -302,10 +301,10 @@ test.describe('Password Reset Flow', () => {
 
       // Type password and check for strength indicator
       await authHelper.page.locator('input[name="password"]').fill('weak');
-      
+
       // Look for password strength indicator
       const strengthIndicator = authHelper.page.locator('.password-strength, [data-testid="password-strength"], :text("Weak"), :text("Strong")');
-      const hasStrengthIndicator = await strengthIndicator.isVisible({ timeout: 2000 }).catch(() => false);
+      const hasStrengthIndicator = await strengthIndicator.isVisible({timeout: 2000}).catch(() => false);
 
       if (hasStrengthIndicator) {
         console.log('✅ Password strength indicator is present');
@@ -316,7 +315,7 @@ test.describe('Password Reset Flow', () => {
   });
 
   test.describe('Complete Password Reset Flow', () => {
-    test('should complete full password reset flow', async ({ page }) => {
+    test('should complete full password reset flow', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
@@ -328,7 +327,7 @@ test.describe('Password Reset Flow', () => {
       const userEmail = AUTH_TEST_USERS.VALID_USER.email;
 
       // Complete password reset
-      const { resetToken } = await authHelper.completePasswordReset(userEmail, newPassword);
+      const {resetToken: _resetToken} = await authHelper.completePasswordReset(userEmail, newPassword);
 
       // Verify success message
       await authHelper.verifySuccessMessage('Password updated successfully');
@@ -338,8 +337,8 @@ test.describe('Password Reset Flow', () => {
 
       // Test login with new password
       const tokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username,
-        newPassword
+          AUTH_TEST_USERS.VALID_USER.username,
+          newPassword
       );
 
       expect(tokenInfo.accessToken).toBeTruthy();
@@ -354,7 +353,7 @@ test.describe('Password Reset Flow', () => {
       });
     });
 
-    test('should invalidate all existing sessions after password reset', async ({ page }) => {
+    test('should invalidate all existing sessions after password reset', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
@@ -364,8 +363,8 @@ test.describe('Password Reset Flow', () => {
 
       // First, login and verify session exists
       const oldTokenInfo = await authHelper.loginWithCredentials(
-        AUTH_TEST_USERS.VALID_USER.username,
-        AUTH_TEST_USERS.VALID_USER.password
+          AUTH_TEST_USERS.VALID_USER.username,
+          AUTH_TEST_USERS.VALID_USER.password
       );
       expect(oldTokenInfo.accessToken).toBeTruthy();
 
@@ -375,12 +374,12 @@ test.describe('Password Reset Flow', () => {
 
       // Previous session should be invalidated
       await authHelper.page.goto('/dashboard');
-      
+
       // Should be redirected to login due to invalidated session
-      await expect(authHelper.page).toHaveURL(/\/login/, { timeout: 10000 });
+      await expect(authHelper.page).toHaveURL(/\/login/, {timeout: 10000});
     });
 
-    test('should prevent reuse of reset tokens', async ({ page }) => {
+    test('should prevent reuse of reset tokens', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
@@ -389,9 +388,9 @@ test.describe('Password Reset Flow', () => {
       }
 
       const newPassword = 'FirstResetPassword123!';
-      const { resetToken } = await authHelper.completePasswordReset(
-        AUTH_TEST_USERS.VALID_USER.email, 
-        newPassword
+      const {resetToken} = await authHelper.completePasswordReset(
+          AUTH_TEST_USERS.VALID_USER.email,
+          newPassword
       );
 
       // Try to use the same token again
@@ -440,12 +439,12 @@ test.describe('Password Reset Flow', () => {
       await authHelper.verifySuccessMessage('If an account with this email exists, you will receive a password reset link');
     });
 
-    test('should expire reset tokens after time limit', async ({ page }) => {
+    test('should expire reset tokens after time limit', async ({page}) => {
       // Mock token expiry check
       await page.route('**/api/v1/auth/validate-reset-token**', route => {
         const url = new URL(route.request().url());
         const token = url.searchParams.get('token');
-        
+
         if (token === 'expired-token') {
           route.fulfill({
             status: 400,
@@ -467,7 +466,7 @@ test.describe('Password Reset Flow', () => {
       await authHelper.verifyErrorMessage('Reset token has expired');
     });
 
-    test('should use secure token generation', async ({ page }) => {
+    test('should use secure token generation', async ({page: _page}) => {
       // Skip if MailHog is not available
       try {
         await fetch(`${MAILHOG_CONFIG.API_BASE_URL}/api/v1/messages`);
@@ -484,12 +483,12 @@ test.describe('Password Reset Flow', () => {
       const tokenMatch = emailBody.match(/token=([a-zA-Z0-9\-_]+)/);
       expect(tokenMatch).toBeTruthy();
 
-      const token = tokenMatch![1];
+      const token = tokenMatch?.[1];
 
       // Token should be sufficiently long and random
       expect(token.length).toBeGreaterThan(20);
       expect(token).toMatch(/^[a-zA-Z0-9\-_]+$/); // URL-safe characters
-      
+
       // Token should not contain predictable patterns
       expect(token).not.toMatch(/123|abc|test|user/i);
     });
@@ -497,9 +496,9 @@ test.describe('Password Reset Flow', () => {
 
   test.describe('Mobile Responsiveness', () => {
     Object.entries(MOBILE_VIEWPORTS).forEach(([deviceName, viewport]) => {
-      test(`should work on ${deviceName}`, async ({ page }) => {
+      test(`should work on ${deviceName}`, async ({page}) => {
         await page.setViewportSize(viewport);
-        
+
         const mobileAuthHelper = new EnhancedAuthHelper(page);
         await mobileAuthHelper.clearStorage();
 
@@ -517,7 +516,7 @@ test.describe('Password Reset Flow', () => {
         await submitButton.tap();
 
         // Should show success message
-        const hasSuccess = await mobileAuthHelper.page.locator('.success').isVisible({ timeout: 5000 }).catch(() => false);
+        const hasSuccess = await mobileAuthHelper.page.locator('.success').isVisible({timeout: 5000}).catch(() => false);
         expect(hasSuccess).toBeTruthy();
       });
     });
@@ -536,7 +535,7 @@ test.describe('Password Reset Flow', () => {
 
       await authHelper.page.keyboard.type(AUTH_TEST_USERS.VALID_USER.email);
       await authHelper.page.keyboard.press('Tab');
-      
+
       // Should focus submit button
       expect(await submitButton.evaluate(el => el === document.activeElement)).toBeTruthy();
 
@@ -553,9 +552,9 @@ test.describe('Password Reset Flow', () => {
 
       // Check for accessibility attributes
       const hasLabel = await emailField.evaluate(el => {
-        return el.hasAttribute('aria-label') || 
-               el.hasAttribute('aria-labelledby') || 
-               document.querySelector(`label[for="${el.id}"]`) !== null;
+        return el.hasAttribute('aria-label') ||
+            el.hasAttribute('aria-labelledby') ||
+            document.querySelector(`label[for="${el.id}"]`) !== null;
       });
 
       expect(hasLabel).toBeTruthy();
@@ -597,7 +596,7 @@ test.describe('Password Reset Flow', () => {
   });
 
   test.describe('Error Handling', () => {
-    test('should handle network failures gracefully', async ({ page }) => {
+    test('should handle network failures gracefully', async ({page}) => {
       await authHelper.navigateToPasswordReset();
 
       // Mock network failure
@@ -611,7 +610,7 @@ test.describe('Password Reset Flow', () => {
       await authHelper.verifyErrorMessage();
     });
 
-    test('should handle server errors gracefully', async ({ page }) => {
+    test('should handle server errors gracefully', async ({page}) => {
       await authHelper.navigateToPasswordReset();
 
       // Mock server error

@@ -71,7 +71,18 @@ public interface HiveRepository extends JpaRepository<Hive, String> {
     // Statistics
     @Query("SELECT COUNT(h) FROM Hive h WHERE h.deletedAt IS NULL AND h.isActive = true")
     long countActiveHives();
-    
+
     @Query("SELECT COUNT(h) FROM Hive h WHERE h.isPublic = true AND h.deletedAt IS NULL AND h.isActive = true")
     long countPublicHives();
+
+    // Additional count methods for enhanced testing
+    @Query("SELECT COUNT(h) FROM Hive h WHERE h.isActive = :isActive AND h.deletedAt IS NULL")
+    long countByIsActiveAndDeletedAtIsNull(@Param("isActive") boolean isActive);
+
+    // Enhanced validation queries
+    @Query("SELECT COUNT(h) FROM Hive h WHERE h.owner.id = :ownerId AND h.deletedAt IS NULL")
+    long countByOwnerIdAndDeletedAtIsNull(@Param("ownerId") String ownerId);
+
+    @Query("SELECT COUNT(h) > 0 FROM Hive h WHERE h.name = :name AND h.owner.id = :ownerId AND h.deletedAt IS NULL")
+    boolean existsByNameAndOwnerIdAndDeletedAtIsNull(@Param("name") String name, @Param("ownerId") String ownerId);
 }

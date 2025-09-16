@@ -162,9 +162,24 @@ public interface HiveService {
     
     /**
      * Updates hive statistics (e.g., total focus minutes).
-     * 
+     *
      * @param hiveId the hive ID
      * @param additionalMinutes minutes to add
      */
     void updateHiveStatistics(String hiveId, long additionalMinutes);
+
+    /**
+     * Gets the count of active hives (for health monitoring).
+     *
+     * @return the number of active hives
+     */
+    long getActiveHiveCount();
+
+    /**
+     * Validates hive constraints during creation.
+     *
+     * @param request the hive creation request
+     * @throws ValidationException if constraints are violated
+     */
+    void validateHiveConstraints(CreateHiveRequest request);
 }

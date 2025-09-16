@@ -13,7 +13,7 @@ export const chartLibraries = {
     try {
       // Import recharts module - TypeScript can't infer dynamic import types properly
       const rechartsModule = await import('recharts') as any;
-      
+
       // Return the specific components we need
       return {
         LineChart: rechartsModule.LineChart,
@@ -32,12 +32,12 @@ export const chartLibraries = {
         AreaChart: rechartsModule.AreaChart,
         Area: rechartsModule.Area
       };
-    } catch (error) {
-      console.warn('Recharts not available:', error);
+    } catch {
+      // Debug statement removed
       return {};
     }
   },
-  
+
   async muiCharts() {
     try {
       const [
@@ -53,7 +53,7 @@ export const chartLibraries = {
         import('@mui/x-charts/Gauge'),
         import('@mui/x-charts/SparkLineChart')
       ]);
-      
+
       return {
         LineChart: lineChart.LineChart,
         BarChart: barChart.BarChart,
@@ -61,8 +61,8 @@ export const chartLibraries = {
         Gauge: gauge.Gauge,
         SparkLineChart: sparkLineChart.SparkLineChart
       };
-    } catch (error) {
-      console.warn('MUI Charts not available:', error);
+    } catch {
+      // Debug statement removed
       return {};
     }
   }
@@ -72,13 +72,13 @@ export const chartLibraries = {
 export const dateLibraries = {
   async dateFns() {
     const [
-      { format, parseISO, startOfDay, endOfDay, subDays, addDays },
-      { AdapterDateFns }
+      {format, parseISO, startOfDay, endOfDay, subDays, addDays},
+      {AdapterDateFns}
     ] = await Promise.all([
       import('date-fns'),
       import('@mui/x-date-pickers/AdapterDateFns')
     ]);
-    
+
     return {
       format,
       parseISO,
@@ -89,7 +89,7 @@ export const dateLibraries = {
       AdapterDateFns
     };
   },
-  
+
   async datePickers() {
     try {
       const [
@@ -103,15 +103,15 @@ export const dateLibraries = {
         import('@mui/x-date-pickers/TimePicker'),
         import('@mui/x-date-pickers/DateTimePicker')
       ]);
-      
+
       return {
         LocalizationProvider: localizationProvider.LocalizationProvider,
         DatePicker: datePicker.DatePicker,
         TimePicker: timePicker.TimePicker,
         DateTimePicker: dateTimePicker.DateTimePicker
       };
-    } catch (error) {
-      console.warn('Date pickers not available:', error);
+    } catch {
+      // Debug statement removed
       return {};
     }
   }
@@ -120,13 +120,13 @@ export const dateLibraries = {
 // Real-time communication libraries
 export const communicationLibraries = {
   async socketIo() {
-    const { io } = await import('socket.io-client');
-    return { io };
+    const {io} = await import('socket.io-client');
+    return {io};
   },
-  
+
   async webSocket() {
     // Native WebSocket - no import needed, but provides consistent API
-    return { WebSocket: window.WebSocket };
+    return {WebSocket: window.WebSocket};
   }
 };
 
@@ -134,15 +134,15 @@ export const communicationLibraries = {
 export const stateLibraries = {
   async reactQuery() {
     const [
-      { QueryClient, useQuery, useMutation, useQueryClient },
-      { ReactQueryDevtools }
+      {QueryClient, useQuery, useMutation, useQueryClient},
+      {ReactQueryDevtools}
     ] = await Promise.all([
       import('@tanstack/react-query'),
-      import.meta.env.DEV 
-        ? import('@tanstack/react-query-devtools')
-        : Promise.resolve({ ReactQueryDevtools: null })
+      import.meta.env.DEV
+          ? import('@tanstack/react-query-devtools')
+          : Promise.resolve({ReactQueryDevtools: null})
     ]);
-    
+
     return {
       QueryClient,
       useQuery,
@@ -151,13 +151,13 @@ export const stateLibraries = {
       ReactQueryDevtools
     };
   },
-  
+
   async zustand() {
     try {
       const zustandModule = await import('zustand') as any;
-      return { create: zustandModule.create };
-    } catch (error) {
-      console.warn('Zustand not available:', error);
+      return {create: zustandModule.create};
+    } catch {
+      // Debug statement removed
       return {};
     }
   }
@@ -179,29 +179,29 @@ export const utilityLibraries = {
         pick: lodashModule.pick,
         omit: lodashModule.omit
       };
-    } catch (error) {
-      console.warn('Lodash not available:', error);
+    } catch {
+      // Debug statement removed
       return {};
     }
   },
-  
+
   async uuid() {
     try {
       const uuidModule = await import('uuid') as any;
-      return { uuidv4: uuidModule.v4, uuidv1: uuidModule.v1 };
-    } catch (error) {
-      console.warn('UUID not available:', error);
+      return {uuidv4: uuidModule.v4, uuidv1: uuidModule.v1};
+    } catch {
+      // Debug statement removed
       return {};
     }
   },
-  
+
   async classNames() {
     try {
       const clsx = await import('clsx');
-      return { clsx: clsx.default || clsx };
-    } catch (error) {
-      console.warn('clsx not available:', error);
-      return { clsx: (...args: any[]) => args.filter(Boolean).join(' ') };
+      return {clsx: clsx.default || clsx};
+    } catch {
+      // Debug statement removed
+      return {clsx: (...args: any[]) => args.filter(Boolean).join(' ')};
     }
   }
 };
@@ -212,10 +212,10 @@ export const musicLibraries = {
     try {
       // Note: The package in package.json is '@spotify/web-api-ts-sdk'
       const spotifyModule = await import('@spotify/web-api-ts-sdk') as any;
-      return { SpotifyApi: spotifyModule.SpotifyApi };
-    } catch (error) {
-      console.warn('Spotify SDK not available:', error);
-      return { SpotifyApi: null };
+      return {SpotifyApi: spotifyModule.SpotifyApi};
+    } catch {
+      // Debug statement removed
+      return {SpotifyApi: null};
     }
   }
 };
@@ -223,34 +223,34 @@ export const musicLibraries = {
 // Preload specific libraries based on user interaction
 export const libraryPreloader = {
   preloadCharts: async () => {
-    console.log('[DynamicImports] Preloading chart libraries...');
+    // Debug statement removed
     await Promise.all([
       chartLibraries.muiCharts(),
       chartLibraries.recharts()
     ]);
-    console.log('[DynamicImports] Chart libraries preloaded');
+    // Debug statement removed
   },
-  
+
   preloadDateUtils: async () => {
-    console.log('[DynamicImports] Preloading date utilities...');
+    // Debug statement removed
     await dateLibraries.dateFns();
-    console.log('[DynamicImports] Date utilities preloaded');
+    // Debug statement removed
   },
-  
+
   preloadCommunication: async () => {
-    console.log('[DynamicImports] Preloading communication libraries...');
+    // Debug statement removed
     await communicationLibraries.socketIo();
-    console.log('[DynamicImports] Communication libraries preloaded');
+    // Debug statement removed
   },
-  
+
   preloadUtils: async () => {
-    console.log('[DynamicImports] Preloading utility libraries...');
+    // Debug statement removed
     await Promise.all([
       utilityLibraries.lodash(),
       utilityLibraries.uuid(),
       utilityLibraries.classNames()
     ]);
-    console.log('[DynamicImports] Utility libraries preloaded');
+    // Debug statement removed
   }
 };
 
@@ -260,8 +260,8 @@ export const smartPreloader = {
     if ('connection' in navigator) {
       const connection = (navigator as any).connection;
       if (connection) {
-        const { effectiveType, saveData } = connection;
-        
+        const {effectiveType, saveData} = connection;
+
         // Only preload on good connections
         if (effectiveType === '4g' && !saveData) {
           await libraryPreloader.preloadCharts();
@@ -284,20 +284,20 @@ export const smartPreloader = {
 
 // Bundle size tracking for development
 export const bundleTracker = {
-  logLibraryUsage(libraryName: string, size: number) {
+  logLibraryUsage(_libraryName: string, _size: number) {
     if (import.meta.env.DEV) {
-      console.log(`[Bundle] Loaded ${libraryName} (~${size}KB)`);
+      // console.log(`[Bundle] Loaded ${_libraryName} (~${_size}KB)`);
     }
   },
-  
+
   getBundleInfo() {
     return {
-      charts: { recharts: '~120KB', muiCharts: '~150KB' },
-      dates: { dateFns: '~70KB', datePickers: '~100KB' },
-      communication: { socketIo: '~30KB' },
-      state: { reactQuery: '~45KB', zustand: '~8KB' },
-      utils: { lodash: '~65KB', uuid: '~4KB', clsx: '~2KB' },
-      music: { spotify: '~40KB' }
+      charts: {recharts: '~120KB', muiCharts: '~150KB'},
+      dates: {dateFns: '~70KB', datePickers: '~100KB'},
+      communication: {socketIo: '~30KB'},
+      state: {reactQuery: '~45KB', zustand: '~8KB'},
+      utils: {lodash: '~65KB', uuid: '~4KB', clsx: '~2KB'},
+      music: {spotify: '~40KB'}
     };
   }
 };

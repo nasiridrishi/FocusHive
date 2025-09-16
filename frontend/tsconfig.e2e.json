@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "vitest/globals",
+      "vite-plugin-pwa/client",
+      "@testing-library/jest-dom",
+      "jest-axe",
+      "node",
+      "@playwright/test"
+    ],
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": [
+    "e2e/**/*"
+  ],
+  "exclude": [
+    "src/**/*",
+    "node_modules"
+  ]
+}

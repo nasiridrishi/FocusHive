@@ -1,5 +1,5 @@
 // Timer and productivity related types
-import { User } from './auth'
+import {User} from './auth'
 
 export interface TimerSettings {
   focusLength: number // in minutes

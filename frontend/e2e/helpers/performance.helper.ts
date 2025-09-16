@@ -2,9 +2,8 @@
  * Performance and Load Testing Helper Utilities for FocusHive E2E Tests
  */
 
-import { Page, BrowserContext, Browser, expect } from '@playwright/test';
-import { TEST_USERS, SELECTORS, TIMEOUTS } from './test-data';
-import { AuthHelper } from './auth.helper';
+import {Browser, BrowserContext, Page} from '@playwright/test';
+import {AuthHelper} from './auth.helper';
 
 export interface PerformanceMetrics {
   timestamp: number;
@@ -95,20 +94,95 @@ export class PerformanceHelper {
   private metrics: PerformanceMetrics[] = [];
   private loadTestResults: LoadTestResult[] = [];
 
-  constructor(private page: Page) {}
+  constructor(private page: Page) {
+  }
+
+  /**
+   * Create standard user scenarios for load testing
+   */
+  static createUserScenarios(): unknown {
+    return {
+      // Basic navigation scenario
+      basicNavigation: async (page: Page, _userIndex: number) => {
+        const authHelper = new AuthHelper(page);
+
+        // Login
+        await authHelper.navigateToLogin();
+        await authHelper.loginWithValidUser(); // Use valid test user
+
+        // Navigate to dashboard
+        await page.goto('/dashboard');
+        await page.waitForLoadState('networkidle');
+
+        // Navigate to hive
+        await page.goto('/hive');
+        await page.waitForLoadState('networkidle');
+
+        // Navigate to profile
+        await page.goto('/profile');
+        await page.waitForLoadState('networkidle');
+      },
+
+      // Hive creation and interaction scenario
+      hiveInteraction: async (page: Page, userIndex: number) => {
+        const authHelper = new AuthHelper(page);
+
+        // Login
+        await authHelper.navigateToLogin();
+        await authHelper.loginWithValidUser();
+
+        // Create hive
+        await page.goto('/hive');
+        await page.click('[data-testid="create-hive-button"]');
+        await page.fill('[data-testid="hive-name-input"]', `Load Test Hive ${userIndex}`);
+        await page.fill('[data-testid="hive-description-input"]', `Performance test hive ${userIndex}`);
+        await page.click('[data-testid="create-hive-submit"]');
+        await page.waitForLoadState('networkidle');
+
+        // Start timer
+        await page.click('[data-testid="start-timer-button"]');
+        await page.waitForTimeout(2000);
+
+        // Stop timer
+        await page.click('[data-testid="stop-timer-button"]');
+        await page.waitForLoadState('networkidle');
+      },
+
+      // Analytics and reports scenario
+      analyticsReporting: async (page: Page, _userIndex: number) => {
+        const authHelper = new AuthHelper(page);
+
+        // Login
+        await authHelper.navigateToLogin();
+        await authHelper.loginWithValidUser();
+
+        // Navigate to analytics
+        await page.goto('/analytics');
+        await page.waitForLoadState('networkidle');
+
+        // Apply filters
+        await page.selectOption('[data-testid="time-range-select"]', 'last-7-days');
+        await page.waitForLoadState('networkidle');
+
+        // Export data
+        await page.click('[data-testid="export-data-button"]');
+        await page.waitForTimeout(3000);
+      }
+    };
+  }
 
   /**
    * Collect Core Web Vitals and performance metrics
    */
   async collectPerformanceMetrics(url: string): Promise<PerformanceMetrics> {
-    const navigationStartTime = Date.now();
-    
+    const _navigationStartTime = Date.now();
+
     // Start measuring performance
     await this.page.goto(url);
-    
+
     // Wait for page to be fully loaded
     await this.page.waitForLoadState('networkidle');
-    
+
     // Get performance metrics using browser APIs
     const metrics = await this.page.evaluate(() => {
       return new Promise<PerformanceMetrics>((resolve) => {
@@ -126,11 +200,11 @@ export class PerformanceHelper {
 
         // Get navigation timing
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        
+
         // Get paint timing
         const paintEntries = performance.getEntriesByType('paint');
         const fcp = paintEntries.find(entry => entry.name === 'first-contentful-paint');
-        
+
         // Calculate metrics
         const metrics: PerformanceMetrics = {
           timestamp: Date.now(),
@@ -152,7 +226,7 @@ export class PerformanceHelper {
           const lastEntry = entries[entries.length - 1];
           metrics.largestContentfulPaint = lastEntry.startTime;
         });
-        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+        lcpObserver.observe({type: 'largest-contentful-paint', buffered: true});
 
         // Observe CLS
         let clsValue = 0;
@@ -165,7 +239,7 @@ export class PerformanceHelper {
           }
           metrics.cumulativeLayoutShift = clsValue;
         });
-        clsObserver.observe({ type: 'layout-shift', buffered: true });
+        clsObserver.observe({type: 'layout-shift', buffered: true});
 
         // Observe FID
         const fidObserver = new PerformanceObserver((list) => {
@@ -173,7 +247,7 @@ export class PerformanceHelper {
           const firstEntry = entries[0] as FirstInputEntry;
           metrics.firstInputDelay = firstEntry.processingStart - firstEntry.startTime;
         });
-        fidObserver.observe({ type: 'first-input', buffered: true });
+        fidObserver.observe({type: 'first-input', buffered: true});
 
         // Wait a bit for observers to collect data
         setTimeout(() => {
@@ -193,10 +267,10 @@ export class PerformanceHelper {
    * Simulate concurrent users for load testing
    */
   async simulateConcurrentUsers(
-    browser: Browser,
-    userCount: number,
-    testDuration: number,
-    testScenario: (page: Page, userIndex: number) => Promise<void>
+      browser: Browser,
+      userCount: number,
+      testDuration: number,
+      testScenario: (page: Page, userIndex: number) => Promise<void>
   ): Promise<LoadTestResult> {
     const startTime = Date.now();
     const results: Array<{ success: boolean; responseTime: number; error?: string }> = [];
@@ -213,16 +287,16 @@ export class PerformanceHelper {
       }
 
       // Run concurrent user simulations
-      const userPromises = pages.map(async (page, userIndex) => {
+      const userPromises = pages.map(async (page, _userIndex) => {
         const userStartTime = Date.now();
         try {
           await testScenario(page, userIndex);
           const responseTime = Date.now() - userStartTime;
-          results.push({ success: true, responseTime });
+          results.push({success: true, responseTime});
         } catch (error) {
           const responseTime = Date.now() - userStartTime;
-          results.push({ 
-            success: false, 
+          results.push({
+            success: false,
             responseTime,
             error: error instanceof Error ? error.message : 'Unknown error'
           });
@@ -238,7 +312,7 @@ export class PerformanceHelper {
       const failedRequests = totalRequests - successfulRequests;
       const responseTimes = results.map(r => r.responseTime);
       const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / totalRequests;
-      
+
       // Calculate percentiles
       const sortedTimes = responseTimes.sort((a, b) => a - b);
       const p95Index = Math.floor(sortedTimes.length * 0.95);
@@ -269,7 +343,7 @@ export class PerformanceHelper {
         p99ResponseTime,
         throughput,
         errorRate,
-        errors: Object.entries(errorCounts).map(([error, count]) => ({ error, count }))
+        errors: Object.entries(errorCounts).map(([error, count]) => ({error, count}))
       };
 
       this.loadTestResults.push(loadTestResult);
@@ -285,15 +359,18 @@ export class PerformanceHelper {
    * Test WebSocket performance and latency
    */
   async testWebSocketPerformance(url: string, messageCount: number = 100): Promise<WebSocketMetrics> {
-    const startTime = Date.now();
-    const connectionTime = 0;
-    const messagesDelivered = 0;
-    const messagesLost = 0;
-    const reconnectCount = 0;
-    const latencies: number[] = [];
+    const _startTime = Date.now();
+    const _connectionTime = 0;
+    const _messagesDelivered = 0;
+    const _messagesLost = 0;
+    const _reconnectCount = 0;
+    const _latencies: number[] = [];
 
-    const wsMetrics = await this.page.evaluate(async ({ wsUrl, msgCount }: { wsUrl: string; msgCount: number }) => {
-      return new Promise<WebSocketMetrics>((resolve, reject) => {
+    const wsMetrics = await this.page.evaluate(async ({wsUrl, msgCount}: {
+      wsUrl: string;
+      msgCount: number
+    }) => {
+      return new Promise<WebSocketMetrics>((resolve, _reject) => {
         const connectStart = Date.now();
         const ws = new WebSocket(wsUrl);
         let connectionTime = 0;
@@ -305,13 +382,13 @@ export class PerformanceHelper {
 
         ws.onopen = () => {
           connectionTime = Date.now() - connectStart;
-          
+
           // Send test messages
           for (let i = 0; i < msgCount; i++) {
             const messageId = `test-${i}`;
             const timestamp = Date.now();
             messageTimestamps[messageId] = timestamp;
-            
+
             try {
               ws.send(JSON.stringify({
                 type: 'performance-test',
@@ -319,7 +396,7 @@ export class PerformanceHelper {
                 timestamp,
                 data: `Test message ${i}`
               }));
-            } catch (error) {
+            } catch {
               messagesLost++;
             }
           }
@@ -337,7 +414,7 @@ export class PerformanceHelper {
                 delete messageTimestamps[message.id];
               }
             }
-          } catch (error) {
+          } catch {
             // Ignore non-JSON messages
           }
         };
@@ -355,9 +432,9 @@ export class PerformanceHelper {
         // Wait for all messages to be processed
         setTimeout(() => {
           messagesLost += Object.keys(messageTimestamps).length;
-          const averageLatency = latencies.length > 0 
-            ? latencies.reduce((a, b) => a + b, 0) / latencies.length 
-            : 0;
+          const averageLatency = latencies.length > 0
+              ? latencies.reduce((a, b) => a + b, 0) / latencies.length
+              : 0;
 
           ws.close();
           resolve({
@@ -369,7 +446,7 @@ export class PerformanceHelper {
           });
         }, 5000);
       });
-    }, { wsUrl: url, msgCount: messageCount });
+    }, {wsUrl: url, msgCount: messageCount});
 
     return wsMetrics;
   }
@@ -378,63 +455,63 @@ export class PerformanceHelper {
    * Run stress test to find breaking point
    */
   async runStressTest(
-    browser: Browser,
-    testScenario: (page: Page, userIndex: number) => Promise<void>,
-    maxUsers: number = 1000,
-    incrementSize: number = 50
+      browser: Browser,
+      testScenario: (page: Page, userIndex: number) => Promise<void>,
+      maxUsers: number = 1000,
+      incrementSize: number = 50
   ): Promise<StressTestResult> {
     let currentUsers = incrementSize;
     let degradationStarted = 0;
     let breakingPoint = 0;
     let systemRecovered = false;
-    
-    const resourceUtilization = { cpu: 0, memory: 0, network: 0 };
-    
+
+    const resourceUtilization = {cpu: 0, memory: 0, network: 0};
+
     while (currentUsers <= maxUsers) {
       console.log(`Testing with ${currentUsers} concurrent users...`);
-      
+
       const result = await this.simulateConcurrentUsers(
-        browser,
-        currentUsers,
-        30000, // 30 seconds
-        testScenario
+          browser,
+          currentUsers,
+          30000, // 30 seconds
+          testScenario
       );
-      
+
       // Check for degradation (error rate > 5% or avg response time > 5000ms)
       if ((result.errorRate > 5 || result.averageResponseTime > 5000) && degradationStarted === 0) {
         degradationStarted = currentUsers;
         console.log(`Performance degradation detected at ${currentUsers} users`);
       }
-      
+
       // Check for breaking point (error rate > 50% or avg response time > 30000ms)
       if (result.errorRate > 50 || result.averageResponseTime > 30000) {
         breakingPoint = currentUsers;
         console.log(`Breaking point reached at ${currentUsers} users`);
         break;
       }
-      
+
       currentUsers += incrementSize;
-      
+
       // Wait between test runs
       await this.page.waitForTimeout(5000);
     }
-    
+
     // Test recovery by reducing load
     if (breakingPoint > 0) {
       const recoveryStartTime = Date.now();
       const recoveryUsers = Math.max(degradationStarted, incrementSize);
-      
+
       console.log(`Testing recovery with ${recoveryUsers} users...`);
       const recoveryResult = await this.simulateConcurrentUsers(
-        browser,
-        recoveryUsers,
-        30000,
-        testScenario
+          browser,
+          recoveryUsers,
+          30000,
+          testScenario
       );
-      
+
       const recoveryTime = Date.now() - recoveryStartTime;
       systemRecovered = recoveryResult.errorRate < 5 && recoveryResult.averageResponseTime < 5000;
-      
+
       return {
         breakingPoint,
         recoveryTime,
@@ -443,7 +520,7 @@ export class PerformanceHelper {
         resourceUtilization
       };
     }
-    
+
     return {
       breakingPoint: 0, // System didn't break within test limits
       recoveryTime: 0,
@@ -458,8 +535,8 @@ export class PerformanceHelper {
    */
   async monitorMemoryUsage(duration: number = 300000): Promise<MemoryUsage[]> {
     const measurements: MemoryUsage[] = [];
-    const startTime = Date.now();
-    
+    const _startTime = Date.now();
+
     const interval = setInterval(async () => {
       try {
         const memory = await this.page.evaluate(() => {
@@ -473,7 +550,7 @@ export class PerformanceHelper {
           }
           return null;
         });
-        
+
         if (memory) {
           measurements.push(memory);
         }
@@ -481,11 +558,11 @@ export class PerformanceHelper {
         console.warn('Failed to collect memory usage:', error);
       }
     }, 1000); // Measure every second
-    
+
     // Wait for test duration
     await new Promise(resolve => setTimeout(resolve, duration));
     clearInterval(interval);
-    
+
     return measurements;
   }
 
@@ -493,24 +570,24 @@ export class PerformanceHelper {
    * Test API endpoint performance under load
    */
   async testApiPerformance(
-    endpoint: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
-    payload?: ApiPayload,
-    concurrentRequests: number = 100
+      endpoint: string,
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+      payload?: ApiPayload,
+      concurrentRequests: number = 100
   ): Promise<{ averageResponseTime: number; successRate: number; errors: string[] }> {
     const results: Array<{ success: boolean; responseTime: number; error?: string }> = [];
-    
-    const requests = Array.from({ length: concurrentRequests }, async () => {
+
+    const requests = Array.from({length: concurrentRequests}, async () => {
       const startTime = Date.now();
-      
+
       try {
         const response = await this.page.request[method.toLowerCase() as 'get'](endpoint, {
           data: payload
         });
-        
+
         const responseTime = Date.now() - startTime;
         const success = response.ok();
-        
+
         results.push({
           success,
           responseTime,
@@ -525,14 +602,14 @@ export class PerformanceHelper {
         });
       }
     });
-    
+
     await Promise.allSettled(requests);
-    
+
     const successfulRequests = results.filter(r => r.success);
     const averageResponseTime = results.reduce((sum, r) => sum + r.responseTime, 0) / results.length;
     const successRate = (successfulRequests.length / results.length) * 100;
     const errors = results.filter(r => !r.success).map(r => r.error || 'Unknown error');
-    
+
     // Remove duplicates manually to avoid Set iteration
     const uniqueErrors: string[] = [];
     for (const error of errors) {
@@ -540,7 +617,7 @@ export class PerformanceHelper {
         uniqueErrors.push(error);
       }
     }
-    
+
     return {
       averageResponseTime,
       successRate,
@@ -567,7 +644,7 @@ export class PerformanceHelper {
     const averageLCP = this.metrics.reduce((sum, m) => sum + m.largestContentfulPaint, 0) / totalTests;
     const averageFID = this.metrics.reduce((sum, m) => sum + m.firstInputDelay, 0) / totalTests;
     const averageCLS = this.metrics.reduce((sum, m) => sum + m.cumulativeLayoutShift, 0) / totalTests;
-    
+
     return {
       summary: {
         totalTests,
@@ -589,105 +666,31 @@ export class PerformanceHelper {
     failures: string[];
   } {
     const failures: string[] = [];
-    
+
     // Core Web Vitals thresholds (good values)
     if (metrics.largestContentfulPaint > 2500) {
       failures.push(`LCP too high: ${metrics.largestContentfulPaint}ms (should be ≤ 2500ms)`);
     }
-    
+
     if (metrics.firstInputDelay > 100) {
       failures.push(`FID too high: ${metrics.firstInputDelay}ms (should be ≤ 100ms)`);
     }
-    
+
     if (metrics.cumulativeLayoutShift > 0.1) {
       failures.push(`CLS too high: ${metrics.cumulativeLayoutShift} (should be ≤ 0.1)`);
     }
-    
+
     if (metrics.loadTime > 3000) {
       failures.push(`Load time too high: ${metrics.loadTime}ms (should be ≤ 3000ms)`);
     }
-    
+
     if (metrics.timeToFirstByte > 600) {
       failures.push(`TTFB too high: ${metrics.timeToFirstByte}ms (should be ≤ 600ms)`);
     }
-    
+
     return {
       passed: failures.length === 0,
       failures
-    };
-  }
-
-  /**
-   * Create standard user scenarios for load testing
-   */
-  static createUserScenarios() {
-    return {
-      // Basic navigation scenario
-      basicNavigation: async (page: Page, userIndex: number) => {
-        const authHelper = new AuthHelper(page);
-        
-        // Login
-        await authHelper.navigateToLogin();
-        await authHelper.loginWithValidUser(); // Use valid test user
-        
-        // Navigate to dashboard
-        await page.goto('/dashboard');
-        await page.waitForLoadState('networkidle');
-        
-        // Navigate to hive
-        await page.goto('/hive');
-        await page.waitForLoadState('networkidle');
-        
-        // Navigate to profile
-        await page.goto('/profile');
-        await page.waitForLoadState('networkidle');
-      },
-      
-      // Hive creation and interaction scenario
-      hiveInteraction: async (page: Page, userIndex: number) => {
-        const authHelper = new AuthHelper(page);
-        
-        // Login
-        await authHelper.navigateToLogin();
-        await authHelper.loginWithValidUser();
-        
-        // Create hive
-        await page.goto('/hive');
-        await page.click('[data-testid="create-hive-button"]');
-        await page.fill('[data-testid="hive-name-input"]', `Load Test Hive ${userIndex}`);
-        await page.fill('[data-testid="hive-description-input"]', `Performance test hive ${userIndex}`);
-        await page.click('[data-testid="create-hive-submit"]');
-        await page.waitForLoadState('networkidle');
-        
-        // Start timer
-        await page.click('[data-testid="start-timer-button"]');
-        await page.waitForTimeout(2000);
-        
-        // Stop timer
-        await page.click('[data-testid="stop-timer-button"]');
-        await page.waitForLoadState('networkidle');
-      },
-      
-      // Analytics and reports scenario
-      analyticsReporting: async (page: Page, userIndex: number) => {
-        const authHelper = new AuthHelper(page);
-        
-        // Login
-        await authHelper.navigateToLogin();
-        await authHelper.loginWithValidUser();
-        
-        // Navigate to analytics
-        await page.goto('/analytics');
-        await page.waitForLoadState('networkidle');
-        
-        // Apply filters
-        await page.selectOption('[data-testid="time-range-select"]', 'last-7-days');
-        await page.waitForLoadState('networkidle');
-        
-        // Export data
-        await page.click('[data-testid="export-data-button"]');
-        await page.waitForTimeout(3000);
-      }
     };
   }
 }

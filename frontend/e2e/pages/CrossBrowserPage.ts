@@ -2,25 +2,20 @@
  * Page Object Model for Cross-Browser Testing
  */
 
-import { Page, expect, Locator, TestInfo } from '@playwright/test';
-import { SELECTORS, TIMEOUTS, TEST_URLS } from '../helpers/test-data';
-import { 
-  getBrowserInfo, 
-  detectFeatureSupport, 
-  BrowserWorkarounds,
-  waitForFontsLoaded,
-  waitForAnimationsComplete,
+import {Locator, Page, TestInfo} from '@playwright/test';
+import {
   type BrowserInfo,
+  BrowserWorkarounds,
+  detectFeatureSupport,
   type FeatureSupport,
+  getBrowserInfo,
+  waitForAnimationsComplete,
+  waitForFontsLoaded,
 } from '../helpers/cross-browser.helper';
 
 export class CrossBrowserPage {
   readonly page: Page;
   readonly testInfo: TestInfo;
-  private browserInfo: BrowserInfo | null = null;
-  private featureSupport: FeatureSupport | null = null;
-  private workarounds: BrowserWorkarounds | null = null;
-
   // Common UI elements that behave differently across browsers
   readonly fileInput: Locator;
   readonly dateInput: Locator;
@@ -35,7 +30,6 @@ export class CrossBrowserPage {
   readonly microphoneButton: Locator;
   readonly downloadButton: Locator;
   readonly uploadButton: Locator;
-
   // Form elements for cross-browser testing
   readonly textInput: Locator;
   readonly emailInput: Locator;
@@ -50,13 +44,15 @@ export class CrossBrowserPage {
   readonly selectInput: Locator;
   readonly checkboxInput: Locator;
   readonly radioInput: Locator;
-
   // Layout and styling elements
   readonly flexContainer: Locator;
   readonly gridContainer: Locator;
   readonly animatedElement: Locator;
   readonly customPropertyElement: Locator;
   readonly backdropElement: Locator;
+  private browserInfo: BrowserInfo | null = null;
+  private featureSupport: FeatureSupport | null = null;
+  private workarounds: BrowserWorkarounds | null = null;
 
   constructor(page: Page, testInfo: TestInfo) {
     this.page = page;
@@ -107,7 +103,7 @@ export class CrossBrowserPage {
     this.browserInfo = await getBrowserInfo(this.page);
     this.featureSupport = await detectFeatureSupport(this.page);
     this.workarounds = new BrowserWorkarounds(this.page, this.browserInfo);
-    
+
     // Wait for fonts to load to prevent layout shifts
     await waitForFontsLoaded(this.page);
   }
@@ -139,7 +135,7 @@ export class CrossBrowserPage {
     await this.page.goto(path);
     await this.page.waitForLoadState('networkidle');
     await waitForFontsLoaded(this.page);
-    
+
     // Browser-specific initialization
     if (this.browserInfo?.isWebkit) {
       // Safari might need extra time for certain features
@@ -155,22 +151,22 @@ export class CrossBrowserPage {
       return new Promise<boolean>((resolve) => {
         try {
           const ws = new WebSocket(wsUrl);
-          
+
           ws.onopen = () => {
             ws.close();
             resolve(true);
           };
-          
+
           ws.onerror = () => {
             resolve(false);
           };
-          
+
           // Timeout after 5 seconds
           setTimeout(() => {
             ws.close();
             resolve(false);
           }, 5000);
-        } catch (error) {
+        } catch {
           resolve(false);
         }
       });
@@ -195,7 +191,7 @@ export class CrossBrowserPage {
       // Test getUserMedia
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const stream = await navigator.mediaDevices.getUserMedia({audio: true});
           result.getUserMedia = true;
           stream.getTracks().forEach(track => track.stop());
         } catch {
@@ -282,10 +278,10 @@ export class CrossBrowserPage {
       const testElement = document.createElement('div');
       testElement.style.display = 'grid';
       document.body.appendChild(testElement);
-      
+
       const computedStyle = window.getComputedStyle(testElement);
       const isSupported = computedStyle.display === 'grid';
-      
+
       document.body.removeChild(testElement);
       return isSupported;
     });
@@ -299,10 +295,10 @@ export class CrossBrowserPage {
       const testElement = document.createElement('div');
       testElement.style.display = 'flex';
       document.body.appendChild(testElement);
-      
+
       const computedStyle = window.getComputedStyle(testElement);
       const isSupported = computedStyle.display === 'flex';
-      
+
       document.body.removeChild(testElement);
       return isSupported;
     });
@@ -317,10 +313,10 @@ export class CrossBrowserPage {
       testElement.style.setProperty('--test-var', 'red');
       testElement.style.color = 'var(--test-var)';
       document.body.appendChild(testElement);
-      
+
       const computedStyle = window.getComputedStyle(testElement);
       const isSupported = computedStyle.color === 'red' || computedStyle.color === 'rgb(255, 0, 0)';
-      
+
       document.body.removeChild(testElement);
       return isSupported;
     });
@@ -339,7 +335,7 @@ export class CrossBrowserPage {
       const canvas = document.createElement('canvas');
       canvas.width = 1;
       canvas.height = 1;
-      
+
       return {
         webp: canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0,
         avif: canvas.toDataURL('image/avif').indexOf('data:image/avif') === 0,
@@ -355,18 +351,18 @@ export class CrossBrowserPage {
   async testFormInputSupport(): Promise<Record<string, boolean>> {
     return await this.page.evaluate(() => {
       const inputTypes = [
-        'email', 'number', 'range', 'date', 'datetime-local', 
+        'email', 'number', 'range', 'date', 'datetime-local',
         'time', 'color', 'search', 'url', 'tel'
       ];
-      
+
       const support: Record<string, boolean> = {};
-      
+
       inputTypes.forEach(type => {
         const input = document.createElement('input');
         input.type = type;
         support[type] = input.type === type;
       });
-      
+
       return support;
     });
   }
@@ -394,7 +390,7 @@ export class CrossBrowserPage {
         try {
           await navigator.clipboard.writeText('test');
           result.writeText = true;
-          
+
           const text = await navigator.clipboard.readText();
           result.readText = text === 'test';
         } catch {
@@ -419,9 +415,9 @@ export class CrossBrowserPage {
 
       return new Promise<boolean>((resolve) => {
         navigator.geolocation.getCurrentPosition(
-          () => resolve(true),
-          () => resolve(false),
-          { timeout: 5000 }
+            () => resolve(true),
+            () => resolve(false),
+            {timeout: 5000}
         );
       });
     });
@@ -442,7 +438,7 @@ export class CrossBrowserPage {
 
       if (result.supported) {
         result.permission = Notification.permission;
-        
+
         if (Notification.permission === 'default') {
           try {
             const permission = await Notification.requestPermission();
@@ -495,7 +491,7 @@ export class CrossBrowserPage {
       if (result.fontLoading) {
         try {
           await document.fonts.ready;
-          
+
           // Test custom font loading
           const testFont = new FontFace('TestFont', 'url(data:font/woff2;base64,d09GMgABAAAAAAUgAAoAAAAABNgAAATPAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbIBwqBmAAgTIBNgIkAzgEBgWDGwcgGykJEZWkAR7I/uuEmzfb5F6ebUUB5gPt6dGVhQKLiT2JJ19M4qKi2+vFRE6gIhqkxEzEkSxkpEqhILQIWdHq9+7FG9lGVz7Y/GvEJBNPXMCMUDAJBQOKUJCJBTSxJBLgYRIDt9dKSjUJJFRJSWKpUEKFZUtU5uT7PKKUOZnzOdKI1jGgGLFQQgWJKBLxmLF+zMBCqYfNFGpY/WBUOxDN2A)');
           await testFont.load();
@@ -512,12 +508,12 @@ export class CrossBrowserPage {
       testDiv.style.fontSize = '16px';
       testDiv.textContent = 'Test Font Rendering';
       document.body.appendChild(testDiv);
-      
+
       const rect = testDiv.getBoundingClientRect();
       result.consistency = rect.width > 0 && rect.height > 0;
-      
+
       document.body.removeChild(testDiv);
-      
+
       return result;
     });
   }
@@ -555,10 +551,10 @@ export class CrossBrowserPage {
     // Wait for animations and fonts
     await this.waitForAllAnimationsComplete();
     await waitForFontsLoaded(this.page);
-    
+
     const browserName = this.getBrowserInfo().name.toLowerCase().replace(/\s+/g, '-');
     const filename = `${name}-${browserName}.png`;
-    
+
     await this.page.screenshot({
       path: `test-results/${this.testInfo.title}/${filename}`,
       fullPage: true,
@@ -578,13 +574,13 @@ export class CrossBrowserPage {
         // Storage might not be available
       }
     });
-    
+
     // Reset any modified page state
     await this.page.evaluate(() => {
       // Remove any test elements that might have been added
       const testElements = document.querySelectorAll('[data-test-element]');
       testElements.forEach(el => el.remove());
-      
+
       // Reset any modified styles
       document.body.style.cssText = '';
       document.documentElement.style.cssText = '';

@@ -2,7 +2,7 @@
 // Separated from LazyDatePickers.tsx to avoid fast-refresh warnings
 
 // Preloader function
-export const preloadDatePickers = () => {
+export const preloadDatePickers = (): void => {
   // Preload commonly used date pickers after a delay
   setTimeout(() => {
     import('@mui/x-date-pickers/DatePicker')
@@ -15,7 +15,7 @@ export const datePickerBundleInfo = {
   '@mui/x-date-pickers': {
     estimatedSize: '~80KB',
     components: [
-      'DatePicker', 'DateTimePicker', 'TimePicker', 
+      'DatePicker', 'DateTimePicker', 'TimePicker',
       'MobileDatePicker', 'DesktopDatePicker', 'StaticDatePicker'
     ],
     note: 'Medium-size bundle - lazy loading recommended for optional features'

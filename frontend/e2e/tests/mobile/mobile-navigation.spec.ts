@@ -3,11 +3,10 @@
  * Tests mobile-specific navigation patterns, gestures, and UX flows
  */
 
-import { test, expect, Page, Locator } from '@playwright/test';
-import { MOBILE_DEVICES, VIEWPORT_BREAKPOINTS } from './mobile.config';
-import { MobileHelper } from '../../helpers/mobile.helper';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { TEST_URLS } from '../../helpers/test-data';
+import {expect, Locator, Page, test} from '@playwright/test';
+import {MobileHelper} from '../../helpers/mobile.helper';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {TEST_URLS} from '../../helpers/test-data';
 
 interface NavigationPattern {
   name: string;
@@ -21,7 +20,7 @@ interface NavigationPattern {
   };
 }
 
-interface MobileNavigationTest {
+interface _MobileNavigationTest {
   pattern: NavigationPattern;
   viewportWidth: number;
   expectedState: 'visible' | 'hidden' | 'collapsed';
@@ -37,14 +36,14 @@ interface BreadcrumbTest {
 
 test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
   let authHelper: AuthHelper;
-  let mobileHelper: MobileHelper;
+  let _mobileHelper: MobileHelper;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page}) => {
     authHelper = new AuthHelper(page);
-    mobileHelper = new MobileHelper(page);
-    
+    _mobileHelper = new MobileHelper(page);
+
     // Set mobile viewport
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({width: 390, height: 844});
     await authHelper.loginWithTestUser();
   });
 
@@ -96,20 +95,20 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
   ];
 
   navigationPatterns.forEach(pattern => {
-    test(`should implement ${pattern.name} correctly`, async ({ page }) => {
+    test(`should implement ${pattern.name} correctly`, async ({page}) => {
       await page.goto(TEST_URLS.DASHBOARD);
       await page.waitForLoadState('networkidle');
 
       await test.step(`Testing ${pattern.name} functionality`, async () => {
         const element = page.locator(pattern.selector);
-        
+
         if (await element.isVisible()) {
           // Test basic functionality
           await testNavigationPattern(page, pattern);
-          
+
           // Test accessibility
           await testNavigationAccessibility(page, pattern);
-          
+
           // Test responsive behavior
           await testNavigationResponsiveness(page, pattern);
         } else {
@@ -119,7 +118,7 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
     });
   });
 
-  test('should handle hamburger menu interaction flow', async ({ page }) => {
+  test('should handle hamburger menu interaction flow', async ({page}) => {
     await page.goto(TEST_URLS.DASHBOARD);
     await page.waitForLoadState('networkidle');
 
@@ -152,14 +151,14 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
           const firstLink = navigationLinks.first();
           const linkText = await firstLink.textContent();
           const linkHref = await firstLink.getAttribute('href');
-          
+
           if (linkHref && !linkHref.startsWith('#')) {
             await firstLink.click();
             await page.waitForLoadState('networkidle');
-            
+
             // Drawer should close after navigation
             await expect(navigationDrawer).not.toBeVisible();
-            
+
             console.log(`Successfully navigated via drawer link: ${linkText}`);
           }
         }
@@ -167,7 +166,7 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
         // Test closing drawer with close button
         if (await navigationDrawer.isVisible()) {
           const closeButton = navigationDrawer.locator('[data-testid="drawer-close"], .close, [aria-label*="close"]');
-          
+
           if (await closeButton.isVisible()) {
             await closeButton.click();
             await page.waitForTimeout(300);
@@ -179,9 +178,9 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
         await hamburgerButton.click();
         await page.waitForTimeout(500);
         await expect(navigationDrawer).toBeVisible();
-        
+
         // Click outside drawer area
-        await page.click('body', { position: { x: 50, y: 50 } });
+        await page.click('body', {position: {x: 50, y: 50}});
         await page.waitForTimeout(300);
         await expect(navigationDrawer).not.toBeVisible();
 
@@ -189,7 +188,7 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
         await hamburgerButton.click();
         await page.waitForTimeout(500);
         await expect(navigationDrawer).toBeVisible();
-        
+
         await page.keyboard.press('Escape');
         await page.waitForTimeout(300);
         await expect(navigationDrawer).not.toBeVisible();
@@ -197,7 +196,7 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
     }
   });
 
-  test('should handle bottom tab navigation', async ({ page }) => {
+  test('should handle bottom tab navigation', async ({page}) => {
     await page.goto(TEST_URLS.DASHBOARD);
     await page.waitForLoadState('networkidle');
 
@@ -227,16 +226,16 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
           // Click on a different tab
           const secondTab = tabs.nth(1);
           const secondTabText = await secondTab.textContent();
-          
+
           await secondTab.click();
           await page.waitForTimeout(500);
 
           // Verify tab switched
           const newActiveTab = bottomNavigation.locator('[aria-selected="true"], .active, .selected');
           const newActiveIndex = await getTabIndex(newActiveTab);
-          
+
           expect(newActiveIndex).not.toBe(initialActiveIndex);
-          
+
           // Verify content changed (check URL or page content)
           const currentUrl = page.url();
           console.log(`Navigated to tab: ${secondTabText}, URL: ${currentUrl}`);
@@ -245,17 +244,17 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
           for (let i = 0; i < Math.min(tabCount, 4); i++) {
             const tab = tabs.nth(i);
             const tabLabel = await tab.textContent();
-            
+
             await tab.click();
             await page.waitForTimeout(300);
-            
+
             // Verify tab is active
             const isActive = await tab.evaluate(el => {
               return el.getAttribute('aria-selected') === 'true' ||
-                     el.classList.contains('active') ||
-                     el.classList.contains('selected');
+                  el.classList.contains('active') ||
+                  el.classList.contains('selected');
             });
-            
+
             expect(isActive).toBeTruthy();
             console.log(`Tab "${tabLabel}" is active: ${isActive}`);
           }
@@ -264,7 +263,7 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
     }
   });
 
-  test('should handle swipe navigation between tabs', async ({ page }) => {
+  test('should handle swipe navigation between tabs', async ({page}) => {
     await page.goto(TEST_URLS.ANALYTICS);
     await page.waitForLoadState('networkidle');
 
@@ -285,15 +284,15 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
         // Perform swipe left (next tab)
         await page.mouse.move(centerX + 100, centerY);
         await page.mouse.down();
-        await page.mouse.move(centerX - 100, centerY, { steps: 10 });
+        await page.mouse.move(centerX - 100, centerY, {steps: 10});
         await page.mouse.up();
-        
+
         await page.waitForTimeout(500); // Animation time
 
         // Check if tab changed
         const newActiveTab = page.locator('[aria-selected="true"], .active-tab, .current');
         const newTabText = await newActiveTab.textContent().catch(() => '');
-        
+
         if (newTabText !== initialTabText) {
           console.log(`Swipe navigation successful: "${initialTabText}" -> "${newTabText}"`);
         }
@@ -301,9 +300,9 @@ test.describe('Mobile Navigation - Primary Navigation Patterns', () => {
         // Perform swipe right (previous tab)
         await page.mouse.move(centerX - 100, centerY);
         await page.mouse.down();
-        await page.mouse.move(centerX + 100, centerY, { steps: 10 });
+        await page.mouse.move(centerX + 100, centerY, {steps: 10});
         await page.mouse.up();
-        
+
         await page.waitForTimeout(500);
 
         // Verify we can navigate back
@@ -337,12 +336,12 @@ test.describe('Mobile Navigation - Breadcrumb Adaptation', () => {
   ];
 
   breadcrumbTests.forEach(breadcrumbTest => {
-    test(`should adapt breadcrumbs on ${breadcrumbTest.page}`, async ({ page }) => {
-      let authHelper = new AuthHelper(page);
+    test(`should adapt breadcrumbs on ${breadcrumbTest.page}`, async ({page}) => {
+      const authHelper = new AuthHelper(page);
       await authHelper.loginWithTestUser();
 
       // Set mobile viewport
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize({width: 390, height: 844});
 
       await test.step(`Testing breadcrumb adaptation for ${breadcrumbTest.page}`, async () => {
         await page.goto(breadcrumbTest.url);
@@ -361,11 +360,11 @@ test.describe('Mobile Navigation - Breadcrumb Adaptation', () => {
     });
   });
 
-  test('should provide alternative navigation when breadcrumbs are hidden', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should provide alternative navigation when breadcrumbs are hidden', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
-    
-    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.setViewportSize({width: 390, height: 844});
     await page.goto(TEST_URLS.HIVE_LIST);
 
     await test.step('Alternative navigation when no breadcrumbs', async () => {
@@ -374,15 +373,15 @@ test.describe('Mobile Navigation - Breadcrumb Adaptation', () => {
       const hamburgerMenu = page.locator('[data-testid="mobile-menu-toggle"]');
 
       const hasBreadcrumbs = await breadcrumb.isVisible();
-      
+
       if (!hasBreadcrumbs) {
         // Should have alternative navigation methods
         const hasBackButton = await backButton.isVisible();
         const hasHamburgerMenu = await hamburgerMenu.isVisible();
-        
+
         const hasAlternativeNavigation = hasBackButton || hasHamburgerMenu;
         expect(hasAlternativeNavigation).toBeTruthy();
-        
+
         console.log('Alternative navigation available:', {
           backButton: hasBackButton,
           hamburgerMenu: hasHamburgerMenu
@@ -392,7 +391,7 @@ test.describe('Mobile Navigation - Breadcrumb Adaptation', () => {
         if (hasBackButton) {
           await backButton.click();
           await page.waitForTimeout(500);
-          
+
           // Should navigate back (check URL or page content changed)
           const currentUrl = page.url();
           console.log(`Back button navigated to: ${currentUrl}`);
@@ -403,11 +402,11 @@ test.describe('Mobile Navigation - Breadcrumb Adaptation', () => {
 });
 
 test.describe('Mobile Navigation - Deep Linking and State Management', () => {
-  test('should handle deep links with mobile navigation', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle deep links with mobile navigation', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
-    
-    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.setViewportSize({width: 390, height: 844});
 
     await test.step('Deep link navigation preservation', async () => {
       // Navigate to a deep page directly
@@ -432,7 +431,7 @@ test.describe('Mobile Navigation - Deep Linking and State Management', () => {
       if (await hamburger.isVisible()) {
         await hamburger.click();
         await page.waitForTimeout(500);
-        
+
         // Current page should be highlighted in drawer
         const drawerActiveItem = page.locator('[data-testid="navigation-drawer"] [aria-current], [data-testid="navigation-drawer"] .active');
         if (await drawerActiveItem.isVisible()) {
@@ -443,11 +442,11 @@ test.describe('Mobile Navigation - Deep Linking and State Management', () => {
     });
   });
 
-  test('should maintain navigation state during page transitions', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should maintain navigation state during page transitions', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
-    
-    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.setViewportSize({width: 390, height: 844});
 
     await test.step('Navigation state persistence', async () => {
       await page.goto(TEST_URLS.DASHBOARD);
@@ -460,7 +459,7 @@ test.describe('Mobile Navigation - Deep Linking and State Management', () => {
 
         // Navigate to different page from drawer
         const hiveLink = page.locator('[data-testid="navigation-drawer"] a[href*="hive"], [data-testid="navigation-drawer"] [data-testid*="hive"]');
-        
+
         if (await hiveLink.isVisible()) {
           await hiveLink.click();
           await page.waitForLoadState('networkidle');
@@ -480,11 +479,11 @@ test.describe('Mobile Navigation - Deep Linking and State Management', () => {
     });
   });
 
-  test('should handle browser back/forward with mobile navigation', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle browser back/forward with mobile navigation', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
-    
-    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.setViewportSize({width: 390, height: 844});
 
     await test.step('Browser navigation integration', async () => {
       // Navigate through several pages
@@ -500,7 +499,7 @@ test.describe('Mobile Navigation - Deep Linking and State Management', () => {
       // Use browser back
       await page.goBack();
       await page.waitForLoadState('networkidle');
-      
+
       // Verify we're at hive list
       expect(page.url()).toContain('hive');
 
@@ -525,11 +524,11 @@ test.describe('Mobile Navigation - Deep Linking and State Management', () => {
 });
 
 test.describe('Mobile Navigation - Error Handling and Edge Cases', () => {
-  test('should handle navigation errors gracefully', async ({ page }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle navigation errors gracefully', async ({page}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
-    
-    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.setViewportSize({width: 390, height: 844});
     await page.goto(TEST_URLS.DASHBOARD);
 
     await test.step('Navigation error handling', async () => {
@@ -541,7 +540,7 @@ test.describe('Mobile Navigation - Error Handling and Edge Cases', () => {
 
         // Try to navigate to a broken link (if any exist)
         const brokenLink = page.locator('[data-testid="navigation-drawer"] a[href="/non-existent"]');
-        
+
         if (await brokenLink.isVisible()) {
           await brokenLink.click();
           await page.waitForTimeout(2000);
@@ -549,21 +548,21 @@ test.describe('Mobile Navigation - Error Handling and Edge Cases', () => {
           // Should show error page or stay on current page
           const errorIndicator = page.locator('[data-testid="error-page"], .error, text="404"');
           const isStillOnDashboard = page.url().includes('dashboard');
-          
+
           const hasErrorHandling = await errorIndicator.isVisible() || isStillOnDashboard;
           expect(hasErrorHandling).toBeTruthy();
-          
+
           console.log(`Navigation error handled gracefully: ${hasErrorHandling}`);
         }
       }
     });
   });
 
-  test('should handle slow network during navigation', async ({ page, context }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle slow network during navigation', async ({page, context}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
-    
-    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.setViewportSize({width: 390, height: 844});
 
     // Simulate slow network
     const client = await context.newCDPSession(page);
@@ -584,20 +583,20 @@ test.describe('Mobile Navigation - Error Handling and Edge Cases', () => {
         await page.waitForTimeout(500);
 
         const navigationLink = page.locator('[data-testid="navigation-drawer"] a').first();
-        
+
         if (await navigationLink.isVisible()) {
           const startTime = Date.now();
           await navigationLink.click();
-          
+
           // Look for loading indicators
           const loadingIndicator = page.locator('[data-testid="loading"], .loading, .spinner');
-          const hasLoadingIndicator = await loadingIndicator.isVisible({ timeout: 1000 }).catch(() => false);
-          
-          await page.waitForLoadState('networkidle', { timeout: 15000 });
+          const hasLoadingIndicator = await loadingIndicator.isVisible({timeout: 1000}).catch(() => false);
+
+          await page.waitForLoadState('networkidle', {timeout: 15000});
           const loadTime = Date.now() - startTime;
-          
+
           console.log(`Navigation with slow network: ${loadTime}ms, loading indicator: ${hasLoadingIndicator}`);
-          
+
           // Should eventually complete navigation
           expect(loadTime).toBeLessThan(15000); // Should complete within 15 seconds
         }
@@ -610,109 +609,116 @@ test.describe('Mobile Navigation - Error Handling and Edge Cases', () => {
 
 async function testNavigationPattern(page: Page, pattern: NavigationPattern): Promise<void> {
   const element = page.locator(pattern.selector);
-  
+
   switch (pattern.type) {
-    case 'hamburger':
+    case 'hamburger': {
       await element.click();
       const drawer = page.locator('[data-testid="navigation-drawer"], [role="dialog"]');
-      await expect(drawer).toBeVisible({ timeout: 1000 });
+      await expect(drawer).toBeVisible({timeout: 1000});
       break;
-      
-    case 'bottom_tabs':
+    }
+
+    case 'bottom_tabs': {
       const tabs = element.locator('[role="tab"], .tab, a');
       const tabCount = await tabs.count();
       expect(tabCount).toBeGreaterThan(0);
       break;
-      
-    case 'drawer':
+    }
+
+    case 'drawer': {
       const isVisible = await element.isVisible();
       // Drawer visibility depends on current state
       console.log(`Drawer visible: ${isVisible}`);
       break;
-      
-    case 'swipe':
+    }
+
+    case 'swipe': {
       // Test swipe capability would require more complex interaction
       const isSwipeable = await element.evaluate(el => {
         return el.getAttribute('data-swipeable') === 'true' ||
-               el.classList.contains('swipeable') ||
-               window.getComputedStyle(el).overflowX === 'auto';
+            el.classList.contains('swipeable') ||
+            window.getComputedStyle(el).overflowX === 'auto';
       });
       console.log(`Swipeable container detected: ${isSwipeable}`);
       break;
+    }
   }
 }
 
 async function testNavigationAccessibility(page: Page, pattern: NavigationPattern): Promise<void> {
   const element = page.locator(pattern.selector);
-  
+
   if (pattern.accessibility.hasAriaLabels) {
     const ariaLabel = await element.getAttribute('aria-label');
     const ariaLabelledBy = await element.getAttribute('aria-labelledby');
-    
+
     const hasAriaLabeling = !!(ariaLabel || ariaLabelledBy);
     expect(hasAriaLabeling).toBeTruthy();
   }
-  
+
   if (pattern.accessibility.keyboardAccessible) {
     const tabIndex = await element.getAttribute('tabindex');
     const isButton = await element.evaluate(el => el.tagName.toLowerCase() === 'button');
     const isLink = await element.evaluate(el => el.tagName.toLowerCase() === 'a');
-    
+
     const isKeyboardAccessible = tabIndex !== '-1' && (isButton || isLink || tabIndex === '0');
     expect(isKeyboardAccessible).toBeTruthy();
   }
-  
+
   if (pattern.accessibility.screenReaderFriendly) {
     const role = await element.getAttribute('role');
-    const hasRole = !!role;
+    const _hasRole = !!role;
     console.log(`Screen reader role for ${pattern.name}: ${role || 'none'}`);
   }
 }
 
 async function testNavigationResponsiveness(page: Page, pattern: NavigationPattern): Promise<void> {
   const viewports = [390, 768, 1024];
-  
+
   for (const width of viewports) {
-    await page.setViewportSize({ width, height: 800 });
+    await page.setViewportSize({width, height: 800});
     await page.waitForTimeout(300);
-    
+
     const element = page.locator(pattern.selector);
     const isVisible = await element.isVisible();
-    
+
     const expectedVisibility = getExpectedVisibility(pattern.type, width);
-    
+
     if (expectedVisibility !== 'flexible') {
       const shouldBeVisible = expectedVisibility === 'visible';
       expect(isVisible).toBe(shouldBeVisible);
     }
-    
+
     console.log(`${pattern.name} at ${width}px: ${isVisible ? 'visible' : 'hidden'}`);
   }
 }
 
 async function testBreadcrumbMobileAdaptation(
-  page: Page, 
-  breadcrumb: Locator, 
-  test: BreadcrumbTest
+    page: Page,
+    breadcrumb: Locator,
+    test: BreadcrumbTest
 ): Promise<void> {
   switch (test.mobileAdaptation) {
-    case 'hidden':
+    case 'hidden': {
       await expect(breadcrumb).not.toBeVisible();
       break;
-      
-    case 'collapsed':
+    }
+
+    case 'collapsed': {
       const collapsedIndicator = breadcrumb.locator('.collapsed, [data-collapsed="true"], text="..."');
       const hasCollapsedState = await collapsedIndicator.isVisible();
       console.log(`Breadcrumb collapsed state: ${hasCollapsedState}`);
       break;
-      
-    case 'horizontal_scroll':
+    }
+
+    case 'horizontal_scroll': {
       const scrollable = await breadcrumb.evaluate(el => {
         const style = window.getComputedStyle(el);
         return style.overflowX === 'auto' || style.overflowX === 'scroll';
       });
       expect(scrollable).toBeTruthy();
       break;
+    }
   }
 }
 
@@ -721,7 +727,7 @@ async function getTabIndex(tab: Locator): Promise<number> {
     const parent = tab.locator('..');
     const allTabs = parent.locator('[role="tab"], .tab, a');
     const tabCount = await allTabs.count();
-    
+
     for (let i = 0; i < tabCount; i++) {
       const currentTab = allTabs.nth(i);
       const isSame = await tab.evaluate((el, otherEl) => el === otherEl, await currentTab.elementHandle());

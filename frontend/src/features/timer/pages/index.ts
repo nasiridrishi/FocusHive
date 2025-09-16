@@ -1,1 +1,1 @@
-export { default as ProductivityDashboard } from './ProductivityDashboard'
+export {default as ProductivityDashboard} from './ProductivityDashboard'

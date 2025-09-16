@@ -2,6 +2,9 @@ plugins {
     id("org.springframework.boot") version "3.3.1"
     id("io.spring.dependency-management") version "1.1.5"
     id("java")
+    id("org.owasp.dependencycheck") version "9.0.6"
+    id("org.sonarqube") version "4.4.1.3373"
+    id("com.github.hierynomus.license") version "0.16.1"
 }
 
 group = "com.focushive"
@@ -24,7 +27,11 @@ repositories {
 
 dependencies {
     // Spring Boot Core
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-web") {
+        // Exclude Tomcat to use Undertow
+        exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
+    }
+    implementation("org.springframework.boot:spring-boot-starter-undertow")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -44,28 +51,45 @@ dependencies {
     
     // Email Support
     implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    
+    // AWS SES
+    implementation("software.amazon.awssdk:ses:2.27.21")
+    implementation("software.amazon.awssdk:auth:2.27.21")
     
     // Database
     implementation("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core:10.17.0")
     implementation("org.flywaydb:flyway-database-postgresql:10.17.0")
+    runtimeOnly("com.h2database:h2")
     
     // Redis for caching
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("redis.clients:jedis")
-    
+
+    // Bucket4j for rate limiting - commented out due to network issues
+    // implementation("com.bucket4j:bucket4j-core:8.10.0")
+    // implementation("com.bucket4j:bucket4j-redis:8.10.0")
+
     // OpenAPI Documentation
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     
     // Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j:3.1.1")
+    implementation("io.vavr:vavr:0.10.4")
     
     // Service Discovery
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.1")
     
-    // Monitoring
+    // Monitoring and Observability
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave:3.4.0")
+    implementation("io.opentelemetry:opentelemetry-exporter-zipkin:1.40.0")
+    
+    // AOP for performance monitoring
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.aspectj:aspectjweaver")
     
     // Development Tools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -142,4 +166,60 @@ tasks.register<Test>("unitTest") {
 
 tasks.bootJar {
     archiveFileName.set("notification-service.jar")
+}
+
+// OWASP Dependency Check Configuration - Temporarily disabled for deployment
+// dependencyCheck {
+//     format = "HTML"
+//     suppressionFile = "owasp-suppressions.xml"
+//     analyzers.assemblyEnabled.set(false)
+//     analyzers.nugetconfEnabled.set(false)
+//     analyzers.nodeEnabled.set(false)
+//     nvd.apiKey.set(System.getenv("NVD_API_KEY") ?: "")
+//     nvd.delay.set(6000)
+//     failBuildOnCVSS = 7.0f
+// }
+
+// SonarQube Configuration
+sonarqube {
+    properties {
+        property("sonar.projectKey", "focushive-notification-service")
+        property("sonar.projectName", "FocusHive Notification Service")
+        property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000")
+        property("sonar.login", System.getenv("SONAR_TOKEN") ?: "")
+        property("sonar.java.source", "21")
+        property("sonar.java.target", "21")
+        property("sonar.java.coveragePlugin", "jacoco")
+        property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+        property("sonar.exclusions", "**/dto/**,**/entity/**,**/config/**")
+    }
+}
+
+// License Check Configuration
+license {
+    header = file("LICENSE_HEADER")
+    include("**/*.java")
+    exclude("**/generated/**")
+    mapping("java", "SLASHSTAR_STYLE")
+}
+
+// Security Task Group
+tasks.register("securityCheck") {
+    group = "security"
+    description = "Run all security checks"
+    dependsOn(
+        // "dependencyCheckAnalyze", // Temporarily disabled due to plugin issues
+        "sonarqube",
+        "license"
+    )
+}
+
+// Pre-commit hook task
+tasks.register("preCommitChecks") {
+    group = "verification"
+    description = "Run checks before committing code"
+    dependsOn(
+        "test",
+        "dependencyCheckAnalyze"
+    )
 }

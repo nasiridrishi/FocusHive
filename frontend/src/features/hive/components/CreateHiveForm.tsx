@@ -1,42 +1,42 @@
-import React, { useState } from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  FormControl,
-  FormLabel,
-  FormGroup,
-  FormControlLabel,
-  Switch,
-  Select,
-  MenuItem,
-  InputLabel,
-  Chip,
-  Box,
-  Typography,
-  Stepper,
-  Step,
-  StepLabel,
   Alert,
   Autocomplete,
-  Paper,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Step,
+  StepLabel,
+  Stepper,
+  Switch,
+  TextField,
+  Typography,
 } from '@mui/material'
 import {
   Add as AddIcon,
-  Public as PublicIcon,
-  Lock as LockIcon,
   Group as GroupIcon,
+  Lock as LockIcon,
+  Public as PublicIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material'
-import { useForm, Controller, SubmitHandler, Resolver } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-import { CreateHiveRequest } from '@shared/types'
-import { LoadingButton } from '@shared/components/loading'
-import { createHiveSchema } from '@shared/validation/schemas'
+import {Controller, Resolver, SubmitHandler, useForm} from 'react-hook-form'
+import {yupResolver} from '@hookform/resolvers/yup'
+import {CreateHiveRequest} from '@shared/types'
+import {LoadingButton} from '@shared/components/loading'
+import {createHiveSchema} from '@shared/validation/schemas'
 
 // Form data type that matches what the form actually provides
 // We need to match the yup schema structure exactly
@@ -67,9 +67,13 @@ interface CreateHiveFormProps {
 const steps = ['Basic Info', 'Settings', 'Review']
 
 const focusModeOptions = [
-  { value: 'pomodoro', label: 'Pomodoro (25/5 min cycles)', description: 'Structured work sessions with breaks' },
-  { value: 'continuous', label: 'Continuous', description: 'Uninterrupted focus sessions' },
-  { value: 'flexible', label: 'Flexible', description: 'Members choose their own timing' },
+  {
+    value: 'pomodoro',
+    label: 'Pomodoro (25/5 min cycles)',
+    description: 'Structured work sessions with breaks'
+  },
+  {value: 'continuous', label: 'Continuous', description: 'Uninterrupted focus sessions'},
+  {value: 'flexible', label: 'Flexible', description: 'Members choose their own timing'},
 ]
 
 const commonTags = [
@@ -79,20 +83,21 @@ const commonTags = [
 ]
 
 export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
-  open,
-  onClose,
-  onSubmit,
-  isLoading = false,
-  error = null,
-}) => {
+                                                                open,
+                                                                onClose,
+                                                                onSubmit,
+                                                                isLoading = false,
+                                                                error = null,
+                                                              }) => {
   const [activeStep, setActiveStep] = useState(0)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   const {
     control,
     handleSubmit,
     watch,
     trigger,
-    formState: { isValid },
+    formState: {isValid},
     reset
   } = useForm<CreateHiveFormData>({
     resolver: yupResolver(createHiveSchema) as Resolver<CreateHiveFormData>,
@@ -120,7 +125,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
   const handleNext = async () => {
     // Validate current step before proceeding
     let fieldsToValidate: (keyof CreateHiveFormData)[] = []
-    
+
     switch (activeStep) {
       case 0:
         fieldsToValidate = ['name', 'description', 'maxMembers', 'isPublic', 'tags']
@@ -136,7 +141,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     }
   }
 
-  const handleBack = () => {
+  const handleBack = (): void => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1)
   }
 
@@ -160,7 +165,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     onSubmit(apiData)
   }
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     if (!isLoading) {
       onClose()
       // Reset form after dialog closes
@@ -171,7 +176,7 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     }
   }
 
-  const isStepValid = (step: number) => {
+  const isStepValid = (step: number): boolean => {
     switch (step) {
       case 0:
         return watchedValues.name?.trim().length >= 3 && watchedValues.description?.trim().length >= 10
@@ -184,315 +189,328 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
     }
   }
 
-  const renderStepContent = (step: number) => {
+  useEffect(() => {
+    // Focus the name input when dialog opens and we're on the first step
+    if (open && activeStep === 0 && nameInputRef.current) {
+      // Use setTimeout to ensure the dialog is fully rendered
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [open, activeStep])
+
+  const renderStepContent = (step: number): React.ReactElement | null => {
     switch (step) {
       case 0:
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Controller
-              name="name"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  autoFocus
-                  label="Hive Name"
-                  placeholder="e.g., Study Group, Writing Circle, Code Jam"
-                  fullWidth
-                  required
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message || `${field.value?.length || 0}/50 characters`}
-                  inputProps={{ maxLength: 50 }}
-                />
-              )}
-            />
-
-            <Controller
-              name="description"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  label="Description"
-                  placeholder="Describe the purpose and goals of your hive..."
-                  fullWidth
-                  required
-                  multiline
-                  rows={4}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message || `${field.value?.length || 0}/500 characters`}
-                  inputProps={{ maxLength: 500 }}
-                />
-              )}
-            />
-
-            <Controller
-              name="maxMembers"
-              control={control}
-              render={({ field, fieldState }) => (
-                <FormControl fullWidth error={!!fieldState.error}>
-                  <InputLabel>Maximum Members</InputLabel>
-                  <Select
-                    {...field}
-                    label="Maximum Members"
-                  >
-                    {[5, 10, 15, 20, 25, 30, 50].map(num => (
-                      <MenuItem key={num} value={num}>{num} members</MenuItem>
-                    ))}
-                  </Select>
-                  {fieldState.error && (
-                    <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
-                      {fieldState.error.message}
-                    </Typography>
-                  )}
-                </FormControl>
-              )}
-            />
-
-            <Controller
-              name="isPublic"
-              control={control}
-              render={({ field }) => (
-                <FormControlLabel
-                  control={
-                    <Switch
-                      {...field}
-                      checked={field.value}
-                      color="primary"
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {field.value ? <PublicIcon /> : <LockIcon />}
-                      {field.value ? 'Public Hive' : 'Private Hive'}
-                    </Box>
-                  }
-                />
-              )}
-            />
-
-            <Typography variant="body2" color="text.secondary">
-              {watchedValues.isPublic 
-                ? 'Anyone can discover and join this hive'
-                : 'Only invited members can join this hive'
-              }
-            </Typography>
-
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Tags (help others discover your hive)
-              </Typography>
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
               <Controller
-                name="tags"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Autocomplete
-                    {...field}
-                    multiple
-                    freeSolo
-                    options={commonTags}
-                    value={field.value || []}
-                    onChange={(_, newValue) => field.onChange(newValue)}
-                    renderTags={(value, getTagProps) =>
-                      value.map((option, index) => (
-                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
-                      ))
-                    }
-                    renderInput={(params) => (
+                  name="name"
+                  control={control}
+                  render={({field, fieldState}) => (
                       <TextField
-                        {...params}
-                        placeholder="Add tags..."
-                        error={!!fieldState.error}
-                        helperText={fieldState.error?.message || "Press Enter to add custom tags"}
+                          {...field}
+                          inputRef={nameInputRef}
+                          label="Hive Name"
+                          placeholder="e.g., Study Group, Writing Circle, Code Jam"
+                          fullWidth
+                          required
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message || `${field.value?.length || 0}/50 characters`}
+                          inputProps={{maxLength: 50}}
                       />
-                    )}
-                  />
-                )}
+                  )}
               />
+
+              <Controller
+                  name="description"
+                  control={control}
+                  render={({field, fieldState}) => (
+                      <TextField
+                          {...field}
+                          label="Description"
+                          placeholder="Describe the purpose and goals of your hive..."
+                          fullWidth
+                          required
+                          multiline
+                          rows={4}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message || `${field.value?.length || 0}/500 characters`}
+                          inputProps={{maxLength: 500}}
+                      />
+                  )}
+              />
+
+              <Controller
+                  name="maxMembers"
+                  control={control}
+                  render={({field, fieldState}) => (
+                      <FormControl fullWidth error={!!fieldState.error}>
+                        <InputLabel>Maximum Members</InputLabel>
+                        <Select
+                            {...field}
+                            label="Maximum Members"
+                        >
+                          {[5, 10, 15, 20, 25, 30, 50].map(num => (
+                              <MenuItem key={num} value={num}>{num} members</MenuItem>
+                          ))}
+                        </Select>
+                        {fieldState.error && (
+                            <Typography variant="caption" color="error" sx={{ml: 2, mt: 0.5}}>
+                              {fieldState.error.message}
+                            </Typography>
+                        )}
+                      </FormControl>
+                  )}
+              />
+
+              <Controller
+                  name="isPublic"
+                  control={control}
+                  render={({field}) => (
+                      <FormControlLabel
+                          control={
+                            <Switch
+                                {...field}
+                                checked={field.value}
+                                color="primary"
+                            />
+                          }
+                          label={
+                            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                              {field.value ? <PublicIcon/> : <LockIcon/>}
+                              {field.value ? 'Public Hive' : 'Private Hive'}
+                            </Box>
+                          }
+                      />
+                  )}
+              />
+
+              <Typography variant="body2" color="text.secondary">
+                {watchedValues.isPublic
+                    ? 'Anyone can discover and join this hive'
+                    : 'Only invited members can join this hive'
+                }
+              </Typography>
+
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Tags (help others discover your hive)
+                </Typography>
+                <Controller
+                    name="tags"
+                    control={control}
+                    render={({field, fieldState}) => (
+                        <Autocomplete
+                            {...field}
+                            multiple
+                            freeSolo
+                            options={commonTags}
+                            value={field.value || []}
+                            onChange={(_, newValue) => field.onChange(newValue)}
+                            renderTags={(value, getTagProps) =>
+                                value.map((option, index) => (
+                                    <Chip variant="outlined"
+                                          label={option} {...getTagProps({index})} />
+                                ))
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    placeholder="Add tags..."
+                                    error={!!fieldState.error}
+                                    helperText={fieldState.error?.message || "Press Enter to add custom tags"}
+                                />
+                            )}
+                        />
+                    )}
+                />
+              </Box>
             </Box>
-          </Box>
         )
 
       case 1:
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <SettingsIcon />
-              Hive Settings
-            </Typography>
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
+              <Typography variant="h6" sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                <SettingsIcon/>
+                Hive Settings
+              </Typography>
 
-            <FormControl component="fieldset">
-              <FormLabel component="legend">Communication</FormLabel>
-              <FormGroup>
-                <Controller
-                  name="settings.allowChat"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          {...field}
-                          checked={field.value}
-                        />
-                      }
-                      label="Allow chat messages"
-                    />
-                  )}
-                />
-                <Controller
-                  name="settings.allowVoice"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          {...field}
-                          checked={field.value}
-                        />
-                      }
-                      label="Allow voice calls (coming soon)"
-                      disabled
-                    />
-                  )}
-                />
-              </FormGroup>
-            </FormControl>
-
-            <Controller
-              name="settings.requireApproval"
-              control={control}
-              render={({ field }) => (
-                <FormControlLabel
-                  control={
-                    <Switch
-                      {...field}
-                      checked={field.value}
-                    />
-                  }
-                  label="Require approval to join"
-                />
-              )}
-            />
-
-            <Controller
-              name="settings.focusMode"
-              control={control}
-              render={({ field, fieldState }) => (
-                <FormControl fullWidth error={!!fieldState.error}>
-                  <InputLabel>Focus Mode</InputLabel>
-                  <Select
-                    {...field}
-                    label="Focus Mode"
-                  >
-                    {focusModeOptions.map(option => (
-                      <MenuItem key={option.value} value={option.value}>
-                        <Box>
-                          <Typography variant="body1">{option.label}</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {option.description}
-                          </Typography>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {fieldState.error && (
-                    <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>
-                      {fieldState.error.message}
-                    </Typography>
-                  )}
-                </FormControl>
-              )}
-            />
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Controller
-                name="settings.defaultSessionLength"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    label="Default Session (minutes)"
-                    type="number"
-                    inputProps={{ min: 5, max: 120, step: 5 }}
-                    sx={{ flex: 1 }}
-                    error={!!fieldState.error}
-                    helperText={fieldState.error?.message}
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Communication</FormLabel>
+                <FormGroup>
+                  <Controller
+                      name="settings.allowChat"
+                      control={control}
+                      render={({field}) => (
+                          <FormControlLabel
+                              control={
+                                <Switch
+                                    {...field}
+                                    checked={field.value}
+                                />
+                              }
+                              label="Allow chat messages"
+                          />
+                      )}
                   />
-                )}
-              />
-              <Controller
-                name="settings.maxSessionLength"
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    label="Max Session (minutes)"
-                    type="number"
-                    inputProps={{ min: 30, max: 480, step: 15 }}
-                    sx={{ flex: 1 }}
-                    error={!!fieldState.error}
-                    helperText={fieldState.error?.message}
+                  <Controller
+                      name="settings.allowVoice"
+                      control={control}
+                      render={({field}) => (
+                          <FormControlLabel
+                              control={
+                                <Switch
+                                    {...field}
+                                    checked={field.value}
+                                />
+                              }
+                              label="Allow voice calls (coming soon)"
+                              disabled
+                          />
+                      )}
                   />
-                )}
+                </FormGroup>
+              </FormControl>
+
+              <Controller
+                  name="settings.requireApproval"
+                  control={control}
+                  render={({field}) => (
+                      <FormControlLabel
+                          control={
+                            <Switch
+                                {...field}
+                                checked={field.value}
+                            />
+                          }
+                          label="Require approval to join"
+                      />
+                  )}
               />
+
+              <Controller
+                  name="settings.focusMode"
+                  control={control}
+                  render={({field, fieldState}) => (
+                      <FormControl fullWidth error={!!fieldState.error}>
+                        <InputLabel>Focus Mode</InputLabel>
+                        <Select
+                            {...field}
+                            label="Focus Mode"
+                        >
+                          {focusModeOptions.map(option => (
+                              <MenuItem key={option.value} value={option.value}>
+                                <Box>
+                                  <Typography variant="body1">{option.label}</Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {option.description}
+                                  </Typography>
+                                </Box>
+                              </MenuItem>
+                          ))}
+                        </Select>
+                        {fieldState.error && (
+                            <Typography variant="caption" color="error" sx={{ml: 2, mt: 0.5}}>
+                              {fieldState.error.message}
+                            </Typography>
+                        )}
+                      </FormControl>
+                  )}
+              />
+
+              <Box sx={{display: 'flex', gap: 2}}>
+                <Controller
+                    name="settings.defaultSessionLength"
+                    control={control}
+                    render={({field, fieldState}) => (
+                        <TextField
+                            {...field}
+                            label="Default Session (minutes)"
+                            type="number"
+                            inputProps={{min: 5, max: 120, step: 5}}
+                            sx={{flex: 1}}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                        />
+                    )}
+                />
+                <Controller
+                    name="settings.maxSessionLength"
+                    control={control}
+                    render={({field, fieldState}) => (
+                        <TextField
+                            {...field}
+                            label="Max Session (minutes)"
+                            type="number"
+                            inputProps={{min: 30, max: 480, step: 15}}
+                            sx={{flex: 1}}
+                            error={!!fieldState.error}
+                            helperText={fieldState.error?.message}
+                        />
+                    )}
+                />
+              </Box>
             </Box>
-          </Box>
         )
 
       case 2:
         return (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Typography variant="h6">Review Your Hive</Typography>
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: 3}}>
+              <Typography variant="h6">Review Your Hive</Typography>
 
-            <Paper variant="outlined" sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <GroupIcon color="primary" />
-                <Typography variant="h6">{watchedValues.name}</Typography>
-                <Chip
-                  size="small"
-                  icon={watchedValues.isPublic ? <PublicIcon /> : <LockIcon />}
-                  label={watchedValues.isPublic ? 'Public' : 'Private'}
-                  color={watchedValues.isPublic ? 'success' : 'warning'}
-                />
-              </Box>
+              <Paper variant="outlined" sx={{p: 3}}>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 2, mb: 2}}>
+                  <GroupIcon color="primary"/>
+                  <Typography variant="h6">{watchedValues.name}</Typography>
+                  <Chip
+                      size="small"
+                      icon={watchedValues.isPublic ? <PublicIcon/> : <LockIcon/>}
+                      label={watchedValues.isPublic ? 'Public' : 'Private'}
+                      color={watchedValues.isPublic ? 'success' : 'warning'}
+                  />
+                </Box>
 
-              <Typography variant="body1" color="text.secondary" paragraph>
-                {watchedValues.description}
-              </Typography>
-
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                {watchedValues.tags?.map(tag => (
-                  <Chip key={tag} size="small" label={tag} variant="outlined" />
-                ))}
-              </Box>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="subtitle2" gutterBottom>Settings</Typography>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                <Typography variant="body2">Max Members: {watchedValues.maxMembers}</Typography>
-                <Typography variant="body2">Focus Mode: {watchedValues.settings?.focusMode}</Typography>
-                <Typography variant="body2">
-                  Chat: {watchedValues.settings?.allowChat ? 'Enabled' : 'Disabled'}
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  {watchedValues.description}
                 </Typography>
-                <Typography variant="body2">
-                  Approval: {watchedValues.settings?.requireApproval ? 'Required' : 'Not Required'}
-                </Typography>
-                <Typography variant="body2">
-                  Default Session: {watchedValues.settings?.defaultSessionLength}m
-                </Typography>
-                <Typography variant="body2">
-                  Max Session: {watchedValues.settings?.maxSessionLength}m
-                </Typography>
-              </Box>
-            </Paper>
 
-            {error && (
-              <Alert severity="error">
-                {error}
-              </Alert>
-            )}
-          </Box>
+                <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2}}>
+                  {watchedValues.tags?.map(tag => (
+                      <Chip key={tag} size="small" label={tag} variant="outlined"/>
+                  ))}
+                </Box>
+
+                <Divider sx={{my: 2}}/>
+
+                <Typography variant="subtitle2" gutterBottom>Settings</Typography>
+                <Box sx={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1}}>
+                  <Typography variant="body2">Max Members: {watchedValues.maxMembers}</Typography>
+                  <Typography variant="body2">Focus
+                    Mode: {watchedValues.settings?.focusMode}</Typography>
+                  <Typography variant="body2">
+                    Chat: {watchedValues.settings?.allowChat ? 'Enabled' : 'Disabled'}
+                  </Typography>
+                  <Typography variant="body2">
+                    Approval: {watchedValues.settings?.requireApproval ? 'Required' : 'Not Required'}
+                  </Typography>
+                  <Typography variant="body2">
+                    Default Session: {watchedValues.settings?.defaultSessionLength}m
+                  </Typography>
+                  <Typography variant="body2">
+                    Max Session: {watchedValues.settings?.maxSessionLength}m
+                  </Typography>
+                </Box>
+              </Paper>
+
+              {error && (
+                  <Alert severity="error">
+                    {error}
+                  </Alert>
+              )}
+            </Box>
         )
 
       default:
@@ -501,69 +519,69 @@ export const CreateHiveForm: React.FC<CreateHiveFormProps> = ({
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="desktop"
-      fullWidth
-      PaperProps={{
-        sx: { borderRadius: 2, minHeight: 600 }
-      }}
-    >
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AddIcon />
-          Create New Hive
-        </Box>
-      </DialogTitle>
+      <Dialog
+          open={open}
+          onClose={handleClose}
+          maxWidth="desktop"
+          fullWidth
+          PaperProps={{
+            sx: {borderRadius: 2, minHeight: 600}
+          }}
+      >
+        <DialogTitle>
+          <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+            <AddIcon/>
+            Create New Hive
+          </Box>
+        </DialogTitle>
 
-      <DialogContent>
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        <DialogContent>
+          <Stepper activeStep={activeStep} sx={{mb: 4}}>
+            {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+            ))}
+          </Stepper>
 
-        {renderStepContent(activeStep)}
-      </DialogContent>
+          {renderStepContent(activeStep)}
+        </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button onClick={handleClose} disabled={isLoading}>
-          Cancel
-        </Button>
-        
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          {activeStep > 0 && (
-            <Button onClick={handleBack} disabled={isLoading}>
-              Back
-            </Button>
-          )}
-          
-          {activeStep < steps.length - 1 ? (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-              disabled={!isStepValid(activeStep)}
-            >
-              Next
-            </Button>
-          ) : (
-            <LoadingButton
-              variant="contained"
-              onClick={handleSubmit(onFormSubmit)}
-              disabled={!isStepValid(activeStep)}
-              loading={isLoading}
-              loadingText="Creating..."
-              startIcon={<AddIcon />}
-            >
-              Create Hive
-            </LoadingButton>
-          )}
-        </Box>
-      </DialogActions>
-    </Dialog>
+        <DialogActions sx={{px: 3, pb: 3}}>
+          <Button onClick={handleClose} disabled={isLoading}>
+            Cancel
+          </Button>
+
+          <Box sx={{display: 'flex', gap: 1}}>
+            {activeStep > 0 && (
+                <Button onClick={handleBack} disabled={isLoading}>
+                  Back
+                </Button>
+            )}
+
+            {activeStep < steps.length - 1 ? (
+                <Button
+                    variant="contained"
+                    onClick={handleNext}
+                    disabled={!isStepValid(activeStep)}
+                >
+                  Next
+                </Button>
+            ) : (
+                <LoadingButton
+                    variant="contained"
+                    onClick={handleSubmit(onFormSubmit)}
+                    disabled={!isStepValid(activeStep)}
+                    loading={isLoading}
+                    loadingText="Creating..."
+                    startIcon={<AddIcon/>}
+                >
+                  Create Hive
+                </LoadingButton>
+            )}
+          </Box>
+        </DialogActions>
+      </Dialog>
   )
 }
 

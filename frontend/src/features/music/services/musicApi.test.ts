@@ -1,4 +1,8 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
+// Import after mocking
+import axios from 'axios'
+import {default as musicApi} from './musicApi'
+import type {CreatePlaylistRequest, SearchTracksRequest} from '../types/music'
 
 // Mock axios before any imports
 vi.mock('axios', () => {
@@ -17,18 +21,13 @@ vi.mock('axios', () => {
       },
     },
   }
-  
+
   return {
     default: {
       create: vi.fn(() => mockInstance),
     },
   }
 })
-
-// Import after mocking
-import axios from 'axios'
-import { default as musicApi } from './musicApi'
-import type { CreatePlaylistRequest, SearchTracksRequest } from '../types/music'
 
 // Get the mocked axios instance
 const mockedAxios = vi.mocked(axios)
@@ -87,12 +86,12 @@ describe('MusicApiService', () => {
       ]
 
       mockAxiosInstance.get.mockResolvedValue({
-        data: { data: mockPlaylists, success: true },
+        data: {data: mockPlaylists, success: true},
         status: 200,
       })
 
       const result = await musicApi.getUserPlaylists()
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists/user', { params: {} })
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists/user', {params: {}})
       expect(result).toEqual(mockPlaylists)
     })
 
@@ -101,14 +100,14 @@ describe('MusicApiService', () => {
         data: {
           data: [],
           success: true,
-          pagination: { page: 2, limit: 10, total: 0, totalPages: 1 },
+          pagination: {page: 2, limit: 10, total: 0, totalPages: 1},
         },
         status: 200,
       })
 
       await musicApi.getUserPlaylists('user123')
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('/playlists/user', {
-        params: { userId: 'user123' },
+        params: {userId: 'user123'},
       })
     })
 
@@ -131,7 +130,7 @@ describe('MusicApiService', () => {
       }
 
       mockAxiosInstance.post.mockResolvedValue({
-        data: { data: mockPlaylist, success: true },
+        data: {data: mockPlaylist, success: true},
         status: 201,
       })
 
@@ -165,7 +164,7 @@ describe('MusicApiService', () => {
       }
 
       mockAxiosInstance.get.mockResolvedValue({
-        data: { data: mockResponse, success: true },
+        data: {data: mockResponse, success: true},
         status: 200,
       })
 
@@ -182,7 +181,7 @@ describe('MusicApiService', () => {
       const errorResponse = {
         response: {
           status: 400,
-          data: { error: 'Bad Request', message: 'Invalid parameters' },
+          data: {error: 'Bad Request', message: 'Invalid parameters'},
         },
       }
 

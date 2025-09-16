@@ -56,6 +56,14 @@ public class OAuth2UserInfoResponse {
     @Schema(description = "User timezone", example = "America/New_York")
     private String zoneinfo;
 
+    @JsonProperty("phone_number")
+    @Schema(description = "Phone number", example = "+1-555-123-4567")
+    private String phoneNumber;
+
+    @JsonProperty("phone_number_verified")
+    @Schema(description = "Phone number verification status", example = "true")
+    private Boolean phoneNumberVerified;
+
     @JsonProperty("updated_at")
     @Schema(description = "Last update timestamp", example = "1620000000")
     private Long updatedAt;

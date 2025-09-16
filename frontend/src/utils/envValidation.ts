@@ -1,10 +1,10 @@
 /**
  * Environment Variable Validation for FocusHive Frontend
- * 
+ *
  * This module provides comprehensive validation of VITE_* environment variables
  * using Zod schema validation. It ensures all required variables are present
  * at startup and provides clear error messages for missing/invalid configuration.
- * 
+ *
  * Features:
  * - TypeScript-first validation with Zod
  * - Clear error messages for missing variables
@@ -14,24 +14,24 @@
  * - Comprehensive logging of validated configuration
  */
 
-import { z } from 'zod';
+import {z} from 'zod';
 
 // URL validation schema that accepts both HTTP and HTTPS
 const urlSchema = z
-  .string()
-  .url('Must be a valid URL')
-  .refine(
+.string()
+.url('Must be a valid URL')
+.refine(
     (url) => url.startsWith('http://') || url.startsWith('https://'),
     'URL must start with http:// or https://'
-  );
+);
 
 // WebSocket URL validation schema
 const wsUrlSchema = z
-  .string()
-  .refine(
+.string()
+.refine(
     (url) => url.startsWith('ws://') || url.startsWith('wss://'),
     'WebSocket URL must start with ws:// or wss://'
-  );
+);
 
 // Environment validation schema
 const environmentSchema = z.object({
@@ -41,50 +41,50 @@ const environmentSchema = z.object({
   VITE_AUTH_DOMAIN: z.string().min(1, 'Auth domain is required').describe('Authentication service domain'),
   VITE_SPOTIFY_CLIENT_ID: z.string().min(1, 'Spotify Client ID is required').describe('Spotify Web API Client ID'),
   VITE_ENV: z.enum(['development', 'staging', 'production'], {
-    errorMap: () => ({ message: 'Environment must be development, staging, or production' })
+    message: 'Environment must be development, staging, or production'
   }).describe('Application environment'),
 
   // Optional Variables with Defaults
   VITE_API_TIMEOUT: z.coerce
-    .number()
-    .min(1000, 'API timeout must be at least 1000ms')
-    .max(120000, 'API timeout must not exceed 120000ms')
-    .default(30000)
-    .describe('API request timeout in milliseconds'),
-  
+  .number()
+  .min(1000, 'API timeout must be at least 1000ms')
+  .max(120000, 'API timeout must not exceed 120000ms')
+  .default(30000)
+  .describe('API request timeout in milliseconds'),
+
   VITE_MAX_RETRIES: z.coerce
-    .number()
-    .min(0, 'Max retries cannot be negative')
-    .max(10, 'Max retries cannot exceed 10')
-    .default(3)
-    .describe('Maximum number of API retry attempts'),
-  
+  .number()
+  .min(0, 'Max retries cannot be negative')
+  .max(10, 'Max retries cannot exceed 10')
+  .default(3)
+  .describe('Maximum number of API retry attempts'),
+
   VITE_DEBUG: z.coerce
-    .boolean()
-    .default(false)
-    .describe('Enable debug logging'),
+  .boolean()
+  .default(false)
+  .describe('Enable debug logging'),
 
   // WebSocket Configuration (Optional)
   VITE_WEBSOCKET_RECONNECT_ATTEMPTS: z.coerce
-    .number()
-    .min(1, 'Reconnect attempts must be at least 1')
-    .max(50, 'Reconnect attempts cannot exceed 50')
-    .default(10)
-    .describe('WebSocket reconnection attempts'),
-  
+  .number()
+  .min(1, 'Reconnect attempts must be at least 1')
+  .max(50, 'Reconnect attempts cannot exceed 50')
+  .default(10)
+  .describe('WebSocket reconnection attempts'),
+
   VITE_WEBSOCKET_RECONNECT_DELAY: z.coerce
-    .number()
-    .min(100, 'Reconnect delay must be at least 100ms')
-    .max(30000, 'Reconnect delay cannot exceed 30 seconds')
-    .default(1000)
-    .describe('WebSocket reconnection delay in milliseconds'),
-  
+  .number()
+  .min(100, 'Reconnect delay must be at least 100ms')
+  .max(30000, 'Reconnect delay cannot exceed 30 seconds')
+  .default(1000)
+  .describe('WebSocket reconnection delay in milliseconds'),
+
   VITE_WEBSOCKET_HEARTBEAT_INTERVAL: z.coerce
-    .number()
-    .min(5000, 'Heartbeat interval must be at least 5 seconds')
-    .max(300000, 'Heartbeat interval cannot exceed 5 minutes')
-    .default(30000)
-    .describe('WebSocket heartbeat interval in milliseconds'),
+  .number()
+  .min(5000, 'Heartbeat interval must be at least 5 seconds')
+  .max(300000, 'Heartbeat interval cannot exceed 5 minutes')
+  .default(30000)
+  .describe('WebSocket heartbeat interval in milliseconds'),
 
   // Music Service Configuration (Optional)
   VITE_MUSIC_SERVICE_URL: urlSchema.optional().describe('Music service URL'),
@@ -101,7 +101,7 @@ export type ValidatedEnvironment = z.infer<typeof environmentSchema>;
 
 /**
  * Validates environment variables and returns a typed configuration object
- * 
+ *
  * @throws {Error} If required environment variables are missing or invalid
  * @returns {ValidatedEnvironment} Validated and typed environment configuration
  */
@@ -131,23 +131,8 @@ export function validateEnvironment(): ValidatedEnvironment {
     const validatedEnv = environmentSchema.parse(rawEnv);
 
     // Log successful validation (without sensitive data)
-    console.info('✅ Environment validation successful');
-    console.info('📋 Environment Configuration:', {
-      environment: validatedEnv.VITE_ENV,
-      apiUrl: validatedEnv.VITE_API_URL,
-      wsUrl: validatedEnv.VITE_WS_URL,
-      authDomain: validatedEnv.VITE_AUTH_DOMAIN,
-      spotifyConfigured: !!validatedEnv.VITE_SPOTIFY_CLIENT_ID,
-      apiTimeout: validatedEnv.VITE_API_TIMEOUT,
-      maxRetries: validatedEnv.VITE_MAX_RETRIES,
-      debugMode: validatedEnv.VITE_DEBUG,
-      wsReconnectAttempts: validatedEnv.VITE_WEBSOCKET_RECONNECT_ATTEMPTS,
-      wsReconnectDelay: validatedEnv.VITE_WEBSOCKET_RECONNECT_DELAY,
-      wsHeartbeatInterval: validatedEnv.VITE_WEBSOCKET_HEARTBEAT_INTERVAL,
-      musicServiceConfigured: !!validatedEnv.VITE_MUSIC_SERVICE_URL,
-      errorLoggingConfigured: !!validatedEnv.VITE_ERROR_LOGGING_ENDPOINT,
-    });
-
+    // Debug statement removed
+    // Debug statement removed
     return validatedEnv;
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -157,7 +142,7 @@ export function validateEnvironment(): ValidatedEnvironment {
 
       error.issues.forEach((issue) => {
         const varName = issue.path.join('.');
-        if (issue.code === 'invalid_type' && issue.received === 'undefined') {
+        if (issue.code === 'invalid_type' && 'received' in issue && issue.received === 'undefined') {
           missingVars.push(varName);
         } else {
           invalidVars.push(`${varName}: ${issue.message}`);
@@ -165,7 +150,7 @@ export function validateEnvironment(): ValidatedEnvironment {
       });
 
       let errorMessage = '❌ Environment Validation Failed!\n\n';
-      
+
       if (missingVars.length > 0) {
         errorMessage += '🚨 Missing Required Environment Variables:\n';
         missingVars.forEach(varName => {
@@ -189,7 +174,7 @@ export function validateEnvironment(): ValidatedEnvironment {
       errorMessage += '4. Restart the development server\n\n';
       errorMessage += '📚 See .env.example for detailed configuration examples';
 
-      console.error(errorMessage);
+      // Debug statement removed
       throw new Error(errorMessage);
     }
 

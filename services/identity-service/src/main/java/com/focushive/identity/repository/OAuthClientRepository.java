@@ -1,7 +1,10 @@
 package com.focushive.identity.repository;
 
 import com.focushive.identity.entity.OAuthClient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -51,6 +54,26 @@ public interface OAuthClientRepository extends JpaRepository<OAuthClient, UUID> 
     /**
      * Update last used timestamp.
      */
+    @Modifying
     @Query("UPDATE OAuthClient c SET c.lastUsedAt = :timestamp WHERE c.id = :clientId")
     void updateLastUsedAt(@Param("clientId") UUID clientId, @Param("timestamp") Instant timestamp);
+
+    /**
+     * Find clients by enabled status with pagination.
+     */
+    Page<OAuthClient> findByEnabled(boolean enabled, Pageable pageable);
+
+    /**
+     * Search clients by name with pagination.
+     */
+    @Query("SELECT c FROM OAuthClient c WHERE LOWER(c.clientName) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    Page<OAuthClient> searchByName(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    /**
+     * Search clients by name and enabled status with pagination.
+     */
+    @Query("SELECT c FROM OAuthClient c WHERE LOWER(c.clientName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) AND c.enabled = :enabled")
+    Page<OAuthClient> searchByNameAndEnabled(@Param("searchTerm") String searchTerm,
+                                            @Param("enabled") boolean enabled,
+                                            Pageable pageable);
 }

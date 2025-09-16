@@ -1,0 +1,16 @@
+-- Add version columns for optimistic locking (required by JPA @Version)
+
+-- Add version column to accountability_scores if missing
+ALTER TABLE accountability_scores ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+
+-- Add version column to buddy_checkins if missing
+ALTER TABLE buddy_checkins ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+
+-- Add version column to buddy_partnerships if missing
+ALTER TABLE buddy_partnerships ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+
+-- Add version column to shared_goals if missing
+ALTER TABLE shared_goals ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+
+-- Add version column to goal_milestones if missing
+ALTER TABLE goal_milestones ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;

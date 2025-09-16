@@ -1,18 +1,18 @@
 /**
  * Environment Configuration Service
- * 
+ *
  * Centralized service for accessing validated environment configuration.
  * This service should be used instead of accessing import.meta.env directly.
- * 
+ *
  * Usage:
  * import { getApiConfig, getWebSocketConfig } from '@/services/config/environmentConfig'
- * 
+ *
  * const apiConfig = getApiConfig()
  * const wsConfig = getWebSocketConfig()
  */
 
-import { env } from '../validation/envValidation';
-import type { ValidatedEnv } from '../validation/envValidation';
+import type {ValidatedEnv} from '../validation/envValidation';
+import {env} from '../validation/envValidation';
 
 /**
  * Get the validated environment configuration
@@ -26,7 +26,7 @@ export function getEnvironment(): ValidatedEnv {
  */
 export function getApiConfig() {
   const environment = env();
-  
+
   return {
     baseUrl: environment.VITE_API_BASE_URL,
     musicApiBaseUrl: environment.VITE_MUSIC_API_BASE_URL || environment.VITE_API_BASE_URL,
@@ -39,7 +39,7 @@ export function getApiConfig() {
  */
 export function getWebSocketConfig() {
   const environment = env();
-  
+
   return {
     url: environment.VITE_WEBSOCKET_URL,
     reconnectAttempts: environment.VITE_WEBSOCKET_RECONNECT_ATTEMPTS,
@@ -53,7 +53,7 @@ export function getWebSocketConfig() {
  */
 export function getMusicConfig() {
   const environment = env();
-  
+
   return {
     serviceUrl: environment.VITE_MUSIC_SERVICE_URL || 'http://localhost:8084',
     apiBaseUrl: environment.VITE_MUSIC_API_BASE_URL || environment.VITE_API_BASE_URL,
@@ -65,7 +65,7 @@ export function getMusicConfig() {
  */
 export function getSpotifyConfig() {
   const environment = env();
-  
+
   return {
     clientId: environment.VITE_SPOTIFY_CLIENT_ID,
     redirectUri: environment.VITE_SPOTIFY_REDIRECT_URI || `${window.location.origin}/music/spotify/callback`,
@@ -78,7 +78,7 @@ export function getSpotifyConfig() {
  */
 export function getErrorLoggingConfig() {
   const environment = env();
-  
+
   return {
     endpoint: environment.VITE_ERROR_LOGGING_ENDPOINT,
     apiKey: environment.VITE_ERROR_LOGGING_API_KEY,
@@ -92,7 +92,7 @@ export function getErrorLoggingConfig() {
  */
 export function getEnvironmentMode() {
   const environment = env();
-  
+
   return {
     mode: environment.MODE,
     isDevelopment: environment.DEV,
@@ -121,7 +121,7 @@ export function isProduction(): boolean {
  */
 export function isFeatureEnabled(feature: string): boolean {
   const environment = env();
-  
+
   switch (feature) {
     case 'spotify':
       return !!environment.VITE_SPOTIFY_CLIENT_ID;

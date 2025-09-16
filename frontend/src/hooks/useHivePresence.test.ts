@@ -1,13 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { useHivePresence } from './useWebSocket';
-import { useWebSocket } from './useWebSocket';
-import type { PresenceUpdate } from '../services/websocket/WebSocketService';
-import { PresenceStatus } from '../services/websocket/WebSocketService';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {act, renderHook, waitFor} from '@testing-library/react';
+import {useHivePresence, useWebSocket} from './useWebSocket';
+import type {PresenceUpdate} from '../services/websocket/WebSocketService';
+import {PresenceStatus} from '../services/websocket/WebSocketService';
 
 // Mock the base useWebSocket hook
 vi.mock('./useWebSocket', async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal() as Record<string, unknown>;
   return {
     ...actual,
     useWebSocket: vi.fn()
@@ -47,32 +46,32 @@ describe('useHivePresence', () => {
     notifications: [],
     clearNotification: vi.fn(),
     clearAllNotifications: vi.fn(),
-    service: mockWebSocketService
+    service: mockWebSocketService as unknown as typeof import('../services/websocket/WebSocketService').default
   };
 
   let capturedPresenceHandler: ((presence: PresenceUpdate) => void) | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    mockUseWebSocket.mockImplementation((options) => {
+
+    mockUseWebSocket.mockImplementation((_options) => {
       // Capture the presence handler
-      capturedPresenceHandler = options?.onPresenceUpdate;
-      
+      capturedPresenceHandler = _options?.onPresenceUpdate;
+
       return mockWebSocketReturn;
     });
   });
 
   it('should initialize with default state', () => {
-    const { result } = renderHook(() => useHivePresence());
+    const {result} = renderHook(() => useHivePresence());
 
     expect(result.current.hivePresence).toEqual([]);
     expect(result.current.onlineCount).toBe(0);
-    
+
     // Should have all base WebSocket properties
     expect(result.current.isConnected).toBe(false);
     expect(result.current.connectionState).toBe('DISCONNECTED');
-    
+
     // Should have hive-specific methods
     expect(typeof result.current.joinHive).toBe('function');
     expect(typeof result.current.leaveHive).toBe('function');
@@ -80,18 +79,18 @@ describe('useHivePresence', () => {
 
   it('should subscribe to hive presence when connected with hiveId', async () => {
     const hiveId = 123;
-    
+
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => {
-      capturedPresenceHandler = options?.onPresenceUpdate;
-      
+    mockUseWebSocket.mockImplementation((_options) => {
+      capturedPresenceHandler = _options?.onPresenceUpdate;
+
       return {
         ...mockWebSocketReturn,
         isConnected: true
       };
     });
 
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     await waitFor(() => {
       expect(mockWebSocketService.subscribeToHivePresence).toHaveBeenCalledWith(hiveId);
@@ -100,15 +99,15 @@ describe('useHivePresence', () => {
     });
 
     // Verify unsubscribe on unmount
-    const { unmount } = renderHook(() => useHivePresence(hiveId));
+    const {unmount} = renderHook(() => useHivePresence(hiveId));
     unmount();
-    
+
     expect(result.current.unsubscribe).toHaveBeenCalledWith('hive-presence-sub-id');
   });
 
   it('should not subscribe when not connected', () => {
     const hiveId = 123;
-    
+
     renderHook(() => useHivePresence(hiveId));
 
     expect(mockWebSocketService.subscribeToHivePresence).not.toHaveBeenCalled();
@@ -118,7 +117,7 @@ describe('useHivePresence', () => {
 
   it('should not subscribe when no hiveId provided', async () => {
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
@@ -134,7 +133,7 @@ describe('useHivePresence', () => {
 
   it('should handle presence updates for the specific hive', async () => {
     const hiveId = 123;
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     const presenceUpdate: PresenceUpdate = {
       userId: 456,
@@ -157,7 +156,7 @@ describe('useHivePresence', () => {
 
   it('should ignore presence updates for different hives', async () => {
     const hiveId = 123;
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     const presenceUpdate: PresenceUpdate = {
       userId: 456,
@@ -179,7 +178,7 @@ describe('useHivePresence', () => {
 
   it('should update existing user presence', async () => {
     const hiveId = 123;
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     // Initial presence
     const initialPresence: PresenceUpdate = {
@@ -222,7 +221,7 @@ describe('useHivePresence', () => {
 
   it('should remove user from presence when they go offline', async () => {
     const hiveId = 123;
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     // Add user
     const onlinePresence: PresenceUpdate = {
@@ -263,7 +262,7 @@ describe('useHivePresence', () => {
 
   it('should handle multiple users in hive presence', async () => {
     const hiveId = 123;
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     const users = [
       {
@@ -298,7 +297,7 @@ describe('useHivePresence', () => {
     await waitFor(() => {
       expect(result.current.hivePresence).toHaveLength(3);
       expect(result.current.onlineCount).toBe(3);
-      
+
       // Check all users are present
       const userIds = result.current.hivePresence.map(p => p.userId);
       expect(userIds).toContain(456);
@@ -322,7 +321,7 @@ describe('useHivePresence', () => {
     await waitFor(() => {
       expect(result.current.hivePresence).toHaveLength(2);
       expect(result.current.onlineCount).toBe(2);
-      
+
       const userIds = result.current.hivePresence.map(p => p.userId);
       expect(userIds).toContain(456);
       expect(userIds).toContain(101);
@@ -331,7 +330,7 @@ describe('useHivePresence', () => {
   });
 
   it('should provide joinHive method that updates presence', () => {
-    const { result } = renderHook(() => useHivePresence());
+    const {result} = renderHook(() => useHivePresence());
 
     const hiveId = 123;
 
@@ -340,39 +339,39 @@ describe('useHivePresence', () => {
     });
 
     expect(mockWebSocketReturn.updatePresence).toHaveBeenCalledWith(
-      PresenceStatus.ONLINE, 
-      hiveId
+        PresenceStatus.ONLINE,
+        hiveId
     );
   });
 
   it('should provide leaveHive method that updates presence', () => {
-    const { result } = renderHook(() => useHivePresence());
+    const {result} = renderHook(() => useHivePresence());
 
     act(() => {
       result.current.leaveHive();
     });
 
     expect(mockWebSocketReturn.updatePresence).toHaveBeenCalledWith(
-      PresenceStatus.ONLINE
+        PresenceStatus.ONLINE
     );
   });
 
   it('should handle subscription errors gracefully', () => {
     const hiveId = 123;
-    
+
     // Mock service to return null (error case)
     mockWebSocketService.subscribeToHivePresence.mockReturnValueOnce(null);
-    
+
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
 
-    const { unmount } = renderHook(() => useHivePresence(hiveId));
+    const {unmount} = renderHook(() => useHivePresence(hiveId));
 
     expect(mockWebSocketService.subscribeToHivePresence).toHaveBeenCalledWith(hiveId);
-    
+
     // Should not attempt to unsubscribe with null subscription
     unmount();
     expect(mockWebSocketReturn.unsubscribe).not.toHaveBeenCalled();
@@ -380,14 +379,14 @@ describe('useHivePresence', () => {
 
   it('should resubscribe when hiveId changes', async () => {
     // Mock connected state
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected: true
     }));
 
-    const { rerender } = renderHook(
-      ({ hiveId }: { hiveId?: number }) => useHivePresence(hiveId),
-      { initialProps: { hiveId: 123 } }
+    const {rerender} = renderHook(
+        ({hiveId}: { hiveId?: number }) => useHivePresence(hiveId),
+        {initialProps: {hiveId: 123}}
     );
 
     await waitFor(() => {
@@ -396,7 +395,7 @@ describe('useHivePresence', () => {
     });
 
     // Change hive ID
-    rerender({ hiveId: 456 });
+    rerender({hiveId: 456});
 
     await waitFor(() => {
       expect(mockWebSocketReturn.unsubscribe).toHaveBeenCalledWith('hive-presence-sub-id');
@@ -406,9 +405,9 @@ describe('useHivePresence', () => {
   });
 
   it('should clear presence when hiveId changes', async () => {
-    const { result, rerender } = renderHook(
-      ({ hiveId }: { hiveId?: number }) => useHivePresence(hiveId),
-      { initialProps: { hiveId: 123 } }
+    const {result, rerender} = renderHook(
+        ({hiveId}: { hiveId?: number }) => useHivePresence(hiveId),
+        {initialProps: {hiveId: 123}}
     );
 
     // Add some presence data
@@ -429,7 +428,7 @@ describe('useHivePresence', () => {
     });
 
     // Change hive ID
-    rerender({ hiveId: 456 });
+    rerender({hiveId: 456});
 
     await waitFor(() => {
       expect(result.current.hivePresence).toHaveLength(0);
@@ -441,12 +440,12 @@ describe('useHivePresence', () => {
     const hiveId = 123;
     let isConnected = false;
 
-    mockUseWebSocket.mockImplementation((options) => ({
+    mockUseWebSocket.mockImplementation((_options) => ({
       ...mockWebSocketReturn,
       isConnected
     }));
 
-    const { rerender } = renderHook(() => useHivePresence(hiveId));
+    const {rerender} = renderHook(() => useHivePresence(hiveId));
 
     // Initially not connected - should not subscribe
     expect(mockWebSocketService.subscribeToHivePresence).not.toHaveBeenCalled();
@@ -463,7 +462,7 @@ describe('useHivePresence', () => {
   });
 
   it('should preserve all base useWebSocket functionality', () => {
-    const { result } = renderHook(() => useHivePresence());
+    const {result} = renderHook(() => useHivePresence());
 
     // Check that all base properties are available
     expect(result.current.isConnected).toBe(mockWebSocketReturn.isConnected);
@@ -483,7 +482,7 @@ describe('useHivePresence', () => {
 
   it('should handle presence updates without hiveId field', async () => {
     const hiveId = 123;
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     // Presence update without hiveId (global presence)
     const presenceUpdate: PresenceUpdate = {
@@ -507,7 +506,7 @@ describe('useHivePresence', () => {
 
   it('should handle rapid presence updates correctly', async () => {
     const hiveId = 123;
-    const { result } = renderHook(() => useHivePresence(hiveId));
+    const {result} = renderHook(() => useHivePresence(hiveId));
 
     const userId = 456;
     const basePresence = {

@@ -1,8 +1,8 @@
 /**
  * Authentication Security Tests (UOL-44.15)
- * 
+ *
  * Comprehensive authentication flow security testing for FocusHive frontend
- * 
+ *
  * Test Categories:
  * 1. Login Security (rate limiting, brute force protection)
  * 2. JWT Token Security (validation, expiry, refresh)
@@ -16,8 +16,7 @@
  * 10. Authentication Bypass Prevention
  */
 
-import { test, expect } from '@playwright/test';
-import { Page, BrowserContext } from '@playwright/test';
+import {BrowserContext, expect, Page, test} from '@playwright/test';
 
 interface LoginAttempt {
   email: string;
@@ -36,7 +35,8 @@ interface AuthTestConfig {
 }
 
 class AuthSecurityHelper {
-  constructor(private page: Page, private context: BrowserContext) {}
+  constructor(private page: Page, private context: BrowserContext) {
+  }
 
   async attemptLogin(email: string, password: string): Promise<{
     success: boolean;
@@ -45,31 +45,31 @@ class AuthSecurityHelper {
     statusCode?: number;
   }> {
     const currentUrl = this.page.url();
-    
+
     await this.page.fill('[data-testid="email-input"]', email);
     await this.page.fill('[data-testid="password-input"]', password);
-    
+
     // Capture network response
     let statusCode: number | undefined;
-    const responsePromise = this.page.waitForResponse(response => 
-      response.url().includes('/auth/login') || response.url().includes('/login')
+    const responsePromise = this.page.waitForResponse(response =>
+        response.url().includes('/auth/login') || response.url().includes('/login')
     ).catch(() => null);
-    
+
     await this.page.click('[data-testid="submit-login"]');
-    
+
     const response = await responsePromise;
     if (response) {
       statusCode = response.status();
     }
-    
+
     // Wait for potential redirect or error message
     await this.page.waitForTimeout(2000);
-    
+
     const newUrl = this.page.url();
     const redirected = newUrl !== currentUrl && !newUrl.includes('/login');
-    
+
     const errorMessage = await this.page.textContent('[data-testid="login-error"]') || '';
-    
+
     return {
       success: redirected && !errorMessage,
       redirected,
@@ -91,13 +91,13 @@ class AuthSecurityHelper {
 
     for (let i = 0; i < attempts; i++) {
       const startTime = Date.now();
-      
+
       const result = await this.attemptLogin(email, wrongPassword);
-      
+
       const endTime = Date.now();
       responseTimes.push(endTime - startTime);
 
-      if (result.errorMessage.toLowerCase().includes('locked') || 
+      if (result.errorMessage.toLowerCase().includes('locked') ||
           result.errorMessage.toLowerCase().includes('too many attempts') ||
           result.statusCode === 429) {
         accountLocked = true;
@@ -112,9 +112,9 @@ class AuthSecurityHelper {
 
     // Check timing attack resistance (response times should be consistent)
     const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-    const timingVariance = responseTimes.reduce((acc, time) => 
-      acc + Math.pow(time - avgResponseTime, 2), 0) / responseTimes.length;
-    
+    const timingVariance = responseTimes.reduce((acc, time) =>
+        acc + Math.pow(time - avgResponseTime, 2), 0) / responseTimes.length;
+
     const timingAttackResistant = Math.sqrt(timingVariance) < (avgResponseTime * 0.5);
 
     return {
@@ -128,22 +128,26 @@ class AuthSecurityHelper {
   async testPasswordComplexity(): Promise<{
     weakPasswordsRejected: boolean[];
     strongPasswordsAccepted: boolean[];
-    testedPasswords: {password: string; expected: 'weak' | 'strong'; result: boolean}[];
+    testedPasswords: { password: string; expected: 'weak' | 'strong'; result: boolean }[];
   }> {
     const testPasswords = [
       // Weak passwords
-      { password: 'password', expected: 'weak' as const },
-      { password: '123456', expected: 'weak' as const },
-      { password: 'qwerty', expected: 'weak' as const },
-      { password: 'Password', expected: 'weak' as const },
-      { password: 'password123', expected: 'weak' as const },
+      {password: 'password', expected: 'weak' as const},
+      {password: '123456', expected: 'weak' as const},
+      {password: 'qwerty', expected: 'weak' as const},
+      {password: 'Password', expected: 'weak' as const},
+      {password: 'password123', expected: 'weak' as const},
       // Strong passwords
-      { password: 'StrongP@ssw0rd123', expected: 'strong' as const },
-      { password: 'MySecure#Pass1', expected: 'strong' as const },
-      { password: 'C0mpl3x!Password', expected: 'strong' as const },
+      {password: 'StrongP@ssw0rd123', expected: 'strong' as const},
+      {password: 'MySecure#Pass1', expected: 'strong' as const},
+      {password: 'C0mpl3x!Password', expected: 'strong' as const},
     ];
 
-    const testedPasswords: {password: string; expected: 'weak' | 'strong'; result: boolean}[] = [];
+    const testedPasswords: {
+      password: string;
+      expected: 'weak' | 'strong';
+      result: boolean
+    }[] = [];
     const weakPasswordsRejected: boolean[] = [];
     const strongPasswordsAccepted: boolean[] = [];
 
@@ -153,9 +157,9 @@ class AuthSecurityHelper {
       await this.page.fill('[data-testid="password-input"]', '');
       await this.page.fill('[data-testid="password-input"]', test.password);
       await this.page.press('[data-testid="password-input"]', 'Tab');
-      
+
       await this.page.waitForTimeout(500);
-      
+
       const isValid = await this.page.evaluate((selector) => {
         const element = document.querySelector(selector) as HTMLInputElement;
         return element ? element.validity.valid : false;
@@ -200,13 +204,13 @@ class AuthSecurityHelper {
     // Check token storage
     const tokenStorage = await this.page.evaluate(() => {
       // Check if token is in localStorage (insecure)
-      const localStorageHasToken = Object.keys(localStorage).some(key => 
-        key.toLowerCase().includes('token') || key.toLowerCase().includes('jwt')
+      const localStorageHasToken = Object.keys(localStorage).some(key =>
+          key.toLowerCase().includes('token') || key.toLowerCase().includes('jwt')
       );
 
       // Check if token is in sessionStorage (better but not ideal)
-      const sessionStorageHasToken = Object.keys(sessionStorage).some(key => 
-        key.toLowerCase().includes('token') || key.toLowerCase().includes('jwt')
+      const sessionStorageHasToken = Object.keys(sessionStorage).some(key =>
+          key.toLowerCase().includes('token') || key.toLowerCase().includes('jwt')
       );
 
       return {
@@ -221,7 +225,7 @@ class AuthSecurityHelper {
     const tokenHasExpiry = await this.page.evaluate(() => {
       // Try to find and decode JWT token
       const possibleTokens = [];
-      
+
       // Check localStorage
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -249,13 +253,13 @@ class AuthSecurityHelper {
         try {
           const payloadB64 = token.split('.')[1];
           const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
-          
+
           if (payload.exp) {
             const now = Math.floor(Date.now() / 1000);
             return payload.exp > now; // Token should have future expiry
           }
-        } catch (error) {
-          continue;
+        } catch {
+          // Ignore errors during cleanup
         }
       }
 
@@ -323,7 +327,7 @@ class AuthSecurityHelper {
               const newPayload = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_');
               const newToken = `${parts[0]}.${newPayload}.${parts[2]}`;
               localStorage.setItem(key, newToken);
-            } catch (error) {
+            } catch {
               // Continue if token decode fails
             }
           }
@@ -340,10 +344,10 @@ class AuthSecurityHelper {
 
     // Check if session data was cleared
     const dataCleared = await this.page.evaluate(() => {
-      const hasTokens = Object.keys(localStorage).some(key => 
-        key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
-      ) || Object.keys(sessionStorage).some(key => 
-        key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
+      const hasTokens = Object.keys(localStorage).some(key =>
+          key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
+      ) || Object.keys(sessionStorage).some(key =>
+          key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
       );
 
       return !hasTokens;
@@ -367,7 +371,7 @@ class AuthSecurityHelper {
     // Test invalid email
     await this.page.fill('[data-testid="reset-email-input"]', 'invalid-email');
     await this.page.click('[data-testid="reset-submit"]');
-    
+
     const invalidEmailError = await this.page.textContent('[data-testid="reset-error"]') || '';
     const requiresValidEmail = invalidEmailError.length > 0;
 
@@ -375,8 +379,8 @@ class AuthSecurityHelper {
     await this.page.fill('[data-testid="reset-email-input"]', 'test@example.com');
     await this.page.click('[data-testid="reset-submit"]');
 
-    const successMessage = await this.page.textContent('[data-testid="reset-success"]') || '';
-    
+    const _successMessage = await this.page.textContent('[data-testid="reset-success"]') || '';
+
     // For security testing, we'll simulate checking reset token properties
     const tokenSecure = true; // Should be cryptographically secure
     const tokenExpires = true; // Should have expiration
@@ -411,10 +415,10 @@ class AuthSecurityHelper {
 
     // Check if tokens were cleared
     const tokensCleared = await this.page.evaluate(() => {
-      const hasTokens = Object.keys(localStorage).some(key => 
-        key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
-      ) || Object.keys(sessionStorage).some(key => 
-        key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
+      const hasTokens = Object.keys(localStorage).some(key =>
+          key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
+      ) || Object.keys(sessionStorage).some(key =>
+          key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')
       );
 
       return !hasTokens;
@@ -425,8 +429,8 @@ class AuthSecurityHelper {
     await this.page.waitForTimeout(2000);
 
     const protectedAccessUrl = this.page.url();
-    const cannotAccessProtected = protectedAccessUrl.includes('/login') || 
-                                  protectedAccessUrl !== '/dashboard';
+    const cannotAccessProtected = protectedAccessUrl.includes('/login') ||
+        protectedAccessUrl !== '/dashboard';
 
     // Test if session was invalidated server-side
     const sessionInvalidated = await this.page.evaluate(() => {
@@ -469,7 +473,7 @@ class AuthSecurityHelper {
 
     // Login in second session with same credentials
     await secondPage.goto('/login');
-    const secondHelper = new AuthSecurityHelper(secondPage, secondContext!);
+    const secondHelper = new AuthSecurityHelper(secondPage, secondContext || new BrowserContext());
     await secondHelper.attemptLogin('test@example.com', 'TestPassword123!');
     await secondPage.waitForURL('/dashboard');
 
@@ -494,10 +498,10 @@ class AuthSecurityHelper {
   }
 
   async testAuthBypassAttempts(): Promise<{
-    bypassAttempts: Array<{method: string; success: boolean}>;
+    bypassAttempts: Array<{ method: string; success: boolean }>;
     allAttemptsFailed: boolean;
   }> {
-    const bypassAttempts: Array<{method: string; success: boolean}> = [];
+    const bypassAttempts: Array<{ method: string; success: boolean }> = [];
 
     // Attempt 1: Direct URL access to protected resource
     await this.page.goto('/dashboard');
@@ -548,12 +552,12 @@ class AuthSecurityHelper {
     const jsInjectionBypass = await this.page.evaluate(() => {
       try {
         // Try to modify window authentication state
-        (window as unknown as {isAuthenticated?: boolean}).isAuthenticated = true;
-        (window as unknown as {currentUser?: object}).currentUser = { id: '123', role: 'admin' };
-        
+        (window as unknown as { isAuthenticated?: boolean }).isAuthenticated = true;
+        (window as unknown as { currentUser?: object }).currentUser = {id: '123', role: 'admin'};
+
         // Check if app state changed
         return true;
-      } catch (error) {
+      } catch {
         return false;
       }
     });
@@ -587,7 +591,7 @@ test.describe('Authentication Security Tests', () => {
     requiresPasswordComplexity: true
   };
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({browser}) => {
     context = await browser.newContext();
   });
 
@@ -595,20 +599,20 @@ test.describe('Authentication Security Tests', () => {
     await context.close();
   });
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page: _page}) => {
     authHelper = new AuthSecurityHelper(page, context);
     await page.goto('/login');
   });
 
   test.describe('Login Security', () => {
-    test('should prevent brute force attacks', async ({ page }) => {
+    test('should prevent brute force attacks', async ({page: _page}) => {
       const testEmail = 'test@example.com';
       const wrongPassword = 'wrongpassword123';
 
       const bruteForceTest = await authHelper.testBruteForceProtection(
-        testEmail,
-        wrongPassword,
-        authConfig.maxLoginAttempts + 2
+          testEmail,
+          wrongPassword,
+          authConfig.maxLoginAttempts + 2
       );
 
       // Account should be locked after max attempts
@@ -620,7 +624,7 @@ test.describe('Authentication Security Tests', () => {
       expect(bruteForceTest.timingAttackResistant).toBe(true);
     });
 
-    test('should validate login input properly', async ({ page }) => {
+    test('should validate login input properly', async ({page: _page}) => {
       const loginAttempts: LoginAttempt[] = [
         {
           email: '',
@@ -650,7 +654,7 @@ test.describe('Authentication Security Tests', () => {
 
       for (const attempt of loginAttempts) {
         const result = await authHelper.attemptLogin(attempt.email, attempt.password);
-        
+
         expect(result.success).toBe(attempt.expectedSuccess);
         if (attempt.expectedError) {
           expect(result.errorMessage.toLowerCase()).toContain(attempt.expectedError);
@@ -662,7 +666,7 @@ test.describe('Authentication Security Tests', () => {
       }
     });
 
-    test('should rate limit login attempts', async ({ page }) => {
+    test('should rate limit login attempts', async ({page: _page}) => {
       const testEmail = 'ratelimit@example.com';
       const password = 'password123';
 
@@ -672,7 +676,7 @@ test.describe('Authentication Security Tests', () => {
       // Make multiple rapid requests
       for (let i = 0; i < 10; i++) {
         const result = await authHelper.attemptLogin(testEmail, password);
-        
+
         if (result.statusCode === 429 || result.errorMessage.includes('rate limit')) {
           rateLimited = true;
           rateLimitStatusCode = result.statusCode || 429;
@@ -689,7 +693,7 @@ test.describe('Authentication Security Tests', () => {
   });
 
   test.describe('JWT Token Security', () => {
-    test('should implement secure JWT handling', async ({ page }) => {
+    test('should implement secure JWT handling', async ({page: _page}) => {
       const jwtTest = await authHelper.testJWTSecurity();
 
       // Tokens should not be in localStorage (XSS vulnerable)
@@ -707,7 +711,7 @@ test.describe('Authentication Security Tests', () => {
       }
     });
 
-    test('should reject invalid JWT tokens', async ({ page }) => {
+    test('should reject invalid JWT tokens', async ({page: _page}) => {
       // Login first to get valid session
       await authHelper.attemptLogin('test@example.com', 'TestPassword123!');
       await page.waitForURL('/dashboard');
@@ -729,7 +733,7 @@ test.describe('Authentication Security Tests', () => {
       expect(invalidTokenTest).toBe(true);
     });
 
-    test('should handle token expiry correctly', async ({ page }) => {
+    test('should handle token expiry correctly', async ({page: _page}) => {
       const sessionTest = await authHelper.testSessionTimeout(1); // 1 minute timeout
 
       // Expired session should redirect to login
@@ -742,21 +746,21 @@ test.describe('Authentication Security Tests', () => {
   });
 
   test.describe('Password Security', () => {
-    test('should enforce password complexity', async ({ page }) => {
+    test('should enforce password complexity', async ({page: _page}) => {
       const passwordTest = await authHelper.testPasswordComplexity();
 
       // All weak passwords should be rejected
-      passwordTest.weakPasswordsRejected.forEach((rejected, index) => {
+      passwordTest.weakPasswordsRejected.forEach((rejected, _index) => {
         expect(rejected).toBe(true);
       });
 
       // All strong passwords should be accepted
-      passwordTest.strongPasswordsAccepted.forEach((accepted, index) => {
+      passwordTest.strongPasswordsAccepted.forEach((accepted, _index) => {
         expect(accepted).toBe(true);
       });
     });
 
-    test('should implement secure password reset', async ({ page }) => {
+    test('should implement secure password reset', async ({page: _page}) => {
       const resetTest = await authHelper.testPasswordResetSecurity();
 
       // Should require valid email
@@ -768,7 +772,7 @@ test.describe('Authentication Security Tests', () => {
       expect(resetTest.singleUse).toBe(true);
     });
 
-    test('should not expose password hints or length', async ({ page }) => {
+    test('should not expose password hints or length', async ({page: _page}) => {
       // Attempt login with wrong password
       const result = await authHelper.attemptLogin('test@example.com', 'wrongpassword');
 
@@ -787,14 +791,14 @@ test.describe('Authentication Security Tests', () => {
   });
 
   test.describe('Session Management', () => {
-    test('should manage concurrent sessions properly', async ({ page }) => {
+    test('should manage concurrent sessions properly', async ({page: _page}) => {
       const sessionTest = await authHelper.testConcurrentSessions();
 
       // Should either allow multiple sessions OR invalidate previous ones
       expect(
-        sessionTest.allowsMultipleSessions || 
-        sessionTest.invalidatesOtherSessions || 
-        sessionTest.maintainsSingleSession
+          sessionTest.allowsMultipleSessions ||
+          sessionTest.invalidatesOtherSessions ||
+          sessionTest.maintainsSingleSession
       ).toBe(true);
 
       // Document the session policy
@@ -805,7 +809,7 @@ test.describe('Authentication Security Tests', () => {
       });
     });
 
-    test('should implement secure logout', async ({ page }) => {
+    test('should implement secure logout', async ({page: _page}) => {
       const logoutTest = await authHelper.testLogoutSecurity();
 
       // All security checks should pass
@@ -815,7 +819,7 @@ test.describe('Authentication Security Tests', () => {
       expect(logoutTest.cannotAccessProtected).toBe(true);
     });
 
-    test('should handle session timeout gracefully', async ({ page }) => {
+    test('should handle session timeout gracefully', async ({page: _page}) => {
       const timeoutTest = await authHelper.testSessionTimeout(authConfig.sessionTimeoutMinutes);
 
       // Session should timeout and redirect
@@ -826,14 +830,14 @@ test.describe('Authentication Security Tests', () => {
   });
 
   test.describe('Registration Security', () => {
-    test('should validate registration data', async ({ page }) => {
+    test('should validate registration data', async ({page: _page}) => {
       await page.goto('/register');
 
       const registrationTests = [
-        { email: 'invalid-email', password: 'password', shouldFail: true },
-        { email: 'test@test.com', password: 'weak', shouldFail: true },
-        { email: 'existing@example.com', password: 'StrongPass123!', shouldFail: true },
-        { email: 'new@example.com', password: 'StrongPass123!', shouldFail: false }
+        {email: 'invalid-email', password: 'password', shouldFail: true},
+        {email: 'test@test.com', password: 'weak', shouldFail: true},
+        {email: 'existing@example.com', password: 'StrongPass123!', shouldFail: true},
+        {email: 'new@example.com', password: 'StrongPass123!', shouldFail: false}
       ];
 
       for (const test of registrationTests) {
@@ -858,7 +862,7 @@ test.describe('Authentication Security Tests', () => {
       }
     });
 
-    test('should prevent automated registration', async ({ page }) => {
+    test('should prevent automated registration', async ({page: _page}) => {
       await page.goto('/register');
 
       // Check for CAPTCHA or similar protection
@@ -871,7 +875,7 @@ test.describe('Authentication Security Tests', () => {
   });
 
   test.describe('OAuth2 Security', () => {
-    test('should implement secure OAuth2 flow', async ({ page }) => {
+    test('should implement secure OAuth2 flow', async ({page: _page}) => {
       // Check if OAuth2 options are available
       const hasOAuth = await page.locator('[data-testid="oauth-login"]').count() > 0;
 
@@ -881,7 +885,7 @@ test.describe('Authentication Security Tests', () => {
 
         const currentUrl = this.page.url();
         const urlParams = new URLSearchParams(currentUrl.split('?')[1]);
-        
+
         const hasState = urlParams.has('state');
         const hasNonce = urlParams.has('nonce');
 
@@ -890,14 +894,14 @@ test.describe('Authentication Security Tests', () => {
       }
     });
 
-    test('should validate OAuth2 redirect URIs', async ({ page }) => {
+    test('should validate OAuth2 redirect URIs', async ({page: _page}) => {
       const hasOAuth = await page.locator('[data-testid="oauth-login"]').count() > 0;
 
       if (hasOAuth) {
         await page.click('[data-testid="oauth-login"]');
-        
+
         const currentUrl = page.url();
-        
+
         // Should redirect to legitimate OAuth provider
         expect(currentUrl).not.toContain('localhost');
         expect(currentUrl).not.toContain('127.0.0.1');
@@ -907,7 +911,7 @@ test.describe('Authentication Security Tests', () => {
   });
 
   test.describe('Authentication Bypass Prevention', () => {
-    test('should prevent all authentication bypass attempts', async ({ page }) => {
+    test('should prevent all authentication bypass attempts', async ({page: _page}) => {
       const bypassTest = await authHelper.testAuthBypassAttempts();
 
       // All bypass attempts should fail
@@ -918,21 +922,21 @@ test.describe('Authentication Security Tests', () => {
       });
     });
 
-    test('should validate server-side authentication', async ({ page }) => {
+    test('should validate server-side authentication', async ({page: _page}) => {
       // Test that server validates authentication independently of client
       const serverValidationTest = await page.evaluate(() => {
         return Promise.all([
           // Test API endpoint without auth
           fetch('/api/user/profile').then(r => r.status === 401),
-          
+
           // Test with fake authorization header
           fetch('/api/user/profile', {
-            headers: { 'Authorization': 'Bearer fake-token' }
+            headers: {'Authorization': 'Bearer fake-token'}
           }).then(r => r.status === 401),
-          
+
           // Test with malformed token
           fetch('/api/user/profile', {
-            headers: { 'Authorization': 'Bearer not.a.jwt' }
+            headers: {'Authorization': 'Bearer not.a.jwt'}
           }).then(r => r.status === 401)
         ]);
       });
@@ -943,10 +947,10 @@ test.describe('Authentication Security Tests', () => {
       });
     });
 
-    test('should prevent privilege escalation', async ({ page }) => {
+    test('should prevent privilege escalation', async ({page: _page}) => {
       // Login as regular user
       await authHelper.attemptLogin('user@example.com', 'UserPassword123!');
-      
+
       // Try to access admin functionality
       const adminAccessTest = await page.evaluate(() => {
         return fetch('/api/admin/users', {
@@ -962,7 +966,7 @@ test.describe('Authentication Security Tests', () => {
   });
 
   test.describe('Account Security Features', () => {
-    test('should provide account security information', async ({ page }) => {
+    test('should provide account security information', async ({page: _page}) => {
       // Login and go to security settings
       await authHelper.attemptLogin('test@example.com', 'TestPassword123!');
       await page.goto('/settings/security');
@@ -980,14 +984,14 @@ test.describe('Authentication Security Tests', () => {
 
       // Should have basic security features
       expect(securityFeatures.hasPasswordChange).toBe(true);
-      
+
       // Advanced features are optional but recommended
       if (securityFeatures.hasLoginHistory) {
         expect(securityFeatures.hasLoginHistory).toBe(true);
       }
     });
 
-    test('should detect suspicious login attempts', async ({ page }) => {
+    test('should detect suspicious login attempts', async ({page: _page}) => {
       // Simulate login from unusual location/device (mocked)
       const suspiciousLoginTest = await page.evaluate(() => {
         // In real implementation, this would be based on IP, device fingerprint, etc.
@@ -1000,8 +1004,8 @@ test.describe('Authentication Security Tests', () => {
 
       // Security system should detect anomalies
       expect(
-        suspiciousLoginTest.detectsUnusualLocation ||
-        suspiciousLoginTest.requiresAdditionalVerification
+          suspiciousLoginTest.detectsUnusualLocation ||
+          suspiciousLoginTest.requiresAdditionalVerification
       ).toBe(true);
     });
   });

@@ -1,0 +1,48 @@
+# =============================================================================
+# Hadolint Configuration for Dockerfile Security and Best Practices
+# =============================================================================
+
+ignored:
+  # Ignore pinning versions for official images (we use specific tags)
+  - DL3007
+
+  # Allow ADD for specific use cases (we use COPY appropriately)
+  - DL3020
+
+  # Allow root user in build stages (required for package installation)
+  - DL3002
+
+failure-threshold: error
+
+override:
+  error:
+    # Enforce security best practices
+    - DL3025  # Use JSON form for CMD and ENTRYPOINT arguments
+    - DL3026  # Use specific tags for base images
+    - DL3027  # Do not use apt-get upgrade in Dockerfile
+    - DL3028  # Pin versions when installing packages
+    - DL3042  # Avoid use of cache directory with pip
+    - DL3059  # Multiple consecutive RUN instructions
+
+  warning:
+    # Warn on less critical issues
+    - DL3008  # Pin versions in apt-get install
+    - DL3009  # Delete the apt-get lists after installing something
+    - DL3015  # Avoid additional packages by specifying --no-install-recommends
+
+  info:
+    # Informational checks
+    - DL3006  # Always tag the version of an image explicitly
+    - DL3045  # COPY to a relative destination without WORKDIR set
+
+# Trusted registries for base images
+trusted-registries:
+  - docker.io
+  - gcr.io
+  - ghcr.io
+  - mcr.microsoft.com
+  - registry.access.redhat.com
+
+# Rules to enforce
+strict-labels: false
+disable-ignore-pragma: false

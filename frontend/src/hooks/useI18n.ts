@@ -1,35 +1,35 @@
-import { useTranslation as useI18nextTranslation } from 'react-i18next'
-import { useCallback, useMemo } from 'react'
+import {useTranslation as useI18nextTranslation} from 'react-i18next'
+import {useCallback, useMemo} from 'react'
 import {
+  changeLanguage,
+  formatCurrency as libFormatCurrency,
   formatDate as libFormatDate,
   formatNumber as libFormatNumber,
-  formatCurrency as libFormatCurrency,
   formatRelativeTime as libFormatRelativeTime,
   getCurrentLanguage,
   isRTL,
-  changeLanguage,
 } from '../lib/i18n'
 import type {
-  Namespace,
-  SupportedLocale,
-  UseTranslationResult,
-  UseFormattingResult,
   InterpolationValues,
   LocaleFormatOptions,
+  Namespace,
+  SupportedLocale,
   TypedTFunction,
+  UseFormattingResult,
+  UseTranslationResult,
 } from '../types/i18n'
 
 /**
  * Enhanced useTranslation hook with type safety and additional features
  */
 export function useTranslation<T extends Namespace = 'common'>(
-  namespace?: T,
-  options?: {
-    keyPrefix?: string
-    useSuspense?: boolean
-  }
+    namespace?: T,
+    options?: {
+      keyPrefix?: string
+      useSuspense?: boolean
+    }
 ): UseTranslationResult<T> {
-  const { t, i18n, ready } = useI18nextTranslation(namespace, {
+  const {t, i18n, ready} = useI18nextTranslation(namespace, {
     keyPrefix: options?.keyPrefix,
     useSuspense: options?.useSuspense ?? false
   } as unknown)
@@ -54,18 +54,18 @@ export function useTranslation<T extends Namespace = 'common'>(
  * Hook for locale-aware formatting functions
  */
 export function useFormatting(): UseFormattingResult {
-  const { i18n } = useI18nextTranslation()
-  
+  const {i18n} = useI18nextTranslation()
+
   const formatDate = useCallback((
-    date: Date | string | number,
-    options?: Intl.DateTimeFormatOptions
+      date: Date | string | number,
+      options?: Intl.DateTimeFormatOptions
   ): string => {
     return libFormatDate(date, options)
   }, [])
 
   const formatTime = useCallback((
-    date: Date | string | number,
-    options?: Intl.DateTimeFormatOptions
+      date: Date | string | number,
+      options?: Intl.DateTimeFormatOptions
   ): string => {
     return libFormatDate(date, {
       hour: '2-digit',
@@ -75,8 +75,8 @@ export function useFormatting(): UseFormattingResult {
   }, [])
 
   const formatDateTime = useCallback((
-    date: Date | string | number,
-    options?: Intl.DateTimeFormatOptions
+      date: Date | string | number,
+      options?: Intl.DateTimeFormatOptions
   ): string => {
     return libFormatDate(date, {
       year: 'numeric',
@@ -89,23 +89,23 @@ export function useFormatting(): UseFormattingResult {
   }, [])
 
   const formatNumber = useCallback((
-    number: number,
-    options?: Intl.NumberFormatOptions
+      number: number,
+      options?: Intl.NumberFormatOptions
   ): string => {
     return libFormatNumber(number, options)
   }, [])
 
   const formatCurrency = useCallback((
-    amount: number,
-    currency: string = 'USD',
-    options?: Intl.NumberFormatOptions
+      amount: number,
+      currency: string = 'USD',
+      options?: Intl.NumberFormatOptions
   ): string => {
     return libFormatCurrency(amount, currency, options)
   }, [])
 
   const formatPercent = useCallback((
-    value: number,
-    options?: Intl.NumberFormatOptions
+      value: number,
+      options?: Intl.NumberFormatOptions
   ): string => {
     return libFormatNumber(value, {
       style: 'percent',
@@ -114,8 +114,8 @@ export function useFormatting(): UseFormattingResult {
   }, [])
 
   const formatRelativeTime = useCallback((
-    date: Date | string | number,
-    options?: Intl.RelativeTimeFormatOptions
+      date: Date | string | number,
+      options?: Intl.RelativeTimeFormatOptions
   ): string => {
     return libFormatRelativeTime(date, options)
   }, [])
@@ -145,10 +145,10 @@ export function useFormatting(): UseFormattingResult {
  * Hook for language switching functionality
  */
 export function useLanguageSwitcher() {
-  const { i18n } = useI18nextTranslation()
+  const {i18n} = useI18nextTranslation()
 
   const currentLanguage = useMemo(() => getCurrentLanguage(), [])
-  
+
   const switchLanguage = useCallback(async (language: SupportedLocale) => {
     // Language switch - let errors bubble up to caller
     await changeLanguage(language)
@@ -168,55 +168,55 @@ export function useLanguageSwitcher() {
  * Hook for translation with interpolation values
  */
 export function useTranslationWithValues<T extends Namespace = 'common'>(
-  namespace?: T
+    namespace?: T
 ) {
-  const { t } = useTranslation(namespace)
+  const {t} = useTranslation(namespace)
 
   const translate = useCallback((
-    key: string,
-    values?: InterpolationValues,
-    options?: { count?: number; context?: string }
+      key: string,
+      values?: InterpolationValues,
+      options?: { count?: number; context?: string }
   ) => {
-    return t(key as string, { ...values, ...options })
+    return t(key as string, {...values, ...options})
   }, [t])
 
-  return { t: translate }
+  return {t: translate}
 }
 
 /**
  * Hook for plural translations
  */
 export function usePluralTranslation<T extends Namespace = 'common'>(
-  namespace?: T
+    namespace?: T
 ) {
-  const { t } = useTranslation(namespace)
+  const {t} = useTranslation(namespace)
 
   const translatePlural = useCallback((
-    key: string,
-    count: number,
-    values?: InterpolationValues
+      key: string,
+      count: number,
+      values?: InterpolationValues
   ) => {
-    return t(key as string, { count, ...values })
+    return t(key as string, {count, ...values})
   }, [t])
 
-  return { translatePlural }
+  return {translatePlural}
 }
 
 /**
  * Hook for locale-specific number formatting with custom options
  */
 export function useNumberFormatting(options?: LocaleFormatOptions) {
-  const { formatNumber, formatCurrency, formatPercent, getCurrentLocale } = useFormatting()
+  const {formatNumber, formatCurrency, formatPercent, getCurrentLocale} = useFormatting()
 
   const formatInteger = useCallback((value: number) => {
-    return formatNumber(value, { 
+    return formatNumber(value, {
       ...options?.number,
-      maximumFractionDigits: 0 
+      maximumFractionDigits: 0
     })
   }, [formatNumber, options?.number])
 
   const formatDecimal = useCallback((value: number, decimals: number = 2) => {
-    return formatNumber(value, { 
+    return formatNumber(value, {
       ...options?.number,
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals
@@ -248,7 +248,13 @@ export function useNumberFormatting(options?: LocaleFormatOptions) {
  * Hook for locale-specific date formatting with custom options
  */
 export function useDateFormatting(options?: LocaleFormatOptions) {
-  const { formatDate, formatTime, formatDateTime, formatRelativeTime, getCurrentLocale } = useFormatting()
+  const {
+    formatDate,
+    formatTime,
+    formatDateTime,
+    formatRelativeTime,
+    getCurrentLocale
+  } = useFormatting()
 
   const formatShortDate = useCallback((date: Date | string | number) => {
     return formatDate(date, {
@@ -311,12 +317,12 @@ export function useDateFormatting(options?: LocaleFormatOptions) {
  * Hook for error message translations
  */
 export function useErrorTranslation() {
-  const { t } = useTranslation('error')
-  const { t: tValidation } = useTranslation('validation')
+  const {t} = useTranslation('error')
+  const {t: tValidation} = useTranslation('validation')
 
   const translateError = useCallback((
-    error: Error | string,
-    fallback?: string
+      error: Error | string,
+      fallback?: string
   ): string => {
     const errorMessage = typeof error === 'string' ? error : error.message
 
@@ -335,9 +341,9 @@ export function useErrorTranslation() {
   }, [t])
 
   const translateValidationError = useCallback((
-    field: string,
-    errorType: string,
-    values?: InterpolationValues
+      field: string,
+      errorType: string,
+      values?: InterpolationValues
   ): string => {
     const key = `${errorType}`
     return tValidation(key as string, values)
@@ -350,4 +356,4 @@ export function useErrorTranslation() {
 }
 
 // Re-export commonly used hooks for convenience
-export { useTranslation as useT, useFormatting as useFormat }
+export {useTranslation as useT, useFormatting as useFormat}

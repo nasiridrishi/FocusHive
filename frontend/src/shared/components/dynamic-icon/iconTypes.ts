@@ -1,5 +1,5 @@
-import { OverridableComponent } from '@mui/material/OverridableComponent';
-import { SvgIconTypeMap } from '@mui/material';
+import {OverridableComponent} from '@mui/material/OverridableComponent';
+import {SvgIconTypeMap} from '@mui/material';
 
 export type IconComponent = OverridableComponent<SvgIconTypeMap<object, 'svg'>>;
 
@@ -15,7 +15,7 @@ export const iconMap = {
   ExpandLess: 'ExpandLess',
   MoreVert: 'MoreVert',
   MoreHoriz: 'MoreHoriz',
-  
+
   // Actions
   Add: 'Add',
   Edit: 'Edit',
@@ -27,7 +27,7 @@ export const iconMap = {
   Refresh: 'Refresh',
   Search: 'Search',
   Settings: 'Settings',
-  
+
   // Media
   PlayArrow: 'PlayArrow',
   Pause: 'Pause',
@@ -37,7 +37,7 @@ export const iconMap = {
   VolumeUp: 'VolumeUp',
   VolumeOff: 'VolumeOff',
   MusicNote: 'MusicNote',
-  
+
   // Social
   Person: 'Person',
   People: 'People',
@@ -45,20 +45,20 @@ export const iconMap = {
   Chat: 'Chat',
   Forum: 'Forum',
   Notifications: 'Notifications',
-  
+
   // Status
   Info: 'Info',
   Warning: 'Warning',
   Error: 'Error',
   CheckCircle: 'CheckCircle',
   HelpOutline: 'HelpOutline',
-  
+
   // File & Content
   Article: 'Article',
   Description: 'Description',
   Folder: 'Folder',
   InsertDriveFile: 'InsertDriveFile',
-  
+
   // Misc
   Timer: 'Timer',
   Schedule: 'Schedule',

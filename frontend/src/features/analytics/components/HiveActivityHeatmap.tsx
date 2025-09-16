@@ -1,14 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   Typography,
   Box,
-  Tooltip,
   useTheme,
   alpha,
-  Theme
+  Theme,
+  Tooltip
 } from '@mui/material';
 import { CalendarMonth } from '@mui/icons-material';
 import { HiveActivityHeatmapProps, HiveActivityData } from '../types';
@@ -45,7 +45,6 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
   onDateClick
 }) => {
   const theme = useTheme();
-  const [, setHoveredDate] = useState<string | null>(null);
 
   // Create a map of date -> activity data for quick lookup
   const activityMap = useMemo(() => {
@@ -64,15 +63,13 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
   // Group days by weeks
   const weeks = useMemo(() => {
     const weekMap = new Map<number, Date[]>();
-    
     allDays.forEach(day => {
       const weekNumber = getWeek(day);
       if (!weekMap.has(weekNumber)) {
         weekMap.set(weekNumber, []);
       }
-      weekMap.get(weekNumber)!.push(day);
+      weekMap.get(weekNumber)?.push(day);
     });
-
     return Array.from(weekMap.entries()).sort(([a], [b]) => a - b);
   }, [allDays]);
 
@@ -80,56 +77,52 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
   const stats = useMemo(() => {
     const activeDays = data.filter(item => item.value > 0);
     const totalActivity = data.reduce((sum, item) => sum + item.value, 0);
-    const averageActivity = data.length > 0 ? totalActivity / data.length : 0;
-    const mostActiveDay = data.reduce((max, current) => 
-      current.value > max.value ? current : max, 
+    const mostActiveDay = data.reduce((max, current) =>
+      current.value > max.value ? current : max,
       { date: '', value: 0, focusTime: 0, sessions: 0, members: 0 }
     );
 
     return {
       activeDays: activeDays.length,
-      averageActivity: averageActivity.toFixed(1),
+      averageActivity: data.length > 0 ? Math.round(totalActivity / data.length * 10) / 10 : 0,
       mostActiveDay: mostActiveDay.value > 0 ? format(parseISO(mostActiveDay.date), 'MMM d') : 'None'
     };
   }, [data]);
 
-  const renderCell = (day: Date) => {
+  const renderCell = (day: Date): JSX.Element => {
     const dateString = format(day, 'yyyy-MM-dd');
     const activityData = activityMap.get(dateString);
-    const activityLevel = getActivityLevel(activityData?.value || 0);
-    const backgroundColor = getActivityColor(activityLevel, theme);
-
+    const level = activityData ? getActivityLevel(activityData.value) : 0;
+    
     const cell = (
       <Box
         key={dateString}
         data-testid={`heatmap-cell-${dateString}`}
-        data-testid-activity={`activity-level-${activityLevel}`}
         sx={{
           width: cellSize,
           height: cellSize,
-          backgroundColor,
-          border: `1px solid ${theme.palette.grey[200]}`,
+          backgroundColor: getActivityColor(level, theme),
           borderRadius: 1,
           cursor: onDateClick ? 'pointer' : 'default',
-          transition: 'all 0.2s ease',
+          border: '1px solid',
+          borderColor: theme.palette.divider,
+          transition: 'background-color 0.2s',
           '&:hover': {
-            transform: 'scale(1.1)',
-            zIndex: 1,
-            boxShadow: theme.shadows[2]
-          }
+            boxShadow: showTooltip ? 2 : undefined,
+          },
         }}
-        onMouseEnter={() => showTooltip && setHoveredDate(dateString)}
-        onMouseLeave={() => showTooltip && setHoveredDate(null)}
-        onClick={() => onDateClick?.(dateString, activityData || {
-          date: dateString,
-          value: 0,
-          focusTime: 0,
-          sessions: 0,
-          members: 0
-        })}
+        onClick={onDateClick && activityData ? () => onDateClick(dateString, activityData) : undefined}
+        onKeyDown={onDateClick && activityData ? (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onDateClick(dateString, activityData);
+          }
+        } : undefined}
+        aria-label={`Activity on ${dateString}: ${activityData?.value ?? 0}`}
+        tabIndex={0}
+        role="button"
       />
     );
-
+    
     if (!showTooltip || !activityData) {
       return cell;
     }
@@ -153,31 +146,28 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
             </Typography>
           </Box>
         }
-        placement="top"
-        arrow
       >
         {cell}
       </Tooltip>
     );
   };
 
-  const renderMonthLabels = () => {
+  const renderMonthLabels = (): React.ReactNode => {
     const monthPositions: { month: string; position: number }[] = [];
     let currentMonth = -1;
-    let position = 0;
 
-    weeks.forEach(([, days]) => {
+    weeks.forEach(([weekNum, days]) => {
       const firstDay = days[0];
-      const month = firstDay.getMonth();
-      
-      if (month !== currentMonth) {
-        monthPositions.push({
-          month: MONTHS[month],
-          position: position * (cellSize + 2) // Account for spacing
-        });
-        currentMonth = month;
+      if (firstDay) {
+        const month = firstDay.getMonth();
+        if (month !== currentMonth) {
+          monthPositions.push({
+            month: MONTHS[month],
+            position: weekNum * (cellSize + 2)
+          });
+          currentMonth = month;
+        }
       }
-      position++;
     });
 
     return (
@@ -200,9 +190,8 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
     );
   };
 
-  const renderWeekdayLabels = () => {
-    // Show only Mon, Wed, Fri to avoid crowding
-    const visibleDays = [1, 3, 5]; // Monday, Wednesday, Friday
+  const renderWeekdayLabels = (): React.ReactNode => {
+    const visibleDays = [1, 3, 5]; // Mon, Wed, Fri
     
     return (
       <Box display="flex" flexDirection="column" mr={1}>
@@ -234,7 +223,7 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
     );
   };
 
-  const renderLegend = () => {
+  const renderLegend = (): React.ReactNode => {
     return (
       <Box display="flex" alignItems="center" justifyContent="center" mt={2} gap={1}>
         <Typography variant="caption" color="text.secondary">
@@ -274,8 +263,8 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
       />
       <CardContent>
         {/* Statistics */}
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 2,
@@ -312,15 +301,15 @@ export const HiveActivityHeatmap: React.FC<HiveActivityHeatmapProps> = ({
         {renderMonthLabels()}
 
         {/* Heatmap grid */}
-        <Box 
-          display="flex" 
-          sx={{ 
+        <Box
+          display="flex"
+          sx={{
             overflowX: 'auto',
             '--cell-size': `${cellSize}px`
           }}
         >
           {renderWeekdayLabels()}
-          
+
           <Box
             data-testid="heatmap-grid"
             display="flex"

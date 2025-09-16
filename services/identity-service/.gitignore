@@ -38,3 +38,24 @@ keystore/
 # Environment
 .env
 .env.local
+
+# Temporary files and scripts
+*.py
+*.sh
+!gradlew
+!build-prod.sh
+!deploy-prod.sh
+
+# Extracted library files
+io/
+META-INF/
+*.class
+
+# Dependency analysis
+dependency-check-suppressions.xml
+
+# Documentation (keep only essential)
+docs/.test_cred
+
+# Test credentials file
+.test_cred

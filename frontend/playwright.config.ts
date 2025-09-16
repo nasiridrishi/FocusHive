@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import {defineConfig, devices} from '@playwright/test';
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -16,8 +16,8 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
-    ['json', { outputFile: 'e2e-results.json' }],
-    ['junit', { outputFile: 'e2e-results.xml' }]
+    ['json', {outputFile: 'e2e-results.json'}],
+    ['junit', {outputFile: 'e2e-results.xml'}]
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -26,28 +26,28 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    
+
     /* Take screenshot when test fails */
     screenshot: 'only-on-failure',
-    
+
     /* Record video for failed tests */
     video: 'retain-on-failure',
-    
+
     /* Additional configuration for FocusHive */
     ignoreHTTPSErrors: true,
-    
+
     /* Wait for network idle by default for SPA */
     waitForLoadState: 'networkidle',
-    
+
     /* Timeout for individual actions */
     actionTimeout: 10000,
-    
+
     /* Timeout for waiting for elements */
     expect: {
       timeout: 5000,
     },
   },
-  
+
   /* Global test timeout */
   timeout: 60000,
 
@@ -55,27 +55,27 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {...devices['Desktop Chrome']},
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {...devices['Desktop Firefox']},
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {...devices['Desktop Safari']},
     },
 
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: {...devices['Pixel 5']},
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      use: {...devices['iPhone 12']},
     },
 
     /* Test against branded browsers. */

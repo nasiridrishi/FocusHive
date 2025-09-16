@@ -1,10 +1,10 @@
-import { AxiosInstance, AxiosError } from 'axios';
-import { apiClient } from './httpInterceptors';
-import { API_ENDPOINTS, buildEndpoint } from './index';
+import {AxiosError, AxiosInstance} from 'axios';
+import {apiClient} from './httpInterceptors';
+import {API_ENDPOINTS, buildEndpoint} from './index';
 
 /**
  * Analytics API Service
- * 
+ *
  * Provides comprehensive analytics and reporting with:
  * - Session tracking
  * - User statistics
@@ -132,7 +132,7 @@ class AnalyticsApiService {
    */
   async startSession(request: SessionRequest): Promise<SessionResponse> {
     try {
-      const response = await this.api.post<SessionResponse>(API_ENDPOINTS.ANALYTICS.SESSION_START, request);
+const response = await this.api.post<SessionResponse>(API_ENDPOINTS.ANALYTICS.START_SESSION, request);
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to start session tracking');
@@ -149,7 +149,7 @@ class AnalyticsApiService {
         endTime: endTime || new Date().toISOString(),
         actualDuration
       };
-      const response = await this.api.post<SessionResponse>(API_ENDPOINTS.ANALYTICS.SESSION_END, requestBody);
+const response = await this.api.post<SessionResponse>(API_ENDPOINTS.ANALYTICS.END_SESSION, requestBody);
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to end session tracking');
@@ -162,7 +162,7 @@ class AnalyticsApiService {
    */
   async startSessionDetailed(sessionId: number, request: SessionRequest): Promise<SessionResponse> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.START_SESSION, { sessionId });
+      const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.START_SESSION, {sessionId});
       const response = await this.api.post<SessionResponse>(endpoint, request);
       return response.data;
     } catch (error) {
@@ -176,8 +176,8 @@ class AnalyticsApiService {
    */
   async endSessionDetailed(sessionId: number, endTime?: string): Promise<SessionResponse> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.END_SESSION, { sessionId });
-      const requestBody = { endTime: endTime || new Date().toISOString() };
+      const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.END_SESSION, {sessionId});
+      const requestBody = {endTime: endTime || new Date().toISOString()};
       const response = await this.api.post<SessionResponse>(endpoint, requestBody);
       return response.data;
     } catch (error) {
@@ -190,18 +190,18 @@ class AnalyticsApiService {
    * Get user statistics
    */
   async getUserStats(
-    userId?: number, 
-    period: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'ALL_TIME' = 'WEEKLY'
+      userId?: number,
+      period: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'ALL_TIME' = 'WEEKLY'
   ): Promise<UserStats> {
     try {
       if (userId) {
-        const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.USER_STATS, { userId });
-        const response = await this.api.get<UserStats>(endpoint, { params: { period } });
+        const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.USER_STATS, {userId});
+        const response = await this.api.get<UserStats>(endpoint, {params: {period}});
         return response.data;
       } else {
         // Get current user's stats
-        const response = await this.api.get<UserStats>(API_ENDPOINTS.ANALYTICS.USER_STATS_ME, { 
-          params: { period } 
+        const response = await this.api.get<UserStats>(API_ENDPOINTS.ANALYTICS.USER_STATS_ME, {
+          params: {period}
         });
         return response.data;
       }
@@ -222,14 +222,14 @@ class AnalyticsApiService {
    * Get hive leaderboard
    */
   async getHiveLeaderboard(
-    hiveId: number, 
-    period: 'DAILY' | 'WEEKLY' | 'MONTHLY' = 'WEEKLY',
-    limit = 50
+      hiveId: number,
+      period: 'DAILY' | 'WEEKLY' | 'MONTHLY' = 'WEEKLY',
+      limit = 50
   ): Promise<HiveLeaderboard> {
     try {
-      const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.HIVE_LEADERBOARD, { hiveId });
-      const response = await this.api.get<HiveLeaderboard>(endpoint, { 
-        params: { period, limit } 
+      const endpoint = buildEndpoint(API_ENDPOINTS.ANALYTICS.HIVE_LEADERBOARD, {hiveId});
+      const response = await this.api.get<HiveLeaderboard>(endpoint, {
+        params: {period, limit}
       });
       return response.data;
     } catch (error) {
@@ -242,12 +242,12 @@ class AnalyticsApiService {
    * Get global leaderboard
    */
   async getGlobalLeaderboard(
-    period: 'DAILY' | 'WEEKLY' | 'MONTHLY' = 'WEEKLY',
-    limit = 100
+      period: 'DAILY' | 'WEEKLY' | 'MONTHLY' = 'WEEKLY',
+      limit = 100
   ): Promise<GlobalLeaderboard> {
     try {
-      const response = await this.api.get<GlobalLeaderboard>(API_ENDPOINTS.ANALYTICS.LEADERBOARD, { 
-        params: { period, limit } 
+      const response = await this.api.get<GlobalLeaderboard>(API_ENDPOINTS.ANALYTICS.LEADERBOARD, {
+        params: {period, limit}
       });
       return response.data;
     } catch (error) {
@@ -260,26 +260,26 @@ class AnalyticsApiService {
    * Get productivity trends
    */
   async getProductivityTrends(
-    userId?: number,
-    dateRange?: { start: string; end: string },
-    granularity: 'HOUR' | 'DAY' | 'WEEK' | 'MONTH' = 'DAY'
+      userId?: number,
+      dateRange?: { start: string; end: string },
+      granularity: 'HOUR' | 'DAY' | 'WEEK' | 'MONTH' = 'DAY'
   ): Promise<{
     trends: { date: string; focusTime: number; sessions: number; }[];
     summary: { totalTime: number; averageDaily: number; bestDay: string; };
   }> {
     try {
-      const params: Record<string, unknown> = { granularity };
+      const params: Record<string, unknown> = {granularity};
       if (userId) params.userId = userId;
       if (dateRange) {
         params.startDate = dateRange.start;
         params.endDate = dateRange.end;
       }
 
-      const endpoint = userId 
-        ? buildEndpoint(API_ENDPOINTS.ANALYTICS.USER_STATS, { userId })
-        : API_ENDPOINTS.ANALYTICS.USER_STATS_ME;
+      const endpoint = userId
+          ? buildEndpoint(API_ENDPOINTS.ANALYTICS.USER_STATS, {userId})
+          : API_ENDPOINTS.ANALYTICS.USER_STATS_ME;
 
-      const response = await this.api.get(`${endpoint}/trends`, { params });
+      const response = await this.api.get(`${endpoint}/trends`, {params});
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to get productivity trends');
@@ -291,8 +291,8 @@ class AnalyticsApiService {
    * Get session analytics
    */
   async getSessionAnalytics(
-    dateRange?: { start: string; end: string },
-    hiveId?: number
+      dateRange?: { start: string; end: string },
+      hiveId?: number
   ): Promise<{
     totalSessions: number;
     completedSessions: number;
@@ -309,7 +309,7 @@ class AnalyticsApiService {
       }
       if (hiveId) params.hiveId = hiveId;
 
-      const response = await this.api.get(`${API_ENDPOINTS.ANALYTICS.BASE}/sessions/analytics`, { params });
+      const response = await this.api.get(`${API_ENDPOINTS.ANALYTICS.BASE}/sessions/analytics`, {params});
       return response.data;
     } catch (error) {
       this.handleError(error, 'Failed to get session analytics');
@@ -321,9 +321,9 @@ class AnalyticsApiService {
    * Request data export
    */
   async requestDataExport(
-    format: 'JSON' | 'CSV' | 'PDF' = 'JSON',
-    dataTypes: ('SESSIONS' | 'STATS' | 'ACHIEVEMENTS' | 'HIVE_ACTIVITY')[] = ['SESSIONS', 'STATS'],
-    dateRange?: { start: string; end: string }
+      format: 'JSON' | 'CSV' | 'PDF' = 'JSON',
+      dataTypes: ('SESSIONS' | 'STATS' | 'ACHIEVEMENTS' | 'HIVE_ACTIVITY')[] = ['SESSIONS', 'STATS'],
+      dateRange?: { start: string; end: string }
   ): Promise<AnalyticsExport> {
     try {
       const request = {
@@ -361,9 +361,9 @@ class AnalyticsApiService {
    */
   private handleError(error: unknown, defaultMessage: string): never {
     if (error instanceof AxiosError) {
-      const message = error.response?.data?.message || 
-                     error.response?.data?.error || 
-                     defaultMessage;
+      const message = error.response?.data?.message ||
+          error.response?.data?.error ||
+          defaultMessage;
       throw new Error(message);
     }
     throw new Error('Network error occurred');

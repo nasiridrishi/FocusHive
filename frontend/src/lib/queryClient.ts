@@ -1,6 +1,6 @@
 /**
  * Enhanced TanStack Query Configuration
- * 
+ *
  * Provides comprehensive API caching with:
  * - Tiered caching strategies (short, medium, long-term)
  * - Offline persistence and sync
@@ -9,24 +9,25 @@
  * - Error handling and retry policies
  */
 
-import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
-import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import {MutationCache, QueryCache, QueryClient} from '@tanstack/react-query';
+import {createSyncStoragePersister} from '@tanstack/query-sync-storage-persister';
+import {persistQueryClient} from '@tanstack/react-query-persist-client';
+import {logger} from '../utils/logger';
 
 // Cache time constants (in milliseconds)
 export const CACHE_TIMES = {
   // Short-term cache: User data, preferences, session-sensitive data
   SHORT: 5 * 60 * 1000,        // 5 minutes
-  
+
   // Medium-term cache: Static content, configurations, reference data that changes occasionally
   MEDIUM: 2 * 60 * 60 * 1000,  // 2 hours
-  
+
   // Long-term cache: Static reference data, app configuration, rarely changing content
   LONG: 24 * 60 * 60 * 1000,   // 24 hours
-  
+
   // Immediate cache: Real-time data that should refetch immediately
   IMMEDIATE: 0,                 // 0 milliseconds
-  
+
   // Static cache: Data that never changes during session
   STATIC: Infinity,
 } as const;
@@ -35,16 +36,16 @@ export const CACHE_TIMES = {
 export const STALE_TIMES = {
   // User data becomes stale quickly
   USER_DATA: 1 * 60 * 1000,    // 1 minute
-  
+
   // Static content can be stale for longer
   STATIC_CONTENT: 10 * 60 * 1000, // 10 minutes
-  
+
   // Reference data stays fresh longer
   REFERENCE_DATA: 30 * 60 * 1000, // 30 minutes
-  
+
   // Real-time data should always be considered stale
   REALTIME: 0,
-  
+
   // Session data moderate staleness
   SESSION_DATA: 5 * 60 * 1000,  // 5 minutes
 } as const;
@@ -56,7 +57,9 @@ const RETRY_CONFIG = {
     retry: (failureCount: number, error: unknown) => {
       // Don't retry on 4xx errors (client errors)
       const hasResponse = error && typeof error === 'object' && 'response' in error;
-      const status = hasResponse ? (error as { response: { status?: number } }).response?.status : undefined;
+      const status = hasResponse ? (error as {
+        response: { status?: number }
+      }).response?.status : undefined;
       if (status >= 400 && status < 500) {
         return false;
       }
@@ -65,12 +68,14 @@ const RETRY_CONFIG = {
     },
     retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
   },
-  
+
   // More aggressive retry for critical operations
   CRITICAL: {
     retry: (failureCount: number, error: unknown) => {
       const hasResponse = error && typeof error === 'object' && 'response' in error;
-      const status = hasResponse ? (error as { response: { status?: number } }).response?.status : undefined;
+      const status = hasResponse ? (error as {
+        response: { status?: number }
+      }).response?.status : undefined;
       if (status >= 400 && status < 500) {
         return false;
       }
@@ -78,7 +83,7 @@ const RETRY_CONFIG = {
     },
     retryDelay: (attemptIndex: number) => Math.min(500 * 2 ** attemptIndex, 30000),
   },
-  
+
   // No retry for mutations by default
   MUTATION: {
     retry: 0,
@@ -127,34 +132,34 @@ export const queryClient = new QueryClient({
     queries: {
       // Default cache time - can be overridden per query
       gcTime: CACHE_TIMES.MEDIUM,
-      
+
       // Default stale time
       staleTime: STALE_TIMES.SESSION_DATA,
-      
+
       // Retry configuration
       ...RETRY_CONFIG.DEFAULT,
-      
+
       // Refetch configuration
       refetchOnWindowFocus: false,  // Disable aggressive refetching
       refetchOnReconnect: 'always', // Always refetch on reconnect
       refetchOnMount: true,         // Refetch on component mount if stale
-      
+
       // Network mode configuration
       networkMode: 'online',
-      
+
       // Error handling
       throwOnError: false,          // Handle errors in components, not globally
-      
+
       // Performance optimizations
       structuralSharing: true,      // Optimize re-renders
     },
     mutations: {
       // Default mutation configuration
       ...RETRY_CONFIG.MUTATION,
-      
+
       // Network mode for mutations
       networkMode: 'online',
-      
+
       // Error handling for mutations
       throwOnError: false,
     },
@@ -167,21 +172,21 @@ export const localStoragePersister = createSyncStoragePersister({
   key: 'focushive-query-cache',
   serialize: JSON.stringify,
   deserialize: JSON.parse,
-  
+
   // Handle persistence errors (e.g., storage quota exceeded)
   retry: (props) => {
-    const { error, errorCount } = props;
-    
+    const {error, errorCount} = props;
+
     // Query persistence failed, attempting recovery
-    
+
     // Try to free up space by removing old queries
     if (errorCount < 3 && error.message.includes('quota')) {
       try {
         // Remove oldest cached data
-        const cacheKeys = Object.keys(localStorage).filter(key => 
-          key.startsWith('focushive-query-cache')
+        const cacheKeys = Object.keys(localStorage).filter(key =>
+            key.startsWith('focushive-query-cache')
         );
-        
+
         if (cacheKeys.length > 0) {
           // Remove the first (oldest) cache entry
           localStorage.removeItem(cacheKeys[0]);
@@ -189,10 +194,10 @@ export const localStoragePersister = createSyncStoragePersister({
         }
       } catch (cleanupError) {
         // Cache cleanup failed - quota issue persists
-        console.error('Failed to cleanup cache:', cleanupError);
+        logger.error('Failed to cleanup cache:', cleanupError);
       }
     }
-    
+
     // Give up after 3 attempts
     return undefined;
   },
@@ -205,17 +210,17 @@ if (typeof window !== 'undefined') {
     persister: localStoragePersister,
     maxAge: CACHE_TIMES.LONG, // Keep persisted data for 24 hours max
     buster: 'focushive-v1',   // Cache buster for major app updates
-    
+
     // Dehydration options - what to persist
     dehydrateOptions: {
       shouldDehydrateQuery: (query) => {
         // Only persist successful queries that aren't real-time
-        return query.state.status === 'success' && 
-               query.queryKey[0] !== 'presence' && // Don't persist real-time data
-               query.queryKey[0] !== 'websocket';   // Don't persist websocket data
+        return query.state.status === 'success' &&
+            query.queryKey[0] !== 'presence' && // Don't persist real-time data
+            query.queryKey[0] !== 'websocket';   // Don't persist websocket data
       },
     },
-    
+
     // Hydration options - how to restore
     hydrateOptions: {
       // Add metadata to hydrated queries
@@ -239,7 +244,7 @@ export const queryKeys = {
     profile: () => [...queryKeys.auth.all, 'profile'] as const,
     permissions: () => [...queryKeys.auth.all, 'permissions'] as const,
   },
-  
+
   // Hive queries
   hives: {
     all: ['hives'] as const,
@@ -248,7 +253,7 @@ export const queryKeys = {
     members: (id: string) => [...queryKeys.hives.all, 'members', id] as const,
     search: (query: string) => [...queryKeys.hives.all, 'search', query] as const,
   },
-  
+
   // Presence queries
   presence: {
     all: ['presence'] as const,
@@ -256,7 +261,7 @@ export const queryKeys = {
     hive: (hiveId: string) => [...queryKeys.presence.all, 'hive', hiveId] as const,
     sessions: (hiveId?: string) => [...queryKeys.presence.all, 'sessions', hiveId] as const,
   },
-  
+
   // Timer queries
   timer: {
     all: ['timer'] as const,
@@ -265,7 +270,7 @@ export const queryKeys = {
     stats: (period: 'daily' | 'weekly' | 'monthly') => [...queryKeys.timer.all, 'stats', period] as const,
     settings: () => [...queryKeys.timer.all, 'settings'] as const,
   },
-  
+
   // Analytics queries
   analytics: {
     all: ['analytics'] as const,
@@ -273,14 +278,14 @@ export const queryKeys = {
     hiveLeaderboard: (hiveId: string) => [...queryKeys.analytics.all, 'leaderboard', hiveId] as const,
     insights: (period: string) => [...queryKeys.analytics.all, 'insights', period] as const,
   },
-  
+
   // Chat queries
   chat: {
     all: ['chat'] as const,
     messages: (hiveId: string, params?: unknown) => [...queryKeys.chat.all, 'messages', hiveId, params] as const,
     recent: (hiveId: string) => [...queryKeys.chat.all, 'recent', hiveId] as const,
   },
-  
+
   // Notifications queries
   notifications: {
     all: ['notifications'] as const,
@@ -288,7 +293,7 @@ export const queryKeys = {
     unread: () => [...queryKeys.notifications.all, 'unread'] as const,
     count: () => [...queryKeys.notifications.all, 'count'] as const,
   },
-  
+
   // Buddy system queries
   buddy: {
     all: ['buddy'] as const,
@@ -298,7 +303,7 @@ export const queryKeys = {
     sessions: (relationshipId: string) => [...queryKeys.buddy.all, 'sessions', relationshipId] as const,
     stats: () => [...queryKeys.buddy.all, 'stats'] as const,
   },
-  
+
   // Music queries
   music: {
     all: ['music'] as const,
@@ -306,7 +311,7 @@ export const queryKeys = {
     playlists: () => [...queryKeys.music.all, 'playlists'] as const,
     current: () => [...queryKeys.music.all, 'current'] as const,
   },
-  
+
   // Forum queries
   forum: {
     all: ['forum'] as const,
@@ -319,29 +324,29 @@ export const queryKeys = {
 // Cache invalidation helpers
 export const invalidateQueries = {
   // Invalidate all auth-related queries
-  auth: () => queryClient.invalidateQueries({ queryKey: queryKeys.auth.all }),
-  
+  auth: () => queryClient.invalidateQueries({queryKey: queryKeys.auth.all}),
+
   // Invalidate specific hive data
   hive: (hiveId: string) => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.hives.detail(hiveId) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.hives.members(hiveId) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.presence.hive(hiveId) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.chat.messages(hiveId) });
+    queryClient.invalidateQueries({queryKey: queryKeys.hives.detail(hiveId)});
+    queryClient.invalidateQueries({queryKey: queryKeys.hives.members(hiveId)});
+    queryClient.invalidateQueries({queryKey: queryKeys.presence.hive(hiveId)});
+    queryClient.invalidateQueries({queryKey: queryKeys.chat.messages(hiveId)});
   },
-  
+
   // Invalidate user-specific data
   user: () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.auth.user() });
-    queryClient.invalidateQueries({ queryKey: queryKeys.timer.current() });
-    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.buddy.all });
+    queryClient.invalidateQueries({queryKey: queryKeys.auth.user()});
+    queryClient.invalidateQueries({queryKey: queryKeys.timer.current()});
+    queryClient.invalidateQueries({queryKey: queryKeys.notifications.all});
+    queryClient.invalidateQueries({queryKey: queryKeys.buddy.all});
   },
-  
+
   // Invalidate all presence data (for real-time updates)
-  presence: () => queryClient.invalidateQueries({ queryKey: queryKeys.presence.all }),
-  
+  presence: () => queryClient.invalidateQueries({queryKey: queryKeys.presence.all}),
+
   // Invalidate all notifications
-  notifications: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all }),
+  notifications: () => queryClient.invalidateQueries({queryKey: queryKeys.notifications.all}),
 };
 
 // Prefetch helpers for common data
@@ -363,7 +368,7 @@ export const prefetchQueries = {
       }),
     ]);
   },
-  
+
   // Prefetch hive data when navigating
   hiveData: async (hiveId: string) => {
     await Promise.allSettled([

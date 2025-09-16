@@ -3,6 +3,57 @@
  * Provides integration with monitoring services like Sentry and LogRocket
  */
 
+// Internal SDK interface types
+interface SentrySDK {
+  init(options: {
+    dsn: string;
+    environment?: string;
+    release?: string;
+    integrations?: unknown[];
+    tracesSampleRate?: number;
+    beforeSend?: (event: unknown) => unknown | null;
+  }): void;
+  setUser(user: ErrorContext['user'] | null): void;
+  setTag(key: string, value: string): void;
+  setContext(key: string, context: Record<string, unknown>): void;
+  addBreadcrumb(breadcrumb: {
+    message: string;
+    category?: string;
+    level?: string;
+    data?: Record<string, unknown>;
+  }): void;
+  captureException(error: Error, context?: {
+    user?: ErrorContext['user'];
+    tags?: Record<string, string>;
+    extra?: Record<string, unknown>;
+    level?: string;
+    fingerprint?: string[];
+  }): string;
+  captureMessage(message: string, level?: string, context?: {
+    user?: ErrorContext['user'];
+    tags?: Record<string, string>;
+    extra?: Record<string, unknown>;
+    fingerprint?: string[];
+  }): string;
+}
+
+interface LogRocketSDK {
+  init(appId: string, options?: {
+    release?: string;
+    console?: {
+      shouldAggregateConsoleErrors?: boolean;
+    };
+    network?: {
+      requestSanitizer?: (request: Record<string, unknown>) => Record<string, unknown>;
+      responseSanitizer?: (response: Record<string, unknown>) => Record<string, unknown>;
+    };
+  }): void;
+  identify(userId: string, userInfo?: Record<string, unknown>): void;
+  track(event: string, properties?: Record<string, unknown>): void;
+  sessionURL?: string;
+  addTag(key: string, value: string): void;
+}
+
 export interface ErrorReportingConfig {
   sentryDsn?: string
   logRocketAppId?: string
@@ -46,11 +97,17 @@ abstract class ErrorReportingService {
   }
 
   abstract initialize(): Promise<void>
+
   abstract captureError(error: Error, context?: ErrorContext): string
+
   abstract captureMessage(message: string, level?: ErrorContext['level'], context?: ErrorContext): string
+
   abstract addBreadcrumb(breadcrumb: BreadcrumbData): void
+
   abstract setUser(user: ErrorContext['user']): void
+
   abstract setTag(key: string, value: string): void
+
   abstract setContext(key: string, context: Record<string, unknown>): void
 
   public isReady(): boolean {
@@ -62,7 +119,7 @@ abstract class ErrorReportingService {
  * Sentry Error Reporting Implementation
  */
 class SentryErrorReporting extends ErrorReportingService {
-  private sentry: typeof import('@sentry/react') | null = null
+  private sentry: SentrySDK | null = null
 
   async initialize(): Promise<void> {
     if (!this.config.enableSentry || !this.config.sentryDsn) {
@@ -70,14 +127,30 @@ class SentryErrorReporting extends ErrorReportingService {
     }
 
     if (!this.config.enableInDevelopment && import.meta.env.DEV) {
-      console.log('📊 Sentry disabled in development mode')
+      // console.log('📊 Sentry disabled in development mode')
       return
     }
 
     try {
       // Dynamic import to avoid bundling Sentry if not needed
-      const { init, setUser, setTag, setContext, addBreadcrumb, captureException, captureMessage } = await import('@sentry/react')
-      this.sentry = { init, setUser, setTag, setContext, addBreadcrumb, captureException, captureMessage } as typeof import('@sentry/react')
+      const {
+        init,
+        setUser,
+        setTag,
+        setContext,
+        addBreadcrumb,
+        captureException,
+        captureMessage
+      } = await import('@sentry/react')
+      this.sentry = {
+        init,
+        setUser,
+        setTag,
+        setContext,
+        addBreadcrumb,
+        captureException,
+        captureMessage
+      }
 
       this.sentry.init({
         dsn: this.config.sentryDsn,
@@ -87,10 +160,11 @@ class SentryErrorReporting extends ErrorReportingService {
           // Add performance monitoring if needed
         ],
         tracesSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
-        beforeSend: (event) => {
+        beforeSend: (event: unknown) => {
           // Filter out certain errors in development
-          if (import.meta.env.DEV && event.exception) {
-            const error = event.exception.values?.[0]
+          if (import.meta.env.DEV && event && typeof event === 'object' && 'exception' in event) {
+            const exception = (event as {exception?: {values?: Array<{value?: string}>}}).exception
+            const error = exception?.values?.[0]
             if (error?.value?.includes('ResizeObserver loop limit exceeded')) {
               return null // Don't send this common development error
             }
@@ -108,9 +182,9 @@ class SentryErrorReporting extends ErrorReportingService {
       }
 
       this.isInitialized = true
-      console.log('📊 Sentry error reporting initialized')
-    } catch (error) {
-      console.warn('Failed to initialize Sentry:', error)
+      // console.log('📊 Sentry error reporting initialized')
+    } catch {
+      // console.warn('Failed to initialize Sentry');
     }
   }
 
@@ -183,7 +257,7 @@ class SentryErrorReporting extends ErrorReportingService {
  * LogRocket Session Recording Implementation
  */
 class LogRocketService {
-  private logRocket: typeof import('logrocket') | null = null
+  private logRocket: LogRocketSDK | null = null
   private isInitialized = false
   private config: ErrorReportingConfig
 
@@ -197,14 +271,14 @@ class LogRocketService {
     }
 
     if (!this.config.enableInDevelopment && import.meta.env.DEV) {
-      console.log('📹 LogRocket disabled in development mode')
+      // console.log('📹 LogRocket disabled in development mode')
       return
     }
 
     try {
       // Dynamic import to avoid bundling LogRocket if not needed
       const LogRocket = await import('logrocket')
-      this.logRocket = LogRocket.default
+      this.logRocket = LogRocket.default || (LogRocket as unknown as LogRocketSDK)
 
       this.logRocket.init(this.config.logRocketAppId, {
         release: this.config.release,
@@ -212,10 +286,13 @@ class LogRocketService {
           shouldAggregateConsoleErrors: true,
         },
         network: {
-          requestSanitizer: (request) => {
+          requestSanitizer: (request: Record<string, unknown>): Record<string, unknown> => {
             // Sanitize sensitive data from network requests
-            if (request.headers && request.headers.authorization) {
-              request.headers.authorization = '[REDACTED]'
+            if (request && typeof request === 'object' && 'headers' in request) {
+              const headers = (request as {headers?: {authorization?: string}}).headers
+              if (headers && typeof headers === 'object' && 'authorization' in headers) {
+                headers.authorization = '[REDACTED]'
+              }
             }
             return request
           },
@@ -235,9 +312,9 @@ class LogRocketService {
       }
 
       this.isInitialized = true
-      console.log('📹 LogRocket session recording initialized')
-    } catch (error) {
-      console.warn('Failed to initialize LogRocket:', error)
+      // console.log('📹 LogRocket session recording initialized')
+    } catch {
+      // console.warn('Failed to initialize LogRocket');
     }
   }
 
@@ -298,16 +375,16 @@ class ErrorReportingManager {
       this.logRocket.initialize(),
     ])
 
-    console.log('📊 Error reporting manager initialized')
+    // console.log('📊 Error reporting manager initialized')
   }
 
   captureError(error: Error, context?: ErrorContext): string {
     const eventId = this.sentry.captureError(error, context)
-    
+
     // Add LogRocket session URL to Sentry context if available
     const sessionURL = this.logRocket.getSessionURL()
     if (sessionURL) {
-      this.sentry.setContext('logrocket', { sessionURL })
+      this.sentry.setContext('logrocket', {sessionURL})
     }
 
     // Track error in LogRocket
@@ -323,7 +400,7 @@ class ErrorReportingManager {
 
   captureMessage(message: string, level: ErrorContext['level'] = 'info', context?: ErrorContext): string {
     const eventId = this.sentry.captureMessage(message, level, context)
-    
+
     // Track message in LogRocket
     this.logRocket.track('Message Logged', {
       message,
@@ -337,7 +414,7 @@ class ErrorReportingManager {
 
   addBreadcrumb(breadcrumb: BreadcrumbData): void {
     this.sentry.addBreadcrumb(breadcrumb)
-    
+
     // LogRocket automatically captures user interactions as breadcrumbs
   }
 

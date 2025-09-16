@@ -1,12 +1,13 @@
 package com.focushive.presence.service.impl;
 
-import com.focushive.config.CacheConfig;
+import com.focushive.config.UnifiedRedisConfig;
 import com.focushive.hive.repository.HiveMemberRepository;
 import com.focushive.presence.dto.*;
 import com.focushive.presence.service.PresenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "app.features.redis.enabled", havingValue = "true", matchIfMissing = false)
 public class OptimizedPresenceServiceImpl implements PresenceService {
     
     private static final String USER_PRESENCE_KEY = "presence:user:";

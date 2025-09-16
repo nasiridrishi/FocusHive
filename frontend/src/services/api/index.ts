@@ -1,6 +1,6 @@
 /**
  * Centralized API Services Export
- * 
+ *
  * Provides centralized access to all API services with:
  * - Authentication handling
  * - HTTP interceptors
@@ -9,44 +9,44 @@
  */
 
 // Core API utilities
-import { apiClient } from './httpInterceptors';
-export { 
-  apiClient,
-  type StandardizedError 
-} from './httpInterceptors';
-
+import {apiClient} from './httpInterceptors';
 // Authentication API
 import authApiService from './authApi';
-export { default as authApiService } from './authApi';
-
 // Hive API
 import hiveApiService from './hiveApi';
-export { default as hiveApiService } from './hiveApi';
-
-// Presence API  
+// Presence API
 import presenceApiService from './presenceApi';
-export { default as presenceApiService } from './presenceApi';
-
 // Timer API
 import timerApiService from './timerApi';
-export { default as timerApiService } from './timerApi';
-
 // Analytics API
 import analyticsApiService from './analyticsApi';
-export { default as analyticsApiService } from './analyticsApi';
-
 // New centralized API configuration
 import {
   API_ENDPOINTS,
-  SERVICE_ENDPOINTS,
   buildEndpoint,
   getServiceUrl,
   HTTP_STATUS,
+  SERVICE_ENDPOINTS,
   TIMEOUT_CONFIG
 } from '../../config/apiConfig';
 
 // Legacy environment configuration for backward compatibility
-import { getApiConfig } from '../config/environmentConfig';
+import {getApiConfig} from '../config/environmentConfig';
+
+export {
+  apiClient,
+  type StandardizedError
+} from './httpInterceptors';
+
+export {default as authApiService} from './authApi';
+
+export {default as hiveApiService} from './hiveApi';
+
+export {default as presenceApiService} from './presenceApi';
+
+export {default as timerApiService} from './timerApi';
+
+export {default as analyticsApiService} from './analyticsApi';
 
 // API base configuration - uses validated environment variables
 export const API_CONFIG = {
@@ -64,7 +64,7 @@ export const API_CONFIG = {
 } as const;
 
 // Re-export from centralized configuration
-export { API_ENDPOINTS, SERVICE_ENDPOINTS, buildEndpoint, getServiceUrl, HTTP_STATUS };
+export {API_ENDPOINTS, SERVICE_ENDPOINTS, buildEndpoint, getServiceUrl, HTTP_STATUS};
 
 // Re-exported from centralized configuration - see src/config/apiConfig.ts
 

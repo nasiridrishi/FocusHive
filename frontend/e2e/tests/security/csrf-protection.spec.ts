@@ -1,11 +1,11 @@
 /**
  * CSRF Protection Security Tests (UOL-44.15)
- * 
+ *
  * Comprehensive Cross-Site Request Forgery (CSRF) protection testing for FocusHive
- * 
+ *
  * Test Categories:
  * 1. CSRF Token Validation
- * 2. Same-Origin Policy Enforcement  
+ * 2. Same-Origin Policy Enforcement
  * 3. SameSite Cookie Attributes
  * 4. Referer Header Validation
  * 5. Custom Header Requirements
@@ -16,8 +16,7 @@
  * 10. WebSocket CSRF Prevention
  */
 
-import { test, expect } from '@playwright/test';
-import { Page, BrowserContext } from '@playwright/test';
+import {BrowserContext, expect, Page, test} from '@playwright/test';
 
 interface CSRFTestConfig {
   endpoint: string;
@@ -28,7 +27,8 @@ interface CSRFTestConfig {
 }
 
 class CSRFTestHelper {
-  constructor(private page: Page, private context: BrowserContext) {}
+  constructor(private page: Page, private context: BrowserContext) {
+  }
 
   async extractCSRFToken(): Promise<string | null> {
     // Try multiple common CSRF token extraction methods
@@ -61,12 +61,13 @@ class CSRFTestHelper {
         _token?: string;
         Laravel?: { csrfToken: string };
       }
+
       const windowWithCSRF = window as WindowWithCSRF;
-      
-      return windowWithCSRF.csrfToken || 
-             windowWithCSRF._token || 
-             windowWithCSRF.Laravel?.csrfToken || 
-             null;
+
+      return windowWithCSRF.csrfToken ||
+          windowWithCSRF._token ||
+          windowWithCSRF.Laravel?.csrfToken ||
+          null;
     });
 
     return token;
@@ -79,14 +80,14 @@ class CSRFTestHelper {
   }> {
     try {
       const response = await this.page.request[config.method.toLowerCase() as keyof typeof this.page.request](
-        config.endpoint,
-        {
-          data: config.data,
-          headers: {
-            'Content-Type': 'application/json',
-            // Deliberately omit CSRF token and custom headers
+          config.endpoint,
+          {
+            data: config.data,
+            headers: {
+              'Content-Type': 'application/json',
+              // Deliberately omit CSRF token and custom headers
+            }
           }
-        }
       );
 
       return {
@@ -103,9 +104,9 @@ class CSRFTestHelper {
   }
 
   async simulateCrossOriginRequest(
-    targetUrl: string,
-    method: string = 'POST',
-    data: Record<string, unknown> = {}
+      targetUrl: string,
+      method: string = 'POST',
+      data: Record<string, unknown> = {}
   ): Promise<{
     blocked: boolean;
     statusCode: number;
@@ -114,7 +115,7 @@ class CSRFTestHelper {
     try {
       // Create a new page to simulate cross-origin request
       const attackerPage = await this.context.newPage();
-      
+
       // Navigate to a different origin (simulate attacker site)
       await attackerPage.goto('data:text/html,<html><body><h1>Attacker Site</h1></body></html>');
 
@@ -129,7 +130,7 @@ class CSRFTestHelper {
             body: JSON.stringify(dataParam),
             credentials: 'include' // Include cookies
           });
-          
+
           return {
             ok: response.ok,
             status: response.status,
@@ -195,7 +196,7 @@ class CSRFTestHelper {
       const headers = route.request().headers();
       const origin = headers.origin;
       const referer = headers.referer;
-      
+
       // Check if origin header is present and valid
       if (origin) {
         const pageUrl = new URL(this.page.url());
@@ -214,15 +215,15 @@ class CSRFTestHelper {
     return originValidated;
   }
 
-  async testDoubleSubmitCookie(endpoint: string): Promise<{
+  async testDoubleSubmitCookie(_endpoint: string): Promise<{
     hasCSRFCookie: boolean;
     hasCSRFHeader: boolean;
     tokensMatch: boolean;
   }> {
     const cookies = await this.context.cookies();
-    const csrfCookie = cookies.find(c => 
-      c.name.toLowerCase().includes('csrf') || 
-      c.name.toLowerCase().includes('xsrf')
+    const csrfCookie = cookies.find(c =>
+        c.name.toLowerCase().includes('csrf') ||
+        c.name.toLowerCase().includes('xsrf')
     );
 
     const csrfToken = await this.extractCSRFToken();
@@ -239,7 +240,7 @@ test.describe('CSRF Protection Security Tests', () => {
   let csrfHelper: CSRFTestHelper;
   let context: BrowserContext;
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({browser}) => {
     context = await browser.newContext();
   });
 
@@ -247,11 +248,11 @@ test.describe('CSRF Protection Security Tests', () => {
     await context.close();
   });
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({page: _page}) => {
     csrfHelper = new CSRFTestHelper(page, context);
-    
+
     await page.goto('/');
-    
+
     // Login with test user
     await page.click('[data-testid="login-button"]');
     await page.fill('[data-testid="email-input"]', 'test@example.com');
@@ -261,29 +262,29 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('CSRF Token Validation', () => {
-    test('should include CSRF token in forms', async ({ page }) => {
+    test('should include CSRF token in forms', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const csrfToken = await csrfHelper.extractCSRFToken();
       expect(csrfToken).toBeTruthy();
       expect(csrfToken).toMatch(/^[a-zA-Z0-9+/=]+$/); // Base64-like pattern
     });
 
-    test('should reject requests without CSRF token', async ({ page }) => {
+    test('should reject requests without CSRF token', async ({page: _page}) => {
       const testConfigs: CSRFTestConfig[] = [
         {
           endpoint: '/api/hives',
           method: 'POST',
           requiresAuth: true,
           requiresCSRF: true,
-          data: { name: 'Test Hive', description: 'Test Description' }
+          data: {name: 'Test Hive', description: 'Test Description'}
         },
         {
           endpoint: '/api/profile',
           method: 'PUT',
           requiresAuth: true,
           requiresCSRF: true,
-          data: { displayName: 'New Name' }
+          data: {displayName: 'New Name'}
         },
         {
           endpoint: '/api/hives/1',
@@ -295,16 +296,16 @@ test.describe('CSRF Protection Security Tests', () => {
 
       for (const config of testConfigs) {
         const result = await csrfHelper.attemptCSRFAttack(config);
-        
+
         // Should be rejected (403 Forbidden or 422 Unprocessable Entity)
         expect([403, 422, 419]).toContain(result.statusCode);
         expect(result.success).toBe(false);
       }
     });
 
-    test('should accept requests with valid CSRF token', async ({ page }) => {
+    test('should accept requests with valid CSRF token', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const csrfToken = await csrfHelper.extractCSRFToken();
       expect(csrfToken).toBeTruthy();
 
@@ -316,7 +317,7 @@ test.describe('CSRF Protection Security Tests', () => {
         },
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken!,
+          'X-CSRF-Token': csrfToken || '',
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
@@ -325,22 +326,22 @@ test.describe('CSRF Protection Security Tests', () => {
       expect([200, 201]).toContain(response.status());
     });
 
-    test('should rotate CSRF tokens after use', async ({ page }) => {
+    test('should rotate CSRF tokens after use', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const initialToken = await csrfHelper.extractCSRFToken();
-      
+
       // Submit form to use the token
       await page.fill('[data-testid="hive-name-input"]', 'Token Rotation Test');
       await page.fill('[data-testid="hive-description-input"]', 'Testing token rotation');
       await page.click('[data-testid="create-hive-submit"]');
-      
+
       // Wait for redirect or response
       await page.waitForTimeout(2000);
-      
+
       // Get new token
       const newToken = await csrfHelper.extractCSRFToken();
-      
+
       // Tokens should be different (indicating rotation)
       if (initialToken && newToken) {
         expect(initialToken).not.toBe(newToken);
@@ -349,27 +350,27 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('Same-Origin Policy Enforcement', () => {
-    test('should block cross-origin state-changing requests', async ({ page }) => {
+    test('should block cross-origin state-changing requests', async ({page: _page}) => {
       const crossOriginTests = [
-        { endpoint: '/api/hives', method: 'POST' },
-        { endpoint: '/api/profile', method: 'PUT' },
-        { endpoint: '/api/hives/1', method: 'DELETE' }
+        {endpoint: '/api/hives', method: 'POST'},
+        {endpoint: '/api/profile', method: 'PUT'},
+        {endpoint: '/api/hives/1', method: 'DELETE'}
       ];
 
-      for (const { endpoint, method } of crossOriginTests) {
+      for (const {endpoint, method} of crossOriginTests) {
         const result = await csrfHelper.simulateCrossOriginRequest(
-          `${page.url().split('/')[0]}//${page.url().split('//')[1].split('/')[0]}${endpoint}`,
-          method,
-          { malicious: 'data' }
+            `${page.url().split('/')[0]}//${page.url().split('//')[1].split('/')[0]}${endpoint}`,
+            method,
+            {malicious: 'data'}
         );
 
         expect(result.blocked).toBe(true);
       }
     });
 
-    test('should allow same-origin requests', async ({ page }) => {
+    test('should allow same-origin requests', async ({page: _page}) => {
       const csrfToken = await csrfHelper.extractCSRFToken();
-      
+
       // Make same-origin request with CSRF token
       const response = await page.evaluate(async (token) => {
         try {
@@ -380,10 +381,10 @@ test.describe('CSRF Protection Security Tests', () => {
               'X-CSRF-Token': token,
               'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ theme: 'dark' }),
+            body: JSON.stringify({theme: 'dark'}),
             credentials: 'same-origin'
           });
-          
+
           return {
             ok: response.ok,
             status: response.status
@@ -403,22 +404,22 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('SameSite Cookie Protection', () => {
-    test('should use SameSite cookie attributes', async ({ page }) => {
+    test('should use SameSite cookie attributes', async ({page: _page}) => {
       const cookieInfo = await csrfHelper.checkSameSiteCookies();
-      
+
       // Should have at least one secure cookie
       expect(cookieInfo.hasSecureCookies).toBe(true);
-      
+
       // Should use SameSite=Lax or Strict
       expect(cookieInfo.hasSameSiteLax || cookieInfo.hasSameSiteStrict).toBe(true);
-      
+
       // Authentication cookies should be secure and httpOnly
-      const authCookies = cookieInfo.cookieDetails.filter(c => 
-        c.name.toLowerCase().includes('auth') || 
-        c.name.toLowerCase().includes('session') ||
-        c.name.toLowerCase().includes('token')
+      const authCookies = cookieInfo.cookieDetails.filter(c =>
+          c.name.toLowerCase().includes('auth') ||
+          c.name.toLowerCase().includes('session') ||
+          c.name.toLowerCase().includes('token')
       );
-      
+
       authCookies.forEach(cookie => {
         expect(cookie.secure).toBe(true);
         expect(cookie.httpOnly).toBe(true);
@@ -426,7 +427,7 @@ test.describe('CSRF Protection Security Tests', () => {
       });
     });
 
-    test('should not send cookies in cross-site requests', async ({ page }) => {
+    test('should not send cookies in cross-site requests', async ({page: _page}) => {
       // This test simulates a cross-site request and verifies cookies aren't sent
       let cookiesSent = false;
 
@@ -445,13 +446,13 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('Referer Header Validation', () => {
-    test('should validate referer header for state-changing requests', async ({ page }) => {
+    test('should validate referer header for state-changing requests', async ({page: _page}) => {
       let refererValid = false;
 
       await page.route('**/api/hives', route => {
         const headers = route.request().headers();
         const referer = headers.referer;
-        
+
         if (referer) {
           const pageOrigin = new URL(page.url()).origin;
           const refererOrigin = new URL(referer).origin;
@@ -462,11 +463,11 @@ test.describe('CSRF Protection Security Tests', () => {
       });
 
       const csrfToken = await csrfHelper.extractCSRFToken();
-      
+
       await page.request.post('/api/hives', {
-        data: { name: 'Referer Test', description: 'Testing referer validation' },
+        data: {name: 'Referer Test', description: 'Testing referer validation'},
         headers: {
-          'X-CSRF-Token': csrfToken!,
+          'X-CSRF-Token': csrfToken || '',
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
@@ -474,9 +475,9 @@ test.describe('CSRF Protection Security Tests', () => {
       expect(refererValid).toBe(true);
     });
 
-    test('should reject requests with invalid referer', async ({ page }) => {
+    test('should reject requests with invalid referer', async ({page: _page}) => {
       const response = await page.request.post('/api/hives', {
-        data: { name: 'Invalid Referer Test' },
+        data: {name: 'Invalid Referer Test'},
         headers: {
           'Referer': 'https://malicious-site.com/',
           'X-Requested-With': 'XMLHttpRequest'
@@ -489,22 +490,22 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('Custom Header Requirements', () => {
-    test('should require X-Requested-With header for AJAX requests', async ({ page }) => {
+    test('should require X-Requested-With header for AJAX requests', async ({page: _page}) => {
       const csrfToken = await csrfHelper.extractCSRFToken();
-      
+
       // Request without X-Requested-With header
       const responseWithoutHeader = await page.request.post('/api/hives', {
-        data: { name: 'No Header Test' },
+        data: {name: 'No Header Test'},
         headers: {
-          'X-CSRF-Token': csrfToken!
+          'X-CSRF-Token': csrfToken || ''
         }
       });
 
       // Request with X-Requested-With header
       const responseWithHeader = await page.request.post('/api/hives', {
-        data: { name: 'With Header Test' },
+        data: {name: 'With Header Test'},
         headers: {
-          'X-CSRF-Token': csrfToken!,
+          'X-CSRF-Token': csrfToken || '',
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
@@ -513,14 +514,14 @@ test.describe('CSRF Protection Security Tests', () => {
       expect(responseWithHeader.status()).toBeLessThanOrEqual(responseWithoutHeader.status());
     });
 
-    test('should accept requests with proper custom headers', async ({ page }) => {
+    test('should accept requests with proper custom headers', async ({page: _page}) => {
       const csrfToken = await csrfHelper.extractCSRFToken();
-      
+
       const response = await page.request.put('/api/user/preferences', {
-        data: { theme: 'light', notifications: true },
+        data: {theme: 'light', notifications: true},
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken!,
+          'X-CSRF-Token': csrfToken || '',
           'X-Requested-With': 'XMLHttpRequest'
         }
       });
@@ -530,19 +531,19 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('Double Submit Cookie Pattern', () => {
-    test('should implement double submit cookie pattern', async ({ page }) => {
+    test('should implement double submit cookie pattern', async ({page: _page}) => {
       const doubleSubmitTest = await csrfHelper.testDoubleSubmitCookie('/api/hives');
-      
+
       // Should have both cookie and header/token
       expect(doubleSubmitTest.hasCSRFCookie || doubleSubmitTest.hasCSRFHeader).toBe(true);
     });
 
-    test('should reject mismatched CSRF tokens', async ({ page }) => {
-      const csrfToken = await csrfHelper.extractCSRFToken();
-      
+    test('should reject mismatched CSRF tokens', async ({page: _page}) => {
+      const _csrfToken = await csrfHelper.extractCSRFToken();
+
       // Make request with wrong CSRF token
       const response = await page.request.post('/api/hives', {
-        data: { name: 'Mismatched Token Test' },
+        data: {name: 'Mismatched Token Test'},
         headers: {
           'X-CSRF-Token': 'wrong-token-value',
           'X-Requested-With': 'XMLHttpRequest'
@@ -555,13 +556,13 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('AJAX and API CSRF Protection', () => {
-    test('should protect all API endpoints', async ({ page }) => {
+    test('should protect all API endpoints', async ({page: _page}) => {
       const apiEndpoints = [
-        { path: '/api/hives', method: 'POST' },
-        { path: '/api/hives/1', method: 'PUT' },
-        { path: '/api/hives/1', method: 'DELETE' },
-        { path: '/api/user/profile', method: 'PUT' },
-        { path: '/api/user/preferences', method: 'POST' }
+        {path: '/api/hives', method: 'POST'},
+        {path: '/api/hives/1', method: 'PUT'},
+        {path: '/api/hives/1', method: 'DELETE'},
+        {path: '/api/user/profile', method: 'PUT'},
+        {path: '/api/user/preferences', method: 'POST'}
       ];
 
       for (const endpoint of apiEndpoints) {
@@ -570,7 +571,7 @@ test.describe('CSRF Protection Security Tests', () => {
           method: endpoint.method as CSRFTestConfig['method'],
           requiresAuth: true,
           requiresCSRF: true,
-          data: { test: 'data' }
+          data: {test: 'data'}
         });
 
         // All API endpoints should be protected
@@ -579,7 +580,7 @@ test.describe('CSRF Protection Security Tests', () => {
       }
     });
 
-    test('should allow GET requests without CSRF token', async ({ page }) => {
+    test('should allow GET requests without CSRF token', async ({page: _page}) => {
       const getEndpoints = [
         '/api/hives',
         '/api/user/profile',
@@ -588,7 +589,7 @@ test.describe('CSRF Protection Security Tests', () => {
 
       for (const endpoint of getEndpoints) {
         const response = await page.request.get(endpoint);
-        
+
         // GET requests should be allowed without CSRF token
         expect([200, 401]).toContain(response.status()); // 401 if not authenticated
       }
@@ -596,12 +597,12 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('WebSocket CSRF Prevention', () => {
-    test('should validate WebSocket connections', async ({ page }) => {
+    test('should validate WebSocket connections', async ({page: _page}) => {
       await page.goto('/hive/test-hive');
-      
+
       // Wait for WebSocket connection
       await page.waitForTimeout(2000);
-      
+
       const wsConnectionSecure = await page.evaluate(() => {
         const ws = (window as unknown as { webSocket?: WebSocket }).webSocket;
         return ws ? ws.url.startsWith('wss://') : false;
@@ -611,12 +612,12 @@ test.describe('CSRF Protection Security Tests', () => {
       expect(wsConnectionSecure).toBe(true);
     });
 
-    test('should authenticate WebSocket messages', async ({ page }) => {
+    test('should authenticate WebSocket messages', async ({page: _page}) => {
       await page.goto('/hive/test-hive');
-      
+
       // Wait for WebSocket connection
       await page.waitForTimeout(2000);
-      
+
       let messageAuthenticated = false;
 
       // Monitor WebSocket messages
@@ -627,9 +628,9 @@ test.describe('CSRF Protection Security Tests', () => {
             try {
               const data = JSON.parse(event.data);
               // Check if message includes authentication info
-              (window as unknown as { ___ws_auth_detected___?: boolean }).___ws_auth_detected___ = 
-                data.token || data.userId || data.sessionId;
-            } catch (e) {
+              (window as unknown as { ___ws_auth_detected___?: boolean }).___ws_auth_detected___ =
+                  data.token || data.userId || data.sessionId;
+            } catch {
               // Invalid JSON message
             }
           });
@@ -650,7 +651,9 @@ test.describe('CSRF Protection Security Tests', () => {
       await page.waitForTimeout(1000);
 
       messageAuthenticated = await page.evaluate(() => {
-        return (window as unknown as { ___ws_auth_detected___?: boolean }).___ws_auth_detected___ || false;
+        return (window as unknown as {
+          ___ws_auth_detected___?: boolean
+        }).___ws_auth_detected___ || false;
       });
 
       expect(messageAuthenticated).toBe(true);
@@ -658,7 +661,7 @@ test.describe('CSRF Protection Security Tests', () => {
   });
 
   test.describe('Form-based CSRF Protection', () => {
-    test('should protect all forms with CSRF tokens', async ({ page }) => {
+    test('should protect all forms with CSRF tokens', async ({page: _page}) => {
       const formPages = [
         '/create-hive',
         '/profile',
@@ -667,7 +670,7 @@ test.describe('CSRF Protection Security Tests', () => {
 
       for (const formPage of formPages) {
         await page.goto(formPage);
-        
+
         // Check for CSRF token in form
         const hasCSRFToken = await page.evaluate(() => {
           const forms = document.querySelectorAll('form');
@@ -681,21 +684,21 @@ test.describe('CSRF Protection Security Tests', () => {
       }
     });
 
-    test('should regenerate CSRF tokens on successful form submission', async ({ page }) => {
+    test('should regenerate CSRF tokens on successful form submission', async ({page: _page}) => {
       await page.goto('/create-hive');
-      
+
       const initialToken = await csrfHelper.extractCSRFToken();
-      
+
       // Submit form
       await page.fill('[data-testid="hive-name-input"]', 'CSRF Test Hive');
       await page.fill('[data-testid="hive-description-input"]', 'Testing CSRF token regeneration');
       await page.click('[data-testid="create-hive-submit"]');
-      
+
       // Wait for form submission
       await page.waitForTimeout(3000);
-      
+
       const newToken = await csrfHelper.extractCSRFToken();
-      
+
       // Token should be regenerated
       if (initialToken && newToken) {
         expect(initialToken).not.toBe(newToken);

@@ -1,6 +1,6 @@
 /**
  * Chat Query Hooks (Placeholder)
- * 
+ *
  * TODO: Implement chat-related query hooks
  */
 

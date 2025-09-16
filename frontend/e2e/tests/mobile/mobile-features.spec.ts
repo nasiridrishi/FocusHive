@@ -3,13 +3,12 @@
  * Tests mobile-only features, APIs, and device capabilities
  */
 
-import { test, expect, Page, Browser } from '@playwright/test';
-import { MOBILE_DEVICES } from './mobile.config';
-import { MobileHelper } from '../../helpers/mobile.helper';
-import { AuthHelper } from '../../helpers/auth.helper';
-import { TEST_URLS } from '../../helpers/test-data';
+import {expect, Page, test} from '@playwright/test';
+import {MobileHelper} from '../../helpers/mobile.helper';
+import {AuthHelper} from '../../helpers/auth.helper';
+import {TEST_URLS} from '../../helpers/test-data';
 
-interface MobileFeatureTest {
+interface _MobileFeatureTest {
   name: string;
   feature: 'camera' | 'geolocation' | 'notifications' | 'share' | 'orientation' | 'battery' | 'network' | 'storage';
   platforms: ('iOS' | 'Android' | 'all')[];
@@ -32,43 +31,43 @@ interface NetworkCondition {
 
 test.describe('Mobile Features - Device APIs', () => {
   let authHelper: AuthHelper;
-  let mobileHelper: MobileHelper;
+  let _mobileHelper: MobileHelper;
 
-  test.beforeEach(async ({ page, context }) => {
+  test.beforeEach(async ({page, context}) => {
     authHelper = new AuthHelper(page);
-    mobileHelper = new MobileHelper(page);
-    
+    _mobileHelper = new MobileHelper(page);
+
     // Grant permissions for mobile features
     await context.grantPermissions(['geolocation', 'camera', 'microphone', 'notifications']);
-    
+
     // Set mobile viewport
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({width: 390, height: 844});
     await authHelper.loginWithTestUser();
   });
 
-  test('should handle camera access for profile photos', async ({ page }) => {
+  test('should handle camera access for profile photos', async ({page}) => {
     await page.goto(TEST_URLS.PROFILE);
     await page.waitForLoadState('networkidle');
 
     const profilePhotoButton = page.locator('[data-testid="change-profile-photo"], [data-testid="camera-button"]');
-    
+
     if (await profilePhotoButton.isVisible()) {
       await test.step('Camera access for profile photo', async () => {
         // Click profile photo change button
         await profilePhotoButton.click();
-        
+
         // Look for camera option in menu/modal
         const cameraOption = page.locator('[data-testid="camera-option"], text="Take Photo", text="Camera"');
-        
+
         if (await cameraOption.isVisible()) {
           await cameraOption.click();
-          
+
           // Test camera API availability
           const cameraSupported = await page.evaluate(async () => {
             try {
               if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
                 // Check if camera permission is available
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({video: true});
                 if (stream) {
                   // Clean up stream
                   stream.getTracks().forEach(track => track.stop());
@@ -85,8 +84,8 @@ test.describe('Mobile Features - Device APIs', () => {
           if (cameraSupported) {
             // Verify camera interface appears
             const cameraInterface = page.locator('[data-testid="camera-interface"], video, canvas');
-            await expect(cameraInterface).toBeVisible({ timeout: 5000 });
-            
+            await expect(cameraInterface).toBeVisible({timeout: 5000});
+
             // Look for capture button
             const captureButton = page.locator('[data-testid="capture-button"], [aria-label="Take photo"]');
             await expect(captureButton).toBeVisible();
@@ -94,7 +93,7 @@ test.describe('Mobile Features - Device APIs', () => {
             // Verify fallback behavior
             const fileInput = page.locator('input[type="file"][accept*="image"]');
             const fallbackMessage = page.locator('[data-testid="camera-fallback"]');
-            
+
             const hasFallback = await fileInput.isVisible() || await fallbackMessage.isVisible();
             expect(hasFallback).toBeTruthy();
           }
@@ -103,7 +102,7 @@ test.describe('Mobile Features - Device APIs', () => {
     }
   });
 
-  test('should handle geolocation for location-based features', async ({ page }) => {
+  test('should handle geolocation for location-based features', async ({page}) => {
     await page.goto(TEST_URLS.HIVE_LIST);
     await page.waitForLoadState('networkidle');
 
@@ -117,7 +116,7 @@ test.describe('Mobile Features - Device APIs', () => {
       ];
 
       let locationFeatureFound = false;
-      
+
       for (const selector of locationButtons) {
         const button = page.locator(selector);
         if (await button.isVisible()) {
@@ -134,14 +133,14 @@ test.describe('Mobile Features - Device APIs', () => {
             if ('geolocation' in navigator) {
               return new Promise((resolve) => {
                 navigator.geolocation.getCurrentPosition(
-                  () => resolve(true),
-                  () => resolve(false),
-                  { timeout: 5000 }
+                    () => resolve(true),
+                    () => resolve(false),
+                    {timeout: 5000}
                 );
               });
             }
             return false;
-          } catch (error) {
+          } catch {
             return false;
           }
         });
@@ -149,12 +148,12 @@ test.describe('Mobile Features - Device APIs', () => {
         if (locationSupported) {
           // Verify location-based content loads
           const locationContent = page.locator('[data-testid="nearby-content"], .location-results');
-          await expect(locationContent).toBeVisible({ timeout: 10000 });
+          await expect(locationContent).toBeVisible({timeout: 10000});
         } else {
           // Verify fallback behavior (manual location entry)
           const locationInput = page.locator('[data-testid="location-input"], input[placeholder*="location"]');
           const fallbackMessage = page.locator('[data-testid="location-fallback"]');
-          
+
           const hasFallback = await locationInput.isVisible() || await fallbackMessage.isVisible();
           expect(hasFallback).toBeTruthy();
         }
@@ -162,22 +161,22 @@ test.describe('Mobile Features - Device APIs', () => {
     });
   });
 
-  test('should handle push notifications', async ({ page }) => {
+  test('should handle push notifications', async ({page}) => {
     await page.goto(TEST_URLS.SETTINGS);
     await page.waitForLoadState('networkidle');
 
     await test.step('Push notification setup', async () => {
       const notificationSettings = page.locator('[data-testid="notification-settings"]');
-      
+
       if (await notificationSettings.isVisible()) {
         await notificationSettings.click();
-        
+
         // Look for notification permission request
         const enableNotifications = page.locator('[data-testid="enable-notifications"]');
-        
+
         if (await enableNotifications.isVisible()) {
           await enableNotifications.click();
-          
+
           // Test notification API
           const notificationSupported = await page.evaluate(async () => {
             try {
@@ -189,7 +188,7 @@ test.describe('Mobile Features - Device APIs', () => {
                 return Notification.permission === 'granted';
               }
               return false;
-            } catch (error) {
+            } catch {
               return false;
             }
           });
@@ -205,7 +204,7 @@ test.describe('Mobile Features - Device APIs', () => {
             // Verify fallback (in-app notifications only)
             const fallbackMessage = page.locator('[data-testid="notification-fallback"]');
             const inAppOnly = page.locator('[data-testid="in-app-only"]');
-            
+
             const hasFallback = await fallbackMessage.isVisible() || await inAppOnly.isVisible();
             expect(hasFallback).toBeTruthy();
           }
@@ -214,16 +213,16 @@ test.describe('Mobile Features - Device APIs', () => {
     });
   });
 
-  test('should handle Web Share API', async ({ page }) => {
+  test('should handle Web Share API', async ({page}) => {
     await page.goto(TEST_URLS.HIVE_LIST);
     await page.waitForLoadState('networkidle');
 
     const shareButtons = page.locator('[data-testid="share-button"], [aria-label*="share"]');
-    
+
     if (await shareButtons.first().isVisible()) {
       await test.step('Web Share API functionality', async () => {
         await shareButtons.first().click();
-        
+
         // Test Web Share API availability
         const shareApiSupported = await page.evaluate(async () => {
           return 'share' in navigator && typeof navigator.share === 'function';
@@ -246,31 +245,31 @@ test.describe('Mobile Features - Device APIs', () => {
           // Verify fallback share options (social media links, copy link)
           const fallbackShare = page.locator('[data-testid="share-fallback"], .share-options');
           await expect(fallbackShare).toBeVisible();
-          
+
           const socialLinks = page.locator('[data-testid^="share-"], a[href*="twitter"], a[href*="facebook"]');
           const copyLink = page.locator('[data-testid="copy-link"]');
-          
-          const hasFallbackOptions = 
-            await socialLinks.count() > 0 || 
-            await copyLink.isVisible();
-          
+
+          const hasFallbackOptions =
+              await socialLinks.count() > 0 ||
+              await copyLink.isVisible();
+
           expect(hasFallbackOptions).toBeTruthy();
         }
       });
     }
   });
 
-  test('should handle file upload from mobile gallery', async ({ page }) => {
+  test('should handle file upload from mobile gallery', async ({page}) => {
     await page.goto(TEST_URLS.PROFILE);
     await page.waitForLoadState('networkidle');
 
     const uploadButtons = page.locator('[data-testid="upload-photo"], input[type="file"]');
-    
+
     if (await uploadButtons.first().isVisible()) {
       await test.step('Mobile file upload capabilities', async () => {
         // Check file input attributes for mobile
         const fileInput = uploadButtons.locator('input[type="file"]').first();
-        
+
         if (await fileInput.isVisible()) {
           const fileAttributes = await fileInput.evaluate((input) => ({
             accept: input.getAttribute('accept'),
@@ -280,7 +279,7 @@ test.describe('Mobile Features - Device APIs', () => {
 
           // Verify mobile-friendly file input
           expect(fileAttributes.accept).toContain('image');
-          
+
           // Check if camera capture is enabled for mobile
           if (fileAttributes.capture) {
             expect(['user', 'environment', 'camera']).toContain(fileAttributes.capture);
@@ -297,25 +296,25 @@ test.describe('Mobile Features - Device APIs', () => {
     }
   });
 
-  test('should handle virtual keyboard appearance', async ({ page }) => {
+  test('should handle virtual keyboard appearance', async ({page}) => {
     await page.goto(TEST_URLS.LOGIN);
-    
+
     await test.step('Virtual keyboard handling', async () => {
       // Focus on input field to trigger virtual keyboard
       const emailInput = page.locator('input[type="email"], input[name="email"]');
-      
+
       if (await emailInput.isVisible()) {
         const initialViewportHeight = await page.evaluate(() => window.innerHeight);
-        
+
         await emailInput.click();
         await page.waitForTimeout(1000); // Wait for keyboard animation
-        
+
         // Check if viewport height changed (virtual keyboard appeared)
         const newViewportHeight = await page.evaluate(() => window.innerHeight);
-        
+
         // On mobile, virtual keyboard typically reduces viewport height
         const keyboardAppeared = newViewportHeight < initialViewportHeight * 0.8;
-        
+
         if (keyboardAppeared) {
           // Verify fixed elements are still accessible
           const submitButton = page.locator('[type="submit"], [data-testid="login-button"]');
@@ -327,26 +326,26 @@ test.describe('Mobile Features - Device APIs', () => {
             }
           }
         }
-        
+
         console.log(`Virtual keyboard detected: ${keyboardAppeared}`);
         console.log(`Viewport height change: ${initialViewportHeight} -> ${newViewportHeight}`);
       }
     });
   });
 
-  test('should handle device orientation changes', async ({ page }) => {
+  test('should handle device orientation changes', async ({page}) => {
     await page.goto(TEST_URLS.ANALYTICS);
     await page.waitForLoadState('networkidle');
 
     const orientationTests: OrientationTest[] = [
       {
         orientation: 'portrait',
-        viewport: { width: 390, height: 844 },
+        viewport: {width: 390, height: 844},
         expectedChanges: ['vertical_layout', 'stacked_navigation', 'single_column']
       },
       {
-        orientation: 'landscape', 
-        viewport: { width: 844, height: 390 },
+        orientation: 'landscape',
+        viewport: {width: 844, height: 390},
         expectedChanges: ['horizontal_layout', 'side_navigation', 'multi_column']
       }
     ];
@@ -364,7 +363,7 @@ test.describe('Mobile Features - Device APIs', () => {
               type: string;
             };
           }
-          
+
           const screen = window.screen as ExtendedScreen;
           return {
             orientation: screen.orientation?.angle || 0,
@@ -410,7 +409,7 @@ test.describe('Mobile Features - Network Conditions', () => {
   ];
 
   networkConditions.forEach(condition => {
-    test(`should handle ${condition.name} network conditions`, async ({ page, context }) => {
+    test(`should handle ${condition.name} network conditions`, async ({page, context}) => {
       // Emulate network conditions
       await context.route('**/*', async route => {
         await route.continue();
@@ -426,17 +425,17 @@ test.describe('Mobile Features - Network Conditions', () => {
         latency: condition.latency
       });
 
-      let authHelper = new AuthHelper(page);
+      const authHelper = new AuthHelper(page);
       await authHelper.loginWithTestUser();
 
       await test.step(`Testing app performance on ${condition.name}`, async () => {
         const startTime = Date.now();
-        
+
         await page.goto(TEST_URLS.DASHBOARD);
         await page.waitForLoadState('networkidle');
-        
+
         const loadTime = Date.now() - startTime;
-        
+
         // Set realistic expectations based on network speed
         let maxLoadTime: number;
         switch (condition.name) {
@@ -476,20 +475,20 @@ test.describe('Mobile Features - Network Conditions', () => {
     });
   });
 
-  test('should handle offline mode gracefully', async ({ page, context }) => {
-    let authHelper = new AuthHelper(page);
+  test('should handle offline mode gracefully', async ({page, context}) => {
+    const authHelper = new AuthHelper(page);
     await authHelper.loginWithTestUser();
-    
+
     await page.goto(TEST_URLS.DASHBOARD);
     await page.waitForLoadState('networkidle');
 
     await test.step('Testing offline functionality', async () => {
       // Go offline
       await context.setOffline(true);
-      
+
       // Try to navigate to a new page
       await page.locator('[data-testid="hive-list-link"]').click();
-      
+
       // Should show offline indicator
       const offlineIndicators = [
         '[data-testid="offline-indicator"]',
@@ -500,7 +499,7 @@ test.describe('Mobile Features - Network Conditions', () => {
 
       let offlineIndicatorFound = false;
       for (const selector of offlineIndicators) {
-        if (await page.locator(selector).isVisible({ timeout: 3000 })) {
+        if (await page.locator(selector).isVisible({timeout: 3000})) {
           offlineIndicatorFound = true;
           break;
         }
@@ -523,11 +522,11 @@ test.describe('Mobile Features - Network Conditions', () => {
       });
 
       console.log(`Service Worker active: ${serviceWorkerActive}`);
-      
+
       // Go back online
       await context.setOffline(false);
       await page.waitForTimeout(2000);
-      
+
       // Verify app recovers
       const onlineContent = page.locator('[data-testid="online-indicator"], main');
       await expect(onlineContent).toBeVisible();
@@ -536,7 +535,7 @@ test.describe('Mobile Features - Network Conditions', () => {
 });
 
 test.describe('Mobile Features - Battery and Performance', () => {
-  test('should respect battery optimization settings', async ({ page }) => {
+  test('should respect battery optimization settings', async ({page}) => {
     await page.goto(TEST_URLS.SETTINGS);
     await page.waitForLoadState('networkidle');
 
@@ -544,7 +543,7 @@ test.describe('Mobile Features - Battery and Performance', () => {
       // Check for battery API support
       const batteryInfo = await page.evaluate(async () => {
         try {
-          // @ts-ignore - Battery API is experimental
+          // @ts-expect-error - Battery API is experimental
           const battery = await navigator.getBattery?.();
           if (battery) {
             return {
@@ -553,26 +552,26 @@ test.describe('Mobile Features - Battery and Performance', () => {
               supported: true
             };
           }
-        } catch (error) {
+        } catch {
           // Battery API not supported
         }
-        return { supported: false };
+        return {supported: false};
       });
 
       if (batteryInfo.supported) {
         console.log(`Battery level: ${batteryInfo.level * 100}%`);
         console.log(`Charging: ${batteryInfo.charging}`);
-        
+
         // Look for battery saver settings
         const batterySaver = page.locator('[data-testid="battery-saver"], [data-testid="power-saving"]');
-        
+
         if (await batterySaver.isVisible()) {
           // Test enabling battery saver mode
           await batterySaver.click();
-          
+
           // Verify performance optimizations are applied
           const optimizationIndicator = page.locator('[data-testid="performance-mode"], [data-testid="reduced-animations"]');
-          
+
           if (await optimizationIndicator.isVisible()) {
             console.log('Battery optimization mode enabled');
           }
@@ -583,7 +582,7 @@ test.describe('Mobile Features - Battery and Performance', () => {
     });
   });
 
-  test('should handle reduced motion preferences', async ({ page }) => {
+  test('should handle reduced motion preferences', async ({page}) => {
     await page.goto(TEST_URLS.DASHBOARD);
 
     await test.step('Reduced motion accessibility', async () => {
@@ -596,18 +595,18 @@ test.describe('Mobile Features - Battery and Performance', () => {
         // Verify animations are disabled or reduced
         const animatedElements = page.locator('.animate, [data-animate="true"]');
         const count = await animatedElements.count();
-        
+
         if (count > 0) {
           // Check if animations are disabled in CSS
           const animationsDisabled = await animatedElements.first().evaluate(el => {
             const style = window.getComputedStyle(el);
             return style.animationDuration === '0s' || style.animationName === 'none';
           });
-          
+
           expect(animationsDisabled).toBeTruthy();
         }
       }
-      
+
       console.log(`Reduced motion preference: ${reducedMotionSupported}`);
     });
   });
@@ -616,39 +615,43 @@ test.describe('Mobile Features - Battery and Performance', () => {
 // Helper Functions
 
 async function verifyOrientationLayout(page: Page, orientationTest: OrientationTest): Promise<void> {
-  const { orientation, expectedChanges } = orientationTest;
+  const {orientation: _orientation, expectedChanges} = orientationTest;
 
   for (const expectedChange of expectedChanges) {
     switch (expectedChange) {
-      case 'vertical_layout':
+      case 'vertical_layout': {
         const verticalLayout = page.locator('[data-orientation="portrait"], .layout-vertical');
         if (await verticalLayout.isVisible()) {
           console.log('Vertical layout detected');
         }
         break;
+      }
 
-      case 'horizontal_layout':
+      case 'horizontal_layout': {
         const horizontalLayout = page.locator('[data-orientation="landscape"], .layout-horizontal');
         if (await horizontalLayout.isVisible()) {
           console.log('Horizontal layout detected');
         }
         break;
+      }
 
-      case 'stacked_navigation':
+      case 'stacked_navigation': {
         const stackedNav = page.locator('[data-testid="bottom-navigation"], .nav-stacked');
         if (await stackedNav.isVisible()) {
           console.log('Stacked navigation in portrait');
         }
         break;
+      }
 
-      case 'side_navigation':
+      case 'side_navigation': {
         const sideNav = page.locator('[data-testid="side-navigation"], .nav-horizontal');
         if (await sideNav.isVisible()) {
           console.log('Side navigation in landscape');
         }
         break;
+      }
 
-      case 'single_column':
+      case 'single_column': {
         const content = page.locator('[data-testid="main-content"]');
         if (await content.isVisible()) {
           const columns = await content.evaluate(el => {
@@ -659,8 +662,9 @@ async function verifyOrientationLayout(page: Page, orientationTest: OrientationT
           expect(columns).toBe(1);
         }
         break;
+      }
 
-      case 'multi_column':
+      case 'multi_column': {
         const multiContent = page.locator('[data-testid="main-content"]');
         if (await multiContent.isVisible()) {
           const columns = await multiContent.evaluate(el => {
@@ -671,6 +675,7 @@ async function verifyOrientationLayout(page: Page, orientationTest: OrientationT
           expect(columns).toBeGreaterThan(1);
         }
         break;
+      }
     }
   }
 }

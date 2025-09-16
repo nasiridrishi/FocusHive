@@ -8,7 +8,10 @@ import com.focushive.identity.exception.ResourceNotFoundException;
 import com.focushive.identity.repository.PersonaRepository;
 import com.focushive.identity.repository.UserRepository;
 import com.focushive.identity.security.JwtTokenProvider;
+import com.focushive.identity.security.encryption.IEncryptionService;
 import com.focushive.identity.service.ITokenBlacklistService;
+import com.focushive.identity.service.AccountLockoutService;
+import com.focushive.identity.exception.AccountLockedException;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +25,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +52,8 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final ITokenBlacklistService tokenBlacklistService;
+    private final IEncryptionService encryptionService;
+    private final AccountLockoutService accountLockoutService;
     
     /**
      * Register a new user with a default persona.
@@ -53,15 +61,39 @@ public class AuthenticationService {
     @Transactional
     public AuthenticationResponse register(RegisterRequest request) {
         log.info("Processing user registration request");
-        
+
         // Validate email format
         if (!isValidEmail(request.getEmail())) {
             throw new IllegalArgumentException("Invalid email format");
         }
-        
+
+        // Validate password confirmation
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Password and confirmation password do not match");
+        }
+
         // Check if user already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AuthenticationException("Email already registered");
+        // Try hash-based lookup first (for production with encryption)
+        // Fallback to direct email lookup (for tests without encryption) 
+        if (encryptionService != null) {
+            try {
+                String emailHash = encryptionService.hash(request.getEmail().toLowerCase());
+                if (userRepository.existsByEmailHash(emailHash)) {
+                    throw new AuthenticationException("Email already registered");
+                }
+            } catch (Exception e) {
+                // Fallback to direct email lookup if hashing fails
+                log.debug("Hash-based email lookup failed, using direct email lookup: {}", e.getMessage());
+                if (userRepository.existsByEmail(request.getEmail())) {
+                    throw new AuthenticationException("Email already registered");
+                }
+            }
+        } else {
+            // EncryptionService not available (test mode), use direct email lookup
+            log.debug("EncryptionService not available, using direct email lookup");
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new AuthenticationException("Email already registered");
+            }
         }
         
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -109,7 +141,23 @@ public class AuthenticationService {
      */
     public AuthenticationResponse login(LoginRequest request) {
         log.info("Processing login for: {}", request.getUsernameOrEmail());
-        
+
+        String ipAddress = getClientIpAddress();
+
+        // Find user first to check lockout status
+        User user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
+                .orElse(null);
+
+        if (user != null) {
+            // Check account lockout status before authentication attempt
+            try {
+                accountLockoutService.checkAccountLockout(user);
+            } catch (AccountLockedException e) {
+                // Account is locked, don't proceed with authentication
+                throw e;
+            }
+        }
+
         // Authenticate
         Authentication authentication;
         try {
@@ -121,33 +169,61 @@ public class AuthenticationService {
             );
         } catch (BadCredentialsException e) {
             log.warn("Invalid login attempt for: {}", request.getUsernameOrEmail());
+
+            // Record failed attempt if user exists
+            if (user != null) {
+                accountLockoutService.recordFailedLoginAttempt(user, ipAddress);
+            }
+
             throw new AuthenticationException("Invalid username or password");
         }
-        
-        User user = (User) authentication.getPrincipal();
+
+        User authenticatedUser = (User) authentication.getPrincipal();
+
+        // Cross-check: Load user from database by username to ensure consistency
+        // This fixes issues with cached/stale user objects from authentication context
+        Optional<User> dbUser = userRepository.findByUsername(authenticatedUser.getUsername());
+        if (dbUser.isPresent()) {
+            if (!authenticatedUser.getId().equals(dbUser.get().getId())) {
+                log.warn("User ID mismatch detected. Using database user for consistency. Auth context ID: {}, DB ID: {}",
+                        authenticatedUser.getId(), dbUser.get().getId());
+                authenticatedUser = dbUser.get();
+            }
+        } else {
+            log.error("User {} not found in database during login!", authenticatedUser.getUsername());
+            throw new IllegalStateException("Authenticated user not found in database");
+        }
+
+        // Record successful login and reset failed attempts
+        accountLockoutService.recordSuccessfulLogin(authenticatedUser, ipAddress);
         
         // Determine which persona to activate
+        final User finalUser = authenticatedUser; // For lambda usage
         Persona activePersona;
         if (request.getPersonaId() != null) {
             activePersona = personaRepository.findByIdAndUser(
-                    UUID.fromString(request.getPersonaId()), user)
+                    UUID.fromString(request.getPersonaId()), authenticatedUser)
                     .orElseThrow(() -> new ResourceNotFoundException("Persona not found"));
         } else {
-            activePersona = personaRepository.findByUserAndIsActiveTrue(user)
-                    .orElseGet(() -> personaRepository.findByUserAndIsDefaultTrue(user)
-                            .orElseThrow(() -> new IllegalStateException("No persona found for user")));
+            activePersona = personaRepository.findByUserAndIsActiveTrue(authenticatedUser)
+                    .orElseGet(() -> personaRepository.findByUserAndIsDefaultTrue(finalUser)
+                            .orElseThrow(() -> {
+                                log.error("No personas found for user {} (ID: {}). Total personas in system: {}",
+                                        finalUser.getUsername(), finalUser.getId(), personaRepository.count());
+                                return new IllegalStateException("No persona found for user");
+                            }));
         }
-        
+
         // Update last active persona
-        personaRepository.updateActivePersona(user.getId(), activePersona.getId());
-        
+        personaRepository.updateActivePersona(authenticatedUser.getId(), activePersona.getId());
+
         // Generate tokens
-        String accessToken = tokenProvider.generateAccessToken(user, activePersona);
-        String refreshToken = request.isRememberMe() 
-                ? tokenProvider.generateLongLivedRefreshToken(user)
-                : tokenProvider.generateRefreshToken(user);
-        
-        return buildAuthenticationResponse(user, activePersona, accessToken, refreshToken);
+        String accessToken = tokenProvider.generateAccessToken(authenticatedUser, activePersona);
+        String refreshToken = request.isRememberMe()
+                ? tokenProvider.generateLongLivedRefreshToken(authenticatedUser)
+                : tokenProvider.generateRefreshToken(authenticatedUser);
+
+        return buildAuthenticationResponse(authenticatedUser, activePersona, accessToken, refreshToken);
     }
     
     /**
@@ -155,9 +231,14 @@ public class AuthenticationService {
      */
     public AuthenticationResponse refreshToken(RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();
-        
+
         if (!tokenProvider.validateToken(refreshToken)) {
             throw new AuthenticationException("Invalid refresh token");
+        }
+
+        // Check if token is blacklisted
+        if (tokenBlacklistService.isBlacklisted(refreshToken)) {
+            throw new AuthenticationException("Token has been revoked");
         }
         
         String username = tokenProvider.extractUsername(refreshToken);
@@ -295,7 +376,32 @@ public class AuthenticationService {
      */
     @Transactional
     public void requestPasswordReset(String email) {
-        userRepository.findByEmail(email).ifPresent(user -> {
+        log.info("Processing password reset request for email: {}", email);
+        
+        // Use encryption-aware lookup for email, similar to registration
+        Optional<User> userOptional = Optional.empty();
+        
+        // Try hash-based lookup first (for production with encryption)
+        if (encryptionService != null) {
+            try {
+                String emailHash = encryptionService.hash(email.toLowerCase());
+                log.debug("Generated email hash for password reset lookup: {}", emailHash);
+                userOptional = userRepository.findByEmailHash(emailHash);
+                log.debug("Hash-based lookup result: user found = {}", userOptional.isPresent());
+            } catch (Exception e) {
+                // Fallback to direct email lookup if hashing fails
+                log.debug("Hash-based email lookup failed for password reset, using direct email lookup: {}", e.getMessage());
+                userOptional = userRepository.findByEmail(email);
+                log.debug("Direct email lookup result: user found = {}", userOptional.isPresent());
+            }
+        } else {
+            // EncryptionService not available (test mode), use direct email lookup
+            log.debug("EncryptionService not available, using direct email lookup for password reset");
+            userOptional = userRepository.findByEmail(email);
+            log.debug("Direct email lookup result: user found = {}", userOptional.isPresent());
+        }
+        
+        userOptional.ifPresent(user -> {
             String resetToken = UUID.randomUUID().toString();
             user.setPasswordResetToken(resetToken);
             user.setPasswordResetTokenExpiry(Instant.now().plus(1, ChronoUnit.HOURS));
@@ -472,9 +578,55 @@ public class AuthenticationService {
         if (email == null || email.trim().isEmpty()) {
             return false;
         }
-        
+
         // Simple email validation regex
         String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
         return email.matches(emailPattern);
+    }
+
+    /**
+     * Extract client IP address from the current HTTP request.
+     */
+    private String getClientIpAddress() {
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                var request = attributes.getRequest();
+
+                // Check various headers for real IP (for proxies/load balancers)
+                String[] headers = {
+                        "X-Forwarded-For",
+                        "X-Real-IP",
+                        "Proxy-Client-IP",
+                        "WL-Proxy-Client-IP",
+                        "HTTP_X_FORWARDED_FOR",
+                        "HTTP_X_FORWARDED",
+                        "HTTP_X_CLUSTER_CLIENT_IP",
+                        "HTTP_CLIENT_IP",
+                        "HTTP_FORWARDED_FOR",
+                        "HTTP_FORWARDED",
+                        "HTTP_VIA",
+                        "REMOTE_ADDR"
+                };
+
+                for (String header : headers) {
+                    String ip = request.getHeader(header);
+                    if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                        // X-Forwarded-For can contain multiple IPs, take the first one
+                        if (ip.contains(",")) {
+                            ip = ip.split(",")[0].trim();
+                        }
+                        return ip;
+                    }
+                }
+
+                // Fallback to remote address
+                return request.getRemoteAddr();
+            }
+        } catch (Exception e) {
+            log.debug("Could not extract IP address from request", e);
+        }
+
+        return "unknown";
     }
 }

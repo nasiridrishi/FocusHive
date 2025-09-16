@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
-import { useWebSocket } from './WebSocketContext'
-import { 
-  ChatContextType, 
-  ChatState, 
-  ChatMessage, 
-  SendMessageRequest, 
-  TypingIndicator,
-  MessageReaction 
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState} from 'react'
+import {useWebSocket} from './WebSocketContext'
+import {
+  ChatContextType,
+  ChatMessage,
+  ChatState,
+  MessageReaction,
+  SendMessageRequest,
+  TypingIndicator
 } from '../types/chat'
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -17,11 +17,11 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({
-  children,
-  userId,
-}) => {
-  const { isConnected, emit, on } = useWebSocket()
-  
+                                                            children,
+                                                            userId,
+                                                          }) => {
+  const {isConnected, emit, on} = useWebSocket()
+
   const [chatState, setChatState] = useState<ChatState>({
     messages: {},
     typingUsers: {},
@@ -40,20 +40,20 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     // Remove any optimistic message with the same content
     const optimisticMessages = optimisticMessagesRef.current[message.hiveId] || []
     const wasOptimistic = optimisticMessages.some(
-      opt => opt.content === message.content && opt.authorId === message.authorId
+        opt => opt.content === message.content && opt.authorId === message.authorId
     )
 
     setChatState(prev => {
       const existingMessages = prev.messages[message.hiveId] || []
-      
+
       // If this was an optimistic message, replace it; otherwise, add it
       let updatedMessages
       if (wasOptimistic && message.authorId === userId) {
         // Replace optimistic message
-        updatedMessages = existingMessages.map(msg => 
-          msg.content === message.content && msg.authorId === userId && msg.id.startsWith('temp_')
-            ? message
-            : msg
+        updatedMessages = existingMessages.map(msg =>
+            msg.content === message.content && msg.authorId === userId && msg.id.startsWith('temp_')
+                ? message
+                : msg
         )
       } else {
         // Add new message if it doesn't already exist
@@ -77,7 +77,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     // Clean up optimistic messages
     if (wasOptimistic) {
       optimisticMessagesRef.current[message.hiveId] = optimisticMessages.filter(
-        opt => !(opt.content === message.content && opt.authorId === message.authorId)
+          opt => !(opt.content === message.content && opt.authorId === message.authorId)
       )
     }
   }, [userId])
@@ -88,7 +88,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
       messages: {
         ...prev.messages,
         [message.hiveId]: (prev.messages[message.hiveId] || []).map(msg =>
-          msg.id === message.id ? message : msg
+            msg.id === message.id ? message : msg
         ),
       },
     }))
@@ -110,38 +110,38 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
       messages: {
         ...prev.messages,
         [reaction.hiveId]: (prev.messages[reaction.hiveId] || []).map(msg =>
-          msg.id === reaction.messageId
-            ? {
-                ...msg,
-                reactions: [...msg.reactions.filter(r => 
-                  !(r.userId === reaction.userId && r.emoji === reaction.emoji)
-                ), reaction],
-              }
-            : msg
+            msg.id === reaction.messageId
+                ? {
+                  ...msg,
+                  reactions: [...msg.reactions.filter(r =>
+                      !(r.userId === reaction.userId && r.emoji === reaction.emoji)
+                  ), reaction],
+                }
+                : msg
         ),
       },
     }))
   }, [])
 
-  const handleReactionRemoved = useCallback((data: { 
-    messageId: string, 
-    userId: string, 
+  const handleReactionRemoved = useCallback((data: {
+    messageId: string,
+    userId: string,
     emoji: string,
-    hiveId: string 
+    hiveId: string
   }) => {
     setChatState(prev => ({
       ...prev,
       messages: {
         ...prev.messages,
         [data.hiveId]: (prev.messages[data.hiveId] || []).map(msg =>
-          msg.id === data.messageId
-            ? {
-                ...msg,
-                reactions: msg.reactions.filter(r => 
-                  !(r.userId === data.userId && r.emoji === data.emoji)
-                ),
-              }
-            : msg
+            msg.id === data.messageId
+                ? {
+                  ...msg,
+                  reactions: msg.reactions.filter(r =>
+                      !(r.userId === data.userId && r.emoji === data.emoji)
+                  ),
+                }
+                : msg
         ),
       },
     }))
@@ -151,14 +151,14 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     setChatState(prev => {
       const existingTyping = prev.typingUsers[data.hiveId] || []
       const alreadyTyping = existingTyping.some(t => t.userId === data.userId)
-      
+
       if (alreadyTyping) return prev
 
       return {
         ...prev,
         typingUsers: {
           ...prev.typingUsers,
-          [data.hiveId]: [...existingTyping, { ...data, isTyping: true }],
+          [data.hiveId]: [...existingTyping, {...data, isTyping: true}],
         },
       }
     })
@@ -174,10 +174,10 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     }))
   }, [])
 
-  const handleChatHistory = useCallback((data: { 
-    hiveId: string, 
-    messages: ChatMessage[], 
-    hasMore: boolean 
+  const handleChatHistory = useCallback((data: {
+    hiveId: string,
+    messages: ChatMessage[],
+    hasMore: boolean
   }) => {
     setChatState(prev => ({
       ...prev,
@@ -211,12 +211,29 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     const unsubscribeFunctions = [
       on('chat:message', (data: unknown) => handleMessageReceived(data as ChatMessage)),
       on('chat:message_updated', (data: unknown) => handleMessageUpdated(data as ChatMessage)),
-      on('chat:message_deleted', (data: unknown) => handleMessageDeleted(data as { messageId: string; hiveId: string })),
-      on('chat:reaction_added', (data: unknown) => handleReactionAdded(data as MessageReaction & { hiveId: string })),
-      on('chat:reaction_removed', (data: unknown) => handleReactionRemoved(data as { messageId: string; userId: string; emoji: string; hiveId: string })),
+      on('chat:message_deleted', (data: unknown) => handleMessageDeleted(data as {
+        messageId: string;
+        hiveId: string
+      })),
+      on('chat:reaction_added', (data: unknown) => handleReactionAdded(data as MessageReaction & {
+        hiveId: string
+      })),
+      on('chat:reaction_removed', (data: unknown) => handleReactionRemoved(data as {
+        messageId: string;
+        userId: string;
+        emoji: string;
+        hiveId: string
+      })),
       on('chat:typing_start', (data: unknown) => handleTypingStart(data as TypingIndicator)),
-      on('chat:typing_stop', (data: unknown) => handleTypingStop(data as { userId: string; hiveId: string })),
-      on('chat:history', (data: unknown) => handleChatHistory(data as { hiveId: string; messages: ChatMessage[]; hasMore: boolean })),
+      on('chat:typing_stop', (data: unknown) => handleTypingStop(data as {
+        userId: string;
+        hiveId: string
+      })),
+      on('chat:history', (data: unknown) => handleChatHistory(data as {
+        hiveId: string;
+        messages: ChatMessage[];
+        hasMore: boolean
+      })),
       on('chat:error', (data: unknown) => handleChatError(data as { message: string })),
     ]
 
@@ -254,7 +271,17 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
       id: `temp_${Date.now()}_${Math.random()}`,
       content: request.content,
       authorId: userId,
-      author: { id: userId, name: 'You', username: 'You', email: '', firstName: '', lastName: '', isEmailVerified: false, createdAt: '', updatedAt: '' }, // Will be populated by backend
+      author: {
+        id: userId,
+        name: 'You',
+        username: 'You',
+        email: '',
+        firstName: '',
+        lastName: '',
+        isEmailVerified: false,
+        createdAt: '',
+        updatedAt: ''
+      }, // Will be populated by backend
       hiveId: request.hiveId,
       type: request.type || 'text',
       metadata: request.metadata,
@@ -285,7 +312,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
 
     try {
       if (isConnected) {
-        emit('chat:send_message', { ...request, userId })
+        emit('chat:send_message', {...request, userId})
       } else {
         // Queue message for when connection is restored
         messageQueueRef.current.push(request)
@@ -298,7 +325,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
         messages: {
           ...prev.messages,
           [request.hiveId]: (prev.messages[request.hiveId] || [])
-            .filter(msg => msg.id !== optimisticMessage.id),
+          .filter(msg => msg.id !== optimisticMessage.id),
         },
         error: error instanceof Error ? error.message : 'Failed to send message',
       }))
@@ -312,7 +339,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     }
 
     try {
-      emit('chat:edit_message', { messageId, content, userId })
+      emit('chat:edit_message', {messageId, content, userId})
     } catch (error) {
       setChatState(prev => ({
         ...prev,
@@ -328,7 +355,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     }
 
     try {
-      emit('chat:delete_message', { messageId, userId })
+      emit('chat:delete_message', {messageId, userId})
     } catch (error) {
       setChatState(prev => ({
         ...prev,
@@ -344,7 +371,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     }
 
     try {
-      emit('chat:add_reaction', { messageId, emoji, userId })
+      emit('chat:add_reaction', {messageId, emoji, userId})
     } catch (error) {
       setChatState(prev => ({
         ...prev,
@@ -360,7 +387,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     }
 
     try {
-      emit('chat:remove_reaction', { messageId, emoji, userId })
+      emit('chat:remove_reaction', {messageId, emoji, userId})
     } catch (error) {
       setChatState(prev => ({
         ...prev,
@@ -375,12 +402,12 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
       return
     }
 
-    setChatState(prev => ({ ...prev, isLoading: true }))
+    setChatState(prev => ({...prev, isLoading: true}))
 
     try {
       const existingMessages = chatState.messages[hiveId] || []
       const oldestMessage = existingMessages[0]
-      
+
       emit('chat:load_history', {
         hiveId,
         before: oldestMessage?.createdAt,
@@ -405,22 +432,22 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
     }
 
     if (isTyping) {
-      emit('chat:typing_start', { hiveId, userId })
-      
+      emit('chat:typing_start', {hiveId, userId})
+
       // Auto-stop typing after 3 seconds
       typingTimeoutRef.current[hiveId] = window.setTimeout(() => {
-        emit('chat:typing_stop', { hiveId, userId })
+        emit('chat:typing_stop', {hiveId, userId})
         delete typingTimeoutRef.current[hiveId]
       }, 3000)
     } else {
-      emit('chat:typing_stop', { hiveId, userId })
+      emit('chat:typing_stop', {hiveId, userId})
     }
   }, [isConnected, userId, emit])
 
   const markMessagesAsRead = useCallback((hiveId: string) => {
     if (!isConnected || !userId) return
 
-    emit('chat:mark_read', { hiveId, userId })
+    emit('chat:mark_read', {hiveId, userId})
   }, [isConnected, userId, emit])
 
 
@@ -437,9 +464,9 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({
   }
 
   return (
-    <ChatContext.Provider value={value}>
-      {children}
-    </ChatContext.Provider>
+      <ChatContext.Provider value={value}>
+        {children}
+      </ChatContext.Provider>
   )
 }
 

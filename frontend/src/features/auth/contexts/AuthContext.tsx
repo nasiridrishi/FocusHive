@@ -1,19 +1,21 @@
-import React, { useReducer, useEffect, ReactNode, useCallback } from 'react';
+import React, {ReactNode, useCallback, useEffect, useReducer} from 'react';
 import {
   AuthState,
-  LoginRequest,
-  RegisterRequest,
-  User,
   ChangePasswordRequest,
-  PasswordResetRequest
+  LoginRequest,
+  PasswordResetRequest,
+  RegisterRequest,
+  User
 } from '@shared/types/auth';
-import authApiService, { tokenStorage } from '../../../services/api/authApi';
-import { tokenManager } from '../../../utils/tokenManager';
-import { FeatureLevelErrorBoundary } from '@shared/components/error-boundary';
+import authApiService, {tokenStorage} from '../../../services/api/authApi';
+import {tokenManager} from '../../../utils/tokenManager';
+import {FeatureLevelErrorBoundary} from '@shared/components/error-boundary';
+// Import contexts from separate file to avoid Fast Refresh warnings
+import {AuthActionsContext, AuthStateContext} from './authContexts';
 
 /**
  * Authentication Context Implementation
- * 
+ *
  * Implements secure authentication state management with:
  * - useReducer for predictable state updates
  * - Automatic token validation on app load
@@ -24,15 +26,15 @@ import { FeatureLevelErrorBoundary } from '@shared/components/error-boundary';
 
 // Auth Actions
 type AuthAction =
-  | { type: 'AUTH_LOADING' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string; refreshToken: string } }
-  | { type: 'AUTH_FAILURE'; payload: { error: string } }
-  | { type: 'AUTH_LOGOUT' }
-  | { type: 'AUTH_UPDATE_USER'; payload: { user: User } }
-  | { type: 'AUTH_CLEAR_ERROR' }
-  | { type: 'AUTH_VALIDATE_START' }
-  | { type: 'AUTH_VALIDATE_SUCCESS'; payload: { user: User } }
-  | { type: 'AUTH_VALIDATE_FAILURE' };
+    | { type: 'AUTH_LOADING' }
+    | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string; refreshToken: string } }
+    | { type: 'AUTH_FAILURE'; payload: { error: string } }
+    | { type: 'AUTH_LOGOUT' }
+    | { type: 'AUTH_UPDATE_USER'; payload: { user: User } }
+    | { type: 'AUTH_CLEAR_ERROR' }
+    | { type: 'AUTH_VALIDATE_START' }
+    | { type: 'AUTH_VALIDATE_SUCCESS'; payload: { user: User } }
+    | { type: 'AUTH_VALIDATE_FAILURE' };
 
 // Initial auth state
 const initialAuthState: AuthState = {
@@ -123,11 +125,6 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
-// Import contexts from separate file to avoid Fast Refresh warnings
-import { AuthStateContext, AuthActionsContext } from './authContexts';
-
-
-
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -135,21 +132,21 @@ interface AuthProviderProps {
 
 /**
  * AuthProvider Component
- * 
+ *
  * Provides authentication context to the entire application
  * Handles automatic token validation on app initialization
  */
-export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
+export function AuthProvider({children}: AuthProviderProps): JSX.Element {
   const [authState, dispatch] = useReducer(authReducer, initialAuthState);
 
   // Authentication actions
   const login = async (credentials: LoginRequest): Promise<void> => {
     try {
-      dispatch({ type: 'AUTH_LOADING' });
-      
+      dispatch({type: 'AUTH_LOADING'});
+
       const response = await authApiService.login(credentials);
-      
-      
+
+
       dispatch({
         type: 'AUTH_SUCCESS',
         payload: {
@@ -162,7 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       dispatch({
         type: 'AUTH_FAILURE',
-        payload: { error: errorMessage }
+        payload: {error: errorMessage}
       });
       throw error;
     }
@@ -170,10 +167,10 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
 
   const register = async (userData: RegisterRequest): Promise<void> => {
     try {
-      dispatch({ type: 'AUTH_LOADING' });
-      
+      dispatch({type: 'AUTH_LOADING'});
+
       const response = await authApiService.register(userData);
-      
+
       dispatch({
         type: 'AUTH_SUCCESS',
         payload: {
@@ -186,7 +183,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
       dispatch({
         type: 'AUTH_FAILURE',
-        payload: { error: errorMessage }
+        payload: {error: errorMessage}
       });
       throw error;
     }
@@ -195,46 +192,46 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   const logout = async (): Promise<void> => {
     try {
       await authApiService.logout();
-    } catch (error) {
+    } catch {
       // Auth logout error logged to error service
     } finally {
-      dispatch({ type: 'AUTH_LOGOUT' });
+      dispatch({type: 'AUTH_LOGOUT'});
     }
   };
 
   const refreshAuth = async (): Promise<void> => {
     try {
-      dispatch({ type: 'AUTH_VALIDATE_START' });
-      
+      dispatch({type: 'AUTH_VALIDATE_START'});
+
       const isValid = await authApiService.validateAuth();
-      
+
       if (isValid) {
         const user = await authApiService.getCurrentUser();
         dispatch({
           type: 'AUTH_VALIDATE_SUCCESS',
-          payload: { user }
+          payload: {user}
         });
       } else {
-        dispatch({ type: 'AUTH_VALIDATE_FAILURE' });
+        dispatch({type: 'AUTH_VALIDATE_FAILURE'});
       }
-    } catch (error) {
-      dispatch({ type: 'AUTH_VALIDATE_FAILURE' });
+    } catch {
+      dispatch({type: 'AUTH_VALIDATE_FAILURE'});
     }
   };
 
   const updateProfile = async (userData: Partial<User>): Promise<void> => {
     try {
       const updatedUser = await authApiService.updateProfile(userData);
-      
+
       dispatch({
         type: 'AUTH_UPDATE_USER',
-        payload: { user: updatedUser }
+        payload: {user: updatedUser}
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Profile update failed';
       dispatch({
         type: 'AUTH_FAILURE',
-        payload: { error: errorMessage }
+        payload: {error: errorMessage}
       });
       throw error;
     }
@@ -247,13 +244,15 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
       const errorMessage = error instanceof Error ? error.message : 'Password change failed';
       dispatch({
         type: 'AUTH_FAILURE',
-        payload: { error: errorMessage }
+        payload: {error: errorMessage}
       });
       throw error;
     }
   };
 
-  const requestPasswordReset = async (resetData: PasswordResetRequest): Promise<{ message: string }> => {
+  const requestPasswordReset = async (resetData: PasswordResetRequest): Promise<{
+    message: string
+  }> => {
     try {
       const response = await authApiService.requestPasswordReset(resetData);
       return response;
@@ -261,38 +260,38 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
       const errorMessage = error instanceof Error ? error.message : 'Password reset request failed';
       dispatch({
         type: 'AUTH_FAILURE',
-        payload: { error: errorMessage }
+        payload: {error: errorMessage}
       });
       throw error;
     }
   };
 
   const clearError = (): void => {
-    dispatch({ type: 'AUTH_CLEAR_ERROR' });
+    dispatch({type: 'AUTH_CLEAR_ERROR'});
   };
 
   // Handle automatic token refresh
   const handleTokenRefresh = useCallback(async () => {
     try {
       await refreshAuth();
-    } catch (error) {
-      console.error('Automatic token refresh failed:', error);
-      dispatch({ type: 'AUTH_LOGOUT' });
+    } catch {
+      // console.error('Automatic token refresh failed:', error);
+      dispatch({type: 'AUTH_LOGOUT'});
     }
   }, []);
 
   // Handle auth failure (logout user)
   const handleAuthFailure = useCallback(() => {
-    dispatch({ type: 'AUTH_LOGOUT' });
+    dispatch({type: 'AUTH_LOGOUT'});
   }, []);
 
   // Initialize authentication state on app load
   useEffect(() => {
-    const initializeAuth = async () => {
+    const initializeAuth = async (): Promise<void> => {
       // Check if we have stored tokens using both token managers for compatibility
       const hasTokensFromOldManager = tokenStorage.hasValidTokens();
       const hasTokensFromNewManager = tokenManager.hasValidTokens();
-      
+
       if (hasTokensFromOldManager || hasTokensFromNewManager) {
         await refreshAuth();
       }
@@ -305,7 +304,7 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   useEffect(() => {
     // Listen for token refresh events from the token manager
     window.addEventListener('tokenRefreshNeeded', handleTokenRefresh);
-    
+
     // Listen for auth failure events from axios interceptors
     window.addEventListener('authFailure', handleAuthFailure);
 
@@ -329,13 +328,13 @@ export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
   };
 
   return (
-    <FeatureLevelErrorBoundary featureName="Authentication">
-      <AuthStateContext.Provider value={authState}>
-        <AuthActionsContext.Provider value={authActions}>
-          {children}
-        </AuthActionsContext.Provider>
-      </AuthStateContext.Provider>
-    </FeatureLevelErrorBoundary>
+      <FeatureLevelErrorBoundary featureName="Authentication">
+        <AuthStateContext.Provider value={authState}>
+          <AuthActionsContext.Provider value={authActions}>
+            {children}
+          </AuthActionsContext.Provider>
+        </AuthStateContext.Provider>
+      </FeatureLevelErrorBoundary>
   );
 }
 

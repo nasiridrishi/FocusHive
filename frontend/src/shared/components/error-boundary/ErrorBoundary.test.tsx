@@ -1,10 +1,9 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { ThemeProvider } from '@mui/material/styles'
-import { createLightTheme } from '@shared/theme'
-import { AppErrorBoundary, ErrorFallback } from './AppErrorBoundary'
-import { errorLogger as _errorLogger } from '@shared/services/errorLogging'
-import { vi, beforeEach, afterEach as _afterEach, beforeAll, afterAll, describe, it, expect } from 'vitest'
+import {fireEvent, render, screen, waitFor} from '@testing-library/react'
+import {ThemeProvider} from '@mui/material/styles'
+import {createLightTheme} from '@shared/theme'
+import {AppErrorBoundary, ErrorFallback} from './AppErrorBoundary'
+import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest'
 
 // Mock the error logger
 vi.mock('@shared/services/errorLogging', () => ({
@@ -17,9 +16,9 @@ vi.mock('@shared/services/errorLogging', () => ({
 
 // Create a component that throws an error
 const ThrowError: React.FC<{ shouldThrow?: boolean; errorMessage?: string }> = ({
-  shouldThrow = false,
-  errorMessage = 'Test error',
-}) => {
+                                                                                  shouldThrow = false,
+                                                                                  errorMessage = 'Test error',
+                                                                                }) => {
   if (shouldThrow) {
     throw new Error(errorMessage)
   }
@@ -28,9 +27,9 @@ const ThrowError: React.FC<{ shouldThrow?: boolean; errorMessage?: string }> = (
 
 // Async error component for testing useAsyncError
 const _AsyncErrorComponent: React.FC<{ shouldThrow?: boolean }> = ({
-  shouldThrow = false,
-}) => {
-  const handleClick = () => {
+                                                                     shouldThrow = false,
+                                                                   }) => {
+  const handleClick = (): Promise<void> => {
     if (shouldThrow) {
       // Simulate an async error
       setTimeout(() => {
@@ -40,12 +39,12 @@ const _AsyncErrorComponent: React.FC<{ shouldThrow?: boolean }> = ({
   }
 
   return (
-    <div>
-      <div data-testid="async-component">Async Component</div>
-      <button data-testid="trigger-async-error" onClick={handleClick}>
-        Trigger Async Error
-      </button>
-    </div>
+      <div>
+        <div data-testid="async-component">Async Component</div>
+        <button data-testid="trigger-async-error" onClick={handleClick}>
+          Trigger Async Error
+        </button>
+      </div>
   )
 }
 
@@ -55,27 +54,27 @@ const renderWithTheme = (component: React.ReactElement) => {
 }
 
 // Suppress console errors during tests
-const originalConsoleError = console.error
+const originalConsoleError = console.error;
 beforeAll(() => {
   console.error = (...args: any[]) => {
     const errorMessage = typeof args[0] === 'string' ? args[0] : ''
-    
+
     // Suppress React error boundary related console outputs
     if (
-      errorMessage.includes('The above error occurred in the') ||
-      errorMessage.includes('React will try to recreate this component') ||
-      errorMessage.includes('Error: Test error') ||
-      errorMessage.includes('Error: Component crashed') ||
-      errorMessage.includes('Error: Detailed error message') ||
-      errorMessage.includes('Error: API temporarily unavailable') ||
-      errorMessage.includes('Consider adding an error boundary') ||
-      args.some((arg: unknown) => 
-        arg instanceof Error && 
-        (arg.message.includes('Test error') || 
-         arg.message.includes('Component crashed') ||
-         arg.message.includes('Detailed error message') ||
-         arg.message.includes('API temporarily unavailable'))
-      )
+        errorMessage.includes('The above error occurred in the') ||
+        errorMessage.includes('React will try to recreate this component') ||
+        errorMessage.includes('Error: Test error') ||
+        errorMessage.includes('Error: Component crashed') ||
+        errorMessage.includes('Error: Detailed error message') ||
+        errorMessage.includes('Error: API temporarily unavailable') ||
+        errorMessage.includes('Consider adding an error boundary') ||
+        args.some((arg: unknown) =>
+            arg instanceof Error &&
+            (arg.message.includes('Test error') ||
+                arg.message.includes('Component crashed') ||
+                arg.message.includes('Detailed error message') ||
+                arg.message.includes('API temporarily unavailable'))
+        )
     ) {
       return
     }
@@ -95,9 +94,9 @@ describe('ErrorBoundary Components', () => {
   describe('AppErrorBoundary', () => {
     it('renders children when no error occurs', () => {
       renderWithTheme(
-        <AppErrorBoundary>
-          <ThrowError shouldThrow={false} />
-        </AppErrorBoundary>
+          <AppErrorBoundary>
+            <ThrowError shouldThrow={false}/>
+          </AppErrorBoundary>
       )
 
       expect(screen.getByTestId('working-component')).toBeInTheDocument()
@@ -105,9 +104,9 @@ describe('ErrorBoundary Components', () => {
 
     it('renders error fallback when component throws', async () => {
       renderWithTheme(
-        <AppErrorBoundary>
-          <ThrowError shouldThrow={true} errorMessage="Component crashed" />
-        </AppErrorBoundary>
+          <AppErrorBoundary>
+            <ThrowError shouldThrow={true} errorMessage="Component crashed"/>
+          </AppErrorBoundary>
       )
 
       await waitFor(() => {
@@ -118,33 +117,33 @@ describe('ErrorBoundary Components', () => {
 
     it('logs error when component crashes', async () => {
       renderWithTheme(
-        <AppErrorBoundary>
-          <ThrowError shouldThrow={true} errorMessage="Component crashed" />
-        </AppErrorBoundary>
+          <AppErrorBoundary>
+            <ThrowError shouldThrow={true} errorMessage="Component crashed"/>
+          </AppErrorBoundary>
       )
 
       await waitFor(() => {
         expect(screen.getByRole('alert')).toBeInTheDocument()
       })
-      
+
       // The error logging is already mocked at the module level, so we just verify the error boundary works
       expect(screen.getByText('Something went wrong')).toBeInTheDocument()
     })
 
     it('shows Try Again button and allows error recovery', async () => {
       let shouldThrow = true
-      
-      const TestComponent = () => {
+
+      const TestComponent = (): React.ReactElement => {
         if (shouldThrow) {
           throw new Error('Test error')
         }
         return <div data-testid="working-component">Component is working</div>
       }
 
-      const { rerender } = renderWithTheme(
-        <AppErrorBoundary>
-          <TestComponent />
-        </AppErrorBoundary>
+      const {rerender} = renderWithTheme(
+          <AppErrorBoundary>
+            <TestComponent/>
+          </AppErrorBoundary>
       )
 
       await waitFor(() => {
@@ -157,11 +156,11 @@ describe('ErrorBoundary Components', () => {
 
       // Re-render with the same component that now works
       rerender(
-        <ThemeProvider theme={createLightTheme()}>
-          <AppErrorBoundary>
-            <TestComponent />
-          </AppErrorBoundary>
-        </ThemeProvider>
+          <ThemeProvider theme={createLightTheme()}>
+            <AppErrorBoundary>
+              <TestComponent/>
+            </AppErrorBoundary>
+          </ThemeProvider>
       )
 
       await waitFor(() => {
@@ -172,9 +171,9 @@ describe('ErrorBoundary Components', () => {
     it('shows different titles for different error levels', async () => {
       // Test app-level error
       renderWithTheme(
-        <AppErrorBoundary level="app">
-          <ThrowError shouldThrow={true} />
-        </AppErrorBoundary>
+          <AppErrorBoundary level="app">
+            <ThrowError shouldThrow={true}/>
+          </AppErrorBoundary>
       )
 
       await waitFor(() => {
@@ -184,9 +183,9 @@ describe('ErrorBoundary Components', () => {
 
     it('shows error details in development mode', async () => {
       renderWithTheme(
-        <AppErrorBoundary>
-          <ThrowError shouldThrow={true} errorMessage="Detailed error message" />
-        </AppErrorBoundary>
+          <AppErrorBoundary>
+            <ThrowError shouldThrow={true} errorMessage="Detailed error message"/>
+          </AppErrorBoundary>
       )
 
       await waitFor(() => {
@@ -208,10 +207,10 @@ describe('ErrorBoundary Components', () => {
 
     it('renders basic error information', () => {
       renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-        />
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+          />
       )
 
       expect(screen.getByRole('alert')).toBeInTheDocument()
@@ -220,12 +219,12 @@ describe('ErrorBoundary Components', () => {
 
     it('shows custom title and subtitle', () => {
       renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-          title="Custom Error Title"
-          subtitle="Custom error description"
-        />
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+              title="Custom Error Title"
+              subtitle="Custom error description"
+          />
       )
 
       expect(screen.getByText('Custom Error Title')).toBeInTheDocument()
@@ -234,10 +233,10 @@ describe('ErrorBoundary Components', () => {
 
     it('calls resetErrorBoundary when Try Again is clicked', () => {
       renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-        />
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+          />
       )
 
       fireEvent.click(screen.getByText('Try Again'))
@@ -246,13 +245,13 @@ describe('ErrorBoundary Components', () => {
 
     it('calls custom error reporter when Report Issue is clicked', () => {
       const mockReportError = vi.fn()
-      
+
       renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-          onReportError={mockReportError}
-        />
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+              onReportError={mockReportError}
+          />
       )
 
       fireEvent.click(screen.getByText('Report Issue'))
@@ -261,13 +260,13 @@ describe('ErrorBoundary Components', () => {
 
     it('navigates home when Go Home is clicked', () => {
       const mockGoHome = vi.fn()
-      
+
       renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-          onGoHome={mockGoHome}
-        />
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+              onGoHome={mockGoHome}
+          />
       )
 
       fireEvent.click(screen.getByText('Go Home'))
@@ -276,11 +275,11 @@ describe('ErrorBoundary Components', () => {
 
     it('shows error boundary name when provided', () => {
       renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-          errorBoundaryName="TestBoundary"
-        />
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+              errorBoundaryName="TestBoundary"
+          />
       )
 
       expect(screen.getByText('Boundary: TestBoundary')).toBeInTheDocument()
@@ -288,11 +287,11 @@ describe('ErrorBoundary Components', () => {
 
     it('expands error details when clicked', async () => {
       renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-          showErrorDetails={true}
-        />
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+              showErrorDetails={true}
+          />
       )
 
       const expandButton = screen.getByText('Error Details (Development Only)')
@@ -304,25 +303,25 @@ describe('ErrorBoundary Components', () => {
     })
 
     it('shows different severity colors', () => {
-      const { rerender } = renderWithTheme(
-        <ErrorFallback
-          error={mockError}
-          resetErrorBoundary={mockResetErrorBoundary}
-          severity="warning"
-        />
+      const {rerender} = renderWithTheme(
+          <ErrorFallback
+              error={mockError}
+              resetErrorBoundary={mockResetErrorBoundary}
+              severity="warning"
+          />
       )
 
       const errorIcon = screen.getByTestId('ErrorIcon') || screen.getByRole('alert').querySelector('svg')
       expect(errorIcon).toBeInTheDocument()
 
       rerender(
-        <ThemeProvider theme={createLightTheme()}>
-          <ErrorFallback
-            error={mockError}
-            resetErrorBoundary={mockResetErrorBoundary}
-            severity="error"
-          />
-        </ThemeProvider>
+          <ThemeProvider theme={createLightTheme()}>
+            <ErrorFallback
+                error={mockError}
+                resetErrorBoundary={mockResetErrorBoundary}
+                severity="error"
+            />
+          </ThemeProvider>
       )
 
       const newErrorIcon = screen.getByTestId('ErrorIcon') || screen.getByRole('alert').querySelector('svg')
@@ -333,12 +332,12 @@ describe('ErrorBoundary Components', () => {
   describe('Error Boundary Integration', () => {
     it('handles feature-level errors with isolation', async () => {
       renderWithTheme(
-        <div>
-          <AppErrorBoundary level="feature" isolate={true} featureName="TestFeature">
-            <ThrowError shouldThrow={true} />
-          </AppErrorBoundary>
-          <div data-testid="other-content">Other content should still work</div>
-        </div>
+          <div>
+            <AppErrorBoundary level="feature" isolate={true} featureName="TestFeature">
+              <ThrowError shouldThrow={true}/>
+            </AppErrorBoundary>
+            <div data-testid="other-content">Other content should still work</div>
+          </div>
       )
 
       await waitFor(() => {
@@ -349,11 +348,11 @@ describe('ErrorBoundary Components', () => {
 
     it('resets when resetKeys change', async () => {
       let resetKey = 'initial'
-      
-      const { rerender } = renderWithTheme(
-        <AppErrorBoundary resetKeys={[resetKey]}>
-          <ThrowError shouldThrow={true} />
-        </AppErrorBoundary>
+
+      const {rerender} = renderWithTheme(
+          <AppErrorBoundary resetKeys={[resetKey]}>
+            <ThrowError shouldThrow={true}/>
+          </AppErrorBoundary>
       )
 
       await waitFor(() => {
@@ -363,11 +362,11 @@ describe('ErrorBoundary Components', () => {
       // Change reset key and re-render with working component
       resetKey = 'changed'
       rerender(
-        <ThemeProvider theme={createLightTheme()}>
-          <AppErrorBoundary resetKeys={[resetKey]}>
-            <ThrowError shouldThrow={false} />
-          </AppErrorBoundary>
-        </ThemeProvider>
+          <ThemeProvider theme={createLightTheme()}>
+            <AppErrorBoundary resetKeys={[resetKey]}>
+              <ThrowError shouldThrow={false}/>
+            </AppErrorBoundary>
+          </ThemeProvider>
       )
 
       await waitFor(() => {
@@ -379,18 +378,18 @@ describe('ErrorBoundary Components', () => {
   describe('Error Recovery Scenarios', () => {
     it('recovers from temporary API errors', async () => {
       let shouldFail = true
-      
-      const ConditionalErrorComponent = () => {
+
+      const ConditionalErrorComponent = (): boolean => {
         if (shouldFail) {
           throw new Error('API temporarily unavailable')
         }
         return <div data-testid="api-working">API is working</div>
       }
 
-      const { rerender } = renderWithTheme(
-        <AppErrorBoundary>
-          <ConditionalErrorComponent />
-        </AppErrorBoundary>
+      const {rerender} = renderWithTheme(
+          <AppErrorBoundary>
+            <ConditionalErrorComponent/>
+          </AppErrorBoundary>
       )
 
       await waitFor(() => {
@@ -399,16 +398,16 @@ describe('ErrorBoundary Components', () => {
 
       // Simulate API recovery
       shouldFail = false
-      
+
       // Click Try Again
       fireEvent.click(screen.getByText('Try Again'))
 
       rerender(
-        <ThemeProvider theme={createLightTheme()}>
-          <AppErrorBoundary>
-            <ConditionalErrorComponent />
-          </AppErrorBoundary>
-        </ThemeProvider>
+          <ThemeProvider theme={createLightTheme()}>
+            <AppErrorBoundary>
+              <ConditionalErrorComponent/>
+            </AppErrorBoundary>
+          </ThemeProvider>
       )
 
       await waitFor(() => {

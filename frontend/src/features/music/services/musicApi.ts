@@ -1,18 +1,18 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import axios, {AxiosInstance, AxiosResponse} from 'axios'
 import {
-  Track,
-  Playlist,
+  AddToQueueRequest,
   ApiResponse,
+  CreatePlaylistRequest,
+  MusicError,
   PaginatedResponse,
+  Playlist,
+  QueueItem,
   SearchTracksRequest,
   SearchTracksResponse,
-  CreatePlaylistRequest,
-  UpdatePlaylistRequest,
-  AddToQueueRequest,
-  VoteRequest,
   SessionRecommendationRequest,
-  MusicError,
-  QueueItem
+  Track,
+  UpdatePlaylistRequest,
+  VoteRequest
 } from '../types/music'
 
 class MusicApiService {
@@ -31,43 +31,43 @@ class MusicApiService {
 
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('authToken')
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-      },
-      (error) => Promise.reject(error)
+        (config) => {
+          const token = localStorage.getItem('authToken')
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
+          return config
+        },
+        (error) => Promise.reject(error)
     )
 
     // Response interceptor for error handling
     this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        const musicError: MusicError = {
-          name: 'MusicError',
-          message: error.response?.data?.message || error.message || 'Unknown error',
-          code: error.response?.data?.code || 'UNKNOWN_ERROR',
-          details: error.response?.data,
-          timestamp: new Date().toISOString(),
+        (response) => response,
+        (error) => {
+          const musicError: MusicError = {
+            name: 'MusicError',
+            message: error.response?.data?.message || error.message || 'Unknown error',
+            code: error.response?.data?.code || 'UNKNOWN_ERROR',
+            details: error.response?.data,
+            timestamp: new Date().toISOString(),
+          }
+          return Promise.reject(musicError)
         }
-        return Promise.reject(musicError)
-      }
     )
   }
 
   // Playlist endpoints
   async getPlaylists(hiveId?: string): Promise<Playlist[]> {
-    const params = hiveId ? { hiveId } : {}
-    const response: AxiosResponse<ApiResponse<Playlist[]>> = await this.api.get('/playlists', { params })
+    const params = hiveId ? {hiveId} : {}
+    const response: AxiosResponse<ApiResponse<Playlist[]>> = await this.api.get('/playlists', {params})
     return response.data.data
   }
 
   // Alias for getUserPlaylists to support existing test code
   async getUserPlaylists(userId?: string): Promise<Playlist[]> {
-    const params = userId ? { userId } : {}
-    const response: AxiosResponse<ApiResponse<Playlist[]>> = await this.api.get('/playlists/user', { params })
+    const params = userId ? {userId} : {}
+    const response: AxiosResponse<ApiResponse<Playlist[]>> = await this.api.get('/playlists/user', {params})
     return response.data.data
   }
 
@@ -91,7 +91,7 @@ class MusicApiService {
   }
 
   async addTracksToPlaylist(playlistId: string, trackIds: string[]): Promise<void> {
-    await this.api.post(`/playlists/${playlistId}/tracks`, { trackIds })
+    await this.api.post(`/playlists/${playlistId}/tracks`, {trackIds})
   }
 
   async removeTrackFromPlaylist(playlistId: string, trackId: string): Promise<void> {
@@ -100,16 +100,16 @@ class MusicApiService {
 
   async getPlaylistTracks(playlistId: string, page = 1, limit = 50): Promise<PaginatedResponse<Track>> {
     const response: AxiosResponse<PaginatedResponse<Track>> = await this.api.get(
-      `/playlists/${playlistId}/tracks`,
-      { params: { page, limit } }
+        `/playlists/${playlistId}/tracks`,
+        {params: {page, limit}}
     )
     return response.data
   }
 
   // Queue endpoints
   async getQueue(hiveId?: string): Promise<QueueItem[]> {
-    const params = hiveId ? { hiveId } : {}
-    const response: AxiosResponse<ApiResponse<QueueItem[]>> = await this.api.get('/queue', { params })
+    const params = hiveId ? {hiveId} : {}
+    const response: AxiosResponse<ApiResponse<QueueItem[]>> = await this.api.get('/queue', {params})
     return response.data.data
   }
 
@@ -123,14 +123,14 @@ class MusicApiService {
   }
 
   async reorderQueue(fromPosition: number, toPosition: number, hiveId?: string): Promise<QueueItem[]> {
-    const request = { fromPosition, toPosition, hiveId }
+    const request = {fromPosition, toPosition, hiveId}
     const response: AxiosResponse<ApiResponse<QueueItem[]>> = await this.api.put('/queue/reorder', request)
     return response.data.data
   }
 
   async clearQueue(hiveId?: string): Promise<void> {
-    const params = hiveId ? { hiveId } : {}
-    await this.api.delete('/queue/clear', { params })
+    const params = hiveId ? {hiveId} : {}
+    await this.api.delete('/queue/clear', {params})
   }
 
   async voteOnTrack(queueId: string, vote: VoteRequest): Promise<void> {
@@ -158,14 +158,14 @@ class MusicApiService {
 
   async getPersonalizedRecommendations(limit = 20): Promise<Track[]> {
     const response: AxiosResponse<ApiResponse<Track[]>> = await this.api.get('/recommendations/personalized', {
-      params: { limit }
+      params: {limit}
     })
     return response.data.data
   }
 
   async getSimilarTracks(trackId: string, limit = 10): Promise<Track[]> {
     const response: AxiosResponse<ApiResponse<Track[]>> = await this.api.get(`/recommendations/similar/${trackId}`, {
-      params: { limit }
+      params: {limit}
     })
     return response.data.data
   }
@@ -205,16 +205,18 @@ class MusicApiService {
 
   // Spotify integration (if available)
   async getSpotifyAuthUrl(): Promise<string> {
-    const response: AxiosResponse<ApiResponse<{ authUrl: string }>> = await this.api.get('/spotify/auth-url')
+    const response: AxiosResponse<ApiResponse<{
+      authUrl: string
+    }>> = await this.api.get('/spotify/auth-url')
     return response.data.data.authUrl
   }
 
   async exchangeSpotifyCode(code: string): Promise<void> {
-    await this.api.post('/spotify/exchange-code', { code })
+    await this.api.post('/spotify/exchange-code', {code})
   }
 
   async getSpotifyTracks(spotifyIds: string[]): Promise<Track[]> {
-    const response: AxiosResponse<ApiResponse<Track[]>> = await this.api.post('/spotify/tracks', { spotifyIds })
+    const response: AxiosResponse<ApiResponse<Track[]>> = await this.api.post('/spotify/tracks', {spotifyIds})
     return response.data.data
   }
 

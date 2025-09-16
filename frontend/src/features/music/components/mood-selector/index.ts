@@ -1,2 +1,2 @@
 // MoodSelector component exports
-export { default as MoodSelector } from './MoodSelector'
+export {default as MoodSelector} from './MoodSelector'

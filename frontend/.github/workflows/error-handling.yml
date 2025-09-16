@@ -122,7 +122,7 @@ jobs:
       fail-fast: false
       matrix:
         test-suite: ${{ fromJson(needs.setup.outputs.test-matrix) }}
-        browser: [chromium, firefox, webkit]
+        browser: [ chromium, firefox, webkit ]
     
     steps:
       - name: Checkout code
@@ -228,7 +228,7 @@ jobs:
           - service-failures
           - resource-exhaustion
           - byzantine-failures
-        intensity: [high, extreme]
+        intensity: [ high, extreme ]
     
     steps:
       - name: Checkout code
@@ -377,7 +377,7 @@ jobs:
   report-generation:
     name: Generate Comprehensive Report
     runs-on: ubuntu-latest
-    needs: [error-handling-tests, chaos-testing, performance-regression]
+    needs: [ error-handling-tests, chaos-testing, performance-regression ]
     if: always()
     
     steps:
@@ -469,7 +469,7 @@ jobs:
   notification:
     name: Send Notifications
     runs-on: ubuntu-latest
-    needs: [error-handling-tests, chaos-testing, performance-regression]
+    needs: [ error-handling-tests, chaos-testing, performance-regression ]
     if: always()
     
     steps:
@@ -515,25 +515,25 @@ jobs:
               title: `🚨 Error Handling Tests Failed - ${new Date().toISOString().split('T')[0]}`,
               body: `## Error Handling Test Failure
 
-**Status**: ${{ steps.results.outputs.status }}
-**Message**: ${{ steps.results.outputs.message }}
+**Status** : ${{ steps.results.outputs.status }}
+**Message** : ${{ steps.results.outputs.message }}
 
-**Run Details**:
-- Workflow: ${{ github.workflow }}
-- Run ID: ${{ github.run_id }}
-- Commit: ${{ github.sha }}
-- Branch: ${{ github.ref_name }}
+  **Run Details**:
+          - Workflow: ${{ github.workflow }}
+          - Run ID: ${{ github.run_id }}
+          - Commit: ${{ github.sha }}
+          - Branch: ${{ github.ref_name }}
 
-**Action Required**:
-1. Review the test results in the workflow run
-2. Identify and fix the failing error handling scenarios
-3. Ensure system resilience is not compromised
-4. Update error handling mechanisms if necessary
+  **Action Required**:
+  1. Review the test results in the workflow run
+  2. Identify and fix the failing error handling scenarios
+  3. Ensure system resilience is not compromised
+  4. Update error handling mechanisms if necessary
 
-**Links**:
-- [Workflow Run](${context.payload.repository.html_url}/actions/runs/${{ github.run_id }})
-- [Test Artifacts](${context.payload.repository.html_url}/actions/runs/${{ github.run_id }})
-
-/label bug,priority-high,error-handling`,
-              labels: ['bug', 'priority-high', 'error-handling', 'automated-test-failure']
-            });
+**Links** :
+  - [ Workflow Run ](${context.payload.repository.html_url}/actions/runs/${{ github.run_id }})
+  - [ Test Artifacts ](${context.payload.repository.html_url}/actions/runs/${{ github.run_id }})
+  
+  /label bug,priority-high,error-handling`,
+labels: [ 'bug', 'priority-high', 'error-handling', 'automated-test-failure' ]
+});

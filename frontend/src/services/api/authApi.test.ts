@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { server } from '@/test-utils/msw-server';
-import { http, HttpResponse } from 'msw';
-import { authApiService as authApi } from './authApi';
-import type { LoginRequest, RegisterRequest } from '@shared/types/auth';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {server} from '@/test-utils/msw-server';
+import {http, HttpResponse} from 'msw';
+import {authApiService as authApi} from './authApi';
+import type {LoginRequest, RegisterRequest} from '@shared/types/auth';
 
 // Mock axios and AxiosError
 vi.mock('axios', async () => {
@@ -93,12 +93,12 @@ describe('authApi', () => {
 
     it('should throw error for invalid credentials', async () => {
       server.use(
-        http.post('/api/auth/login', () => {
-          return HttpResponse.json(
-            { message: 'Invalid credentials' },
-            { status: 401 }
-          );
-        })
+          http.post('/api/auth/login', () => {
+            return HttpResponse.json(
+                {message: 'Invalid credentials'},
+                {status: 401}
+            );
+          })
       );
 
       const loginData: LoginRequest = {
@@ -111,9 +111,9 @@ describe('authApi', () => {
 
     it('should handle network errors', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/login', () => {
-          return HttpResponse.error();
-        })
+          http.post('http://localhost:8081/api/v1/auth/login', () => {
+            return HttpResponse.error();
+          })
       );
 
       const loginData: LoginRequest = {
@@ -126,12 +126,12 @@ describe('authApi', () => {
 
     it('should handle server errors', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/login', () => {
-          return HttpResponse.json(
-            { message: 'Internal server error' },
-            { status: 500 }
-          );
-        })
+          http.post('http://localhost:8081/api/v1/auth/login', () => {
+            return HttpResponse.json(
+                {message: 'Internal server error'},
+                {status: 500}
+            );
+          })
       );
 
       const loginData: LoginRequest = {
@@ -160,7 +160,7 @@ describe('authApi', () => {
           username: 'newuser',
           email: 'newuser@example.com',
           firstName: 'New',
-        lastName: 'User'
+          lastName: 'User'
         }),
         token: expect.any(String),
         refreshToken: expect.any(String)
@@ -191,12 +191,12 @@ describe('authApi', () => {
 
     it('should handle registration validation errors', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/register', () => {
-          return HttpResponse.json(
-            { message: 'Email already exists' },
-            { status: 400 }
-          );
-        })
+          http.post('http://localhost:8081/api/v1/auth/register', () => {
+            return HttpResponse.json(
+                {message: 'Email already exists'},
+                {status: 400}
+            );
+          })
       );
 
       const registerData: RegisterRequest = {
@@ -212,12 +212,12 @@ describe('authApi', () => {
 
     it('should handle invalid registration data', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/register', () => {
-          return HttpResponse.json(
-            { message: 'Invalid registration data' },
-            { status: 400 }
-          );
-        })
+          http.post('http://localhost:8081/api/v1/auth/register', () => {
+            return HttpResponse.json(
+                {message: 'Invalid registration data'},
+                {status: 400}
+            );
+          })
       );
 
       const registerData: RegisterRequest = {
@@ -240,12 +240,12 @@ describe('authApi', () => {
 
     it('should return false for invalid authentication', async () => {
       server.use(
-        http.get('/api/v1/auth/me', () => {
-          return HttpResponse.json(
-            { message: 'Unauthorized' },
-            { status: 401 }
-          );
-        })
+          http.get('/api/v1/auth/me', () => {
+            return HttpResponse.json(
+                {message: 'Unauthorized'},
+                {status: 401}
+            );
+          })
       );
 
       const response = await authApi.validateAuth();
@@ -270,12 +270,12 @@ describe('authApi', () => {
 
     it('should handle logout errors gracefully', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/logout', () => {
-          return HttpResponse.json(
-            { message: 'Logout failed' },
-            { status: 500 }
-          );
-        })
+          http.post('http://localhost:8081/api/v1/auth/logout', () => {
+            return HttpResponse.json(
+                {message: 'Logout failed'},
+                {status: 500}
+            );
+          })
       );
 
       // Logout should not throw even if server returns error
@@ -301,12 +301,12 @@ describe('authApi', () => {
 
     it('should handle unauthorized access', async () => {
       server.use(
-        http.get('http://localhost:8081/api/v1/auth/me', () => {
-          return HttpResponse.json(
-            { message: 'Unauthorized' },
-            { status: 401 }
-          );
-        })
+          http.get('http://localhost:8081/api/v1/auth/me', () => {
+            return HttpResponse.json(
+                {message: 'Unauthorized'},
+                {status: 401}
+            );
+          })
       );
 
       await expect(authApi.getCurrentUser()).rejects.toThrow();
@@ -322,22 +322,22 @@ describe('authApi', () => {
       let capturedRequest: Request | null = null;
 
       server.use(
-        http.get('http://localhost:8081/api/v1/auth/me', ({ request }) => {
-          capturedRequest = request;
-          return HttpResponse.json({
-            user: {
-              id: '1',
-              username: 'testuser',
-              email: 'testuser@example.com',
-              firstName: 'Test',
-              lastName: 'User',
-              name: 'Test User',
-              isEmailVerified: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            }
-          });
-        })
+          http.get('http://localhost:8081/api/v1/auth/me', ({request}) => {
+            capturedRequest = request;
+            return HttpResponse.json({
+              user: {
+                id: '1',
+                username: 'testuser',
+                email: 'testuser@example.com',
+                firstName: 'Test',
+                lastName: 'User',
+                name: 'Test User',
+                isEmailVerified: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }
+            });
+          })
       );
 
       await authApi.getCurrentUser();
@@ -349,11 +349,11 @@ describe('authApi', () => {
   describe('error handling', () => {
     it('should handle timeout errors', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/login', async () => {
-          // Simulate timeout - longer than axios timeout (10s)
-          await new Promise(resolve => setTimeout(resolve, 11000));
-          return HttpResponse.json({});
-        })
+          http.post('http://localhost:8081/api/v1/auth/login', async () => {
+            // Simulate timeout - longer than axios timeout (10s)
+            await new Promise(resolve => setTimeout(resolve, 11000));
+            return HttpResponse.json({});
+          })
       );
 
       const loginData: LoginRequest = {
@@ -367,13 +367,13 @@ describe('authApi', () => {
 
     it('should handle malformed JSON responses', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/login', () => {
-          // Return malformed JSON that will cause axios to fail parsing
-          return new Response('{"user": invalid}', {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        })
+          http.post('http://localhost:8081/api/v1/auth/login', () => {
+            // Return malformed JSON that will cause axios to fail parsing
+            return new Response('{"user": invalid}', {
+              status: 200,
+              headers: {'Content-Type': 'application/json'}
+            });
+          })
       );
 
       const loginData: LoginRequest = {
@@ -386,13 +386,13 @@ describe('authApi', () => {
 
     it('should handle empty responses', async () => {
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/login', () => {
-          // Return empty JSON object that lacks required fields
-          return new Response('{}', { 
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        })
+          http.post('http://localhost:8081/api/v1/auth/login', () => {
+            // Return empty JSON object that lacks required fields
+            return new Response('{}', {
+              status: 200,
+              headers: {'Content-Type': 'application/json'}
+            });
+          })
       );
 
       const loginData: LoginRequest = {
@@ -409,27 +409,27 @@ describe('authApi', () => {
       let capturedRequest: Request | null = null;
 
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/login', ({ request }) => {
-          capturedRequest = request;
-          return HttpResponse.json({
-            user: { 
-              id: '1',
-              username: 'test',
-              email: 'test@example.com',
-              firstName: 'Test',
-              lastName: 'User',
-              name: 'Test User',
-              isEmailVerified: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            },
-            token: 'token',
-            refreshToken: 'refresh'
-          });
-        })
+          http.post('http://localhost:8081/api/v1/auth/login', ({request}) => {
+            capturedRequest = request;
+            return HttpResponse.json({
+              user: {
+                id: '1',
+                username: 'test',
+                email: 'test@example.com',
+                firstName: 'Test',
+                lastName: 'User',
+                name: 'Test User',
+                isEmailVerified: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              token: 'token',
+              refreshToken: 'refresh'
+            });
+          })
       );
 
-      await authApi.login({ email: 'test@example.com', password: 'pass' });
+      await authApi.login({email: 'test@example.com', password: 'pass'});
 
       expect(capturedRequest?.headers.get('content-type')).toBe('application/json');
     });
@@ -438,27 +438,27 @@ describe('authApi', () => {
       let capturedBody: unknown = null;
 
       server.use(
-        http.post('http://localhost:8081/api/v1/auth/login', async ({ request }) => {
-          capturedBody = await request.json();
-          return HttpResponse.json({
-            user: { 
-              id: '1',
-              username: 'test',
-              email: 'testuser@example.com',
-              firstName: 'Test',
-              lastName: 'User',
-              name: 'Test User',
-              isEmailVerified: true,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            },
-            token: 'token',
-            refreshToken: 'refresh'
-          });
-        })
+          http.post('http://localhost:8081/api/v1/auth/login', async ({request}) => {
+            capturedBody = await request.json();
+            return HttpResponse.json({
+              user: {
+                id: '1',
+                username: 'test',
+                email: 'testuser@example.com',
+                firstName: 'Test',
+                lastName: 'User',
+                name: 'Test User',
+                isEmailVerified: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              token: 'token',
+              refreshToken: 'refresh'
+            });
+          })
       );
 
-      const loginData = { email: 'testuser@example.com', password: 'testpass' };
+      const loginData = {email: 'testuser@example.com', password: 'testpass'};
       await authApi.login(loginData);
 
       expect(capturedBody).toEqual(loginData);

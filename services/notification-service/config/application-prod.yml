@@ -1,0 +1,188 @@
+spring:
+  profiles:
+    active: prod
+    include:
+      - common
+
+  # Production database configuration (using environment variables)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:prod-postgres.focushive.internal}:${DB_PORT:5432}/${DB_NAME:notification_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      connection-timeout: 30000
+      minimum-idle: 10
+      maximum-pool-size: 50
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+
+  # Production Redis configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:prod-redis.focushive.internal}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: 5000ms
+      ssl: true
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 5000ms
+
+  # Production RabbitMQ configuration
+  rabbitmq:
+    host: ${RABBITMQ_HOST:prod-rabbitmq.focushive.internal}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: /prod
+    ssl:
+      enabled: true
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2000
+          max-attempts: 5
+          max-interval: 30000
+          multiplier: 3.0
+
+  # Production mail configuration (AWS SES)
+  mail:
+    host: email-smtp.us-east-1.amazonaws.com
+    port: 587
+    username: ${AWS_SES_SMTP_USERNAME}
+    password: ${AWS_SES_SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: email-smtp.us-east-1.amazonaws.com
+
+  # Production security configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:https://auth.focushive.com/auth/realms/focushive}
+          jwk-set-uri: ${JWT_JWK_SET_URI:https://auth.focushive.com/auth/realms/focushive/protocol/openid-connect/certs}
+          cache-duration: PT5M
+
+# Production server configuration
+server:
+  port: 8083
+  servlet:
+    context-path: /notification-service/api
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
+  http2:
+    enabled: true
+
+# Production management configuration
+management:
+  server:
+    port: 8080
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: when_authorized
+    shutdown:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 30s
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+        "[notification.processing.time]": true
+      percentiles:
+        "[http.server.requests]": "0.5, 0.95, 0.99"
+        "[notification.processing.time]": "0.5, 0.95, 0.99"
+
+# Production notification configuration
+notification:
+  email:
+    from: ${EMAIL_FROM:noreply@focushive.com}
+    enabled: true
+  digest:
+    schedule: "0 0 8,20 * * *"  # 8 AM and 8 PM daily
+    batch-size: 500
+  retry:
+    max-attempts: 5
+    delay: 2000
+
+# Production logging configuration
+logging:
+  level:
+    com.uol.focushive.notificationservice: INFO
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type: WARN
+    org.springframework.amqp: INFO
+    root: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB
+
+# Production CORS configuration
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://app.focushive.com,https://admin.focushive.com}
+  allowed-methods: "GET,POST,PUT,DELETE,PATCH,OPTIONS"
+  allowed-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+  allow-credentials: true
+
+# Production monitoring configuration
+management:
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.1}  # Sample 10% of requests in production
+    zipkin:
+      endpoint: ${ZIPKIN_URL:https://zipkin.focushive.internal/api/v2/spans}
+
+# Production security features
+security:
+  require-ssl: true
+
+# Disable development-specific features
+debug: false
+
+# Springdoc OpenAPI configuration for production
+springdoc:
+  api-docs:
+    enabled: false  # Disable in production for security
+  swagger-ui:
+    enabled: false  # Disable in production for security
+
+# JVM tuning for production
+java:
+  opts: >-
+    -Xmx2g
+    -Xms1g
+    -XX:+UseG1GC
+    -XX:MaxGCPauseMillis=200
+    -XX:+UseStringDeduplication
+    -XX:+OptimizeStringConcat
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:HeapDumpPath=/tmp/heapdump.hprof
+    -Djava.security.egd=file:/dev/./urandom

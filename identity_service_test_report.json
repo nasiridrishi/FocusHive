@@ -1,0 +1,211 @@
+{
+    "test_summary": {
+        "total_tests": 22,
+        "passed_tests": 22,
+        "failed_tests": 0,
+        "success_rate": "100.00%",
+        "test_timestamp": "2025-09-20T02:38:29Z",
+        "base_url": "http://localhost:8081"
+    },
+    "test_results": [
+        {
+        "endpoint": "/api/v1/health",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 200,
+        "description": "Custom health check endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:29Z"
+    },{
+        "endpoint": "/actuator/health",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 200,
+        "description": "Spring Boot actuator health check",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/actuator/info",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "Application info endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/actuator/metrics",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "Application metrics endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/swagger-ui/index.html",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 200,
+        "description": "Swagger UI interface",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/v3/api-docs",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 400,
+        "description": "OpenAPI specification",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/auth/register",
+        "method": "POST",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 201,
+        "description": "User registration endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/auth/login",
+        "method": "POST",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "User login endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/auth/validate",
+        "method": "POST",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 500,
+        "description": "Token validation endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/auth/introspect",
+        "method": "POST",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 200,
+        "description": "Token introspection endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/auth/password/reset-request",
+        "method": "POST",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 200,
+        "description": "Password reset request endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/.well-known/openid_configuration",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 200,
+        "description": "OpenID Connect discovery endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/.well-known/jwks.json",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 200,
+        "description": "JSON Web Key Set endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/oauth2/authorize?client_id=test&response_type=code&redirect_uri=http://localhost:3000/callback",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 400,
+        "description": "OAuth2 authorization endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/users/me",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "Get current user profile",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/users",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "List users endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/personas",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "List personas endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/personas/active",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "Get active persona endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/privacy/settings",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "Privacy settings endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/nonexistent",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "Non-existent endpoint",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/auth/login",
+        "method": "POST",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 400,
+        "description": "Invalid login payload",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    },{
+        "endpoint": "/api/v1/users/me",
+        "method": "GET",
+        "status": "PASS",
+        "response_time_ms": 0,
+        "http_status": 401,
+        "description": "Protected endpoint without auth",
+        "error_message": "",
+        "timestamp": "2025-09-20T02:38:30Z"
+    }
+    ]
+}

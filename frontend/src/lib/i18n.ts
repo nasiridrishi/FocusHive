@@ -1,5 +1,5 @@
 import i18n from 'i18next'
-import { initReactI18next } from 'react-i18next'
+import {initReactI18next} from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
 // Import translation resources
@@ -111,26 +111,26 @@ export const resources = {
 
 // Supported languages configuration
 export const supportedLanguages = {
-  en: { 
-    code: 'en', 
-    name: 'English', 
-    nativeName: 'English', 
+  en: {
+    code: 'en',
+    name: 'English',
+    nativeName: 'English',
     flag: '🇺🇸',
-    rtl: false 
+    rtl: false
   },
-  es: { 
-    code: 'es', 
-    name: 'Spanish', 
-    nativeName: 'Español', 
+  es: {
+    code: 'es',
+    name: 'Spanish',
+    nativeName: 'Español',
     flag: '🇪🇸',
-    rtl: false 
+    rtl: false
   },
-  fr: { 
-    code: 'fr', 
-    name: 'French', 
-    nativeName: 'Français', 
+  fr: {
+    code: 'fr',
+    name: 'French',
+    nativeName: 'Français',
     flag: '🇫🇷',
-    rtl: false 
+    rtl: false
   },
 } as const
 
@@ -145,139 +145,139 @@ export const defaultNS = 'common'
 
 // Configure i18next
 i18n
-  // Detect user language
-  .use(LanguageDetector)
-  // Pass the i18n instance to react-i18next
-  .use(initReactI18next)
-  // Initialize i18next
-  .init({
-    // Debug mode for development
-    debug: import.meta.env.DEV || false,
+// Detect user language
+.use(LanguageDetector)
+// Pass the i18n instance to react-i18next
+.use(initReactI18next)
+// Initialize i18next
+.init({
+  // Debug mode for development
+  debug: import.meta.env.DEV || false,
 
-    // Fallback language
-    fallbackLng: 'en',
+  // Fallback language
+  fallbackLng: 'en',
 
-    // Default namespace
-    defaultNS,
+  // Default namespace
+  defaultNS,
 
-    // Available namespaces
-    ns: [
-      'common',
-      'auth',
-      'hive',
-      'timer',
-      'analytics',
-      'gamification',
-      'music',
-      'chat',
-      'presence',
-      'error',
-      'validation',
-    ],
+  // Available namespaces
+  ns: [
+    'common',
+    'auth',
+    'hive',
+    'timer',
+    'analytics',
+    'gamification',
+    'music',
+    'chat',
+    'presence',
+    'error',
+    'validation',
+  ],
 
-    // Resources
-    resources,
+  // Resources
+  resources,
 
-    // Language detection options
-    detection: {
-      // Order and from where user language should be detected
-      order: ['querystring', 'localStorage', 'navigator', 'htmlTag', 'path', 'subdomain'],
+  // Language detection options
+  detection: {
+    // Order and from where user language should be detected
+    order: ['querystring', 'localStorage', 'navigator', 'htmlTag', 'path', 'subdomain'],
 
-      // Keys or params to lookup language from
-      lookupQuerystring: 'lng',
-      lookupLocalStorage: 'focushive-language',
-      lookupFromPathIndex: 0,
-      lookupFromSubdomainIndex: 0,
+    // Keys or params to lookup language from
+    lookupQuerystring: 'lng',
+    lookupLocalStorage: 'focushive-language',
+    lookupFromPathIndex: 0,
+    lookupFromSubdomainIndex: 0,
 
-      // Cache user language on
-      caches: ['localStorage'],
+    // Cache user language on
+    caches: ['localStorage'],
 
-      // Optional expire and domain for set cookie
-      cookieMinutes: 10080, // 7 days
-      cookieDomain: 'focushive.com',
+    // Optional expire and domain for set cookie
+    cookieMinutes: 10080, // 7 days
+    cookieDomain: 'focushive.com',
 
-      // Optional htmlTag with lang attribute
-      htmlTag: document.documentElement,
-      checkWhitelist: true,
-    },
+    // Optional htmlTag with lang attribute
+    htmlTag: document.documentElement,
+    checkWhitelist: true,
+  },
 
-    // Interpolation options
-    interpolation: {
-      // React already escapes by default
-      escapeValue: false,
-      // Note: Legacy format function removed - using new formatter approach
-      // Custom formatters are now added via i18next.services.formatter.add() after init
-    },
+  // Interpolation options
+  interpolation: {
+    // React already escapes by default
+    escapeValue: false,
+    // Note: Legacy format function removed - using new formatter approach
+    // Custom formatters are now added via i18next.services.formatter.add() after init
+  },
 
-    // React specific options
-    react: {
-      // Turn off the use of React Suspense for i18n loading
-      useSuspense: false,
-      
-      // Bind i18n instance to React component tree
-      bindI18n: 'languageChanged',
-      
-      // Bind store to React component tree
-      bindI18nStore: 'added removed',
-      
-      // Enable or disable the TransWithoutContext hoc
-      transEmptyNodeValue: '',
-      
-      // Trans component key validation
-      transSupportBasicHtmlNodes: true,
-      transKeepBasicHtmlNodesFor: ['br', 'strong', 'i'],
-      
-      // Escape passed in values to avoid XSS injection
-      escapeValue: true,
+  // React specific options
+  react: {
+    // Turn off the use of React Suspense for i18n loading
+    useSuspense: false,
 
-      // Set to false if you prefer not to use the default Trans component
-      defaultTransParent: 'div',
+    // Bind i18n instance to React component tree
+    bindI18n: 'languageChanged',
 
-      // You can choose to only update when i18n language changes or also when
-      // the loaded resources change
-    },
+    // Bind store to React component tree
+    bindI18nStore: 'added removed',
 
-    // Backend options (if using i18next-http-backend)
-    // backend: {
-    //   loadPath: '/locales/{{lng}}/{{ns}}.json',
-    //   allowMultiLoading: false,
-    //   parse: (data: string) => JSON.parse(data),
-    //   crossDomain: false,
-    //   addPath: '/locales/add/{{lng}}/{{ns}}',
-    //   allowMultiLoading: false,
-    //   reloadInterval: false,
-    // },
+    // Enable or disable the TransWithoutContext hoc
+    transEmptyNodeValue: '',
 
-    // Separators
-    keySeparator: '.',
-    nsSeparator: ':',
+    // Trans component key validation
+    transSupportBasicHtmlNodes: true,
+    transKeepBasicHtmlNodesFor: ['br', 'strong', 'i'],
 
-    // Pluralization
-    pluralSeparator: '_',
-    contextSeparator: '_',
+    // Escape passed in values to avoid XSS injection
+    escapeValue: true,
 
-    // Postprocessing
-    postProcess: ['interval'],
+    // Set to false if you prefer not to use the default Trans component
+    defaultTransParent: 'div',
 
-    // Cleanup
-    cleanCode: true,
-    
-    // Additional options for TypeScript support
-    // This helps with type inference
-    returnEmptyString: false,
-    returnNull: false,
-    returnObjects: false,
-    joinArrays: false,
+    // You can choose to only update when i18n language changes or also when
+    // the loaded resources change
+  },
 
-    // Savemissing feature
-    saveMissing: import.meta.env.DEV,
-    saveMissingTo: 'all',
-    missingKeyHandler: import.meta.env.DEV 
+  // Backend options (if using i18next-http-backend)
+  // backend: {
+  //   loadPath: '/locales/{{lng}}/{{ns}}.json',
+  //   allowMultiLoading: false,
+  //   parse: (data: string) => JSON.parse(data),
+  //   crossDomain: false,
+  //   addPath: '/locales/add/{{lng}}/{{ns}}',
+  //   allowMultiLoading: false,
+  //   reloadInterval: false,
+  // },
+
+  // Separators
+  keySeparator: '.',
+  nsSeparator: ':',
+
+  // Pluralization
+  pluralSeparator: '_',
+  contextSeparator: '_',
+
+  // Postprocessing
+  postProcess: ['interval'],
+
+  // Cleanup
+  cleanCode: true,
+
+  // Additional options for TypeScript support
+  // This helps with type inference
+  returnEmptyString: false,
+  returnNull: false,
+  returnObjects: false,
+  joinArrays: false,
+
+  // Savemissing feature
+  saveMissing: import.meta.env.DEV,
+  saveMissingTo: 'all',
+  missingKeyHandler: import.meta.env.DEV
       ? (_lng: string[], _ns: string, _key: string) => {
-          // Missing translation logged only in development
-        }
+        // Missing translation logged only in development
+      }
       : undefined,
-  } as unknown)
+} as unknown)
 
 // Add custom formatters using the new approach (after init)
 // These replace the legacy format function that was deprecated
@@ -323,13 +323,13 @@ export const getAvailableLanguages = () => {
 // Helper function to change language
 export const changeLanguage = async (language: SupportedLanguage): Promise<void> => {
   await i18n.changeLanguage(language)
-  
+
   // Update HTML lang attribute for accessibility
   document.documentElement.lang = language
-  
+
   // Update HTML dir attribute for RTL support
   document.documentElement.dir = rtlLanguages.includes(language) ? 'rtl' : 'ltr'
-  
+
   // Store in localStorage for persistence
   localStorage.setItem('focushive-language', language)
 }
@@ -337,8 +337,8 @@ export const changeLanguage = async (language: SupportedLanguage): Promise<void>
 // Helper function to format dates with current locale
 // Note: For i18next translations, prefer using {{value, datetime}} in translation strings
 export const formatDate = (
-  date: Date | string | number,
-  options?: Intl.DateTimeFormatOptions
+    date: Date | string | number,
+    options?: Intl.DateTimeFormatOptions
 ): string => {
   const currentLang = i18n.language
   return new Intl.DateTimeFormat(currentLang, options).format(new Date(date))
@@ -347,8 +347,8 @@ export const formatDate = (
 // Helper function to format numbers with current locale
 // Note: For i18next translations, prefer using {{value, number}} in translation strings
 export const formatNumber = (
-  number: number,
-  options?: Intl.NumberFormatOptions
+    number: number,
+    options?: Intl.NumberFormatOptions
 ): string => {
   const currentLang = i18n.language
   return new Intl.NumberFormat(currentLang, options).format(number)
@@ -357,9 +357,9 @@ export const formatNumber = (
 // Helper function to format currency with current locale
 // Note: For i18next translations, prefer using {{value, currency}} in translation strings
 export const formatCurrency = (
-  amount: number,
-  currency: string = 'USD',
-  options?: Intl.NumberFormatOptions
+    amount: number,
+    currency: string = 'USD',
+    options?: Intl.NumberFormatOptions
 ): string => {
   const currentLang = i18n.language
   return new Intl.NumberFormat(currentLang, {
@@ -371,16 +371,16 @@ export const formatCurrency = (
 
 // Helper function to format relative time
 export const formatRelativeTime = (
-  date: Date | string | number,
-  options?: Intl.RelativeTimeFormatOptions
+    date: Date | string | number,
+    options?: Intl.RelativeTimeFormatOptions
 ): string => {
   const currentLang = i18n.language
   const rtf = new Intl.RelativeTimeFormat(currentLang, options)
-  
+
   const now = new Date()
   const target = new Date(date)
   const diffInSeconds = Math.floor((target.getTime() - now.getTime()) / 1000)
-  
+
   // Convert to appropriate unit
   if (Math.abs(diffInSeconds) < 60) {
     return rtf.format(diffInSeconds, 'second')

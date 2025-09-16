@@ -1,6 +1,6 @@
 /**
  * Color Contrast Utilities for WCAG 2.1 AA/AAA Compliance
- * 
+ *
  * Provides utilities for calculating and validating color contrast ratios
  * according to WCAG guidelines.
  */
@@ -39,7 +39,7 @@ export function calculateContrastRatio(color1: string, color2: string): number {
   const rgb2 = hexToRgb(color2);
 
   if (!rgb1 || !rgb2) {
-    console.warn('Invalid color format provided to calculateContrastRatio');
+    // console.warn('Invalid color format provided to calculateContrastRatio');
     return 1;
   }
 
@@ -69,16 +69,16 @@ export type TextSize = 'normal' | 'large';
  * Check if contrast ratio meets WCAG requirements
  */
 export function meetsContrastRequirement(
-  foreground: string,
-  background: string,
-  level: WCAGLevel = 'AA',
-  textSize: TextSize = 'normal'
+    foreground: string,
+    background: string,
+    level: WCAGLevel = 'AA',
+    textSize: TextSize = 'normal'
 ): boolean {
   const ratio = calculateContrastRatio(foreground, background);
-  
-  const requirement = level === 'AA' 
-    ? (textSize === 'normal' ? WCAG_CONTRAST_RATIOS.AA_NORMAL : WCAG_CONTRAST_RATIOS.AA_LARGE)
-    : (textSize === 'normal' ? WCAG_CONTRAST_RATIOS.AAA_NORMAL : WCAG_CONTRAST_RATIOS.AAA_LARGE);
+
+  const requirement = level === 'AA'
+      ? (textSize === 'normal' ? WCAG_CONTRAST_RATIOS.AA_NORMAL : WCAG_CONTRAST_RATIOS.AA_LARGE)
+      : (textSize === 'normal' ? WCAG_CONTRAST_RATIOS.AAA_NORMAL : WCAG_CONTRAST_RATIOS.AAA_LARGE);
 
   return ratio >= requirement;
 }
@@ -89,7 +89,7 @@ export function meetsContrastRequirement(
 export function getBestContrastColor(backgroundColor: string): '#000000' | '#ffffff' {
   const whiteContrast = calculateContrastRatio('#ffffff', backgroundColor);
   const blackContrast = calculateContrastRatio('#000000', backgroundColor);
-  
+
   return whiteContrast > blackContrast ? '#ffffff' : '#000000';
 }
 
@@ -103,9 +103,9 @@ export interface ColorPaletteValidation {
 }
 
 export function validateColorPalette(
-  foregroundColor: string,
-  backgroundColor: string,
-  level: WCAGLevel = 'AA'
+    foregroundColor: string,
+    backgroundColor: string,
+    level: WCAGLevel = 'AA'
 ): ColorPaletteValidation {
   const issues: string[] = [];
   const suggestions: string[] = [];
@@ -116,7 +116,7 @@ export function validateColorPalette(
 
   if (!meetsNormal) {
     issues.push(`Normal text contrast ratio ${normalTextRatio.toFixed(2)}:1 does not meet ${level} standards (${level === 'AA' ? '4.5' : '7'}:1 required)`);
-    
+
     if (meetsLarge) {
       suggestions.push('Use larger text (18pt+ or 14pt+ bold) to meet accessibility standards');
     } else {
@@ -140,9 +140,9 @@ export function validateColorPalette(
  * Generate accessible color variations
  */
 export function generateAccessibleColorVariations(
-  baseColor: string,
-  targetBackground: string = '#ffffff',
-  level: WCAGLevel = 'AA'
+    baseColor: string,
+    targetBackground: string = '#ffffff',
+    level: WCAGLevel = 'AA'
 ): string[] {
   const rgb = hexToRgb(baseColor);
   if (!rgb) return [];
@@ -182,12 +182,12 @@ export function generateAccessibleColorVariations(
 export function isLargeText(fontSize: number, fontWeight: number | string): boolean {
   // 18pt or larger is always considered large
   if (fontSize >= 18) return true;
-  
+
   // 14pt or larger with bold weight (700+) is considered large
-  const weight = typeof fontWeight === 'string' 
-    ? (fontWeight === 'bold' ? 700 : 400)
-    : fontWeight;
-    
+  const weight = typeof fontWeight === 'string'
+      ? (fontWeight === 'bold' ? 700 : 400)
+      : fontWeight;
+
   return fontSize >= 14 && weight >= 700;
 }
 
@@ -197,18 +197,18 @@ export function isLargeText(fontSize: number, fontWeight: number | string): bool
 export const ACCESSIBLE_COLORS = {
   // High contrast pairs (7:1 ratio for AAA compliance)
   HIGH_CONTRAST: [
-    { foreground: '#000000', background: '#ffffff', ratio: 21 },
-    { foreground: '#ffffff', background: '#000000', ratio: 21 },
-    { foreground: '#ffffff', background: '#1f1f1f', ratio: 18.5 },
-    { foreground: '#000000', background: '#f0f0f0', ratio: 16.8 },
+    {foreground: '#000000', background: '#ffffff', ratio: 21},
+    {foreground: '#ffffff', background: '#000000', ratio: 21},
+    {foreground: '#ffffff', background: '#1f1f1f', ratio: 18.5},
+    {foreground: '#000000', background: '#f0f0f0', ratio: 16.8},
   ],
-  
+
   // Standard contrast pairs (4.5:1 ratio for AA compliance)
   STANDARD_CONTRAST: [
-    { foreground: '#333333', background: '#ffffff', ratio: 12.6 },
-    { foreground: '#666666', background: '#ffffff', ratio: 5.7 },
-    { foreground: '#ffffff', background: '#333333', ratio: 12.6 },
-    { foreground: '#ffffff', background: '#666666', ratio: 5.7 },
+    {foreground: '#333333', background: '#ffffff', ratio: 12.6},
+    {foreground: '#666666', background: '#ffffff', ratio: 5.7},
+    {foreground: '#ffffff', background: '#333333', ratio: 12.6},
+    {foreground: '#ffffff', background: '#666666', ratio: 5.7},
   ],
 
   // Focus indicator colors with high contrast

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import {useCallback, useMemo, useState} from 'react';
 
 export interface LoadingState {
   isLoading: boolean;
@@ -18,11 +18,12 @@ export interface LoadingStateActions {
   getError: (operation: string) => Error | null;
 }
 
-export interface UseLoadingStateReturn extends LoadingState, LoadingStateActions {}
+export interface UseLoadingStateReturn extends LoadingState, LoadingStateActions {
+}
 
 /**
  * Custom hook for managing multiple concurrent loading operations
- * 
+ *
  * @example
  * ```tsx
  * const {
@@ -34,19 +35,19 @@ export interface UseLoadingStateReturn extends LoadingState, LoadingStateActions
  *   hasError,
  *   clearState
  * } = useLoadingState();
- * 
+ *
  * // Start loading
  * setLoading('login', true);
- * 
+ *
  * // Check specific operation
  * if (isOperationLoading('login')) {
  *   // Show loading UI
  * }
- * 
+ *
  * // Handle success
  * setSuccess('login', true);
  * setLoading('login', false);
- * 
+ *
  * // Handle error
  * setError('login', new Error('Login failed'));
  * setLoading('login', false);
@@ -54,15 +55,15 @@ export interface UseLoadingStateReturn extends LoadingState, LoadingStateActions
  */
 export const useLoadingState = (): UseLoadingStateReturn => {
   const [loadingOperations, setLoadingOperations] = useState<Set<string>>(
-    new Set()
+      new Set()
   );
   const [errors, setErrors] = useState<Record<string, Error | null>>({});
   const [success, setSuccessState] = useState<Record<string, boolean>>({});
 
   // Computed loading state
   const isLoading = useMemo(
-    () => loadingOperations.size > 0,
-    [loadingOperations]
+      () => loadingOperations.size > 0,
+      [loadingOperations]
   );
 
   // Set loading state for an operation
@@ -79,28 +80,28 @@ export const useLoadingState = (): UseLoadingStateReturn => {
 
     // Clear error and success when starting loading
     if (loading) {
-      setErrors(prev => ({ ...prev, [operation]: null }));
-      setSuccessState(prev => ({ ...prev, [operation]: false }));
+      setErrors(prev => ({...prev, [operation]: null}));
+      setSuccessState(prev => ({...prev, [operation]: false}));
     }
   }, []);
 
   // Set error state for an operation
   const setError = useCallback((operation: string, error: Error | null) => {
-    setErrors(prev => ({ ...prev, [operation]: error }));
+    setErrors(prev => ({...prev, [operation]: error}));
     if (error) {
-      setSuccessState(prev => ({ ...prev, [operation]: false }));
+      setSuccessState(prev => ({...prev, [operation]: false}));
     }
   }, []);
 
   // Set success state for an operation
   const setSuccess = useCallback((operation: string, success: boolean) => {
-    setSuccessState(prev => ({ ...prev, [operation]: success }));
+    setSuccessState(prev => ({...prev, [operation]: success}));
     if (success) {
-      setErrors(prev => ({ ...prev, [operation]: null }));
-      
+      setErrors(prev => ({...prev, [operation]: null}));
+
       // Auto-reset success after 3 seconds
       setTimeout(() => {
-        setSuccessState(current => ({ ...current, [operation]: false }));
+        setSuccessState(current => ({...current, [operation]: false}));
       }, 3000);
     }
   }, []);
@@ -112,8 +113,8 @@ export const useLoadingState = (): UseLoadingStateReturn => {
       newSet.delete(operation);
       return newSet;
     });
-    setErrors(prev => ({ ...prev, [operation]: null }));
-    setSuccessState(prev => ({ ...prev, [operation]: false }));
+    setErrors(prev => ({...prev, [operation]: null}));
+    setSuccessState(prev => ({...prev, [operation]: false}));
   }, []);
 
   // Clear all operations
@@ -125,26 +126,26 @@ export const useLoadingState = (): UseLoadingStateReturn => {
 
   // Check if specific operation is loading
   const isOperationLoading = useCallback(
-    (operation: string) => loadingOperations.has(operation),
-    [loadingOperations]
+      (operation: string) => loadingOperations.has(operation),
+      [loadingOperations]
   );
 
   // Check if operation has error
   const hasError = useCallback(
-    (operation: string) => Boolean(errors[operation]),
-    [errors]
+      (operation: string) => Boolean(errors[operation]),
+      [errors]
   );
 
   // Check if operation has success
   const hasSuccess = useCallback(
-    (operation: string) => Boolean(success[operation]),
-    [success]
+      (operation: string) => Boolean(success[operation]),
+      [success]
   );
 
   // Get error for operation
   const getError = useCallback(
-    (operation: string) => errors[operation] || null,
-    [errors]
+      (operation: string) => errors[operation] || null,
+      [errors]
   );
 
   return {
@@ -167,7 +168,15 @@ export const useLoadingState = (): UseLoadingStateReturn => {
  * Hook for simple single operation loading state
  * Useful when you only need to track one operation at a time
  */
-export const useSimpleLoadingState = () => {
+export const useSimpleLoadingState = (): {
+  isLoading: boolean;
+  error: Error | null;
+  success: boolean;
+  setLoading: (loading: boolean) => void;
+  setError: (error: Error | null) => void;
+  setSuccess: () => void;
+  reset: () => void;
+} => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [success, setSuccess] = useState(false);
@@ -192,7 +201,7 @@ export const useSimpleLoadingState = () => {
     setSuccess(true);
     setError(null);
     setIsLoading(false);
-    
+
     // Auto-reset success after 3 seconds
     setTimeout(() => {
       setSuccess(false);

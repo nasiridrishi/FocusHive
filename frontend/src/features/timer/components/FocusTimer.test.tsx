@@ -1,30 +1,24 @@
 import React from 'react'
-import { 
-  renderWithProviders, 
-  screen, 
-  userEvent, 
-  waitFor,
-  act,
-  fireEvent 
-} from '../../../test-utils/test-utils'
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { FocusTimer } from './FocusTimer'
-import { TimerProvider, useTimer } from '../contexts/TimerContext'
-import { FocusTimerProps, TimerState, SessionStats, SessionGoal } from '../../../shared/types/timer'
-import type { User } from '../../../shared/types/auth'
+import {act, renderWithProviders, screen, userEvent, waitFor} from '../../../test-utils/test-utils'
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest'
+import {FocusTimer} from './FocusTimer'
+import {TimerProvider, useTimer} from '../contexts/TimerContext'
+import {FocusTimerProps} from '../../../shared/types/timer'
+import type {User} from '../../../shared/types/auth'
 
 // Mock WebSocket and Presence contexts
 vi.mock('../../../shared/contexts/WebSocketContext', () => ({
   useWebSocket: () => ({
     isConnected: true,
     emit: vi.fn(),
-    on: vi.fn(() => () => {}),
+    on: vi.fn(() => () => {
+    }),
   }),
 }))
 
 vi.mock('../../../shared/contexts/PresenceContext', () => ({
   usePresence: () => ({
-    currentPresence: { hiveId: 'test-hive-123' },
+    currentPresence: {hiveId: 'test-hive-123'},
     updatePresence: vi.fn(),
   }),
 }))
@@ -33,7 +27,7 @@ vi.mock('../../../shared/contexts/PresenceContext', () => ({
 const mockAudioContext = {
   createOscillator: vi.fn(() => ({
     connect: vi.fn(),
-    frequency: { setValueAtTime: vi.fn() },
+    frequency: {setValueAtTime: vi.fn()},
     start: vi.fn(),
     stop: vi.fn(),
   })),
@@ -66,8 +60,11 @@ Object.defineProperty(window, 'webkitAudioContext', {
   configurable: true,
 })
 
-// Mock timers
-vi.useFakeTimers()
+// Mock timers globally
+vi.useFakeTimers({
+  shouldAdvanceTime: true,
+  toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date']
+})
 
 // Test user data
 const mockUser: User = {
@@ -83,49 +80,50 @@ const mockUser: User = {
 }
 
 // Test component to wrap FocusTimer with TimerProvider
-const TestTimerWrapper: React.FC<{ 
+const TestTimerWrapper: React.FC<{
   children: React.ReactNode
   timerProps?: Partial<FocusTimerProps>
-}> = ({ children, timerProps = {} }) => {
+}> = ({children, timerProps = {}}) => {
   return (
-    <TimerProvider userId={mockUser.id}>
-      <FocusTimer hiveId="test-hive-123" {...timerProps} />
-      {children}
-    </TimerProvider>
+      <TimerProvider userId={mockUser.id}>
+        <FocusTimer hiveId="test-hive-123" {...timerProps} />
+        {children}
+      </TimerProvider>
   )
 }
 
 // Test component to access timer context
 const TimerStateInspector: React.FC = () => {
   const timer = useTimer()
-  
+
   return (
-    <div data-testid="timer-inspector">
-      <div data-testid="current-phase">{timer.timerState.currentPhase}</div>
-      <div data-testid="time-remaining">{timer.timerState.timeRemaining}</div>
-      <div data-testid="is-running">{timer.timerState.isRunning.toString()}</div>
-      <div data-testid="is-paused">{timer.timerState.isPaused.toString()}</div>
-      <div data-testid="current-cycle">{timer.timerState.currentCycle}</div>
-      <div data-testid="session-id">{timer.currentSession?.id || 'null'}</div>
-      <div data-testid="focus-length">{timer.timerSettings.focusLength}</div>
-      <div data-testid="sound-enabled">{timer.timerSettings.soundEnabled.toString()}</div>
-      <div data-testid="notifications-enabled">{timer.timerSettings.notificationsEnabled.toString()}</div>
-    </div>
+      <div data-testid="timer-inspector">
+        <div data-testid="current-phase">{timer.timerState.currentPhase}</div>
+        <div data-testid="time-remaining">{timer.timerState.timeRemaining}</div>
+        <div data-testid="is-running">{timer.timerState.isRunning.toString()}</div>
+        <div data-testid="is-paused">{timer.timerState.isPaused.toString()}</div>
+        <div data-testid="current-cycle">{timer.timerState.currentCycle}</div>
+        <div data-testid="session-id">{timer.currentSession?.id || 'null'}</div>
+        <div data-testid="focus-length">{timer.timerSettings.focusLength}</div>
+        <div data-testid="sound-enabled">{timer.timerSettings.soundEnabled.toString()}</div>
+        <div
+            data-testid="notifications-enabled">{timer.timerSettings.notificationsEnabled.toString()}</div>
+      </div>
   )
 }
 
-const defaultProps: FocusTimerProps = {
+const _defaultProps: FocusTimerProps = {
   hiveId: 'test-hive-123',
 }
 
 describe('FocusTimer Component', () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>
-  
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.clearAllTimers()
     localStorage.clear()
-    
+
     // Mock Notification permission
     Object.defineProperty(Notification, 'permission', {
       value: 'granted',
@@ -137,23 +135,23 @@ describe('FocusTimer Component', () => {
     })
 
     // Suppress console errors during tests
-    consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+    })
   })
 
   afterEach(() => {
     consoleSpy.mockRestore()
     vi.runOnlyPendingTimers()
-    vi.useRealTimers()
-    vi.useFakeTimers()
+    vi.clearAllTimers()
   })
 
   describe('Component Rendering', () => {
     it('renders without crashing', () => {
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       expect(screen.getByText('Ready to Focus')).toBeInTheDocument()
@@ -162,72 +160,72 @@ describe('FocusTimer Component', () => {
 
     it('renders in compact mode', () => {
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ compact: true }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{compact: true}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Should render compact layout
       expect(screen.getByText('Ready to Focus')).toBeInTheDocument()
       // Compact mode has smaller timer display
-      const timerCard = screen.getByRole('button', { name: /start focus session/i })
+      const timerCard = screen.getByRole('button', {name: /start focus session/i})
       expect(timerCard).toBeInTheDocument()
     })
 
     it('renders fullscreen mode toggle', () => {
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const fullscreenButton = screen.getByRole('button', { name: /fullscreen/i })
+      const fullscreenButton = screen.getByRole('button', {name: /fullscreen/i})
       expect(fullscreenButton).toBeInTheDocument()
     })
 
     it('renders settings button when showSettings is true', () => {
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ showSettings: true }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{showSettings: true}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
+      const settingsButton = screen.getByRole('button', {name: /settings/i})
       expect(settingsButton).toBeInTheDocument()
     })
 
     it('does not render settings button when showSettings is false', () => {
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ showSettings: false }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{showSettings: false}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const settingsButton = screen.queryByRole('button', { name: /settings/i })
+      const settingsButton = screen.queryByRole('button', {name: /settings/i})
       expect(settingsButton).not.toBeInTheDocument()
     })
   })
 
   describe('Timer Functionality', () => {
     it('starts focus session when play button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Initial state
       expect(screen.getByTestId('current-phase')).toHaveTextContent('idle')
       expect(screen.getByTestId('is-running')).toHaveTextContent('false')
 
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -239,108 +237,131 @@ describe('FocusTimer Component', () => {
     })
 
     it('pauses timer when pause button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer first
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
 
-      expect(screen.getByTestId('is-running')).toHaveTextContent('true')
+      // Wait for timer to start
+      await waitFor(() => {
+        expect(screen.getByTestId('is-running')).toHaveTextContent('true')
+      }, {timeout: 5000})
 
       // Now pause
-      const pauseButton = screen.getByRole('button', { name: /pause timer/i })
+      const pauseButton = screen.getByRole('button', {name: /pause timer/i})
       await act(async () => {
         await user.click(pauseButton)
       })
 
-      expect(screen.getByTestId('is-running')).toHaveTextContent('false')
-      expect(screen.getByTestId('is-paused')).toHaveTextContent('true')
+      // Wait for pause state
+      await waitFor(() => {
+        expect(screen.getByTestId('is-running')).toHaveTextContent('false')
+        expect(screen.getByTestId('is-paused')).toHaveTextContent('true')
+      }, {timeout: 5000})
     })
 
     it('resumes timer when resume button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
 
+      // Wait for timer to start
+      await waitFor(() => {
+        expect(screen.getByTestId('is-running')).toHaveTextContent('true')
+      }, {timeout: 5000})
+
       // Pause timer
-      const pauseButton = screen.getByRole('button', { name: /pause timer/i })
+      const pauseButton = screen.getByRole('button', {name: /pause timer/i})
       await act(async () => {
         await user.click(pauseButton)
       })
 
-      expect(screen.getByTestId('is-paused')).toHaveTextContent('true')
+      // Wait for pause state
+      await waitFor(() => {
+        expect(screen.getByTestId('is-paused')).toHaveTextContent('true')
+      }, {timeout: 5000})
 
       // Resume timer
-      const resumeButton = screen.getByRole('button', { name: /resume timer/i })
+      const resumeButton = screen.getByRole('button', {name: /resume timer/i})
       await act(async () => {
         await user.click(resumeButton)
       })
 
-      expect(screen.getByTestId('is-running')).toHaveTextContent('true')
-      expect(screen.getByTestId('is-paused')).toHaveTextContent('false')
+      // Wait for resume state
+      await waitFor(() => {
+        expect(screen.getByTestId('is-running')).toHaveTextContent('true')
+        expect(screen.getByTestId('is-paused')).toHaveTextContent('false')
+      }, {timeout: 5000})
     })
 
     it('stops timer when stop button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
 
-      expect(screen.getByTestId('is-running')).toHaveTextContent('true')
+      // Wait for timer to start
+      await waitFor(() => {
+        expect(screen.getByTestId('is-running')).toHaveTextContent('true')
+      }, {timeout: 5000})
 
       // Stop timer
-      const stopButton = screen.getByRole('button', { name: /stop timer/i })
+      const stopButton = screen.getByRole('button', {name: /stop timer/i})
       await act(async () => {
         await user.click(stopButton)
       })
 
-      expect(screen.getByTestId('is-running')).toHaveTextContent('false')
-      expect(screen.getByTestId('is-paused')).toHaveTextContent('false')
-      expect(screen.getByTestId('current-phase')).toHaveTextContent('idle')
+      // Wait for stop state
+      await waitFor(() => {
+        expect(screen.getByTestId('is-running')).toHaveTextContent('false')
+        expect(screen.getByTestId('is-paused')).toHaveTextContent('false')
+        expect(screen.getByTestId('current-phase')).toHaveTextContent('idle')
+      }, {timeout: 5000})
     })
 
     it('skips phase when skip button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -348,7 +369,7 @@ describe('FocusTimer Component', () => {
       expect(screen.getByTestId('current-phase')).toHaveTextContent('focus')
 
       // Skip phase
-      const skipButton = screen.getByRole('button', { name: /skip phase/i })
+      const skipButton = screen.getByRole('button', {name: /skip phase/i})
       await act(async () => {
         await user.click(skipButton)
       })
@@ -364,10 +385,10 @@ describe('FocusTimer Component', () => {
   describe('Time Display and Progress', () => {
     it('displays correct time format', () => {
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Default focus time is 25 minutes (25:00)
@@ -375,17 +396,17 @@ describe('FocusTimer Component', () => {
     })
 
     it('counts down time when timer is running', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -410,17 +431,17 @@ describe('FocusTimer Component', () => {
     })
 
     it('displays correct phase colors and icons', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start focus session
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -431,17 +452,17 @@ describe('FocusTimer Component', () => {
     })
 
     it('shows session progress when in session', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start focus session
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -456,40 +477,42 @@ describe('FocusTimer Component', () => {
 
   describe('Settings Menu', () => {
     it('opens settings menu when settings button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ showSettings: true }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{showSettings: true}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
+      const settingsButton = screen.getByRole('button', {name: /settings/i})
       await act(async () => {
         await user.click(settingsButton)
       })
 
       // Settings menu should be open
-      expect(screen.getByText('Enable Sound')).toBeInTheDocument()
-      expect(screen.getByText('Enable Notifications')).toBeInTheDocument()
+      // Since soundEnabled defaults to true, it should show "Disable Sound"
+      expect(screen.getByText('Disable Sound')).toBeInTheDocument()
+      // Since notificationsEnabled defaults to true, it should show "Disable Notifications"
+      expect(screen.getByText('Disable Notifications')).toBeInTheDocument()
       expect(screen.getByText('Advanced Settings')).toBeInTheDocument()
     })
 
     it('toggles sound setting', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ showSettings: true }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{showSettings: true}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       expect(screen.getByTestId('sound-enabled')).toHaveTextContent('true')
 
       // Open settings menu
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
+      const settingsButton = screen.getByRole('button', {name: /settings/i})
       await act(async () => {
         await user.click(settingsButton)
       })
@@ -504,19 +527,19 @@ describe('FocusTimer Component', () => {
     })
 
     it('toggles notification setting', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ showSettings: true }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{showSettings: true}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       expect(screen.getByTestId('notifications-enabled')).toHaveTextContent('true')
 
       // Open settings menu
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
+      const settingsButton = screen.getByRole('button', {name: /settings/i})
       await act(async () => {
         await user.click(settingsButton)
       })
@@ -533,19 +556,19 @@ describe('FocusTimer Component', () => {
 
   describe('Session Management', () => {
     it('creates session when starting focus timer', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       expect(screen.getByTestId('session-id')).toHaveTextContent('null')
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -559,17 +582,17 @@ describe('FocusTimer Component', () => {
     })
 
     it('tracks distractions when distraction button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer to create session
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -593,17 +616,17 @@ describe('FocusTimer Component', () => {
     })
 
     it('shows goals section when goals button is clicked', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer to create session
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -619,49 +642,52 @@ describe('FocusTimer Component', () => {
       })
 
       // Goals section should be visible
-      expect(screen.getByText('Session Goals')).toBeInTheDocument()
+      // Use getAllByText to handle multiple "Session Goals" elements (tooltip + heading)
+      const sessionGoalsElements = screen.getAllByText('Session Goals')
+      // Should have at least one visible (the heading in the collapsed section)
+      expect(sessionGoalsElements.length).toBeGreaterThan(0)
       expect(screen.getByText('Add Goal')).toBeInTheDocument()
     })
 
     it('calls onSessionStart when session starts', async () => {
       const onSessionStart = vi.fn()
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ onSessionStart }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{onSessionStart}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
 
       await waitFor(() => {
         expect(onSessionStart).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: mockUser.id,
-            hiveId: 'test-hive-123',
-          })
+            expect.objectContaining({
+              userId: mockUser.id,
+              hiveId: 'test-hive-123',
+            })
         )
       })
     })
 
     it('calls onSessionEnd when session ends', async () => {
       const onSessionEnd = vi.fn()
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ onSessionEnd }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{onSessionEnd}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -671,16 +697,16 @@ describe('FocusTimer Component', () => {
       })
 
       // Stop timer
-      const stopButton = screen.getByRole('button', { name: /stop timer/i })
+      const stopButton = screen.getByRole('button', {name: /stop timer/i})
       await act(async () => {
         await user.click(stopButton)
       })
 
       await waitFor(() => {
         expect(onSessionEnd).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: mockUser.id,
-          })
+            expect.objectContaining({
+              userId: mockUser.id,
+            })
         )
       })
     })
@@ -688,55 +714,55 @@ describe('FocusTimer Component', () => {
 
   describe('Fullscreen Mode', () => {
     it('toggles fullscreen mode', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const fullscreenButton = screen.getByRole('button', { name: /fullscreen/i })
-      
+      const fullscreenButton = screen.getByRole('button', {name: /fullscreen/i})
+
       // Enter fullscreen
       await act(async () => {
         await user.click(fullscreenButton)
       })
 
       // Should show exit fullscreen button
-      expect(screen.getByRole('button', { name: /exit fullscreen/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', {name: /exit fullscreen/i})).toBeInTheDocument()
 
       // Exit fullscreen
-      const exitFullscreenButton = screen.getByRole('button', { name: /exit fullscreen/i })
+      const exitFullscreenButton = screen.getByRole('button', {name: /exit fullscreen/i})
       await act(async () => {
         await user.click(exitFullscreenButton)
       })
 
       // Should show fullscreen button again
-      expect(screen.getByRole('button', { name: /^fullscreen$/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', {name: /^fullscreen$/i})).toBeInTheDocument()
     })
   })
 
   describe('Accessibility', () => {
     it('has proper ARIA labels for buttons', () => {
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      expect(screen.getByRole('button', { name: /start focus session/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /fullscreen/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', {name: /start focus session/i})).toBeInTheDocument()
+      expect(screen.getByRole('button', {name: /fullscreen/i})).toBeInTheDocument()
     })
 
     it('has proper semantic structure', () => {
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Should have main timer display
@@ -745,17 +771,17 @@ describe('FocusTimer Component', () => {
     })
 
     it('supports keyboard navigation', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
-      
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
+
       // Focus the button
       await act(async () => {
         playButton.focus()
@@ -775,17 +801,17 @@ describe('FocusTimer Component', () => {
 
   describe('Edge Cases', () => {
     it('handles timer reaching zero', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Start timer
-      const playButton = screen.getByRole('button', { name: /start focus session/i })
+      const playButton = screen.getByRole('button', {name: /start focus session/i})
       await act(async () => {
         await user.click(playButton)
       })
@@ -804,18 +830,18 @@ describe('FocusTimer Component', () => {
     })
 
     it('handles settings persistence in localStorage', async () => {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimers })
-      
+      const user = userEvent.setup({advanceTimers: vi.advanceTimersByTime})
+
       // First render
-      const { unmount } = renderWithProviders(
-        <TestTimerWrapper timerProps={{ showSettings: true }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+      const {unmount} = renderWithProviders(
+          <TestTimerWrapper timerProps={{showSettings: true}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Change a setting
-      const settingsButton = screen.getByRole('button', { name: /settings/i })
+      const settingsButton = screen.getByRole('button', {name: /settings/i})
       await act(async () => {
         await user.click(settingsButton)
       })
@@ -831,10 +857,10 @@ describe('FocusTimer Component', () => {
       unmount()
 
       renderWithProviders(
-        <TestTimerWrapper timerProps={{ showSettings: true }}>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper timerProps={{showSettings: true}}>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Setting should be persisted
@@ -843,10 +869,10 @@ describe('FocusTimer Component', () => {
 
     it('handles invalid timer states gracefully', async () => {
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Component should render without errors even in edge cases
@@ -858,7 +884,7 @@ describe('FocusTimer Component', () => {
   describe('Sound and Notifications', () => {
     it('requests notification permission on mount', async () => {
       const requestPermissionSpy = vi.spyOn(Notification, 'requestPermission')
-      
+
       // Set permission to default to trigger request
       Object.defineProperty(Notification, 'permission', {
         value: 'default',
@@ -866,10 +892,10 @@ describe('FocusTimer Component', () => {
       })
 
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       await waitFor(() => {
@@ -879,10 +905,10 @@ describe('FocusTimer Component', () => {
 
     it('initializes audio context when sound is enabled', async () => {
       renderWithProviders(
-        <TestTimerWrapper>
-          <TimerStateInspector />
-        </TestTimerWrapper>,
-        { withAuth: false, user: mockUser }
+          <TestTimerWrapper>
+            <TimerStateInspector/>
+          </TestTimerWrapper>,
+          {withAuth: false, user: mockUser}
       )
 
       // Audio context should be initialized

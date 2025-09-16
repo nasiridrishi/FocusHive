@@ -17,12 +17,12 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile("!test")
+@Profile("!test & !integration-test & !owasp-test & !cors-test & !rate-limit-test")
 public class TokenBlacklistService implements ITokenBlacklistService {
     
     private static final String BLACKLIST_PREFIX = "blacklist:token:";
-    
-    private final RedisTemplate<String, String> redisTemplate;
+
+    private final RedisTemplate<String, String> tokenBlacklistRedisTemplate;
     
     /**
      * Add token to blacklist until its expiration time.
@@ -34,7 +34,7 @@ public class TokenBlacklistService implements ITokenBlacklistService {
         long ttlSeconds = Duration.between(Instant.now(), expirationTime).getSeconds();
         
         if (ttlSeconds > 0) {
-            redisTemplate.opsForValue().set(key, "revoked", ttlSeconds, TimeUnit.SECONDS);
+            tokenBlacklistRedisTemplate.opsForValue().set(key, "revoked", ttlSeconds, TimeUnit.SECONDS);
             log.info("Token blacklisted for {} seconds", ttlSeconds);
         }
     }
@@ -44,15 +44,15 @@ public class TokenBlacklistService implements ITokenBlacklistService {
      */
     public boolean isBlacklisted(String token) {
         String key = BLACKLIST_PREFIX + token;
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        return Boolean.TRUE.equals(tokenBlacklistRedisTemplate.hasKey(key));
     }
-    
+
     /**
      * Remove token from blacklist (rarely needed).
      */
     public void removeFromBlacklist(String token) {
         String key = BLACKLIST_PREFIX + token;
-        redisTemplate.delete(key);
+        tokenBlacklistRedisTemplate.delete(key);
         log.info("Token removed from blacklist");
     }
     

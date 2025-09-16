@@ -1,14 +1,14 @@
 // Spotify Context for managing Spotify Web SDK integration
 // Provides authentication, player state, and controls throughout the music feature
 
-import React, { createContext, useReducer, useCallback, useEffect, useRef } from 'react'
-import { getSpotifyService, SpotifyService } from '../services/spotifyService'
-import type { 
-  SpotifyConfig, 
-  SpotifyAuthState, 
-  SpotifyPlayerState, 
+import React, {createContext, useCallback, useEffect, useReducer, useRef} from 'react'
+import {getSpotifyService, SpotifyService} from '../services/spotifyService'
+import type {
+  PlayOptions,
+  SpotifyAuthState,
+  SpotifyConfig,
   SpotifyConnectionStatus,
-  PlayOptions
+  SpotifyPlayerState
 } from '../../../types/spotify'
 
 // Spotify Context State
@@ -49,23 +49,23 @@ const initialState: SpotifyContextState = {
 }
 
 // Action Types
-type SpotifyAction = 
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'SET_AUTH_STATE'; payload: SpotifyAuthState }
-  | { type: 'SET_PLAYER_STATE'; payload: SpotifyPlayerState }
-  | { type: 'SET_CONNECTION_STATUS'; payload: Partial<SpotifyConnectionStatus> }
-  | { type: 'RESET_STATE' }
+type SpotifyAction =
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_ERROR'; payload: string | null }
+    | { type: 'SET_AUTH_STATE'; payload: SpotifyAuthState }
+    | { type: 'SET_PLAYER_STATE'; payload: SpotifyPlayerState }
+    | { type: 'SET_CONNECTION_STATUS'; payload: Partial<SpotifyConnectionStatus> }
+    | { type: 'RESET_STATE' }
 
 // Reducer
 function spotifyReducer(state: SpotifyContextState, action: SpotifyAction): SpotifyContextState {
   switch (action.type) {
     case 'SET_LOADING':
-      return { ...state, isLoading: action.payload }
-    
+      return {...state, isLoading: action.payload}
+
     case 'SET_ERROR':
-      return { ...state, error: action.payload }
-    
+      return {...state, error: action.payload}
+
     case 'SET_AUTH_STATE':
       return {
         ...state,
@@ -75,7 +75,7 @@ function spotifyReducer(state: SpotifyContextState, action: SpotifyAction): Spot
           isPremium: action.payload.isPremium
         }
       }
-    
+
     case 'SET_PLAYER_STATE':
       return {
         ...state,
@@ -86,16 +86,16 @@ function spotifyReducer(state: SpotifyContextState, action: SpotifyAction): Spot
           deviceName: action.payload.player ? 'FocusHive Music Player' : null
         }
       }
-    
+
     case 'SET_CONNECTION_STATUS':
       return {
         ...state,
-        connection: { ...state.connection, ...action.payload }
+        connection: {...state.connection, ...action.payload}
       }
-    
+
     case 'RESET_STATE':
       return initialState
-    
+
     default:
       return state
   }
@@ -104,18 +104,18 @@ function spotifyReducer(state: SpotifyContextState, action: SpotifyAction): Spot
 // Context Type
 interface SpotifyContextType {
   state: SpotifyContextState
-  
+
   // Authentication
   login: () => void
   logout: () => void
   handleAuthCallback: (code: string, state: string) => Promise<boolean>
-  
+
   // Player Management
   initializePlayer: () => Promise<boolean>
   connectPlayer: () => Promise<boolean>
   disconnectPlayer: () => void
   transferPlaybackHere: () => Promise<boolean>
-  
+
   // Playback Controls
   play: (options?: PlayOptions) => Promise<void>
   pause: () => Promise<void>
@@ -123,7 +123,7 @@ interface SpotifyContextType {
   previous: () => Promise<void>
   seek: (positionMs: number) => Promise<void>
   setVolume: (volume: number) => Promise<void>
-  
+
   // Utility
   getPlayerInstance: () => import('../../../types/spotify').Spotify.Player | null
   isFeatureAvailable: (feature: 'play' | 'premium' | 'connect') => boolean
@@ -164,10 +164,10 @@ interface SpotifyProviderProps {
 }
 
 // Provider Component
-export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({ 
-  children, 
-  autoConnect = true 
-}) => {
+export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
+                                                                  children,
+                                                                  autoConnect = true
+                                                                }) => {
   const [state, dispatch] = useReducer(spotifyReducer, initialState)
   const spotifyServiceRef = useRef<SpotifyService | null>(null)
   const playerStateIntervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -177,17 +177,17 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     try {
       const config = getSpotifyConfig()
       spotifyServiceRef.current = getSpotifyService(config)
-      
+
       // Load initial auth state
       const authState = spotifyServiceRef.current.getAuthState()
-      dispatch({ type: 'SET_AUTH_STATE', payload: authState })
-      
+      dispatch({type: 'SET_AUTH_STATE', payload: authState})
+
       if (authState.isAuthenticated && autoConnect) {
         initializePlayer()
       }
-    } catch (error) {
+    } catch {
       // Spotify initialization error logged to error service
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize Spotify integration' })
+      dispatch({type: 'SET_ERROR', payload: 'Failed to initialize Spotify integration'})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoConnect])
@@ -196,12 +196,12 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
   useEffect(() => {
     if (!spotifyServiceRef.current) return
 
-    const syncState = () => {
-      const authState = spotifyServiceRef.current!.getAuthState()
-      const playerState = spotifyServiceRef.current!.getPlayerState()
-      
-      dispatch({ type: 'SET_AUTH_STATE', payload: authState })
-      dispatch({ type: 'SET_PLAYER_STATE', payload: playerState })
+    const syncState = (): void => {
+      const authState = spotifyServiceRef.current?.getAuthState()
+      const playerState = spotifyServiceRef.current?.getPlayerState()
+
+      dispatch({type: 'SET_AUTH_STATE', payload: authState})
+      dispatch({type: 'SET_PLAYER_STATE', payload: playerState})
     }
 
     // Sync initially and then periodically
@@ -214,36 +214,36 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
   // Authentication functions
   const login = useCallback(() => {
     if (!spotifyServiceRef.current) return
-    
-    dispatch({ type: 'SET_LOADING', payload: true })
+
+    dispatch({type: 'SET_LOADING', payload: true})
     spotifyServiceRef.current.startAuthFlow()
   }, [])
 
   const logout = useCallback(() => {
     if (!spotifyServiceRef.current) return
-    
+
     spotifyServiceRef.current.clearAuth()
-    dispatch({ type: 'RESET_STATE' })
+    dispatch({type: 'RESET_STATE'})
   }, [])
 
   const handleAuthCallback = useCallback(async (code: string, state: string): Promise<boolean> => {
     if (!spotifyServiceRef.current) return false
-    
+
     try {
-      dispatch({ type: 'SET_LOADING', payload: true })
+      dispatch({type: 'SET_LOADING', payload: true})
       const success = await spotifyServiceRef.current.handleAuthCallback(code, state)
-      
+
       if (success && autoConnect) {
         await initializePlayer()
       }
-      
+
       return success
-    } catch (error) {
+    } catch {
       // Spotify authentication error logged to error service
-      dispatch({ type: 'SET_ERROR', payload: 'Authentication failed' })
+      dispatch({type: 'SET_ERROR', payload: 'Authentication failed'})
       return false
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false })
+      dispatch({type: 'SET_LOADING', payload: false})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoConnect])
@@ -251,30 +251,30 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
   // Player Management
   const initializePlayer = useCallback(async (): Promise<boolean> => {
     if (!spotifyServiceRef.current) return false
-    
+
     try {
-      dispatch({ type: 'SET_LOADING', payload: true })
-      dispatch({ type: 'SET_ERROR', payload: null })
-      
+      dispatch({type: 'SET_LOADING', payload: true})
+      dispatch({type: 'SET_ERROR', payload: null})
+
       const success = await spotifyServiceRef.current.initializePlayer(
-        'FocusHive Music Player',
-        0.5
+          'FocusHive Music Player',
+          0.5
       )
-      
+
       if (success) {
         // Start monitoring player state
         startPlayerStateMonitoring()
       } else {
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize Spotify player' })
+        dispatch({type: 'SET_ERROR', payload: 'Failed to initialize Spotify player'})
       }
-      
+
       return success
-    } catch (error) {
+    } catch {
       // Spotify connection error logged to error service
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to connect to Spotify' })
+      dispatch({type: 'SET_ERROR', payload: 'Failed to connect to Spotify'})
       return false
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false })
+      dispatch({type: 'SET_LOADING', payload: false})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -283,13 +283,13 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!state.player.player) {
       return await initializePlayer()
     }
-    
+
     try {
       const success = await state.player.player.connect()
       return success
-    } catch (error) {
+    } catch {
       // Spotify player connection error logged to error service
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to connect player' })
+      dispatch({type: 'SET_ERROR', payload: 'Failed to connect player'})
       return false
     }
   }, [state.player.player, initializePlayer])
@@ -298,7 +298,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (spotifyServiceRef.current) {
       spotifyServiceRef.current.disconnect()
     }
-    
+
     if (playerStateIntervalRef.current) {
       clearInterval(playerStateIntervalRef.current)
       playerStateIntervalRef.current = null
@@ -309,16 +309,16 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!spotifyServiceRef.current || !state.player.deviceId) {
       return false
     }
-    
+
     try {
       await spotifyServiceRef.current.transferPlayback({
         deviceIds: [state.player.deviceId],
         play: false
       })
       return true
-    } catch (error) {
+    } catch {
       // Spotify playback transfer error logged to error service
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to transfer playback to this device' })
+      dispatch({type: 'SET_ERROR', payload: 'Failed to transfer playback to this device'})
       return false
     }
   }, [state.player.deviceId])
@@ -328,7 +328,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!spotifyServiceRef.current || !state.player.deviceId) {
       throw new Error('Spotify player not ready')
     }
-    
+
     await spotifyServiceRef.current.play(state.player.deviceId, options)
   }, [state.player.deviceId])
 
@@ -336,7 +336,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!spotifyServiceRef.current) {
       throw new Error('Spotify player not ready')
     }
-    
+
     if (state.player.player) {
       await state.player.player.pause()
     } else {
@@ -348,7 +348,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!spotifyServiceRef.current) {
       throw new Error('Spotify player not ready')
     }
-    
+
     if (state.player.player) {
       await state.player.player.nextTrack()
     } else {
@@ -360,7 +360,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!spotifyServiceRef.current) {
       throw new Error('Spotify player not ready')
     }
-    
+
     if (state.player.player) {
       await state.player.player.previousTrack()
     } else {
@@ -372,7 +372,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!spotifyServiceRef.current) {
       throw new Error('Spotify player not ready')
     }
-    
+
     if (state.player.player) {
       await state.player.player.seek(positionMs)
     } else {
@@ -384,9 +384,9 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     if (!spotifyServiceRef.current) {
       throw new Error('Spotify player not ready')
     }
-    
+
     const volumePercent = Math.round(volume * 100)
-    
+
     if (state.player.player) {
       await state.player.player.setVolume(volume)
     } else {
@@ -421,7 +421,7 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     playerStateIntervalRef.current = setInterval(() => {
       if (spotifyServiceRef.current) {
         const playerState = spotifyServiceRef.current.getPlayerState()
-        dispatch({ type: 'SET_PLAYER_STATE', payload: playerState })
+        dispatch({type: 'SET_PLAYER_STATE', payload: playerState})
       }
     }, 1000)
   }, [dispatch])
@@ -438,18 +438,18 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
 
   const contextValue: SpotifyContextType = {
     state,
-    
+
     // Authentication
     login,
     logout,
     handleAuthCallback,
-    
+
     // Player Management
     initializePlayer,
     connectPlayer,
     disconnectPlayer,
     transferPlaybackHere,
-    
+
     // Playback Controls
     play,
     pause,
@@ -457,21 +457,21 @@ export const SpotifyProvider: React.FC<SpotifyProviderProps> = ({
     previous,
     seek,
     setVolume,
-    
+
     // Utility
     getPlayerInstance,
     isFeatureAvailable
   }
 
   return (
-    <SpotifyContext.Provider value={contextValue}>
-      {children}
-    </SpotifyContext.Provider>
+      <SpotifyContext.Provider value={contextValue}>
+        {children}
+      </SpotifyContext.Provider>
   )
 }
 
 
 // Export context and type for use in hooks
-export { SpotifyContext }
-export type { SpotifyContextType }
+export {SpotifyContext}
+export type {SpotifyContextType}
 export default SpotifyContext

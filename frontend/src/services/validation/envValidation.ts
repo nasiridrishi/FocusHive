@@ -1,9 +1,9 @@
 /**
  * Environment Variable Validation Service
- * 
+ *
  * Validates all required and optional environment variables at application startup.
  * Provides type-safe access to environment variables with validation.
- * 
+ *
  * Based on Vite environment variable best practices:
  * - All client-side env vars must be prefixed with VITE_
  * - Use import.meta.env to access variables
@@ -24,7 +24,7 @@ export interface ValidatedEnv {
   // Music Service Configuration (Optional)
   VITE_MUSIC_API_BASE_URL?: string;
   VITE_MUSIC_SERVICE_URL?: string;
-  
+
   // Spotify Integration (Optional)
   VITE_SPOTIFY_CLIENT_ID?: string;
   VITE_SPOTIFY_REDIRECT_URI?: string;
@@ -192,10 +192,10 @@ const ENV_VALIDATION_RULES: EnvValidationConfig[] = [
  * Validates a single environment variable according to its configuration
  */
 function validateEnvironmentVariable(
-  config: EnvValidationConfig,
-  rawValue: string | undefined
+    config: EnvValidationConfig,
+    rawValue: string | undefined
 ): { value: unknown; error?: EnvValidationError } {
-  const { variable, required, type, defaultValue, validator, description } = config;
+  const {variable, required, type, defaultValue, validator, description} = config;
 
   // Check if required variable is missing
   if (required && (rawValue === undefined || rawValue === '')) {
@@ -211,12 +211,12 @@ function validateEnvironmentVariable(
 
   // Use default value if not provided and not required
   if (!rawValue && defaultValue !== undefined) {
-    return { value: defaultValue };
+    return {value: defaultValue};
   }
 
   // Return undefined for optional variables without values
   if (!rawValue && !required) {
-    return { value: undefined };
+    return {value: undefined};
   }
 
   let convertedValue: unknown = rawValue;
@@ -225,7 +225,7 @@ function validateEnvironmentVariable(
   try {
     switch (type) {
       case 'number': {
-        const numValue = parseInt(rawValue!, 10);
+        const numValue = parseInt(rawValue || '0', 10);
         convertedValue = numValue;
         if (isNaN(numValue)) {
           return {
@@ -240,21 +240,21 @@ function validateEnvironmentVariable(
         break;
       }
       case 'boolean':
-        convertedValue = rawValue!.toLowerCase() === 'true';
+        convertedValue = rawValue?.toLowerCase() === 'true';
         break;
       case 'url':
       case 'string':
-        convertedValue = rawValue!;
+        convertedValue = rawValue || '';
         break;
     }
-  } catch (error) {
-      console.error('Environment validation error:', error);
-      return {
+  } catch {
+    // console.error('Environment validation error');
+    return {
       value: undefined,
       error: {
         variable,
         message: `Failed to convert environment variable ${variable
-    } to ${type}. Got: "${rawValue}"`,
+        } to ${type}. Got: "${rawValue}"`,
         severity: 'error'
       }
     };
@@ -272,7 +272,7 @@ function validateEnvironmentVariable(
     };
   }
 
-  return { value: convertedValue };
+  return {value: convertedValue};
 }
 
 /**
@@ -288,7 +288,10 @@ export function validateEnvironment(): {
 
   // Validate custom environment variables
   for (const config of ENV_VALIDATION_RULES) {
-    const rawValue = import.meta.env[config.variable];
+    // Support both import.meta.env (Vite) and process.env (Node/Test)
+    const rawValue = typeof import.meta !== 'undefined' && import.meta.env
+      ? import.meta.env[config.variable]
+      : process.env[config.variable];
     const result = validateEnvironmentVariable(config, rawValue);
 
     if (result.error) {
@@ -301,11 +304,21 @@ export function validateEnvironment(): {
   }
 
   // Add built-in Vite environment variables
-  validatedEnv.MODE = import.meta.env.MODE;
-  validatedEnv.DEV = import.meta.env.DEV;
-  validatedEnv.PROD = import.meta.env.PROD;
-  validatedEnv.SSR = import.meta.env.SSR;
-  validatedEnv.BASE_URL = import.meta.env.BASE_URL;
+  // Support both import.meta.env (Vite) and process.env (Node/Test)
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    validatedEnv.MODE = import.meta.env.MODE;
+    validatedEnv.DEV = import.meta.env.DEV;
+    validatedEnv.PROD = import.meta.env.PROD;
+    validatedEnv.SSR = import.meta.env.SSR;
+    validatedEnv.BASE_URL = import.meta.env.BASE_URL;
+  } else {
+    // Test environment defaults
+    validatedEnv.MODE = process.env.MODE || 'test';
+    validatedEnv.DEV = process.env.NODE_ENV !== 'production';
+    validatedEnv.PROD = process.env.NODE_ENV === 'production';
+    validatedEnv.SSR = false;
+    validatedEnv.BASE_URL = process.env.BASE_URL || '/';
+  }
 
   // Environment-specific validation
   if (validatedEnv.PROD) {
@@ -342,13 +355,13 @@ export function validateEnvironment(): {
  */
 export function getValidatedEnv(): ValidatedEnv {
   const result = validateEnvironment();
-  
+
   if (!result.isValid) {
     const errorMessages = result.errors
-      .filter(error => error.severity === 'error')
-      .map(error => error.message)
-      .join('\n');
-    
+    .filter(error => error.severity === 'error')
+    .map(error => error.message)
+    .join('\n');
+
     throw new Error(`Environment validation failed:\n${errorMessages}`);
   }
 
@@ -360,23 +373,23 @@ export function getValidatedEnv(): ValidatedEnv {
  */
 export function validateAndWarnEnvironment(): ValidatedEnv {
   const result = validateEnvironment();
-  
+
   // Log warnings to console
   const warnings = result.errors.filter(error => error.severity === 'warning');
   if (warnings.length > 0) {
-    console.warn('Environment validation warnings:');
-    warnings.forEach(warning => {
-      console.warn(`⚠️  ${warning.message}`);
+    // console.warn('Environment validation warnings:');
+    warnings.forEach(_warning => {
+      // console.warn(`⚠️  ${_warning.message}`);
     });
   }
 
   // Throw error for critical issues
   if (!result.isValid) {
     const errorMessages = result.errors
-      .filter(error => error.severity === 'error')
-      .map(error => error.message)
-      .join('\n');
-    
+    .filter(error => error.severity === 'error')
+    .map(error => error.message)
+    .join('\n');
+
     throw new Error(`Environment validation failed:\n${errorMessages}`);
   }
 
@@ -388,29 +401,29 @@ export function validateAndWarnEnvironment(): ValidatedEnv {
  */
 export function checkEnvironmentSetup(): void {
   if (import.meta.env.DEV) {
-    console.group('🔧 Environment Configuration');
-    
+    // console.group('🔧 Environment Configuration');
+
     const result = validateEnvironment();
-    
-    console.log('Environment Mode:', import.meta.env.MODE);
-    console.log('Development Mode:', import.meta.env.DEV);
-    console.log('Production Mode:', import.meta.env.PROD);
-    
+
+    // console.log('Environment Mode:', import.meta.env.MODE);
+    // console.log('Development Mode:', import.meta.env.DEV);
+    // console.log('Production Mode:', import.meta.env.PROD);
+
     if (result.errors.length > 0) {
-      console.group('⚠️ Environment Issues');
+      // console.group('⚠️ Environment Issues');
       result.errors.forEach(error => {
-        const icon = error.severity === 'error' ? '❌' : '⚠️';
-        console.log(`${icon} ${error.variable}: ${error.message}`);
+        const _icon = error.severity === 'error' ? '❌' : '⚠️';
+        // console.log(`${_icon} ${error.variable}: ${error.message}`);
       });
-      console.groupEnd();
+      // console.groupEnd();
     } else {
-      console.log('✅ All environment variables validated successfully');
+      // console.log('✅ All environment variables validated successfully');
     }
 
-    console.log('\nValidated Configuration:');
-    console.table(result.env);
-    
-    console.groupEnd();
+    // console.log('\nValidated Configuration:');
+    // console.table(result.env);
+
+    // console.groupEnd();
   }
 }
 

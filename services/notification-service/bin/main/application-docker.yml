@@ -1,0 +1,200 @@
+# Docker Profile Configuration
+# This profile is activated when running in Docker containers
+
+spring:
+  application:
+    name: notification-service-docker
+
+  # Enable CGLIB proxies for AOP (required for @Scheduled methods)
+  aop:
+    proxy-target-class: true
+
+  # Database Configuration (using Docker service names)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:5432/${DB_NAME:focushive_notifications}
+    username: ${DB_USER:focushive}
+    password: ${DB_PASSWORD:focushive123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+    
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    
+  # Redis Configuration (using Docker service names)
+  redis:
+    host: ${REDIS_HOST:redis}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    jedis:
+      pool:
+        max-active: 10
+        max-idle: 8
+        min-idle: 2
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      
+  # RabbitMQ Configuration (using Docker service names)
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    connection-timeout: 5000
+    publisher-confirms: true
+    publisher-returns: true
+    template:
+      mandatory: true
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        max-interval: 10000
+        multiplier: 2
+    
+  # Mail Configuration (using Docker service names)
+  mail:
+    host: ${MAIL_HOST:mailhog}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+    test-connection: false
+    
+  # Security Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://identity-service:8081}
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://identity-service:8081/.well-known/jwks.json}
+          
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+      
+# Server Configuration
+server:
+  port: 8083
+  servlet:
+    context-path: /
+  shutdown: graceful
+  error:
+    include-message: always
+    include-binding-errors: always
+    
+# Management & Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,beans
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: docker
+        
+# Logging Configuration
+logging:
+  level:
+    com.focushive.notification: ${LOG_LEVEL:INFO}
+    org.springframework: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+  file:
+    name: /app/logs/notification-service.log
+    max-size: 10MB
+    max-history: 30
+    
+# Security Configuration
+security:
+  encryption:
+    enabled: ${SECURITY_ENCRYPTION_ENABLED:true}
+    master-key: ${SECURITY_ENCRYPTION_MASTER_KEY:}
+
+# Application-specific Configuration
+notification:
+  queue:
+    name: notifications-docker
+    exchange: ${NOTIFICATION_QUEUE_EXCHANGE:focushive.notifications}
+    routing-key: ${NOTIFICATION_QUEUE_ROUTING_KEY:notification.created}
+  template:
+    default-language: en
+  cleanup:
+    schedule: "0 0 2 * * ?"
+    default-retention-days: 30
+  delivery:
+    max-retries: 3
+    retry-delay-ms: 1000
+    
+# Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      identity-service:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        
+# OpenAPI Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method

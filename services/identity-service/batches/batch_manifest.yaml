@@ -1,0 +1,723 @@
+batches:
+- categories: &id001
+  - dto
+  - entity
+  - util
+  - validation
+  class_patterns:
+  - com.focushive.identity.dto.AuthenticationResponseUnitTest
+  - com.focushive.identity.dto.DataExportRequestUnitTest
+  - com.focushive.identity.dto.DataExportResponseUnitTest
+  - com.focushive.identity.dto.LoginRequestUnitTest
+  - com.focushive.identity.dto.MessageResponseUnitTest
+  - com.focushive.identity.dto.OAuth2AuthorizeRequestUnitTest
+  - com.focushive.identity.dto.OAuth2ClientRegistrationRequestUnitTest
+  - com.focushive.identity.dto.OAuth2ClientResponseUnitTest
+  - com.focushive.identity.dto.OAuth2IntrospectionRequestUnitTest
+  - com.focushive.identity.dto.OAuth2TokenRequestUnitTest
+  - com.focushive.identity.dto.OAuth2TokenResponseUnitTest
+  - com.focushive.identity.dto.PasswordResetConfirmRequestUnitTest
+  - com.focushive.identity.dto.PasswordResetRequestUnitTest
+  - com.focushive.identity.dto.PersonaDtoUnitTest
+  - com.focushive.identity.dto.PrivacyPreferencesResponseUnitTest
+  - com.focushive.identity.dto.RegisterRequestUnitTest
+  - com.focushive.identity.dto.TokenRefreshRequestUnitTest
+  - com.focushive.identity.dto.UpdatePrivacyPreferencesRequestUnitTest
+  - com.focushive.identity.dto.UserDTOUnitTest
+  - com.focushive.identity.dto.ValidateTokenRequestUnitTest
+  - com.focushive.identity.dto.ValidateTokenResponseUnitTest
+  - com.focushive.identity.entity.AuditLogTest
+  - com.focushive.identity.entity.AuditLogUnitTest
+  - com.focushive.identity.entity.ConsentRecordTest
+  - com.focushive.identity.entity.ConsentRecordUnitTest
+  description: Tests for dto, entity, util, validation (short runtime)
+  estimated_runtime_minutes: 2.5
+  name: unit-fast-1
+  runtime_filters: &id002
+  - short
+  test_count: 25
+  test_files:
+  - com/focushive/identity/dto/AuthenticationResponseUnitTest.java
+  - com/focushive/identity/dto/DataExportRequestUnitTest.java
+  - com/focushive/identity/dto/DataExportResponseUnitTest.java
+  - com/focushive/identity/dto/LoginRequestUnitTest.java
+  - com/focushive/identity/dto/MessageResponseUnitTest.java
+  - com/focushive/identity/dto/OAuth2AuthorizeRequestUnitTest.java
+  - com/focushive/identity/dto/OAuth2ClientRegistrationRequestUnitTest.java
+  - com/focushive/identity/dto/OAuth2ClientResponseUnitTest.java
+  - com/focushive/identity/dto/OAuth2IntrospectionRequestUnitTest.java
+  - com/focushive/identity/dto/OAuth2TokenRequestUnitTest.java
+  - com/focushive/identity/dto/OAuth2TokenResponseUnitTest.java
+  - com/focushive/identity/dto/PasswordResetConfirmRequestUnitTest.java
+  - com/focushive/identity/dto/PasswordResetRequestUnitTest.java
+  - com/focushive/identity/dto/PersonaDtoUnitTest.java
+  - com/focushive/identity/dto/PrivacyPreferencesResponseUnitTest.java
+  - com/focushive/identity/dto/RegisterRequestUnitTest.java
+  - com/focushive/identity/dto/TokenRefreshRequestUnitTest.java
+  - com/focushive/identity/dto/UpdatePrivacyPreferencesRequestUnitTest.java
+  - com/focushive/identity/dto/UserDTOUnitTest.java
+  - com/focushive/identity/dto/ValidateTokenRequestUnitTest.java
+  - com/focushive/identity/dto/ValidateTokenResponseUnitTest.java
+  - com/focushive/identity/entity/AuditLogTest.java
+  - com/focushive/identity/entity/AuditLogUnitTest.java
+  - com/focushive/identity/entity/ConsentRecordTest.java
+  - com/focushive/identity/entity/ConsentRecordUnitTest.java
+- categories: *id001
+  class_patterns:
+  - com.focushive.identity.entity.DataExportRequestTest
+  - com.focushive.identity.entity.DataExportRequestUnitTest
+  - com.focushive.identity.entity.DataPermissionTest
+  - com.focushive.identity.entity.OAuthAccessTokenTest
+  - com.focushive.identity.entity.OAuthAuthorizationCodeTest
+  - com.focushive.identity.entity.OAuthRefreshTokenTest
+  - com.focushive.identity.entity.PersonaProfileTest
+  - com.focushive.identity.entity.PersonaProfileUnitTest
+  - com.focushive.identity.entity.PersonaUnitTest
+  - com.focushive.identity.entity.PrivacySettingTest
+  - com.focushive.identity.entity.UserUnitTest
+  - com.focushive.identity.util.PKCEUtilTest
+  description: Tests for dto, entity, util, validation (short runtime)
+  estimated_runtime_minutes: 1.2
+  name: unit-fast-2
+  runtime_filters: *id002
+  test_count: 12
+  test_files:
+  - com/focushive/identity/entity/DataExportRequestTest.java
+  - com/focushive/identity/entity/DataExportRequestUnitTest.java
+  - com/focushive/identity/entity/DataPermissionTest.java
+  - com/focushive/identity/entity/OAuthAccessTokenTest.java
+  - com/focushive/identity/entity/OAuthAuthorizationCodeTest.java
+  - com/focushive/identity/entity/OAuthRefreshTokenTest.java
+  - com/focushive/identity/entity/PersonaProfileTest.java
+  - com/focushive/identity/entity/PersonaProfileUnitTest.java
+  - com/focushive/identity/entity/PersonaUnitTest.java
+  - com/focushive/identity/entity/PrivacySettingTest.java
+  - com/focushive/identity/entity/UserUnitTest.java
+  - com/focushive/identity/util/PKCEUtilTest.java
+- categories:
+  - dto
+  - entity
+  - util
+  - validation
+  class_patterns:
+  - com.focushive.identity.validation.InputValidationTest
+  - com.focushive.identity.validation.NoSQLInjectionSafeValidatorTest
+  - com.focushive.identity.validation.SimpleValidationTest
+  description: Tests for dto, entity, util, validation (medium runtime)
+  estimated_runtime_minutes: 1.5
+  name: unit-medium
+  runtime_filters:
+  - medium
+  test_count: 3
+  test_files:
+  - com/focushive/identity/validation/InputValidationTest.java
+  - com/focushive/identity/validation/NoSQLInjectionSafeValidatorTest.java
+  - com/focushive/identity/validation/SimpleValidationTest.java
+- categories: &id003
+  - service
+  class_patterns:
+  - com.focushive.identity.service.AccountLockoutServiceTest
+  - com.focushive.identity.service.AuthenticationServiceTest
+  - com.focushive.identity.service.AuthenticationServiceUnitTest
+  - com.focushive.identity.service.CookieJwtServiceTest
+  - com.focushive.identity.service.CustomUserDetailsServiceCacheTest
+  - com.focushive.identity.service.CustomUserDetailsServiceTest
+  - com.focushive.identity.service.EmailServiceTest
+  - com.focushive.identity.service.FederationServiceImplTest
+  - com.focushive.identity.service.OAuth2AuthorizationServiceImplTest
+  - com.focushive.identity.service.OAuth2AuthorizationServiceTest
+  - com.focushive.identity.service.OAuth2ClientCredentialsTest
+  - com.focushive.identity.service.OAuth2DiscoveryEndpointTest
+  - com.focushive.identity.service.OAuth2JWKSEndpointTest
+  - com.focushive.identity.service.OAuth2PKCETest
+  - com.focushive.identity.service.OAuth2TokenIntrospectionTest
+  description: Tests for service (short, medium runtime)
+  estimated_runtime_minutes: 7.1
+  name: service-1
+  runtime_filters: &id004
+  - short
+  - medium
+  test_count: 15
+  test_files:
+  - com/focushive/identity/service/AccountLockoutServiceTest.java
+  - com/focushive/identity/service/AuthenticationServiceTest.java
+  - com/focushive/identity/service/AuthenticationServiceUnitTest.java
+  - com/focushive/identity/service/CookieJwtServiceTest.java
+  - com/focushive/identity/service/CustomUserDetailsServiceCacheTest.java
+  - com/focushive/identity/service/CustomUserDetailsServiceTest.java
+  - com/focushive/identity/service/EmailServiceTest.java
+  - com/focushive/identity/service/FederationServiceImplTest.java
+  - com/focushive/identity/service/OAuth2AuthorizationServiceImplTest.java
+  - com/focushive/identity/service/OAuth2AuthorizationServiceTest.java
+  - com/focushive/identity/service/OAuth2ClientCredentialsTest.java
+  - com/focushive/identity/service/OAuth2DiscoveryEndpointTest.java
+  - com/focushive/identity/service/OAuth2JWKSEndpointTest.java
+  - com/focushive/identity/service/OAuth2PKCETest.java
+  - com/focushive/identity/service/OAuth2TokenIntrospectionTest.java
+- categories: *id003
+  class_patterns:
+  - com.focushive.identity.service.OAuth2TokenRevocationTest
+  - com.focushive.identity.service.OAuth2TokenRotationServiceTest
+  - com.focushive.identity.service.OAuth2UserInfoEndpointTest
+  - com.focushive.identity.service.OptimizedPersonaServiceTest
+  - com.focushive.identity.service.PersonaManagementServiceTest
+  - com.focushive.identity.service.PersonaServiceTest
+  - com.focushive.identity.service.PersonaServiceUnitTest
+  - com.focushive.identity.service.PrivacyControlsServiceTest
+  - com.focushive.identity.service.PrivacyServiceTest
+  - com.focushive.identity.service.RedisRateLimiterTest
+  - com.focushive.identity.service.ScopeEnforcementServiceImplTest
+  - com.focushive.identity.service.SecurityTestRedisRateLimiter
+  - com.focushive.identity.service.TestRedisRateLimiter
+  - com.focushive.identity.service.TestTokenBlacklistService
+  - com.focushive.identity.service.TokenBlacklistServiceTest
+  description: Tests for service (short, medium runtime)
+  estimated_runtime_minutes: 7.1
+  name: service-2
+  runtime_filters: *id004
+  test_count: 15
+  test_files:
+  - com/focushive/identity/service/OAuth2TokenRevocationTest.java
+  - com/focushive/identity/service/OAuth2TokenRotationServiceTest.java
+  - com/focushive/identity/service/OAuth2UserInfoEndpointTest.java
+  - com/focushive/identity/service/OptimizedPersonaServiceTest.java
+  - com/focushive/identity/service/PersonaManagementServiceTest.java
+  - com/focushive/identity/service/PersonaServiceTest.java
+  - com/focushive/identity/service/PersonaServiceUnitTest.java
+  - com/focushive/identity/service/PrivacyControlsServiceTest.java
+  - com/focushive/identity/service/PrivacyServiceTest.java
+  - com/focushive/identity/service/RedisRateLimiterTest.java
+  - com/focushive/identity/service/ScopeEnforcementServiceImplTest.java
+  - com/focushive/identity/service/SecurityTestRedisRateLimiter.java
+  - com/focushive/identity/service/TestRedisRateLimiter.java
+  - com/focushive/identity/service/TestTokenBlacklistService.java
+  - com/focushive/identity/service/TokenBlacklistServiceTest.java
+- categories: *id003
+  class_patterns:
+  - com.focushive.identity.service.TokenManagementServiceSimpleTest
+  - com.focushive.identity.service.TokenManagementServiceTest
+  - com.focushive.identity.service.UserManagementServiceTest
+  description: Tests for service (short, medium runtime)
+  estimated_runtime_minutes: 1.5
+  name: service-3
+  runtime_filters: *id004
+  test_count: 3
+  test_files:
+  - com/focushive/identity/service/TokenManagementServiceSimpleTest.java
+  - com/focushive/identity/service/TokenManagementServiceTest.java
+  - com/focushive/identity/service/UserManagementServiceTest.java
+- categories:
+  - service
+  class_patterns:
+  - com.focushive.identity.service.TokenManagementServiceIntegrationTest
+  description: Tests for service (long runtime)
+  estimated_runtime_minutes: 2.0
+  name: service-long
+  runtime_filters:
+  - long
+  test_count: 1
+  test_files:
+  - com/focushive/identity/service/TokenManagementServiceIntegrationTest.java
+- categories:
+  - controller
+  class_patterns:
+  - com.focushive.identity.controller.AuthControllerMinimalTest
+  - com.focushive.identity.controller.AuthControllerMvcTest
+  - com.focushive.identity.controller.AuthControllerRegistrationTest
+  - com.focushive.identity.controller.AuthControllerTest
+  - com.focushive.identity.controller.AuthControllerUnitTest
+  - com.focushive.identity.controller.FederationControllerTest
+  - com.focushive.identity.controller.HealthControllerTest
+  - com.focushive.identity.controller.OAuth2AuthorizationControllerTest
+  - com.focushive.identity.controller.PersonaControllerTest
+  - com.focushive.identity.controller.PrivacyControllerTest
+  - com.focushive.identity.controller.RegisterEndpointStatusTest
+  - com.focushive.identity.controller.UserPreferencesControllerTest
+  description: Tests for controller (short, medium runtime)
+  estimated_runtime_minutes: 5.6
+  name: controllers
+  runtime_filters:
+  - short
+  - medium
+  test_count: 12
+  test_files:
+  - com/focushive/identity/controller/AuthControllerMinimalTest.java
+  - com/focushive/identity/controller/AuthControllerMvcTest.java
+  - com/focushive/identity/controller/AuthControllerRegistrationTest.java
+  - com/focushive/identity/controller/AuthControllerTest.java
+  - com/focushive/identity/controller/AuthControllerUnitTest.java
+  - com/focushive/identity/controller/FederationControllerTest.java
+  - com/focushive/identity/controller/HealthControllerTest.java
+  - com/focushive/identity/controller/OAuth2AuthorizationControllerTest.java
+  - com/focushive/identity/controller/PersonaControllerTest.java
+  - com/focushive/identity/controller/PrivacyControllerTest.java
+  - com/focushive/identity/controller/RegisterEndpointStatusTest.java
+  - com/focushive/identity/controller/UserPreferencesControllerTest.java
+- categories: &id005
+  - security
+  class_patterns:
+  - com.focushive.identity.security.AuthorizationSecurityTest
+  - com.focushive.identity.security.CORSSimpleTest
+  - com.focushive.identity.security.CookieAuthenticationTest
+  - com.focushive.identity.security.DependencyVulnerabilityTest
+  - com.focushive.identity.security.encryption.FieldLevelEncryptionTest
+  - com.focushive.identity.security.JwtAuthenticationFilterTest
+  - com.focushive.identity.security.JwtGenerationDebugTest
+  - com.focushive.identity.security.JwtRSAMigrationTest
+  - com.focushive.identity.security.JwtTokenProviderTest
+  - com.focushive.identity.security.JwtTokenProviderUnitTest
+  - com.focushive.identity.security.OWASPComplianceStandaloneTest
+  - com.focushive.identity.security.OWASPPasswordValidationTest
+  description: Tests for security (short, medium runtime)
+  estimated_runtime_minutes: 5.6
+  name: security-unit-1
+  runtime_filters: &id006
+  - short
+  - medium
+  test_count: 12
+  test_files:
+  - com/focushive/identity/security/AuthorizationSecurityTest.java
+  - com/focushive/identity/security/CORSSimpleTest.java
+  - com/focushive/identity/security/CookieAuthenticationTest.java
+  - com/focushive/identity/security/DependencyVulnerabilityTest.java
+  - com/focushive/identity/security/encryption/FieldLevelEncryptionTest.java
+  - com/focushive/identity/security/JwtAuthenticationFilterTest.java
+  - com/focushive/identity/security/JwtGenerationDebugTest.java
+  - com/focushive/identity/security/JwtRSAMigrationTest.java
+  - com/focushive/identity/security/JwtTokenProviderTest.java
+  - com/focushive/identity/security/JwtTokenProviderUnitTest.java
+  - com/focushive/identity/security/OWASPComplianceStandaloneTest.java
+  - com/focushive/identity/security/OWASPPasswordValidationTest.java
+- categories: *id005
+  class_patterns:
+  - com.focushive.identity.security.OWASPTop10ComplianceTest
+  - com.focushive.identity.security.RateLimitingUnitTest
+  - com.focushive.identity.security.RegistrationDebugTest
+  - com.focushive.identity.security.ScopeManagementEnforcementTest
+  - com.focushive.identity.security.SecurityAttackPreventionTest
+  - com.focushive.identity.security.SecurityAttackPreventionUnitTest
+  - com.focushive.identity.security.SecurityEventListenerTest
+  - com.focushive.identity.security.encryption.TestEncryptionService
+  - com.focushive.identity.security.UrlValidationUtilTest
+  description: Tests for security (short, medium runtime)
+  estimated_runtime_minutes: 3.7
+  name: security-unit-2
+  runtime_filters: *id006
+  test_count: 9
+  test_files:
+  - com/focushive/identity/security/OWASPTop10ComplianceTest.java
+  - com/focushive/identity/security/RateLimitingUnitTest.java
+  - com/focushive/identity/security/RegistrationDebugTest.java
+  - com/focushive/identity/security/ScopeManagementEnforcementTest.java
+  - com/focushive/identity/security/SecurityAttackPreventionTest.java
+  - com/focushive/identity/security/SecurityAttackPreventionUnitTest.java
+  - com/focushive/identity/security/SecurityEventListenerTest.java
+  - com/focushive/identity/security/encryption/TestEncryptionService.java
+  - com/focushive/identity/security/UrlValidationUtilTest.java
+- categories:
+  - security
+  class_patterns:
+  - com.focushive.identity.security.AccountLockoutIntegrationTest
+  description: Tests for security (long, very-long runtime)
+  estimated_runtime_minutes: 2.0
+  name: security-integration
+  runtime_filters:
+  - long
+  - very-long
+  test_count: 1
+  test_files:
+  - com/focushive/identity/security/AccountLockoutIntegrationTest.java
+- categories: &id007
+  - config
+  class_patterns:
+  - com.focushive.identity.config.ApplicationConfigTest
+  - com.focushive.identity.config.AuthControllerTestConfig
+  - com.focushive.identity.config.BaseSecurityTest
+  - com.focushive.identity.config.BaseTestConfig
+  - com.focushive.identity.config.BaseWebMvcTest
+  - com.focushive.identity.config.CacheConfigTest
+  - com.focushive.identity.config.ComprehensiveTestConfig
+  - com.focushive.identity.config.EnvironmentConfigTest
+  - com.focushive.identity.config.EnvironmentValidationTest
+  - com.focushive.identity.config.HealthCheckTest
+  - com.focushive.identity.config.JpaEntityTestConfig
+  - com.focushive.identity.config.MinimalAuthTestConfig
+  - com.focushive.identity.config.MinimalTestConfig
+  - com.focushive.identity.config.MinimalWebSecurityTest
+  - com.focushive.identity.config.OWASPTestConfig
+  - com.focushive.identity.config.PostgreSQLTestContainerConfig
+  - com.focushive.identity.config.QueryCountTestConfiguration
+  - com.focushive.identity.config.SSLConfigurationTest
+  - com.focushive.identity.config.SecretManagementTest
+  - com.focushive.identity.config.SecurityHeadersConfigTest
+  description: Tests for config (short, medium runtime)
+  estimated_runtime_minutes: 10.0
+  name: config-1
+  runtime_filters: &id008
+  - short
+  - medium
+  test_count: 20
+  test_files:
+  - com/focushive/identity/config/ApplicationConfigTest.java
+  - com/focushive/identity/config/AuthControllerTestConfig.java
+  - com/focushive/identity/config/BaseSecurityTest.java
+  - com/focushive/identity/config/BaseTestConfig.java
+  - com/focushive/identity/config/BaseWebMvcTest.java
+  - com/focushive/identity/config/CacheConfigTest.java
+  - com/focushive/identity/config/ComprehensiveTestConfig.java
+  - com/focushive/identity/config/EnvironmentConfigTest.java
+  - com/focushive/identity/config/EnvironmentValidationTest.java
+  - com/focushive/identity/config/HealthCheckTest.java
+  - com/focushive/identity/config/JpaEntityTestConfig.java
+  - com/focushive/identity/config/MinimalAuthTestConfig.java
+  - com/focushive/identity/config/MinimalTestConfig.java
+  - com/focushive/identity/config/MinimalWebSecurityTest.java
+  - com/focushive/identity/config/OWASPTestConfig.java
+  - com/focushive/identity/config/PostgreSQLTestContainerConfig.java
+  - com/focushive/identity/config/QueryCountTestConfiguration.java
+  - com/focushive/identity/config/SSLConfigurationTest.java
+  - com/focushive/identity/config/SecretManagementTest.java
+  - com/focushive/identity/config/SecurityHeadersConfigTest.java
+- categories: *id007
+  class_patterns:
+  - com.focushive.identity.config.SecurityTestConfig
+  - com.focushive.identity.config.SecurityTestRateLimitingConfig
+  - com.focushive.identity.config.SecurityTestSecurityConfig
+  - com.focushive.identity.config.SimpleSecurityTest
+  - com.focushive.identity.config.StandaloneOWASPTest
+  - com.focushive.identity.config.TestApplicationConfig
+  - com.focushive.identity.config.TestConfig
+  - com.focushive.identity.config.TestContainersConfig
+  - com.focushive.identity.config.TestDatabaseConfig
+  - com.focushive.identity.config.TestEncryptionConfig
+  - com.focushive.identity.config.TestMetricsConfig
+  - com.focushive.identity.config.TestOAuth2AuthorizationService
+  - com.focushive.identity.config.TestOAuth2Config
+  - com.focushive.identity.config.TestRateLimiterConfig
+  - com.focushive.identity.config.TestSecurityConfig
+  - com.focushive.identity.config.UnifiedTestConfig
+  description: Tests for config (short, medium runtime)
+  estimated_runtime_minutes: 8.0
+  name: config-2
+  runtime_filters: *id008
+  test_count: 16
+  test_files:
+  - com/focushive/identity/config/SecurityTestConfig.java
+  - com/focushive/identity/config/SecurityTestRateLimitingConfig.java
+  - com/focushive/identity/config/SecurityTestSecurityConfig.java
+  - com/focushive/identity/config/SimpleSecurityTest.java
+  - com/focushive/identity/config/StandaloneOWASPTest.java
+  - com/focushive/identity/config/TestApplicationConfig.java
+  - com/focushive/identity/config/TestConfig.java
+  - com/focushive/identity/config/TestContainersConfig.java
+  - com/focushive/identity/config/TestDatabaseConfig.java
+  - com/focushive/identity/config/TestEncryptionConfig.java
+  - com/focushive/identity/config/TestMetricsConfig.java
+  - com/focushive/identity/config/TestOAuth2AuthorizationService.java
+  - com/focushive/identity/config/TestOAuth2Config.java
+  - com/focushive/identity/config/TestRateLimiterConfig.java
+  - com/focushive/identity/config/TestSecurityConfig.java
+  - com/focushive/identity/config/UnifiedTestConfig.java
+- categories:
+  - config
+  class_patterns:
+  - com.focushive.identity.config.BaseIntegrationTest
+  - com.focushive.identity.config.IntegrationTestConfig
+  - com.focushive.identity.config.NotificationIntegrationTestConfig
+  - com.focushive.identity.config.OAuth2IntegrationTestConfig
+  description: Tests for config (long runtime)
+  estimated_runtime_minutes: 8.0
+  name: config-integration
+  runtime_filters:
+  - long
+  test_count: 4
+  test_files:
+  - com/focushive/identity/config/BaseIntegrationTest.java
+  - com/focushive/identity/config/IntegrationTestConfig.java
+  - com/focushive/identity/config/NotificationIntegrationTestConfig.java
+  - com/focushive/identity/config/OAuth2IntegrationTestConfig.java
+- categories: &id009
+  - integration
+  class_patterns:
+  - com.focushive.identity.integration.AbstractIntegrationTest
+  - com.focushive.identity.integration.AuthenticationTestContainersIntegrationTest
+  - com.focushive.identity.integration.BaseIntegrationTest
+  - com.focushive.identity.integration.BasicApplicationContextTest
+  - com.focushive.identity.integration.DatabaseIntegrationTest
+  - com.focushive.identity.integration.ErrorHandlingIntegrationTest
+  - com.focushive.identity.integration.ManualNotificationTest
+  - com.focushive.identity.integration.MockMvcIntegrationTestBase
+  description: Tests for integration (long runtime)
+  estimated_runtime_minutes: 16.0
+  name: integration-long-1
+  runtime_filters: &id010
+  - long
+  test_count: 8
+  test_files:
+  - com/focushive/identity/integration/AbstractIntegrationTest.java
+  - com/focushive/identity/integration/AuthenticationTestContainersIntegrationTest.java
+  - com/focushive/identity/integration/BaseIntegrationTest.java
+  - com/focushive/identity/integration/BasicApplicationContextTest.java
+  - com/focushive/identity/integration/DatabaseIntegrationTest.java
+  - com/focushive/identity/integration/ErrorHandlingIntegrationTest.java
+  - com/focushive/identity/integration/ManualNotificationTest.java
+  - com/focushive/identity/integration/MockMvcIntegrationTestBase.java
+- categories: *id009
+  class_patterns:
+  - com.focushive.identity.integration.NotificationIntegrationVerificationTest
+  - com.focushive.identity.integration.client.NotificationServiceClientTest
+  - com.focushive.identity.integration.service.NotificationServiceIntegrationTest
+  - com.focushive.identity.integration.NotificationServiceRealIntegrationTest
+  - com.focushive.identity.integration.OAuth2AuthorizationFlowTest
+  - com.focushive.identity.integration.OAuth2FlowIntegrationTest
+  - com.focushive.identity.integration.OAuth2FullFlowIntegrationTest
+  - com.focushive.identity.integration.OAuth2IntegrationTestConfig
+  description: Tests for integration (long runtime)
+  estimated_runtime_minutes: 16.0
+  name: integration-long-2
+  runtime_filters: *id010
+  test_count: 8
+  test_files:
+  - com/focushive/identity/integration/NotificationIntegrationVerificationTest.java
+  - com/focushive/identity/integration/client/NotificationServiceClientTest.java
+  - com/focushive/identity/integration/service/NotificationServiceIntegrationTest.java
+  - com/focushive/identity/integration/NotificationServiceRealIntegrationTest.java
+  - com/focushive/identity/integration/OAuth2AuthorizationFlowTest.java
+  - com/focushive/identity/integration/OAuth2FlowIntegrationTest.java
+  - com/focushive/identity/integration/OAuth2FullFlowIntegrationTest.java
+  - com/focushive/identity/integration/OAuth2IntegrationTestConfig.java
+- categories: *id009
+  class_patterns:
+  - com.focushive.identity.integration.OAuth2TokenOperationsTest
+  - com.focushive.identity.integration.PersonaWorkflowIntegrationTest
+  - com.focushive.identity.integration.PrivacyOperationsIntegrationTest
+  - com.focushive.identity.integration.RateLimitingIntegrationTest
+  - com.focushive.identity.integration.SecurityConfigurationIntegrationTest
+  - com.focushive.identity.integration.SecurityIncidentIntegrationTest
+  - com.focushive.identity.integration.ServiceStartupIntegrationTest
+  - com.focushive.identity.integration.SimpleTestContainersIntegrationTest
+  description: Tests for integration (long runtime)
+  estimated_runtime_minutes: 16.0
+  name: integration-long-3
+  runtime_filters: *id010
+  test_count: 8
+  test_files:
+  - com/focushive/identity/integration/OAuth2TokenOperationsTest.java
+  - com/focushive/identity/integration/PersonaWorkflowIntegrationTest.java
+  - com/focushive/identity/integration/PrivacyOperationsIntegrationTest.java
+  - com/focushive/identity/integration/RateLimitingIntegrationTest.java
+  - com/focushive/identity/integration/SecurityConfigurationIntegrationTest.java
+  - com/focushive/identity/integration/SecurityIncidentIntegrationTest.java
+  - com/focushive/identity/integration/ServiceStartupIntegrationTest.java
+  - com/focushive/identity/integration/SimpleTestContainersIntegrationTest.java
+- categories: *id009
+  class_patterns:
+  - com.focushive.identity.integration.TestContainersBasicTest
+  - com.focushive.identity.integration.TestContainersDemoTest
+  - com.focushive.identity.integration.UserJourneyIntegrationTest
+  - com.focushive.identity.integration.UserRepositoryIntegrationTest
+  - com.focushive.identity.integration.WorkingTestContainersIntegrationTest
+  description: Tests for integration (long runtime)
+  estimated_runtime_minutes: 10.0
+  name: integration-long-4
+  runtime_filters: *id010
+  test_count: 5
+  test_files:
+  - com/focushive/identity/integration/TestContainersBasicTest.java
+  - com/focushive/identity/integration/TestContainersDemoTest.java
+  - com/focushive/identity/integration/UserJourneyIntegrationTest.java
+  - com/focushive/identity/integration/UserRepositoryIntegrationTest.java
+  - com/focushive/identity/integration/WorkingTestContainersIntegrationTest.java
+- categories: &id011
+  - performance
+  class_patterns:
+  - com.focushive.identity.performance.BatchFetchOptimizationTest
+  - com.focushive.identity.performance.ComprehensiveN1QueryPerformanceTest
+  - com.focushive.identity.performance.ComprehensivePerformanceTestSuite
+  - com.focushive.identity.performance.DatabasePerformanceTest
+  description: Tests for performance (very-long runtime)
+  estimated_runtime_minutes: 20.0
+  name: performance-long-1
+  runtime_filters: &id012
+  - very-long
+  test_count: 4
+  test_files:
+  - com/focushive/identity/performance/BatchFetchOptimizationTest.java
+  - com/focushive/identity/performance/ComprehensiveN1QueryPerformanceTest.java
+  - com/focushive/identity/performance/ComprehensivePerformanceTestSuite.java
+  - com/focushive/identity/performance/DatabasePerformanceTest.java
+- categories: *id011
+  class_patterns:
+  - com.focushive.identity.performance.LoadTestSimulation
+  - com.focushive.identity.performance.MemoryLeakDetectionTest
+  - com.focushive.identity.performance.MicrobenchmarkTests
+  - com.focushive.identity.performance.OptimizedN1QueryPerformanceTest
+  description: Tests for performance (very-long runtime)
+  estimated_runtime_minutes: 20.0
+  name: performance-long-2
+  runtime_filters: *id012
+  test_count: 4
+  test_files:
+  - com/focushive/identity/performance/LoadTestSimulation.java
+  - com/focushive/identity/performance/MemoryLeakDetectionTest.java
+  - com/focushive/identity/performance/MicrobenchmarkTests.java
+  - com/focushive/identity/performance/OptimizedN1QueryPerformanceTest.java
+- categories: *id011
+  class_patterns:
+  - com.focushive.identity.performance.PerformanceTestSuite
+  - com.focushive.identity.performance.RestApiPerformanceTest
+  - com.focushive.identity.performance.SimpleN1QueryPerformanceTest
+  - com.focushive.identity.performance.UserPersonaN1QueryPerformanceTest
+  description: Tests for performance (very-long runtime)
+  estimated_runtime_minutes: 20.0
+  name: performance-long-3
+  runtime_filters: *id012
+  test_count: 4
+  test_files:
+  - com/focushive/identity/performance/PerformanceTestSuite.java
+  - com/focushive/identity/performance/RestApiPerformanceTest.java
+  - com/focushive/identity/performance/SimpleN1QueryPerformanceTest.java
+  - com/focushive/identity/performance/UserPersonaN1QueryPerformanceTest.java
+- categories:
+  - repository
+  - cache
+  - monitoring
+  - network
+  - interceptor
+  class_patterns:
+  - com.focushive.identity.cache.CachingLayerTest
+  - com.focushive.identity.interceptor.RateLimitingInterceptorTest
+  - com.focushive.identity.monitoring.DistributedTracingMonitoringTest
+  - com.focushive.identity.monitoring.ErrorAlertingMonitoringTest
+  - com.focushive.identity.monitoring.LogAggregationMonitoringTest
+  - com.focushive.identity.monitoring.MetricsCollectionMonitoringTest
+  - com.focushive.identity.network.DatabaseConnectionLossTest
+  - com.focushive.identity.network.DnsResolutionFailureTest
+  - com.focushive.identity.network.NetworkFailureTestSuite
+  - com.focushive.identity.network.NetworkTimeoutTest
+  - com.focushive.identity.network.RedisUnavailableTest
+  - com.focushive.identity.network.SslCertificateIssuesTest
+  - com.focushive.identity.repository.DatabaseOperationsTest
+  - com.focushive.identity.repository.PersonaRepositoryTest
+  - com.focushive.identity.repository.UserRepositoryTest
+  description: Tests for repository, cache, monitoring, network, interceptor (short,
+    medium, long runtime)
+  estimated_runtime_minutes: 7.5
+  name: infrastructure
+  runtime_filters:
+  - short
+  - medium
+  - long
+  test_count: 15
+  test_files:
+  - com/focushive/identity/cache/CachingLayerTest.java
+  - com/focushive/identity/interceptor/RateLimitingInterceptorTest.java
+  - com/focushive/identity/monitoring/DistributedTracingMonitoringTest.java
+  - com/focushive/identity/monitoring/ErrorAlertingMonitoringTest.java
+  - com/focushive/identity/monitoring/LogAggregationMonitoringTest.java
+  - com/focushive/identity/monitoring/MetricsCollectionMonitoringTest.java
+  - com/focushive/identity/network/DatabaseConnectionLossTest.java
+  - com/focushive/identity/network/DnsResolutionFailureTest.java
+  - com/focushive/identity/network/NetworkFailureTestSuite.java
+  - com/focushive/identity/network/NetworkTimeoutTest.java
+  - com/focushive/identity/network/RedisUnavailableTest.java
+  - com/focushive/identity/network/SslCertificateIssuesTest.java
+  - com/focushive/identity/repository/DatabaseOperationsTest.java
+  - com/focushive/identity/repository/PersonaRepositoryTest.java
+  - com/focushive/identity/repository/UserRepositoryTest.java
+- categories: &id013
+  - compliance
+  - resilience
+  - concurrency
+  - integrity
+  class_patterns:
+  - com.focushive.identity.compliance.GDPRDataPortabilityComplianceTest
+  - com.focushive.identity.compliance.PCIDSSNoCardStorageComplianceTest
+  - com.focushive.identity.compliance.SimplifiedGDPRComplianceTest
+  - com.focushive.identity.concurrency.ConcurrentAccessTest
+  - com.focushive.identity.integrity.DataIntegrityTestSuite
+  - com.focushive.identity.resilience.CascadingFailurePreventionResilienceTest
+  - com.focushive.identity.resilience.CircuitBreakerRecoveryResilienceTest
+  - com.focushive.identity.resilience.GracefulShutdownResilienceTest
+  - com.focushive.identity.resilience.PoisonMessageHandlingResilienceTest
+  - com.focushive.identity.resilience.ResilienceTestConfig
+  - com.focushive.identity.resilience.ResilienceTestSuite
+  - com.focushive.identity.resilience.SimpleResilienceTest
+  description: Tests for compliance, resilience, concurrency, integrity (short, medium,
+    long runtime)
+  estimated_runtime_minutes: 6.0
+  name: compliance-resilience-1
+  runtime_filters: &id014
+  - short
+  - medium
+  - long
+  test_count: 12
+  test_files:
+  - com/focushive/identity/compliance/GDPRDataPortabilityComplianceTest.java
+  - com/focushive/identity/compliance/PCIDSSNoCardStorageComplianceTest.java
+  - com/focushive/identity/compliance/SimplifiedGDPRComplianceTest.java
+  - com/focushive/identity/concurrency/ConcurrentAccessTest.java
+  - com/focushive/identity/integrity/DataIntegrityTestSuite.java
+  - com/focushive/identity/resilience/CascadingFailurePreventionResilienceTest.java
+  - com/focushive/identity/resilience/CircuitBreakerRecoveryResilienceTest.java
+  - com/focushive/identity/resilience/GracefulShutdownResilienceTest.java
+  - com/focushive/identity/resilience/PoisonMessageHandlingResilienceTest.java
+  - com/focushive/identity/resilience/ResilienceTestConfig.java
+  - com/focushive/identity/resilience/ResilienceTestSuite.java
+  - com/focushive/identity/resilience/SimpleResilienceTest.java
+- categories: *id013
+  class_patterns:
+  - com.focushive.identity.resilience.SimpleResilienceTestConfig
+  - com.focushive.identity.resilience.StartupHealthChecksResilienceTest
+  description: Tests for compliance, resilience, concurrency, integrity (short, medium,
+    long runtime)
+  estimated_runtime_minutes: 1.0
+  name: compliance-resilience-2
+  runtime_filters: *id014
+  test_count: 2
+  test_files:
+  - com/focushive/identity/resilience/SimpleResilienceTestConfig.java
+  - com/focushive/identity/resilience/StartupHealthChecksResilienceTest.java
+- categories:
+  - other
+  - diagnosis
+  - exception
+  - startup
+  - unit
+  class_patterns:
+  - com.focushive.identity.diagnosis.SpringBootConfigDiagnosisTest
+  - com.focushive.identity.diagnosis.SpringMvcMappingDiagnosisTest
+  - com.focushive.identity.diagnosis.WorkingMockMvcTest
+  - com.focushive.identity.exception.GlobalExceptionHandlerTest
+  - com.focushive.identity.BasicTestContainersTest
+  - com.focushive.identity.IdentityServiceApplicationTests
+  - com.focushive.identity.PostgreSQLTestContainersTest
+  - com.focushive.identity.RegistrationFlowDebugTest
+  - com.focushive.identity.SimplePostgreSQLContainerTest
+  - com.focushive.identity.TestContainersSmokeTest
+  - com.focushive.identity.TestContainersVerificationTest
+  - com.focushive.identity.startup.OAuth2ApplicationStartupTest
+  - com.focushive.identity.unit.JwtTokenProviderTest
+  description: Tests for other, diagnosis, exception, startup, unit (short, medium,
+    long runtime)
+  estimated_runtime_minutes: 6.5
+  name: misc
+  runtime_filters:
+  - short
+  - medium
+  - long
+  test_count: 13
+  test_files:
+  - com/focushive/identity/diagnosis/SpringBootConfigDiagnosisTest.java
+  - com/focushive/identity/diagnosis/SpringMvcMappingDiagnosisTest.java
+  - com/focushive/identity/diagnosis/WorkingMockMvcTest.java
+  - com/focushive/identity/exception/GlobalExceptionHandlerTest.java
+  - com/focushive/identity/BasicTestContainersTest.java
+  - com/focushive/identity/IdentityServiceApplicationTests.java
+  - com/focushive/identity/PostgreSQLTestContainersTest.java
+  - com/focushive/identity/RegistrationFlowDebugTest.java
+  - com/focushive/identity/SimplePostgreSQLContainerTest.java
+  - com/focushive/identity/TestContainersSmokeTest.java
+  - com/focushive/identity/TestContainersVerificationTest.java
+  - com/focushive/identity/startup/OAuth2ApplicationStartupTest.java
+  - com/focushive/identity/unit/JwtTokenProviderTest.java

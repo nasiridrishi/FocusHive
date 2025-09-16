@@ -1,0 +1,163 @@
+# =============================================================================
+# Ultra-Secure .dockerignore for Buddy Service Production Build
+# Minimize attack surface and optimize build context
+# =============================================================================
+
+# Development and IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Version Control
+.git/
+.gitignore
+.gitattributes
+.gitmodules
+
+# Gradle build artifacts (exclude from context)
+.gradle/
+build/
+!build/libs/buddy-service*.jar
+!build.gradle.kts
+!gradle.properties
+gradlew.bat
+# gradle/wrapper/gradle-wrapper.jar  # IMPORTANT: This file is needed for Docker build
+
+# Application logs and temporary files
+logs/
+*.log
+*.log.*
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Test files and reports
+src/test/
+test-results/
+.junit/
+coverage/
+jacoco/
+
+# Configuration and secrets (use environment variables instead)
+*.env
+*.env.*
+.env.local
+.env.production
+.env.staging
+application-*.properties
+!application-docker.properties
+
+# Documentation and development artifacts
+README.md
+*.md
+!DEPLOYMENT.md
+docs/
+documentation/
+
+# Docker and deployment artifacts
+docker-compose*.yml
+!docker-compose.yml
+Dockerfile.*
+.dockerignore
+
+# Security and scanning artifacts
+.trivyignore
+.hadolint.yaml
+security-scan-results/
+
+# Backup and archive files
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.rar
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Dependency directories that should be downloaded in container
+node_modules/
+bower_components/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output
+
+# ESLint
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Application specific exclusions
+data/
+uploads/
+downloads/
+cache/
+
+# IDE and editor files
+*.sublime-project
+*.sublime-workspace
+.atom/
+.brackets.json
+.tern-project
+
+# Generated files
+target/
+out/
+bin/
+lib/
+
+# Maven specific (if using Maven instead of Gradle)
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Security sensitive files
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+*.truststore
+*.crt
+*.csr
+secrets/
+certs/

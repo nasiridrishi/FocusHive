@@ -3,15 +3,15 @@
  * Prepares test environment and dependencies for authentication testing
  */
 
-import { chromium, FullConfig } from '@playwright/test';
+import {chromium, FullConfig} from '@playwright/test';
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup(_config: FullConfig): Promise<unknown[]> {
   console.log('🚀 Setting up authentication E2E test environment...');
 
   // Validate environment variables
   const requiredEnvVars = [
     'E2E_BASE_URL',
-    'E2E_IDENTITY_API_URL', 
+    'E2E_IDENTITY_API_URL',
     'E2E_API_BASE_URL',
   ];
 
@@ -48,13 +48,13 @@ async function globalSetup(config: FullConfig) {
 
     // Check frontend is accessible
     try {
-      await page.goto(process.env.E2E_BASE_URL!);
-      await page.waitForLoadState('networkidle', { timeout: 30000 });
+      await page.goto(process.env.E2E_BASE_URL || 'http://127.0.0.1:5173');
+      await page.waitForLoadState('networkidle', {timeout: 30000});
       console.log('✅ Frontend service is accessible');
-    } catch (error) {
+    } catch (_error) {
       console.error(`❌ Frontend service not accessible at ${process.env.E2E_BASE_URL}`);
       console.error('   Make sure to run: npm run dev');
-      throw error;
+      throw _error;
     }
 
     // Check identity service is accessible
@@ -65,7 +65,7 @@ async function globalSetup(config: FullConfig) {
       } else {
         console.warn(`⚠️  Identity service returned status: ${identityResponse.status()}`);
       }
-    } catch (error) {
+    } catch {
       console.warn(`⚠️  Identity service not accessible at ${process.env.E2E_IDENTITY_API_URL}`);
       console.warn('   OAuth tests may be skipped');
     }
@@ -78,7 +78,7 @@ async function globalSetup(config: FullConfig) {
       } else {
         console.warn(`⚠️  Backend API service returned status: ${backendResponse.status()}`);
       }
-    } catch (error) {
+    } catch {
       console.warn(`⚠️  Backend API service not accessible at ${process.env.E2E_API_BASE_URL}`);
       console.warn('   API integration tests may fail');
     }
@@ -88,14 +88,14 @@ async function globalSetup(config: FullConfig) {
       const mailhogResponse = await page.request.get(`${process.env.E2E_MAILHOG_API_URL}/api/v1/messages`);
       if (mailhogResponse.ok()) {
         console.log('✅ MailHog service is accessible for email testing');
-        
+
         // Clear any existing emails
         await page.request.delete(`${process.env.E2E_MAILHOG_API_URL}/api/v1/messages`);
         console.log('📧 Cleared existing test emails');
       } else {
         console.warn(`⚠️  MailHog service returned status: ${mailhogResponse.status()}`);
       }
-    } catch (error) {
+    } catch {
       console.warn(`⚠️  MailHog service not accessible at ${process.env.E2E_MAILHOG_API_URL}`);
       console.warn('   Email verification tests will be skipped');
       console.warn('   To enable email testing, run: docker run --rm -p 1025:1025 -p 8025:8025 mailhog/mailhog');
@@ -103,7 +103,7 @@ async function globalSetup(config: FullConfig) {
 
     // Prepare test data and cleanup any previous test artifacts
     console.log('🧹 Cleaning up previous test artifacts...');
-    
+
     // Clear browser storage
     await page.evaluate(() => {
       localStorage.clear();
@@ -122,7 +122,7 @@ async function globalSetup(config: FullConfig) {
         },
         {
           username: 'e2e_test_user_2',
-          email: 'e2e.test2@focushive.com', 
+          email: 'e2e.test2@focushive.com',
           password: 'TestPassword456!',
           firstName: 'E2E2',
           lastName: 'TestUser2',
@@ -141,20 +141,20 @@ async function globalSetup(config: FullConfig) {
             // User might already exist, which is fine
             console.log(`ℹ️  Test user ${user.username} already exists or registration failed`);
           }
-        } catch (error) {
+        } catch {
           console.log(`ℹ️  Could not prepare test user ${user.username}`);
         }
       }
-    } catch (error) {
+    } catch {
       console.warn('⚠️  Could not prepare test users - tests will use mock data');
     }
 
     // Validate authentication endpoints
     console.log('🔐 Validating authentication endpoints...');
-    
+
     const authEndpoints = [
       '/api/v1/auth/login',
-      '/api/v1/auth/register', 
+      '/api/v1/auth/register',
       '/api/v1/auth/logout',
       '/api/v1/auth/me',
       '/api/v1/auth/forgot-password',
@@ -164,7 +164,7 @@ async function globalSetup(config: FullConfig) {
       try {
         // Make a test request to see if endpoint exists
         const response = await page.request.post(`${process.env.E2E_API_BASE_URL}${endpoint}`, {
-          data: { test: true },
+          data: {test: true},
           failOnStatusCode: false,
         });
 
@@ -174,14 +174,14 @@ async function globalSetup(config: FullConfig) {
         } else {
           console.log(`✅ Auth endpoint available: ${endpoint}`);
         }
-      } catch (error) {
+      } catch {
         console.warn(`⚠️  Could not validate endpoint: ${endpoint}`);
       }
     }
 
     // Setup OAuth mock endpoints if providers are not available
     console.log('🔧 Setting up OAuth test environment...');
-    
+
     // These will be handled by individual tests with mocking
 
     console.log('✅ Authentication E2E test environment setup complete');

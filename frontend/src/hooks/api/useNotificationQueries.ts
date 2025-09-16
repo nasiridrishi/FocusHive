@@ -1,6 +1,6 @@
 /**
  * Notification Query Hooks (Placeholder)
- * 
+ *
  * TODO: Implement notification-related query hooks
  */
 

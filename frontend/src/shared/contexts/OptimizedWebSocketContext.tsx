@@ -1,13 +1,13 @@
-import React, { 
-  createContext, 
-  useContext, 
-  useEffect, 
-  useRef, 
-  useState, 
-  useCallback, 
-  useMemo 
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
 } from 'react'
-import { io, Socket } from 'socket.io-client'
+import {io, Socket} from 'socket.io-client'
 
 // eslint-disable-next-line react-refresh/only-export-components
 export enum ConnectionState {
@@ -58,15 +58,15 @@ const DEFAULT_OPTIONS = {
 }
 
 export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
-  children,
-  url = 'http://localhost:8080',
-  autoConnect = true,
-  options = DEFAULT_OPTIONS,
-}) => {
+                                                                               children,
+                                                                               url = 'http://localhost:8080',
+                                                                               autoConnect = true,
+                                                                               options = DEFAULT_OPTIONS,
+                                                                             }) => {
   const [connectionState, setConnectionState] = useState<ConnectionState>(ConnectionState.DISCONNECTED)
   const [reconnectCount, setReconnectCount] = useState(0)
   const [lastError, setLastError] = useState<string | null>(null)
-  
+
   const socketRef = useRef<Socket | null>(null)
   const reconnectTimeoutRef = useRef<number | null>(null)
   const isManualDisconnect = useRef(false)
@@ -104,7 +104,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
     clearHeartbeat()
     heartbeatIntervalRef.current = window.setInterval(() => {
       if (socketRef.current?.connected) {
-        socketRef.current.emit('heartbeat', { timestamp: Date.now() })
+        socketRef.current.emit('heartbeat', {timestamp: Date.now()})
         performanceMetricsRef.current.lastHeartbeat = Date.now()
       }
     }, mergedOptions.heartbeatInterval)
@@ -113,7 +113,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const processMessageQueue = useCallback(() => {
     if (socketRef.current?.connected && messageQueueRef.current.length > 0) {
       const messages = messageQueueRef.current.splice(0, mergedOptions.messageQueueSize)
-      messages.forEach(({ event, data }) => {
+      messages.forEach(({event, data}) => {
         socketRef.current?.emit(event, data)
         performanceMetricsRef.current.messagesSent++
       })
@@ -153,7 +153,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
     socket.on('disconnect', (reason) => {
       setConnectionState(ConnectionState.DISCONNECTED)
       clearHeartbeat()
-      
+
       if (!isManualDisconnect.current && reason !== 'io client disconnect') {
         scheduleReconnectRef.current?.()
       }
@@ -163,7 +163,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
       setConnectionState(ConnectionState.ERROR)
       setLastError(error.message)
       clearHeartbeat()
-      
+
       if (!isManualDisconnect.current) {
         scheduleReconnectRef.current?.()
       }
@@ -179,14 +179,14 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
   }, [url, mergedOptions.timeout, clearReconnectTimeout, startHeartbeat, processMessageQueue, clearHeartbeat])
 
   const scheduleReconnectRef = useRef<() => void>()
-  
+
   const scheduleReconnect = useCallback(() => {
     if (isManualDisconnect.current || reconnectCount >= mergedOptions.reconnectionAttempts) {
       return
     }
 
     clearReconnectTimeout()
-    
+
     // Exponential backoff with jitter and max cap
     const baseDelay = mergedOptions.reconnectionDelay
     const exponentialDelay = Math.min(baseDelay * Math.pow(2, reconnectCount), 30000)
@@ -194,29 +194,29 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const delay = exponentialDelay + jitter
 
     setConnectionState(ConnectionState.RECONNECTING)
-    
+
     reconnectTimeoutRef.current = window.setTimeout(() => {
       setReconnectCount(prev => prev + 1)
       connect()
     }, delay)
   }, [reconnectCount, mergedOptions.reconnectionDelay, mergedOptions.reconnectionAttempts, clearReconnectTimeout, connect])
-  
+
   scheduleReconnectRef.current = scheduleReconnect
 
   const disconnect = useCallback(() => {
     isManualDisconnect.current = true
     clearReconnectTimeout()
     clearHeartbeat()
-    
+
     // Clear throttle timers
     throttleTimersRef.current.forEach(timerId => clearTimeout(timerId))
     throttleTimersRef.current.clear()
-    
+
     if (socketRef.current) {
       socketRef.current.disconnect()
       socketRef.current = null
     }
-    
+
     setConnectionState(ConnectionState.DISCONNECTED)
     setReconnectCount(0)
     setLastError(null)
@@ -230,7 +230,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
     } else {
       // Queue message for when connection is restored
       if (messageQueueRef.current.length < mergedOptions.messageQueueSize) {
-        messageQueueRef.current.push({ event, data })
+        messageQueueRef.current.push({event, data})
       }
     }
   }, [mergedOptions.messageQueueSize])
@@ -238,15 +238,15 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
   // Performance optimization: Batch multiple emissions
   const batchEmit = useCallback((events: Array<{ event: string; data?: unknown }>) => {
     if (socketRef.current?.connected) {
-      events.forEach(({ event, data }) => {
+      events.forEach(({event, data}) => {
         socketRef.current?.emit(event, data)
         performanceMetricsRef.current.messagesSent++
       })
     } else {
       // Queue all events
-      events.forEach(({ event, data }) => {
+      events.forEach(({event, data}) => {
         if (messageQueueRef.current.length < mergedOptions.messageQueueSize) {
-          messageQueueRef.current.push({ event, data })
+          messageQueueRef.current.push({event, data})
         }
       })
     }
@@ -255,16 +255,16 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
   // Performance optimization: Throttled emissions
   const throttledEmit = useCallback((event: string, data?: unknown, delay: number = 1000) => {
     const timerId = throttleTimersRef.current.get(event)
-    
+
     if (timerId) {
       clearTimeout(timerId)
     }
-    
+
     const newTimerId = window.setTimeout(() => {
       emit(event, data)
       throttleTimersRef.current.delete(event)
     }, delay)
-    
+
     throttleTimersRef.current.set(event, newTimerId)
   }, [emit])
 
@@ -275,7 +275,7 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
         handler(...args)
       })
     }
-    
+
     // Return cleanup function
     return () => {
       if (socketRef.current) {
@@ -319,9 +319,9 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
   // Handle visibility change for optimized reconnection
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && 
-          connectionState === ConnectionState.DISCONNECTED && 
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === 'visible' &&
+          connectionState === ConnectionState.DISCONNECTED &&
           !isManualDisconnect.current) {
         // Small delay to allow network to stabilize
         setTimeout(connect, 1000)
@@ -363,9 +363,9 @@ export const OptimizedWebSocketProvider: React.FC<WebSocketProviderProps> = ({
   ])
 
   return (
-    <WebSocketContext.Provider value={value}>
-      {children}
-    </WebSocketContext.Provider>
+      <WebSocketContext.Provider value={value}>
+        {children}
+      </WebSocketContext.Provider>
   )
 }
 

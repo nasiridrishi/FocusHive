@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.focushive.presence.storage.PresenceStorageService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ public class PresenceServiceImpl implements PresenceService {
     private static final String PRESENCE_CHANNEL = "presence:updates";
     private static final String SESSION_CHANNEL = "presence:sessions";
     
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final PresenceStorageService storageService;
     private final SimpMessagingTemplate messagingTemplate;
     private final HiveMemberRepository hiveMemberRepository;
     
@@ -57,9 +57,8 @@ public class PresenceServiceImpl implements PresenceService {
                 .currentHiveId(update.hiveId())
                 .build();
         
-        // Store in Redis with expiration
-        String key = USER_PRESENCE_KEY + userId;
-        redisTemplate.opsForValue().set(key, presence, heartbeatTimeoutSeconds * 2, TimeUnit.SECONDS);
+        // Store presence with expiration
+        storageService.storeUserPresence(userId, presence, Duration.ofSeconds(heartbeatTimeoutSeconds * 2));
         
         // Update heartbeat
         recordHeartbeat(userId);
@@ -72,23 +71,20 @@ public class PresenceServiceImpl implements PresenceService {
     
     @Override
     public UserPresence getUserPresence(String userId) {
-        String key = USER_PRESENCE_KEY + userId;
-        return (UserPresence) redisTemplate.opsForValue().get(key);
+        return storageService.getUserPresence(userId);
     }
     
     @Override
     public void recordHeartbeat(String userId) {
         // Update heartbeat timestamp using separate key for efficient tracking
-        String heartbeatKey = HEARTBEAT_KEY + userId;
-        redisTemplate.opsForValue().set(heartbeatKey, Instant.now().toEpochMilli(), 
-                heartbeatTimeoutSeconds, TimeUnit.SECONDS);
+        storageService.storeHeartbeat(userId, Instant.now().toEpochMilli(),
+                Duration.ofSeconds(heartbeatTimeoutSeconds));
         
         // Update presence last seen if exists
         UserPresence presence = getUserPresence(userId);
         if (presence != null) {
             presence.setLastSeen(Instant.now());
-            String key = USER_PRESENCE_KEY + userId;
-            redisTemplate.opsForValue().set(key, presence, heartbeatTimeoutSeconds * 2, TimeUnit.SECONDS);
+            storageService.storeUserPresence(userId, presence, Duration.ofSeconds(heartbeatTimeoutSeconds * 2));
         }
     }
     
@@ -101,10 +97,8 @@ public class PresenceServiceImpl implements PresenceService {
             throw new IllegalArgumentException("User is not a member of this hive");
         }
         
-        // Add user to hive presence set using Redis SET operations
-        String hiveSetKey = HIVE_PRESENCE_SET_KEY + hiveId;
-        redisTemplate.opsForSet().add(hiveSetKey, userId);
-        redisTemplate.expire(hiveSetKey, 1, TimeUnit.HOURS);
+        // Add user to hive presence set
+        storageService.addUserToHive(hiveId, userId);
         
         // Publish join event to Redis pub/sub
         publishPresenceEvent("JOIN", hiveId, userId);
@@ -125,15 +119,8 @@ public class PresenceServiceImpl implements PresenceService {
     public HivePresenceInfo leaveHivePresence(String hiveId, String userId) {
         log.info("User {} leaving hive {} presence", userId, hiveId);
         
-        // Remove user from hive presence set using Redis SET operations
-        String hiveSetKey = HIVE_PRESENCE_SET_KEY + hiveId;
-        redisTemplate.opsForSet().remove(hiveSetKey, userId);
-        
-        // Check if set is empty and clean up if needed
-        Long setSize = redisTemplate.opsForSet().size(hiveSetKey);
-        if (setSize != null && setSize == 0) {
-            redisTemplate.delete(hiveSetKey);
-        }
+        // Remove user from hive presence set
+        storageService.removeUserFromHive(hiveId, userId);
         
         // Publish leave event to Redis pub/sub
         publishPresenceEvent("LEAVE", hiveId, userId);
@@ -190,17 +177,13 @@ public class PresenceServiceImpl implements PresenceService {
                 .build();
         
         // Store session
-        String sessionKey = SESSION_KEY + session.getSessionId();
-        redisTemplate.opsForValue().set(sessionKey, session, durationMinutes * 2, TimeUnit.MINUTES);
-        
+        storageService.storeFocusSession(session.getSessionId(), session, Duration.ofMinutes(durationMinutes * 2));
+
         // Map user to session
-        String userSessionKey = USER_SESSION_KEY + userId + ":session";
-        redisTemplate.opsForValue().set(userSessionKey, session.getSessionId(), durationMinutes * 2, TimeUnit.MINUTES);
-        
+        storageService.mapUserToSession(userId, session.getSessionId(), Duration.ofMinutes(durationMinutes * 2));
+
         // Add session to hive sessions set
-        String hiveSessionsKey = HIVE_SESSIONS_KEY + hiveId;
-        redisTemplate.opsForSet().add(hiveSessionsKey, session.getSessionId());
-        redisTemplate.expire(hiveSessionsKey, durationMinutes * 2, TimeUnit.MINUTES);
+        storageService.addSessionToHive(hiveId, session.getSessionId());
         
         // Publish session start event
         publishSessionEvent("START", session);
@@ -209,8 +192,7 @@ public class PresenceServiceImpl implements PresenceService {
         UserPresence presence = getUserPresence(userId);
         if (presence != null) {
             presence.setInFocusSession(true);
-            String presenceKey = USER_PRESENCE_KEY + userId;
-            redisTemplate.opsForValue().set(presenceKey, presence, heartbeatTimeoutSeconds * 2, TimeUnit.SECONDS);
+            storageService.storeUserPresence(userId, presence, Duration.ofSeconds(heartbeatTimeoutSeconds * 2));
         }
         
         // Broadcast session start
@@ -235,8 +217,7 @@ public class PresenceServiceImpl implements PresenceService {
         log.info("Ending focus session {} for user {}", sessionId, userId);
         
         // Get session
-        String sessionKey = SESSION_KEY + sessionId;
-        FocusSession session = (FocusSession) redisTemplate.opsForValue().get(sessionKey);
+        FocusSession session = storageService.getFocusSession(sessionId);
         
         if (session == null || !session.getUserId().equals(userId)) {
             throw new IllegalArgumentException("Session not found or not owned by user");
@@ -251,16 +232,14 @@ public class PresenceServiceImpl implements PresenceService {
         session.setActualDurationMinutes((int) actualMinutes);
         
         // Store updated session for 1 hour for retrieval
-        redisTemplate.opsForValue().set(sessionKey, session, 1, TimeUnit.HOURS);
-        
+        storageService.storeFocusSession(sessionId, session, Duration.ofHours(1));
+
         // Remove user session mapping
-        String userSessionKey = USER_SESSION_KEY + userId + ":session";
-        redisTemplate.delete(userSessionKey);
-        
+        storageService.removeUserSessionMapping(userId);
+
         // Remove session from hive sessions set
         if (session.getHiveId() != null) {
-            String hiveSessionsKey = HIVE_SESSIONS_KEY + session.getHiveId();
-            redisTemplate.opsForSet().remove(hiveSessionsKey, sessionId);
+            storageService.removeSessionFromHive(session.getHiveId(), sessionId);
         }
         
         // Publish session end event
@@ -270,8 +249,7 @@ public class PresenceServiceImpl implements PresenceService {
         UserPresence presence = getUserPresence(userId);
         if (presence != null) {
             presence.setInFocusSession(false);
-            String presenceKey = USER_PRESENCE_KEY + userId;
-            redisTemplate.opsForValue().set(presenceKey, presence, heartbeatTimeoutSeconds * 2, TimeUnit.SECONDS);
+            storageService.storeUserPresence(userId, presence, Duration.ofSeconds(heartbeatTimeoutSeconds * 2));
         }
         
         // Broadcast session end
@@ -293,15 +271,13 @@ public class PresenceServiceImpl implements PresenceService {
     
     @Override
     public FocusSession getActiveFocusSession(String userId) {
-        String userSessionKey = USER_SESSION_KEY + userId + ":session";
-        String sessionId = (String) redisTemplate.opsForValue().get(userSessionKey);
-        
+        String sessionId = storageService.getUserSessionId(userId);
+
         if (sessionId == null) {
             return null;
         }
-        
-        String sessionKey = SESSION_KEY + sessionId;
-        return (FocusSession) redisTemplate.opsForValue().get(sessionKey);
+
+        return storageService.getFocusSession(sessionId);
     }
     
     @Override
@@ -309,18 +285,15 @@ public class PresenceServiceImpl implements PresenceService {
         List<FocusSession> sessions = new ArrayList<>();
         
         // Use hive sessions set for more efficient retrieval
-        String hiveSessionsKey = HIVE_SESSIONS_KEY + hiveId;
-        Set<Object> sessionIds = redisTemplate.opsForSet().members(hiveSessionsKey);
-        
+        Set<String> sessionIds = storageService.getHiveSessions(hiveId);
+
         if (sessionIds == null || sessionIds.isEmpty()) {
             return sessions;
         }
-        
+
         // Get session details for each ID
-        for (Object sessionIdObj : sessionIds) {
-            String sessionId = sessionIdObj.toString();
-            String sessionKey = SESSION_KEY + sessionId;
-            FocusSession session = (FocusSession) redisTemplate.opsForValue().get(sessionKey);
+        for (String sessionId : sessionIds) {
+            FocusSession session = storageService.getFocusSession(sessionId);
             if (session != null) {
                 sessions.add(session);
             }
@@ -338,18 +311,19 @@ public class PresenceServiceImpl implements PresenceService {
         }
         
         // Get all user presence keys
-        Set<String> userKeys = redisTemplate.keys(USER_PRESENCE_KEY + "*");
-        if (userKeys == null) {
+        Set<String> userKeys = storageService.getAllUserPresenceKeys();
+        if (userKeys == null || userKeys.isEmpty()) {
             return;
         }
         
         Instant staleThreshold = Instant.now().minusSeconds(heartbeatTimeoutSeconds);
         
         for (String key : userKeys) {
-            UserPresence presence = (UserPresence) redisTemplate.opsForValue().get(key);
+            String userId = key.replace(USER_PRESENCE_KEY, "");
+            UserPresence presence = storageService.getUserPresence(userId);
             if (presence != null && presence.getLastSeen().isBefore(staleThreshold)) {
                 log.info("Removing stale presence for user {}", presence.getUserId());
-                redisTemplate.delete(key);
+                storageService.deleteUserPresence(userId);
                 
                 // Remove from any hives
                 if (presence.getCurrentHiveId() != null) {
@@ -371,8 +345,7 @@ public class PresenceServiceImpl implements PresenceService {
             presence.setLastSeen(Instant.now());
             
             // Store briefly for any final notifications
-            String key = USER_PRESENCE_KEY + userId;
-            redisTemplate.opsForValue().set(key, presence, 10, TimeUnit.SECONDS);
+            storageService.storeUserPresence(userId, presence, Duration.ofSeconds(10));
             
             // Remove from any hives
             if (presence.getCurrentHiveId() != null) {
@@ -389,7 +362,7 @@ public class PresenceServiceImpl implements PresenceService {
             broadcastPresenceUpdate(presence, presence.getCurrentHiveId());
             
             // Delete presence after broadcast
-            redisTemplate.delete(key);
+            storageService.deleteUserPresence(userId);
         }
     }
     
@@ -420,51 +393,34 @@ public class PresenceServiceImpl implements PresenceService {
     }
     
     private Set<String> getHiveUserIds(String hiveId) {
-        String hiveSetKey = HIVE_PRESENCE_SET_KEY + hiveId;
-        Set<Object> userIds = redisTemplate.opsForSet().members(hiveSetKey);
-        
-        if (userIds == null) {
-            return new HashSet<>();
-        }
-        
-        return userIds.stream()
-                .map(Object::toString)
-                .collect(Collectors.toSet());
+        return storageService.getHiveUsers(hiveId);
     }
     
     /**
      * Publishes presence events to Redis pub/sub for distributed messaging.
      */
     private void publishPresenceEvent(String eventType, String hiveId, String userId) {
-        try {
-            Map<String, Object> event = Map.of(
-                "type", eventType,
-                "hiveId", hiveId,
-                "userId", userId,
-                "timestamp", Instant.now().toEpochMilli()
-            );
-            redisTemplate.convertAndSend(PRESENCE_CHANNEL, event);
-        } catch (Exception e) {
-            log.warn("Failed to publish presence event: {}", e.getMessage());
-        }
+        Map<String, Object> event = Map.of(
+            "type", eventType,
+            "hiveId", hiveId,
+            "userId", userId,
+            "timestamp", Instant.now().toEpochMilli()
+        );
+        storageService.publishPresenceEvent(PRESENCE_CHANNEL, event);
     }
     
     /**
      * Publishes session events to Redis pub/sub for distributed messaging.
      */
     private void publishSessionEvent(String eventType, FocusSession session) {
-        try {
-            Map<String, Object> event = Map.of(
-                "type", eventType,
-                "sessionId", session.getSessionId(),
-                "userId", session.getUserId(),
-                "hiveId", session.getHiveId() != null ? session.getHiveId() : "",
-                "timestamp", Instant.now().toEpochMilli()
-            );
-            redisTemplate.convertAndSend(SESSION_CHANNEL, event);
-        } catch (Exception e) {
-            log.warn("Failed to publish session event: {}", e.getMessage());
-        }
+        Map<String, Object> event = Map.of(
+            "type", eventType,
+            "sessionId", session.getSessionId(),
+            "userId", session.getUserId(),
+            "hiveId", session.getHiveId() != null ? session.getHiveId() : "",
+            "timestamp", Instant.now().toEpochMilli()
+        );
+        storageService.publishPresenceEvent(SESSION_CHANNEL, event);
     }
     
     /**
@@ -472,7 +428,7 @@ public class PresenceServiceImpl implements PresenceService {
      */
     private boolean isHeartbeatActive(String userId) {
         String heartbeatKey = HEARTBEAT_KEY + userId;
-        return redisTemplate.hasKey(heartbeatKey);
+        return storageService.hasKey(heartbeatKey);
     }
     
     private HivePresenceInfo buildHivePresenceInfo(String hiveId) {

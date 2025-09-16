@@ -1,24 +1,24 @@
 /**
  * Enhanced Responsive Layout System
- * 
+ *
  * Updated AppLayout component that integrates all the new responsive features
  * and provides a unified layout experience across all screen sizes
  */
 
-import React, { useState, useEffect } from 'react'
-import { Box, useTheme } from '@mui/material'
-import { Outlet, useLocation } from 'react-router-dom'
-import { 
-  Home as HomeIcon, 
-  Dashboard as DashboardIcon, 
-  Business as BusinessIcon, 
-  Assignment as AssignmentIcon, 
-  Search as SearchIcon, 
-  Chat as ChatIcon 
+import React, {useEffect, useState} from 'react'
+import {Box, useTheme} from '@mui/material'
+import {Outlet, useLocation} from 'react-router-dom'
+import {
+  Assignment as AssignmentIcon,
+  Business as BusinessIcon,
+  Chat as ChatIcon,
+  Dashboard as DashboardIcon,
+  Home as HomeIcon,
+  Search as SearchIcon
 } from '@mui/icons-material'
-import { AdaptiveNavigation } from './AdaptiveNavigation'
-import { ResponsiveContainer } from './ResponsiveContainer'
-import { useResponsive, useScrollDirection, useDynamicViewportHeight } from '../hooks'
+import {AdaptiveNavigation} from './AdaptiveNavigation'
+import {ResponsiveContainer} from './ResponsiveContainer'
+import {useDynamicViewportHeight, useResponsive, useScrollDirection} from '../hooks'
 
 interface ResponsiveLayoutProps {
   children?: React.ReactNode
@@ -32,17 +32,17 @@ interface ResponsiveLayoutProps {
 }
 
 export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
-  children,
-  currentUser,
-  isConnected = true,
-  notificationCount = 0,
-}) => {
+                                                                    children,
+                                                                    currentUser,
+                                                                    isConnected = true,
+                                                                    notificationCount = 0,
+                                                                  }) => {
   const theme = useTheme()
   const location = useLocation()
-  const { isMobile, isTablet, isDesktop } = useResponsive()
+  const {isMobile, isTablet, isDesktop} = useResponsive()
   const scrollDirection = useScrollDirection()
-  const { height: viewportHeight } = useDynamicViewportHeight()
-  
+  const {height: viewportHeight} = useDynamicViewportHeight()
+
   // Layout state
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const [contentPadding, setContentPadding] = useState({
@@ -51,7 +51,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
     left: 0,
     right: 0,
   })
-  
+
   // Update layout when screen size changes
   useEffect(() => {
     if (isMobile) {
@@ -80,43 +80,43 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
       })
     }
   }, [isMobile, isTablet])
-  
+
   // Check if we're on authentication pages (no layout needed)
   const isAuthPage = ['/login', '/register'].includes(location.pathname)
   const isLandingPage = location.pathname === '/'
-  
+
   // Navigation items configuration
   const navigationItems = [
     {
       id: 'home',
       label: 'Home',
-      icon: <HomeIcon />,
+      icon: <HomeIcon/>,
       path: '/',
     },
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: <DashboardIcon />,
+      icon: <DashboardIcon/>,
       path: '/dashboard',
       requiresAuth: true,
     },
     {
       id: 'hives',
       label: 'Hives',
-      icon: <BusinessIcon />,
+      icon: <BusinessIcon/>,
       path: '/hives',
       requiresAuth: true,
       children: [
         {
           id: 'my-hives',
           label: 'My Hives',
-          icon: <AssignmentIcon />,
+          icon: <AssignmentIcon/>,
           path: '/hives/my',
         },
         {
           id: 'discover',
           label: 'Discover',
-          icon: <SearchIcon />,
+          icon: <SearchIcon/>,
           path: '/hives/discover',
         },
       ],
@@ -124,7 +124,7 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
     {
       id: 'chat',
       label: 'Chat',
-      icon: <ChatIcon />,
+      icon: <ChatIcon/>,
       path: '/chat',
       badge: 3,
       requiresAuth: true,
@@ -137,93 +137,94 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
       requiresAuth: true,
     },
   ]
-  
+
   // Render minimal layout for auth pages
   if (isAuthPage || isLandingPage) {
     return (
-      <Box
-        id="main-content"
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-          backgroundColor: 'background.default',
-        }}
-      >
-        {children || <Outlet />}
-      </Box>
+        <Box
+            id="main-content"
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '100vh',
+              backgroundColor: 'background.default',
+            }}
+        >
+          {children || <Outlet/>}
+        </Box>
     )
   }
-  
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        backgroundColor: 'background.default',
-        // Set CSS custom property for dynamic viewport height
-        '--vh': `${viewportHeight / 100}px`,
-      }}
-    >
-      {/* Adaptive Navigation System */}
-      <AdaptiveNavigation
-        items={navigationItems}
-        currentUser={currentUser}
-        isConnected={isConnected}
-        notificationCount={notificationCount}
-        onNotificationClick={() => {}}
-      />
-      
-      {/* Main Content Area */}
       <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          transition: theme.transitions.create(['margin', 'padding'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          // Dynamic padding based on layout state with safe areas
-          paddingTop: `${contentPadding.top}px`,
-          paddingLeft: `max(env(safe-area-inset-left), ${isDesktop && sidebarOpen ? contentPadding.left : 0}px)`,
-          paddingRight: `max(env(safe-area-inset-right), ${contentPadding.right}px)`,
-          paddingBottom: `max(env(safe-area-inset-bottom), ${contentPadding.bottom}px)`,
-          // Ensure content doesn't go below viewport fold
-          minHeight: `calc(100vh - ${contentPadding.top + contentPadding.bottom}px)`,
-        }}
-      >
-        {/* Content Container */}
-        <ResponsiveContainer
-          id="main-content"
-          maxWidth="desktopLg"
-          fluidPadding={true}
-          contentType="dashboard"
           sx={{
-            minHeight: '100%',
             display: 'flex',
             flexDirection: 'column',
+            minHeight: '100vh',
+            backgroundColor: 'background.default',
+            // Set CSS custom property for dynamic viewport height
+            '--vh': `${viewportHeight / 100}px`,
           }}
-        >
-          {children || <Outlet />}
-        </ResponsiveContainer>
-      </Box>
-      
-      {/* Scroll-to-top button */}
-      {scrollDirection === 'up' && (
+      >
+        {/* Adaptive Navigation System */}
+        <AdaptiveNavigation
+            items={navigationItems}
+            currentUser={currentUser}
+            isConnected={isConnected}
+            notificationCount={notificationCount}
+            onNotificationClick={() => {
+            }}
+        />
+
+        {/* Main Content Area */}
         <Box
-          sx={{
-            position: 'fixed',
-            bottom: isMobile ? theme.spacing(10) : theme.spacing(4),
-            right: theme.spacing(2),
-            zIndex: theme.zIndex.fab,
-            display: { xs: 'block', md: 'none' }, // Show only on smaller screens
-          }}
+            component="main"
+            sx={{
+              flexGrow: 1,
+              transition: theme.transitions.create(['margin', 'padding'], {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.leavingScreen,
+              }),
+              // Dynamic padding based on layout state with safe areas
+              paddingTop: `${contentPadding.top}px`,
+              paddingLeft: `max(env(safe-area-inset-left), ${isDesktop && sidebarOpen ? contentPadding.left : 0}px)`,
+              paddingRight: `max(env(safe-area-inset-right), ${contentPadding.right}px)`,
+              paddingBottom: `max(env(safe-area-inset-bottom), ${contentPadding.bottom}px)`,
+              // Ensure content doesn't go below viewport fold
+              minHeight: `calc(100vh - ${contentPadding.top + contentPadding.bottom}px)`,
+            }}
         >
-          {/* Scroll to top functionality would be implemented here */}
+          {/* Content Container */}
+          <ResponsiveContainer
+              id="main-content"
+              maxWidth="desktopLg"
+              fluidPadding={true}
+              contentType="dashboard"
+              sx={{
+                minHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+          >
+            {children || <Outlet/>}
+          </ResponsiveContainer>
         </Box>
-      )}
-    </Box>
+
+        {/* Scroll-to-top button */}
+        {scrollDirection === 'up' && (
+            <Box
+                sx={{
+                  position: 'fixed',
+                  bottom: isMobile ? theme.spacing(10) : theme.spacing(4),
+                  right: theme.spacing(2),
+                  zIndex: theme.zIndex.fab,
+                  display: {xs: 'block', md: 'none'}, // Show only on smaller screens
+                }}
+            >
+              {/* Scroll to top functionality would be implemented here */}
+            </Box>
+        )}
+      </Box>
   )
 }
 
@@ -236,89 +237,89 @@ export const PageLayout: React.FC<{
   maxWidth?: 'mobile' | 'tablet' | 'desktop' | 'desktopLg' | false
   spacing?: 'compact' | 'normal' | 'spacious'
 }> = ({
-  title,
-  subtitle,
-  actions,
-  children,
-  maxWidth = 'desktop',
-  spacing = 'normal',
-}) => {
+        title,
+        subtitle,
+        actions,
+        children,
+        maxWidth = 'desktop',
+        spacing = 'normal',
+      }) => {
   const spacingMap = {
-    compact: { mobile: 2, tablet: 3, desktop: 4 },
-    normal: { mobile: 3, tablet: 4, desktop: 6 },
-    spacious: { mobile: 4, tablet: 6, desktop: 8 },
+    compact: {mobile: 2, tablet: 3, desktop: 4},
+    normal: {mobile: 3, tablet: 4, desktop: 6},
+    spacious: {mobile: 4, tablet: 6, desktop: 8},
   }
-  
+
   return (
-    <Box
-      sx={{
-        width: '100%',
-        ...(maxWidth && {
-          maxWidth: theme => theme.breakpoints.values[maxWidth],
-          mx: 'auto',
-        }),
-        py: (theme) => ({
-          xs: theme.spacing(spacingMap[spacing].mobile),
-          sm: theme.spacing(spacingMap[spacing].tablet),
-          md: theme.spacing(spacingMap[spacing].desktop),
-        }),
-      }}
-    >
-      {/* Page Header */}
-      {(title || subtitle || actions) && (
-        <Box
+      <Box
           sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            justifyContent: 'space-between',
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            gap: 2,
-            mb: 4,
+            width: '100%',
+            ...(maxWidth && {
+              maxWidth: theme => theme.breakpoints.values[maxWidth],
+              mx: 'auto',
+            }),
+            py: (theme) => ({
+              xs: theme.spacing(spacingMap[spacing].mobile),
+              sm: theme.spacing(spacingMap[spacing].tablet),
+              md: theme.spacing(spacingMap[spacing].desktop),
+            }),
           }}
-        >
-          <Box>
-            {title && (
-              <Box
-                component="h1"
+      >
+        {/* Page Header */}
+        {(title || subtitle || actions) && (
+            <Box
                 sx={{
-                  fontSize: { xs: '1.75rem', sm: '2.125rem', md: '2.5rem' },
-                  fontWeight: 700,
-                  lineHeight: 1.2,
-                  margin: 0,
-                  marginBottom: subtitle ? 1 : 0,
-                  color: 'text.primary',
+                  display: 'flex',
+                  flexDirection: {xs: 'column', sm: 'row'},
+                  justifyContent: 'space-between',
+                  alignItems: {xs: 'flex-start', sm: 'center'},
+                  gap: 2,
+                  mb: 4,
                 }}
-              >
-                {title}
+            >
+              <Box>
+                {title && (
+                    <Box
+                        component="h1"
+                        sx={{
+                          fontSize: {xs: '1.75rem', sm: '2.125rem', md: '2.5rem'},
+                          fontWeight: 700,
+                          lineHeight: 1.2,
+                          margin: 0,
+                          marginBottom: subtitle ? 1 : 0,
+                          color: 'text.primary',
+                        }}
+                    >
+                      {title}
+                    </Box>
+                )}
+                {subtitle && (
+                    <Box
+                        component="p"
+                        sx={{
+                          fontSize: {xs: '1rem', sm: '1.125rem'},
+                          color: 'text.secondary',
+                          margin: 0,
+                          lineHeight: 1.5,
+                        }}
+                    >
+                      {subtitle}
+                    </Box>
+                )}
               </Box>
-            )}
-            {subtitle && (
-              <Box
-                component="p"
-                sx={{
-                  fontSize: { xs: '1rem', sm: '1.125rem' },
-                  color: 'text.secondary',
-                  margin: 0,
-                  lineHeight: 1.5,
-                }}
-              >
-                {subtitle}
-              </Box>
-            )}
-          </Box>
-          {actions && (
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {actions}
+              {actions && (
+                  <Box sx={{display: 'flex', gap: 1, flexWrap: 'wrap'}}>
+                    {actions}
+                  </Box>
+              )}
             </Box>
-          )}
+        )}
+
+        {/* Page Content */}
+        <Box>
+          {children}
         </Box>
-      )}
-      
-      {/* Page Content */}
-      <Box>
-        {children}
       </Box>
-    </Box>
   )
 }
 

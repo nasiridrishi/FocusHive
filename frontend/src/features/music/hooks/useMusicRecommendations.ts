@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react'
-import { Track, SessionRecommendationRequest, MoodState, TaskType } from '../types'
-import { musicApi } from '../services'
-import { useMusic } from '../context'
+import {useCallback, useEffect, useState} from 'react'
+import {MoodState, SessionRecommendationRequest, TaskType, Track} from '../types'
+import {musicApi} from '../services'
+import {useMusic} from '../context'
 
 interface UseRecommendationsOptions {
   autoRefresh?: boolean
@@ -23,8 +23,8 @@ interface RecommendationState {
  */
 export const useMusicRecommendations = (options: UseRecommendationsOptions = {}) => {
   const musicContext = useMusic()
-  const { state } = musicContext
-  const { queue, currentMood, currentTrack } = state
+  const {state} = musicContext
+  const {queue, currentMood, currentTrack} = state
   const [recommendationState, setRecommendationState] = useState<RecommendationState>({
     recommendations: [],
     isLoading: false,
@@ -33,13 +33,13 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
     source: null,
   })
 
-  const { autoRefresh = false, refreshInterval = 5 * 60 * 1000, hiveId } = options
+  const {autoRefresh = false, refreshInterval = 5 * 60 * 1000, hiveId} = options
 
   // Get session-based recommendations
   const getSessionRecommendations = useCallback(async (request: SessionRecommendationRequest) => {
     try {
-      setRecommendationState(prev => ({ ...prev, isLoading: true, error: null }))
-      
+      setRecommendationState(prev => ({...prev, isLoading: true, error: null}))
+
       const recommendations = await musicApi.getSessionRecommendations({
         hiveId: hiveId || request.hiveId,
         mood: request.mood || currentMood?.mood,
@@ -72,8 +72,8 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
   // Get personalized recommendations
   const getPersonalizedRecommendations = useCallback(async (limit = 20) => {
     try {
-      setRecommendationState(prev => ({ ...prev, isLoading: true, error: null }))
-      
+      setRecommendationState(prev => ({...prev, isLoading: true, error: null}))
+
       const recommendations = await musicApi.getPersonalizedRecommendations(limit)
 
       setRecommendationState({
@@ -99,8 +99,8 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
   // Get similar tracks
   const getSimilarTracks = useCallback(async (trackId: string, limit = 10) => {
     try {
-      setRecommendationState(prev => ({ ...prev, isLoading: true, error: null }))
-      
+      setRecommendationState(prev => ({...prev, isLoading: true, error: null}))
+
       const recommendations = await musicApi.getSimilarTracks(trackId, limit)
 
       setRecommendationState({
@@ -155,8 +155,8 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
 
   // Refresh current recommendations
   const refreshRecommendations = useCallback(async () => {
-    const { source } = recommendationState
-    
+    const {source} = recommendationState
+
     switch (source) {
       case 'session':
         return getContextualRecommendations()
@@ -191,8 +191,8 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
     genres?: string[]
     excludeIds?: string[]
   }) => {
-    const { recommendations } = recommendationState
-    
+    const {recommendations} = recommendationState
+
     return recommendations.filter(track => {
       if (criteria.minDuration && track.duration < criteria.minDuration) return false
       if (criteria.maxDuration && track.duration > criteria.maxDuration) return false
@@ -245,7 +245,7 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
   const getSmartSuggestions = useCallback(async () => {
     const now = new Date()
     const hour = now.getHours()
-    
+
     // Morning: energetic tracks
     if (hour >= 6 && hour < 12) {
       return getEnergyBoostRecommendations()
@@ -275,32 +275,32 @@ export const useMusicRecommendations = (options: UseRecommendationsOptions = {})
   return {
     // State
     ...recommendationState,
-    
+
     // Core functions
     getSessionRecommendations,
     getPersonalizedRecommendations,
     getSimilarTracks,
-    
+
     // Context-aware functions
     getMoodRecommendations,
     getTaskRecommendations,
     getContextualRecommendations,
-    
+
     // Utility functions
     refreshRecommendations,
     clearRecommendations,
     filterRecommendations,
-    
+
     // Preset recommendations
     getEnergyBoostRecommendations,
     getFocusRecommendations,
     getBreakRecommendations,
     getSmartSuggestions,
-    
+
     // Helper computed values
     hasRecommendations: recommendationState.recommendations.length > 0,
-    isStale: recommendationState.lastUpdated 
-      ? Date.now() - recommendationState.lastUpdated.getTime() > refreshInterval 
-      : false,
+    isStale: recommendationState.lastUpdated
+        ? Date.now() - recommendationState.lastUpdated.getTime() > refreshInterval
+        : false,
   }
 }

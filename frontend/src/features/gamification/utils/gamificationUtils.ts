@@ -1,21 +1,21 @@
 import React from 'react';
-import type { SvgIconProps } from '@mui/material/SvgIcon';
+import type {SvgIconProps} from '@mui/material/SvgIcon';
 import {
   Adjust as TargetIcon,
-  Handshake as HandshakeIcon,
   CalendarMonth as CalendarIcon,
   EmojiEvents as TrophyIcon,
-  Star as StarIcon,
+  Handshake as HandshakeIcon,
   MilitaryTech as MedalIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import type {
   Achievement,
+  AchievementCategory,
+  AchievementRarity,
+  GamificationStats,
+  LeaderboardEntry,
   Streak,
   StreakType,
-  AchievementRarity,
-  AchievementCategory,
-  LeaderboardEntry,
-  GamificationStats,
 } from '../types/gamification';
 
 /**
@@ -31,14 +31,14 @@ export const formatPoints = (points: number | null | undefined): string => {
  */
 export const formatStreakType = (type: StreakType | null): string => {
   if (!type) return 'Unknown Type';
-  
+
   const typeMap: Record<StreakType, string> = {
     daily_login: 'Daily Login',
     focus_session: 'Focus Session',
     goal_completion: 'Goal Completion',
     hive_participation: 'Hive Participation',
   };
-  
+
   return typeMap[type] || 'Unknown Type';
 };
 
@@ -73,7 +73,7 @@ export const getRarityColor = (rarity: AchievementRarity): string => {
     epic: '#9C27B0',
     legendary: '#FF9800',
   };
-  
+
   return colorMap[rarity] || colorMap.common;
 };
 
@@ -88,7 +88,7 @@ export const getCategoryIcon = (category: AchievementCategory): React.ComponentT
     milestone: TrophyIcon,
     special: StarIcon,
   };
-  
+
   return iconMap[category] || MedalIcon;
 };
 
@@ -112,15 +112,15 @@ export const getAchievementProgress = (achievement: Achievement): number => {
  * Calculates hours until a streak breaks
  */
 export const calculateTimeUntilStreakBreaks = (
-  streak: Streak,
-  currentTime: Date = new Date()
+    streak: Streak,
+    currentTime: Date = new Date()
 ): number => {
   if (!streak.isActive || !streak.lastActivity) return 0;
-  
+
   const lastActivity = new Date(streak.lastActivity);
   const hoursElapsed = (currentTime.getTime() - lastActivity.getTime()) / (1000 * 60 * 60);
   const hoursUntilBreak = 24 - (hoursElapsed % 24);
-  
+
   return Math.max(0, Math.floor(hoursUntilBreak));
 };
 
@@ -137,8 +137,8 @@ export const formatRankChange = (change: number | undefined): string => {
  * Finds user position in leaderboard
  */
 export const getLeaderboardPosition = (
-  entries: LeaderboardEntry[],
-  userId: string
+    entries: LeaderboardEntry[],
+    userId: string
 ): number => {
   const position = entries.findIndex(entry => entry.user.id === userId);
   return position >= 0 ? position + 1 : -1;
@@ -157,8 +157,8 @@ export const calculatePointsForLevel = (level: number): number => {
  * Filters achievements by category
  */
 export const getAchievementsByCategory = (
-  achievements: Achievement[],
-  category: AchievementCategory
+    achievements: Achievement[],
+    category: AchievementCategory
 ): Achievement[] => {
   return achievements.filter(achievement => achievement.category === category);
 };
@@ -181,7 +181,7 @@ export const sortAchievementsByRarity = (achievements: Achievement[]): Achieveme
     uncommon: 3,
     common: 4,
   };
-  
+
   return [...achievements].sort((a, b) => {
     return rarityOrder[a.rarity] - rarityOrder[b.rarity];
   });
@@ -191,8 +191,8 @@ export const sortAchievementsByRarity = (achievements: Achievement[]): Achieveme
  * Calculates days since last activity
  */
 export const calculateDaysActive = (
-  lastActivity: Date,
-  currentTime: Date = new Date()
+    lastActivity: Date,
+    currentTime: Date = new Date()
 ): number => {
   const diffTime = currentTime.getTime() - lastActivity.getTime();
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -202,14 +202,14 @@ export const calculateDaysActive = (
  * Checks if streak is about to break (within 6 hours)
  */
 export const isStreakAboutToBreak = (
-  streak: Streak,
-  currentTime: Date = new Date()
+    streak: Streak,
+    currentTime: Date = new Date()
 ): boolean => {
   if (!streak.isActive || !streak.lastActivity) return false;
-  
+
   const lastActivity = new Date(streak.lastActivity);
   const hoursElapsed = (currentTime.getTime() - lastActivity.getTime()) / (1000 * 60 * 60);
-  
+
   // If more than 18 hours have passed since last activity, it's about to break
   return hoursElapsed >= 18 && hoursElapsed < 24;
 };
@@ -220,7 +220,7 @@ export const isStreakAboutToBreak = (
 export const getNextAchievement = (achievements: Achievement[]): Achievement | null => {
   const locked = achievements.filter(a => !a.isUnlocked);
   if (locked.length === 0) return null;
-  
+
   // Prioritize achievements with progress
   const withProgress = locked.filter(a => a.progress && a.progress > 0);
   if (withProgress.length > 0) {
@@ -230,7 +230,7 @@ export const getNextAchievement = (achievements: Achievement[]): Achievement | n
       return progressB - progressA; // Highest progress first
     })[0];
   }
-  
+
   // Otherwise, return lowest point achievement
   return locked.sort((a, b) => a.points - b.points)[0];
 };
@@ -247,35 +247,35 @@ export const calculateEfficiencyScore = (stats: GamificationStats): number => {
     rank,
     totalUsers,
   } = stats;
-  
+
   // Points efficiency (30%)
   const maxExpectedPoints = calculatePointsForLevel(level + 5);
   const pointsScore = Math.min(100, (points.total / maxExpectedPoints) * 100);
-  
+
   // Achievement completion (25%)
   const unlockedCount = achievements.filter(a => a.isUnlocked).length;
-  const achievementScore = achievements.length > 0 
-    ? (unlockedCount / achievements.length) * 100 
-    : 0;
-  
+  const achievementScore = achievements.length > 0
+      ? (unlockedCount / achievements.length) * 100
+      : 0;
+
   // Streak maintenance (25%)
   const activeCount = streaks.filter(s => s.isActive).length;
-  const streakScore = streaks.length > 0 
-    ? (activeCount / streaks.length) * 100 
-    : 0;
-  
+  const streakScore = streaks.length > 0
+      ? (activeCount / streaks.length) * 100
+      : 0;
+
   // Rank position (20%)
-  const rankScore = totalUsers > 0 
-    ? ((totalUsers - rank + 1) / totalUsers) * 100 
-    : 50;
-  
+  const rankScore = totalUsers > 0
+      ? ((totalUsers - rank + 1) / totalUsers) * 100
+      : 50;
+
   const efficiency = (
-    pointsScore * 0.3 +
-    achievementScore * 0.25 +
-    streakScore * 0.25 +
-    rankScore * 0.2
+      pointsScore * 0.3 +
+      achievementScore * 0.25 +
+      streakScore * 0.25 +
+      rankScore * 0.2
   );
-  
+
   return Math.min(100, Math.max(0, Math.round(efficiency)));
 };
 
@@ -284,12 +284,12 @@ export const calculateEfficiencyScore = (stats: GamificationStats): number => {
  */
 export const getUserInitials = (name: string): string => {
   if (!name) return 'U';
-  
+
   const words = name.trim().split(' ');
   if (words.length === 1) {
     return words[0].charAt(0).toUpperCase();
   }
-  
+
   return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
 };
 
@@ -301,18 +301,18 @@ export const formatDuration = (hours: number): string => {
     const minutes = Math.round(hours * 60);
     return `${minutes}m`;
   }
-  
+
   if (hours < 24) {
     return `${Math.floor(hours)}h`;
   }
-  
+
   const days = Math.floor(hours / 24);
   const remainingHours = Math.floor(hours % 24);
-  
+
   if (remainingHours === 0) {
     return `${days}d`;
   }
-  
+
   return `${days}d ${remainingHours}h`;
 };
 
@@ -330,13 +330,13 @@ export const generateAchievementId = (title: string): string => {
  */
 export const validateAchievement = (achievement: Partial<Achievement>): boolean => {
   return Boolean(
-    achievement.id &&
-    achievement.title &&
-    achievement.description &&
-    achievement.category &&
-    achievement.rarity &&
-    typeof achievement.points === 'number' &&
-    achievement.points >= 0
+      achievement.id &&
+      achievement.title &&
+      achievement.description &&
+      achievement.category &&
+      achievement.rarity &&
+      typeof achievement.points === 'number' &&
+      achievement.points >= 0
   );
 };
 
@@ -345,13 +345,13 @@ export const validateAchievement = (achievement: Partial<Achievement>): boolean 
  */
 export const validateStreak = (streak: Partial<Streak>): boolean => {
   return Boolean(
-    streak.id &&
-    streak.type &&
-    typeof streak.current === 'number' &&
-    typeof streak.best === 'number' &&
-    streak.current >= 0 &&
-    streak.best >= streak.current &&
-    streak.lastActivity &&
-    typeof streak.isActive === 'boolean'
+      streak.id &&
+      streak.type &&
+      typeof streak.current === 'number' &&
+      typeof streak.best === 'number' &&
+      streak.current >= 0 &&
+      streak.best >= streak.current &&
+      streak.lastActivity &&
+      typeof streak.isActive === 'boolean'
   );
 };

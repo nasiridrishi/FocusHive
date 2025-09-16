@@ -1,40 +1,39 @@
-import React, { useState, useEffect } from 'react'
+import React, {useEffect, useState} from 'react'
 import {
-  Box,
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  Avatar,
-  Chip,
-  
-  LinearProgress,
   Alert,
-  Stack,
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Chip,
   Divider,
-  IconButton,
-  Tooltip,
   Grid,
+  IconButton,
+  LinearProgress,
+  Stack,
+  Tooltip,
+  Typography,
 } from '@mui/material'
 
 // Grid component type workaround
 import {
-  PersonAdd as PersonAddIcon,
-  Refresh as RefreshIcon,
-  Star as StarIcon,
   AccessTime as TimeIcon,
   Chat as ChatIcon,
-  Psychology as PsychologyIcon
+  PersonAdd as PersonAddIcon,
+  Psychology as PsychologyIcon,
+  Refresh as RefreshIcon,
+  Star as StarIcon
 } from '@mui/icons-material'
-import { buddyApi } from '../services/buddyApi'
-import { BuddyMatch, BuddyRequest } from '../types'
+import {buddyApi} from '../services/buddyApi'
+import {BuddyMatch, BuddyRequest} from '../types'
 
 interface BuddyMatchingCardProps {
   onMatchFound?: () => void
 }
 
-const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) => {
+const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({onMatchFound}) => {
   const [matches, setMatches] = useState<BuddyMatch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,8 +50,8 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
       setError(null)
       const matchData = await buddyApi.findPotentialMatches()
       setMatches(matchData)
-    } catch (err) {
-      console.error('Error:', err);
+    } catch {
+      // console.error('Error loading potential matches');
       setError('Failed to load potential matches')
     } finally {
       setLoading(false)
@@ -71,8 +70,8 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
       if (onMatchFound) {
         onMatchFound()
       }
-    } catch (err) {
-      console.error('Error:', err);
+    } catch {
+      // console.error('Error sending buddy request');
       setError('Failed to send buddy request')
     } finally {
       setSendingRequest(null)
@@ -92,201 +91,202 @@ const BuddyMatchingCard: React.FC<BuddyMatchingCardProps> = ({ onMatchFound }) =
     return "Poor Match"
   }
 
-  const getCommunicationIcon = (style: string) => {
+  const getCommunicationIcon = (style: string): React.ReactElement => {
     switch (style) {
       case 'FREQUENT':
-        return <ChatIcon fontSize="small" />
+        return <ChatIcon fontSize="small"/>
       case 'MODERATE':
-        return <TimeIcon fontSize="small" />
+        return <TimeIcon fontSize="small"/>
       case 'MINIMAL':
-        return <PsychologyIcon fontSize="small" />
+        return <PsychologyIcon fontSize="small"/>
       default:
-        return <ChatIcon fontSize="small" />
+        return <ChatIcon fontSize="small"/>
     }
   }
 
   if (loading) {
     return (
-      <Box sx={{ p: 3 }}>
-        <LinearProgress />
-        <Typography variant="body2" color="textSecondary" sx={{ mt: 2, textAlign: 'center' }}>
-          Finding your perfect buddy matches...
-        </Typography>
-      </Box>
+        <Box sx={{p: 3}}>
+          <LinearProgress/>
+          <Typography variant="body2" color="textSecondary" sx={{mt: 2, textAlign: 'center'}}>
+            Finding your perfect buddy matches...
+          </Typography>
+        </Box>
     )
   }
 
   if (error) {
     return (
-      <Alert 
-        severity="error" 
-        action={
-          <Button color="inherit" size="small" onClick={loadMatches}>
-            Retry
-          </Button>
-        }
-      >
-        {error}
-      </Alert>
+        <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={loadMatches}>
+                Retry
+              </Button>
+            }
+        >
+          {error}
+        </Alert>
     )
   }
 
   if (matches.length === 0) {
     return (
-      <Box textAlign="center" py={4}>
-        <Typography variant="h6" gutterBottom>
-          No matches found
-        </Typography>
-        <Typography variant="body2" color="textSecondary" paragraph>
-          We couldn't find any potential buddies at this time. Please check back later or update your preferences.
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={loadMatches}
-        >
-          Refresh Matches
-        </Button>
-      </Box>
+        <Box textAlign="center" py={4}>
+          <Typography variant="h6" gutterBottom>
+            No matches found
+          </Typography>
+          <Typography variant="body2" color="textSecondary" paragraph>
+            We couldn't find any potential buddies at this time. Please check back later or update
+            your preferences.
+          </Typography>
+          <Button
+              variant="outlined"
+              startIcon={<RefreshIcon/>}
+              onClick={loadMatches}
+          >
+            Refresh Matches
+          </Button>
+        </Box>
     )
   }
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6">
-          Potential Buddy Matches
-        </Typography>
-        <IconButton onClick={loadMatches} color="primary">
-          <RefreshIcon />
-        </IconButton>
-      </Box>
+      <Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h6">
+            Potential Buddy Matches
+          </Typography>
+          <IconButton onClick={loadMatches} color="primary">
+            <RefreshIcon/>
+          </IconButton>
+        </Box>
 
-      <Grid container spacing={3}>
-        {matches.map((match) => (
-          <Grid item key={match.userId}>
-            <Card elevation={2}>
-              <CardContent>
-                {/* Header with Avatar and Score */}
-                <Box display="flex" alignItems="center" mb={2}>
-                  <Avatar 
-                    src={match.avatar} 
-                    sx={{ width: 60, height: 60, mr: 2 }}
-                  >
-                    {match.username[0].toUpperCase()}
-                  </Avatar>
-                  <Box flexGrow={1}>
-                    <Typography variant="h6">
-                      {match.username}
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Chip
-                        size="small"
-                        icon={<StarIcon />}
-                        label={`${Math.round(match.matchScore * 100)}%`}
-                        color={getMatchScoreColor(match.matchScore)}
-                      />
-                      <Typography variant="caption" color="textSecondary">
-                        {getMatchScoreLabel(match.matchScore)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-
-                {/* Bio */}
-                {match.bio && (
-                  <Typography variant="body2" color="textSecondary" paragraph>
-                    {match.bio}
-                  </Typography>
-                )}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Match Details */}
-                <Stack spacing={1.5}>
-                  {/* Common Focus Areas */}
-                  {match.commonFocusAreas.length > 0 && (
-                    <Box>
-                      <Typography variant="caption" color="textSecondary" gutterBottom>
-                        Common Interests
-                      </Typography>
-                      <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
-                        {match.commonFocusAreas.map((area) => (
+        <Grid container spacing={3}>
+          {matches.map((match) => (
+              <Grid item key={match.userId}>
+                <Card elevation={2}>
+                  <CardContent>
+                    {/* Header with Avatar and Score */}
+                    <Box display="flex" alignItems="center" mb={2}>
+                      <Avatar
+                          src={match.avatar}
+                          sx={{width: 60, height: 60, mr: 2}}
+                      >
+                        {match.username[0].toUpperCase()}
+                      </Avatar>
+                      <Box flexGrow={1}>
+                        <Typography variant="h6">
+                          {match.username}
+                        </Typography>
+                        <Box display="flex" alignItems="center" gap={1}>
                           <Chip
-                            key={area}
-                            label={area}
-                            size="small"
-                            variant="outlined"
+                              size="small"
+                              icon={<StarIcon/>}
+                              label={`${Math.round(match.matchScore * 100)}%`}
+                              color={getMatchScoreColor(match.matchScore)}
                           />
-                        ))}
+                          <Typography variant="caption" color="textSecondary">
+                            {getMatchScoreLabel(match.matchScore)}
+                          </Typography>
+                        </Box>
                       </Box>
                     </Box>
-                  )}
 
-                  {/* Communication Style */}
-                  <Box display="flex" alignItems="center" gap={1}>
-                    {getCommunicationIcon(match.communicationStyle)}
-                    <Typography variant="body2">
-                      {match.communicationStyle.toLowerCase()} communication
-                    </Typography>
-                  </Box>
-
-                  {/* Timezone Overlap */}
-                  {match.timezoneOverlapHours > 0 && (
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <TimeIcon fontSize="small" />
-                      <Typography variant="body2">
-                        {match.timezoneOverlapHours}h timezone overlap
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {/* Stats */}
-                  <Box display="flex" justifyContent="space-between" mt={1}>
-                    <Tooltip title="Active buddy relationships">
-                      <Chip
-                        size="small"
-                        label={`${match.activeBuddyCount} buddies`}
-                        variant="outlined"
-                      />
-                    </Tooltip>
-                    <Tooltip title="Completed goals">
-                      <Chip
-                        size="small"
-                        label={`${match.completedGoalsCount} goals`}
-                        variant="outlined"
-                      />
-                    </Tooltip>
-                    {match.averageSessionRating && (
-                      <Tooltip title="Average session rating">
-                        <Chip
-                          size="small"
-                          icon={<StarIcon />}
-                          label={match.averageSessionRating.toFixed(1)}
-                          variant="outlined"
-                        />
-                      </Tooltip>
+                    {/* Bio */}
+                    {match.bio && (
+                        <Typography variant="body2" color="textSecondary" paragraph>
+                          {match.bio}
+                        </Typography>
                     )}
-                  </Box>
-                </Stack>
-              </CardContent>
 
-              <CardActions>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<PersonAddIcon />}
-                  onClick={() => handleSendRequest(match)}
-                  disabled={sendingRequest === match.userId || sentRequests.has(match.userId)}
-                >
-                  {sentRequests.has(match.userId) ? 'Request Sent' : 'Send Buddy Request'}
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
+                    <Divider sx={{my: 2}}/>
+
+                    {/* Match Details */}
+                    <Stack spacing={1.5}>
+                      {/* Common Focus Areas */}
+                      {match.commonFocusAreas.length > 0 && (
+                          <Box>
+                            <Typography variant="caption" color="textSecondary" gutterBottom>
+                              Common Interests
+                            </Typography>
+                            <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
+                              {match.commonFocusAreas.map((area) => (
+                                  <Chip
+                                      key={area}
+                                      label={area}
+                                      size="small"
+                                      variant="outlined"
+                                  />
+                              ))}
+                            </Box>
+                          </Box>
+                      )}
+
+                      {/* Communication Style */}
+                      <Box display="flex" alignItems="center" gap={1}>
+                        {getCommunicationIcon(match.communicationStyle)}
+                        <Typography variant="body2">
+                          {match.communicationStyle.toLowerCase()} communication
+                        </Typography>
+                      </Box>
+
+                      {/* Timezone Overlap */}
+                      {match.timezoneOverlapHours > 0 && (
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <TimeIcon fontSize="small"/>
+                            <Typography variant="body2">
+                              {match.timezoneOverlapHours}h timezone overlap
+                            </Typography>
+                          </Box>
+                      )}
+
+                      {/* Stats */}
+                      <Box display="flex" justifyContent="space-between" mt={1}>
+                        <Tooltip title="Active buddy relationships">
+                          <Chip
+                              size="small"
+                              label={`${match.activeBuddyCount} buddies`}
+                              variant="outlined"
+                          />
+                        </Tooltip>
+                        <Tooltip title="Completed goals">
+                          <Chip
+                              size="small"
+                              label={`${match.completedGoalsCount} goals`}
+                              variant="outlined"
+                          />
+                        </Tooltip>
+                        {match.averageSessionRating && (
+                            <Tooltip title="Average session rating">
+                              <Chip
+                                  size="small"
+                                  icon={<StarIcon/>}
+                                  label={match.averageSessionRating.toFixed(1)}
+                                  variant="outlined"
+                              />
+                            </Tooltip>
+                        )}
+                      </Box>
+                    </Stack>
+                  </CardContent>
+
+                  <CardActions>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<PersonAddIcon/>}
+                        onClick={() => handleSendRequest(match)}
+                        disabled={sendingRequest === match.userId || sentRequests.has(match.userId)}
+                    >
+                      {sentRequests.has(match.userId) ? 'Request Sent' : 'Send Buddy Request'}
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+          ))}
+        </Grid>
+      </Box>
   )
 }
 
