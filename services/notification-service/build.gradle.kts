@@ -47,8 +47,8 @@ dependencies {
     
     // Database
     implementation("org.postgresql:postgresql")
-    implementation("org.flywaydb:flyway-core:10.17.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.17.0")
+    implementation("org.flywaydb:flyway-core:11.13.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.13.1")
     
     // Redis for caching
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
