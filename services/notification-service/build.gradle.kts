@@ -3,7 +3,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.5"
     id("java")
     id("org.owasp.dependencycheck") version "9.0.6"
-    id("org.sonarqube") version "4.4.1.3373"
+    id("org.sonarqube") version "6.3.1.5724"
     id("com.github.hierynomus.license") version "0.16.1"
 }
 
