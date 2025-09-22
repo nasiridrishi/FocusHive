@@ -54,8 +54,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     
     // AWS SES
-    implementation("software.amazon.awssdk:ses:2.27.21")
-    implementation("software.amazon.awssdk:auth:2.27.21")
+    implementation("software.amazon.awssdk:ses:2.34.0")
+    implementation("software.amazon.awssdk:auth:2.34.0")
     
     // Database
     implementation("org.postgresql:postgresql")
