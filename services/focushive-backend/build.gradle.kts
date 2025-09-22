@@ -84,7 +84,7 @@ dependencies {
     implementation("com.bucket4j:bucket4j-core:8.7.0")
 
     // Redis Jedis client
-    implementation("redis.clients:jedis:5.1.0")
+    implementation("redis.clients:jedis:6.2.0")
 
     // Caffeine Cache
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
