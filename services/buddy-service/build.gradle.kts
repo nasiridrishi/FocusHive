@@ -45,7 +45,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:10.17.0")
 
     // Jakarta annotations (replaces javax.annotation)
-    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+    implementation("jakarta.annotation:jakarta.annotation-api:3.0.0")
 
     // Redis for caching
     implementation("redis.clients:jedis")
