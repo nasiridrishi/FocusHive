@@ -101,7 +101,7 @@ dependencies {
     testImplementation("org.awaitility:awaitility:4.2.0")
 
     // Redis testing
-    testImplementation("com.redis:testcontainers-redis:2.2.2")
+    testImplementation("com.redis:testcontainers-redis:2.2.4")
 }
 
 dependencyManagement {
