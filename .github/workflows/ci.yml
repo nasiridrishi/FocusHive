@@ -104,7 +104,7 @@ jobs:
 
       - name: Set up Node.js (Frontend)
         if: matrix.component == 'frontend' && matrix.condition
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: 'npm'
@@ -265,7 +265,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: 'npm'
