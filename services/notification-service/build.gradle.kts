@@ -84,7 +84,7 @@ dependencies {
     // Monitoring and Observability
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
-    implementation("io.zipkin.reporter2:zipkin-reporter-brave:3.4.0")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave:3.5.1")
     implementation("io.opentelemetry:opentelemetry-exporter-zipkin:1.40.0")
     
     // AOP for performance monitoring
