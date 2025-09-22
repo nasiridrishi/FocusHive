@@ -44,7 +44,7 @@ dependencies {
     implementation("io.zipkin.reporter2:zipkin-reporter-brave")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-observation")
-    implementation("org.apache.commons:commons-pool2:2.12.0")
+    implementation("org.apache.commons:commons-pool2:2.12.1")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
     
     // Resilience4j
