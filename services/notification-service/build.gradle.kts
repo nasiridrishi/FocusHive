@@ -111,8 +111,8 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     
     // Email Testing
-    testImplementation("com.icegreen:greenmail-junit5:2.0.0")
-    testImplementation("com.icegreen:greenmail-spring:2.0.0")
+    testImplementation("com.icegreen:greenmail-junit5:2.1.5")
+    testImplementation("com.icegreen:greenmail-spring:2.1.5")
     
     // Template Engine Testing
     testImplementation("org.springframework.boot:spring-boot-starter-thymeleaf")
