@@ -65,8 +65,8 @@ dependencies {
     // Database
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("com.h2database:h2")  // Temporary for quick startup
-    implementation("org.flywaydb:flyway-core:10.17.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.17.0")
+    implementation("org.flywaydb:flyway-core:11.13.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.13.1")
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.7.3")
     
     // OpenAPI Documentation
