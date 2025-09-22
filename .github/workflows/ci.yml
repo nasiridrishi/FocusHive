@@ -238,7 +238,7 @@ jobs:
 
       - name: Build and push Docker image
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: services/${{ matrix.service }}
           platforms: linux/amd64,linux/arm64
@@ -300,7 +300,7 @@ jobs:
 
       - name: Build and push Docker image
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: frontend
           platforms: linux/amd64,linux/arm64
