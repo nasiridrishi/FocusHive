@@ -309,6 +309,8 @@ env/
 # FocusHive specific
 BOLO.md
 archive/
+.archive/
+**/archived-services/
 
 # Keep these
 !.gitkeep
