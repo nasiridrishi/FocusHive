@@ -122,7 +122,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("com.redis:testcontainers-redis:2.2.2")
+    testImplementation("com.redis:testcontainers-redis:2.2.4")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.h2database:h2")
     runtimeOnly("com.h2database:h2")
