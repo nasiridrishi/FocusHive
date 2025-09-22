@@ -126,7 +126,7 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("com.h2database:h2")
     runtimeOnly("com.h2database:h2")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:5.3.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:6.0.0")
     testImplementation("net.ttddyy:datasource-proxy:1.10")
 
     // Network failure testing with Toxiproxy
