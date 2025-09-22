@@ -143,9 +143,9 @@ dependencies {
     testAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:1.37")
 
     // Gatling for load testing
-    testImplementation("io.gatling.highcharts:gatling-charts-highcharts:3.10.3")
-    testImplementation("io.gatling:gatling-app:3.10.3")
-    testImplementation("io.gatling:gatling-recorder:3.10.3")
+    testImplementation("io.gatling.highcharts:gatling-charts-highcharts:3.14.4")
+    testImplementation("io.gatling:gatling-app:3.14.4")
+    testImplementation("io.gatling:gatling-recorder:3.14.4")
 
     // WireMock for service mocking
     testImplementation("com.github.tomakehurst:wiremock-jre8:2.35.1")
