@@ -42,7 +42,7 @@
     "@hookform/resolvers": "^5.2.1",
     "@mui/icons-material": "^5.16.7",
     "@mui/lab": "^5.0.0-alpha.176",
-    "@mui/material": "^5.16.7",
+    "@mui/material": "^7.3.2",
     "@mui/system": "^7.3.2",
     "@mui/x-charts": "^7.22.2",
     "@mui/x-date-pickers": "^7.22.2",
